@@ -1,0 +1,208 @@
+@model VelastoProductionSystem.Models.PackingStandard
+
+@{
+    ViewData["Title"] = "Edit Packing Standard";
+}
+
+<div class="row">
+    <div class="col-md-11 mx-auto">
+        <form asp-action="Edit" id="mainForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="d-flex justify-content-between align-items-end mb-3">
+                <h4 class="mb-0 text-white"><i class="bi bi-box-seam"></i> Packing Standard Form</h4>
+                <div class="text-muted small">Standard Packing & Logistik</div>
+            </div>
+
+            <div class="card mb-4 border-secondary bg-glass">
+                <div class="card-header bg-transparent border-bottom border-secondary">
+                    <h6 class="mb-0 text-info fw-bold"><i class="bi bi-info-circle"></i> INFORMASI MATERIAL</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label text-white-50 small mb-1 fw-bold">NA CODE</label>
+                            <input asp-for="NACode" class="form-control bg-transparent text-white border-secondary fw-bold" placeholder="Masukkan NA Code" />
+                            <span asp-validation-for="NACode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label text-white-50 small mb-1 fw-bold">MATERIAL NAME</label>
+                            <input asp-for="MaterialName" class="form-control bg-transparent text-white border-secondary" placeholder="Deskripsi nama material" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small mb-1 fw-bold">PART NUMBER</label>
+                            <input asp-for="PartNumber" class="form-control bg-transparent text-white border-secondary" placeholder="Tentukan Part Number" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small mb-1 fw-bold">VIN CODE</label>
+                            <input asp-for="VinCode" class="form-control bg-transparent text-white border-secondary" placeholder="Tentukan VIN Code" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- PARAMETER PACKING -->
+                <div class="col-md-7">
+                    <div class="card mb-4 border-primary bg-glass h-100">
+                        <div class="card-header bg-transparent border-bottom border-primary">
+                            <h6 class="mb-0 text-primary fw-bold"><i class="bi bi-gear-wide-connected"></i> PARAMETER PACKING</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4 mt-1">
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 hover-border-primary transition-all">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-primary bg-opacity-25 p-2 rounded text-primary">
+                                                <i class="bi bi-boxes fs-4"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="text-white-50 small fw-bold mb-1">DANDORI (CHS)</div>
+                                                <div class="d-flex align-items-baseline gap-2">
+                                                    <input asp-for="Dandori" type="number" class="form-control bg-transparent border-0 text-white fw-bold p-0 shadow-none fs-4" placeholder="0" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 hover-border-primary transition-all">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-primary bg-opacity-25 p-2 rounded text-primary">
+                                                <i class="bi bi-box-seam fs-4"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="text-white-50 small fw-bold mb-1">DH*</div>
+                                                <div class="d-flex align-items-baseline gap-2">
+                                                    <input asp-for="DH" type="number" class="form-control bg-transparent border-0 text-white fw-bold p-0 shadow-none fs-4" placeholder="0" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 hover-border-success transition-all">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-success bg-opacity-25 p-2 rounded text-success">
+                                                <i class="bi bi-stack fs-4"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="text-success small fw-bold mb-1">STD. QTY</div>
+                                                <div class="d-flex align-items-baseline gap-2">
+                                                    <input asp-for="StdQty" type="number" class="form-control bg-transparent border-0 text-success fw-bold p-0 shadow-none fs-4" placeholder="0" />
+                                                    <span class="text-white-50 small">pcs</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 hover-border-info transition-all">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-info bg-opacity-25 p-2 rounded text-info">
+                                                <i class="bi bi-check2-circle fs-4"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="text-info small fw-bold mb-1">ACTUAL QTY</div>
+                                                <div class="d-flex align-items-baseline gap-2">
+                                                    <input asp-for="ActualQty" type="number" class="form-control bg-transparent border-0 text-info fw-bold p-0 shadow-none fs-4" placeholder="0" />
+                                                    <span class="text-white-50 small">pcs</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTING LAINNYA -->
+                <div class="col-md-5">
+                    <div class="card mb-4 border-secondary bg-glass h-100">
+                        <div class="card-header bg-transparent border-bottom border-secondary">
+                            <h6 class="mb-0 text-white-75 fw-bold"><i class="bi bi-list-check"></i> SETTING LAINNYA</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <label class="form-label text-warning small mb-1 fw-bold">TANGGAL EFEKTIF</label>
+                                <input asp-for="EffectiveDate" class="form-control bg-transparent text-white border-warning border-opacity-50" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label text-white-50 small mb-1 fw-bold">STATUS</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input asp-for="IsActive" class="form-check-input bg-success border-success" type="checkbox" checked style="width: 3em; height: 1.5em; cursor: pointer;" />
+                                    <label class="form-check-label ms-2 mt-1 text-white fw-bold" asp-for="IsActive">
+                                        Standard Aktif Digunakan
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white-50 small mb-1 fw-bold">REMARKS</label>
+                                <textarea asp-for="Remarks" class="form-control bg-transparent text-white border-secondary" rows="4" placeholder="Catatan tambahan..." style="resize: none;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-5 d-flex gap-3 justify-content-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="bi bi-save"></i> Simpan Perubahan
+                </button>
+                <a asp-action="Index" class="btn btn-outline-light btn-lg px-4">
+                    <i class="bi bi-x-circle"></i> Batal
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var successMsg = '@TempData["SuccessMessage"]';
+            var errorMsg = '@Html.Raw(TempData["ErrorMessage"])';
+
+            if (successMsg) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: successMsg,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+
+            if (errorMsg) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    html: errorMsg,
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+
+        document.getElementById('mainForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Menyimpan Data...',
+                text: 'Harap tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            setTimeout(() => {
+                this.submit();
+            }, 800);
+        });
+    </script>
+}

@@ -1,0 +1,104 @@
+@model IEnumerable<VelastoProductionSystem.Models.NowProducing>
+
+@{
+    ViewData["Title"] = "Now Producing - List";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-list-ul"></i> Production History</h4>
+                <a asp-action="Create" class="btn btn-velasto">
+                    <i class="bi bi-plus-circle"></i> Start New Production
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Hose Type</th>
+                                <th>Dimension</th>
+                                <th>Yarn</th>
+                                <th>Production Time</th>
+                                <th>Status</th>
+                                <th>SPV Check</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.ProductionDate.ToString("dd MMM yyyy")</td>
+                                    <td><strong>@item.HoseType</strong></td>
+                                    <td>@item.Dimension</td>
+                                    <td>@item.Yarn</td>
+                                    <td>
+                                        @if (item.ProductionStartTime != null)
+                                        {
+                                            @item.ProductionStartTime?.ToString("HH:mm")
+                                            @if (item.ProductionEndTime != null)
+                                            {
+                                                <span> - @item.ProductionEndTime?.ToString("HH:mm")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success ms-2">Running</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.ProductionEndTime != null)
+                                        {
+                                            <span class="badge bg-secondary">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.SPVCheck)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-clock text-warning"></i>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info" title="Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Print" asp-route-id="@item.Id" class="btn btn-sm btn-secondary" title="Print">
+                                            <i class="bi bi-printer"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Belum ada data produksi. 
+                        <a asp-action="Create" class="alert-link">Start new production</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

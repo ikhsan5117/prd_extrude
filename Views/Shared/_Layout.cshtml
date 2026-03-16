@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Velasto Production System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+    
+    <!-- Top Navbar -->
+    <nav class="top-navbar no-print">
+        <div class="navbar-content">
+            <div class="navbar-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="brand">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>VELASTO Production System</span>
+                </div>
+            </div>
+            <div class="navbar-right">
+                <div class="status-indicator">
+                    <span class="status-dot pulse"></span>
+                    <span>System Online</span>
+                </div>
+                <div class="datetime">
+                    <i class="bi bi-calendar3"></i>
+                    <span id="currentDateTime">@DateTime.Now.ToString("dd MMM yyyy HH:mm")</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar no-print" id="sidebar">
+        <div class="sidebar-header">
+            <div class="company-logo">
+                <i class="bi bi-hexagon-fill"></i>
+            </div>
+            <h4>PT. Velasto</h4>
+            <p>Manufacturing Facility 4</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a asp-controller="Home" asp-action="Index" class="nav-item">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            
+            <div class="nav-group">
+                <div class="nav-group-title">
+                    <i class="bi bi-database"></i>
+                    <span>Master Data</span>
+                </div>
+                <a asp-controller="StandardParameterSetting" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-sliders"></i>
+                    <span>Parameter Setting</span>
+                </a>
+                <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                    <span>SPS Excel Master</span>
+                </a>
+                <a asp-controller="PackingStandard" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Packing Standard</span>
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-title">
+                    <i class="bi bi-gear-wide-connected"></i>
+                    <span>Production</span>
+                </div>
+                <a asp-controller="ProductionReport" asp-action="Create" class="nav-item sub">
+                    <i class="bi bi-play-circle-fill text-success"></i>
+                    <span class="fw-bold">NOW I'M PRODUCE (Start)</span>
+                </a>
+                <a asp-controller="ProductionReport" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-clipboard-data"></i>
+                    <span>Production Monitoring</span>
+                </a>
+                <a asp-controller="LotTag" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-tag"></i>
+                    <span>Lot Tag</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="footer-info">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                    <small>Plant 2504</small>
+                    <small class="text-muted">Tango Factory</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert-glass alert-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>@TempData["SuccessMessage"]</span>
+                <button class="alert-close" onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        }
+        
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-glass alert-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>@TempData["ErrorMessage"]</span>
+                <button class="alert-close" onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        }
+
+        @RenderBody()
+
+        <footer class="footer-content no-print">
+            <p>&copy; 2026 PT. Velasto Indonesia - Manufacturing Excellence</p>
+        </footer>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+
+        // Update datetime every minute
+        function updateDateTime() {
+            const now = new Date();
+            const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('id-ID', options);
+        }
+        setInterval(updateDateTime, 60000);
+
+        // Active nav item highlight
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+            if (item.getAttribute('href') === currentPath) {
+                item.classList.add('active');
+            }
+        });
+
+        // Auto-hide alerts after 5 seconds
+        document.querySelectorAll('.alert-glass').forEach(alert => {
+            setTimeout(() => {
+                alert.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

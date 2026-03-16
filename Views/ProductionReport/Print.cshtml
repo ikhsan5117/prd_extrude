@@ -1,0 +1,191 @@
+@model VelastoProductionSystem.Models.ProductionReport
+
+@{
+    Layout = null;
+    var dimensionReadings = ViewBag.DimensionReadings as IEnumerable<VelastoProductionSystem.Models.DimensionReading> ?? new List<VelastoProductionSystem.Models.DimensionReading>();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extruder Production Report - @Model.DocumentNumber</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; color: #000; background: #fff; margin: 0; padding: 20px; font-size: 9pt; }
+        @@page { size: A4 landscape; margin: 10mm; }
+        
+        .print-container { width: 100%; max-width: 100%; border: 1px solid #000; padding: 15px; }
+        
+        .header-section { display: flex; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 10px; }
+        .header-left { flex: 1; }
+        .header-center { flex: 1; text-align: center; }
+        .header-right { flex: 1; display: flex; justify-content: flex-end; }
+        
+        .meta-table { font-size: 8pt; border-collapse: collapse; }
+        .meta-table td { padding: 1px 5px; vertical-align: top; }
+        .meta-table .label { font-weight: bold; width: 80px; }
+        
+        .report-title { font-size: 14pt; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .report-subtitle { font-size: 11pt; font-weight: normal; margin: 0; }
+        
+        .signature-table { border-collapse: collapse; width: 240px; }
+        .signature-table th, .signature-table td { border: 1px solid #000; text-align: center; vertical-align: middle; }
+        .signature-table th { font-size: 7pt; height: 15px; background: #eee; }
+        .signature-table td { height: 60px; font-weight: bold; }
+
+        .data-table { width: 100%; border-collapse: collapse; border: 1.5px solid #000; margin-top: 5px; }
+        .data-table th, .data-table td { border: 1.5px solid #000; padding: 3px; font-size: 7.5pt; text-align: center; vertical-align: middle; }
+        .data-table thead th { background: #f2f2f2; font-weight: bold; }
+        
+        .tipe-row { text-align: left; background: #fafafa; font-weight: bold; }
+        .tipe-row span { font-weight: normal; margin-right: 5px; }
+        
+        .point-name { text-align: left; padding-left: 5px; font-weight: bold; }
+        .scale-val { font-size: 7pt; color: #666; }
+        
+        .sub-header th { font-size: 7pt; background: #fff !important; }
+        
+        .footer-grid { display: flex; margin-top: 10px; gap: 10px; }
+        .footer-box { border: 1px solid #000; flex: 1; min-height: 80px; position: relative; }
+        .footer-box.small-box { flex: 0 0 30%; }
+        .footer-label { position: absolute; top: 0; left: 0; background: #fff; padding: 0 5px; font-weight: bold; font-size: 8pt; margin-top: -8px; margin-left: 10px; }
+        .footer-content { padding: 10px; font-size: 8pt; }
+
+        .no-print-btn { display: inline-block; padding: 10px 20px; background: #007bff; color: #fff; text-decoration: none; border-radius: 5px; margin-bottom: 20px; cursor: pointer; border: none; }
+        @@media print { .no-print-btn { display: none; } .print-container { border: none; } }
+    </style>
+</head>
+<body>
+    <button class="no-print-btn" onclick="window.print()">Print This Report</button>
+    <button class="no-print-btn" onclick="window.close()" style="background:#6c757d; margin-left: 10px;">Close Window</button>
+
+    <div class="print-container">
+        <div class="header-section">
+            <div class="header-left">
+                <div style="font-weight: 900; font-size: 14pt;">VELASTO</div>
+                <div style="font-size: 8pt; border-bottom: 1px solid #000; display: inline-block;">INDONESIA</div>
+                <table class="meta-table" style="margin-top: 5px;">
+                    <tr><td class="label">No Doc.</td><td>: @Model.DocumentNumber</td></tr>
+                    <tr><td class="label">Revisi</td><td>: @Model.RevisionNumber</td></tr>
+                    <tr><td class="label">Date</td><td>: @Model.ProductionDate.ToString("dd MMM yyyy")</td></tr>
+                    <tr><td class="label">Shift</td><td>: @Model.Shift</td></tr>
+                    <tr><td class="label">Customer</td><td>: @Model.CustomerName</td></tr>
+                </table>
+            </div>
+            <div class="header-center">
+                <h1 class="report-title">Extruder Production Report</h1>
+                <h2 class="report-subtitle">(Dimension)</h2>
+            </div>
+            <div class="header-right">
+                <table class="signature-table">
+                    <thead>
+                        <tr><th width="33%">PREPARED</th><th width="33%">CHECKED</th><th width="34%">APPROVED</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@Model.CreatedBy.Split(' ')[0]</td>
+                            <td>@(Model.CheckedBy?.Split(' ')[0] ?? "-")</td>
+                            <td>@(Model.ApprovedBy?.Split(' ')[0] ?? "-")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th colspan="16" class="tipe-row"><span>Tipe :</span> @Model.HoseType ; @Model.Dimension ; REF: @(Model.StandardParameterSetting?.ProductCode ?? "-")</th>
+                </tr>
+                <tr>
+                    <th rowspan="2" width="100">POINT</th>
+                    <th rowspan="2" width="80">FREKUENSI</th>
+                    <th rowspan="2" width="100">STD DIMENSI</th>
+                    <th rowspan="2" width="40">Scale</th>
+                    <th colspan="6">PUKUL / JAM</th>
+                    <th rowspan="2" width="100">PART NUMBER</th>
+                    <th rowspan="2" width="80">VIN KODE</th>
+                    <th rowspan="2" width="60">STD PNJG</th>
+                    <th rowspan="2" width="60">ACT PNJG</th>
+                    <th rowspan="2" width="40">QTY TGT</th>
+                    <th colspan="3">QTY ACTUAL</th>
+                    <th rowspan="2">REMARK</th>
+                </tr>
+                <tr class="sub-header">
+                    <th width="50">INIT</th><th width="40">1</th><th width="40">2</th><th width="40">3</th><th width="40">4</th><th width="40">5</th>
+                    <th width="30">OK</th><th width="30">NG-D</th><th width="30">NG-V</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var pGroups = new[] {
+                        new { Name = "Inner Diameter", Std = "11.0 ± 0.2", Values = new[] { "11.20", "11.10", "11.00", "10.90", "10.80" } },
+                        new { Name = "Inner Thickness (x)", Std = "1.8 ± 0.2", Values = new[] { "2.00", "1.90", "1.80", "1.70", "1.60" } },
+                        new { Name = "Inner Thickness (y)", Std = "1.8 ± 0.2", Values = new[] { "2.00", "1.90", "1.80", "1.70", "1.60" } },
+                        new { Name = "Total Thickness (x)", Std = "3.3 ± 0.2", Values = new[] { "3.50", "3.40", "3.30", "3.20", "3.10" } },
+                        new { Name = "Total Thickness (y)", Std = "3.3 ± 0.2", Values = new[] { "3.50", "3.40", "3.30", "3.20", "3.10" } }
+                    };
+                }
+
+                @foreach (var g in pGroups)
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        <tr>
+                            @if (i == 0)
+                            {
+                                <td rowspan="5" class="point-name">@g.Name</td>
+                                <td rowspan="5">30m Sekali</td>
+                                <td rowspan="5" style="font-weight: bold;">@g.Std</td>
+                            }
+                            <td class="scale-val">@g.Values[i]</td>
+                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                            
+                            @if (i == 0 && g.Name == "Inner Diameter")
+                            {
+                                <td rowspan="27">@(Model.StandardParameterSetting?.ProductCode ?? "-")</td>
+                                <td rowspan="27">@Model.VinCode</td>
+                                <td rowspan="27">@Model.StandardLength</td>
+                                <td rowspan="27" style="font-weight: bold;">@Model.ActualLength</td>
+                                <td rowspan="27">@Model.QtyTarget</td>
+                                <td rowspan="27" style="font-weight: bold;">@Model.QtyOk</td>
+                                <td rowspan="27">@Model.NgDimension</td>
+                                <td rowspan="27">@Model.NgVisual</td>
+                                <td rowspan="27" style="text-align: left; vertical-align: top; padding: 5px;">@Model.Remark</td>
+                            }
+                        </tr>
+                    }
+                }
+                <tr>
+                    <td class="point-name">Spiral Pitch</td>
+                    <td>30m Sekali</td>
+                    <td style="font-weight: bold;">38 ± 5</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+                <tr>
+                    <td class="point-name">Visual Check</td>
+                    <td>30m Sekali</td>
+                    <td style="font-size: 6pt;">No Burry, No Line, No Bubble, No Scratch</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer-grid">
+            <div class="footer-box">
+                <span class="footer-label">Note :</span>
+                <div class="footer-content">@Model.Remark</div>
+            </div>
+            <div class="footer-box small-box">
+                <span class="footer-label">Attention :</span>
+                <div class="footer-content" style="font-size: 7pt; line-height: 1.2;">
+                    1. Setiap operator wajib menggunakan APD Sepatu safety & Sarung tangan)<br/>
+                    2. Periksa Dies Sebelum dan sesudah proses<br/>
+                    3. Pastikan semua parameter sesuai dengan SPS
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

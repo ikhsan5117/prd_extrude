@@ -1,0 +1,407 @@
+@model VelastoProductionSystem.Models.MasterlistSpsDoubleLayer
+
+@{
+    ViewData["Title"] = "Standard Parameter Setting - " + Model.ExcelId;
+}
+
+<style>
+    /* Force high contrast for readability */
+    .paper-container {
+        background: white !important;
+        color: #000 !important;
+        padding: 30px;
+        font-family: "Arial", sans-serif;
+        max-width: 1100px;
+        margin: 20px auto;
+        border: 2px solid #000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        font-size: 13px;
+    }
+
+    .paper-container * {
+        color: #000 !important;
+    }
+
+    .paper-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 2px solid black !important;
+    }
+
+    .paper-table th, .paper-table td {
+        border: 1px solid black !important;
+        padding: 6px 8px;
+        vertical-align: middle;
+    }
+
+    .paper-table th {
+        background: #f2f2f2 !important;
+        font-weight: bold;
+    }
+
+    .header-layout {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    .approval-table {
+        width: 100%;
+        border: 2px solid black !important;
+    }
+    .approval-table th { font-size: 10px; height: 20px; }
+    .approval-table td { height: 45px; font-size: 11px; }
+    .approval-names td { height: 20px; font-weight: bold; font-size: 10px; background: #eee !important; }
+
+    .info-table { border: none !important; width: 100%; margin-bottom: 15px; }
+    .info-table td { border: none !important; padding: 2px 0; font-size: 14px; }
+    .info-table .label { width: 130px; font-weight: bold; }
+    .info-table .colon { width: 13px; text-align: center; }
+
+    /* Revision Layout Alignment - FIXED TIGHTER */
+    .revision-id-layout {
+        display: flex;
+        align-items: center; /* Sejajarkan ke tengah tabel secara vertikal */
+        margin-bottom: 15px;
+        gap: 250px; /* Ditambah jaraknya agar lebih ke kanan */
+    }
+    .revision-table-container { 
+        width: 700px; /* Lebar tetap agar proporsional */
+    }
+    .revision-table { width: 100%; }
+    .revision-table td { text-align: left; }
+    .revision-table .cell-center { text-align: center !important; }
+
+    .id-marker-side { 
+        font-weight: bold; 
+        font-size: 13px; 
+        margin-bottom: 5px; 
+        white-space: nowrap;
+        color: #000 !important;
+    }
+
+    /* Unified Spec & Legend Table */
+    .unified-spec-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 2px solid black !important;
+        margin-bottom: 15px;
+        table-layout: fixed;
+    }
+    .unified-spec-table td {
+        border: 1px solid black !important;
+        padding: 5px 8px;
+        vertical-align: middle;
+    }
+    .spec-label-cell {
+        width: 140px;
+        background: #fff !important;
+        font-weight: bold;
+        text-align: right;
+    }
+    .spec-value-cell {
+        background: #f2f2f2 !important;
+        text-align: center;
+        font-weight: bold;
+        font-size: 14px;
+        text-transform: uppercase;
+    }
+    .tujuan-cell {
+        vertical-align: top !important;
+        padding: 8px 12px !important;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .rotated-legend-cell {
+        width: 30px;
+        padding: 0 !important;
+        background: #fff !important;
+        vertical-align: middle !important;
+        text-align: center;
+    }
+    .rotated-legend-text {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        display: inline-block;
+        font-size: 10px;
+        font-weight: bold;
+        white-space: nowrap;
+        line-height: 1;
+        margin: auto;
+    }
+    .symbol-cell {
+        width: 130px;
+        font-size: 11px;
+        font-weight: bold;
+        vertical-align: middle !important;
+        padding-left: 12px !important;
+    }
+
+    .diagonal-cell {
+        background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><line x1='0' y1='0' x2='100' y2='100' stroke='black' stroke-width='1'/></svg>");
+        background-size: 100% 100%;
+    }
+
+    .rotated-text-th {
+        height: 80px;
+        text-align: center;
+        padding: 0 !important;
+    }
+    .rotated-text-th span {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        display: inline-block;
+        font-size: 10px;
+        font-weight: bold;
+    }
+
+    .im-marker { font-weight: bold; text-align: center; font-size: 11px; width: 40px; }
+    .re-marker { font-weight: bold; text-align: center; font-size: 11px; width: 40px; }
+
+    .btn-print-area { margin-bottom: 25px; text-align: center; }
+
+    @@media print {
+        .btn-print-area, nav, aside, .navbar, .footer, .btn, .breadcrumb { display: none !important; }
+        .paper-container { box-shadow: none; border: 2px solid black; padding: 20px; width: 100%; margin: 0; }
+        body { background: white !important; }
+    }
+</style>
+
+<div class="btn-print-area text-center mt-3">
+    <a asp-action="Index" class="btn btn-secondary btn-sm rounded-pill px-3 me-2">Back</a>
+    <button onclick="window.print()" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold">CETAK / PDF</button>
+</div>
+
+<div class="paper-container">
+    <!-- LOGO & TITLE & APPROVAL -->
+    <div class="header-layout">
+        <div style="flex: 1;">
+            <img src="~/images/velasto-logo-e1700056160273.png" alt="Velasto Logo" style="height: 60px;">
+        </div>
+        
+        <div style="flex: 2; text-align: center;">
+            <h1 style="font-size: 22px; font-weight: bold; text-decoration: underline; margin: 0; text-transform: uppercase;">
+                Standard Parameter Setting
+            </h1>
+        </div>
+
+        <div style="flex: 1.2;">
+            <table class="paper-table approval-table">
+                <thead>
+                    <tr><th width="33%">Approved</th><th width="33%">Checked</th><th width="33%">Prepared</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td></td><td></td><td></td></tr>
+                    <tr class="approval-names text-center"><td>Amri A</td><td>Adrian H</td><td>Ivan W</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- INFO TABLE -->
+    <table class="info-table">
+        <tr>
+            <td class="label">Machine</td><td class="colon">:</td><td class="fw-bold">@Model.Machine</td>
+            <td class="text-end fw-bold" style="font-size: 24px; padding-right: 20px;">@Model.ExcelId</td>
+        </tr>
+        <tr><td class="label">Purpose</td><td class="colon">:</td><td>Extrusion parameter setting conditions for Double Layer</td></tr>
+        <tr><td class="label">No. Document</td><td class="colon">:</td><td>@Model.DocumentNumber</td></tr>
+        <tr><td class="label">Customer</td><td class="colon">:</td><td>PT. ADM</td></tr>
+    </table>
+
+    <!-- REVISION RECORD & ID TOGETHER -->
+    <div class="revision-id-layout">
+        <div class="revision-table-container">
+            <table class="paper-table revision-table">
+                <thead class="text-center">
+                    <tr>
+                        <th width="40">No.</th>
+                        <th width="80">Rev. No.</th>
+                        <th>Revision Record</th>
+                        <th width="120">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="cell-center">1</td>
+                        <td class="cell-center">@Model.RevisionNumber</td>
+                        <td>Dibuat</td>
+                        <td class="cell-center">@Model.RevisionDate</td>
+                    </tr>
+                    <tr><td class="cell-center">2</td><td></td><td></td><td></td></tr>
+                    <tr><td class="cell-center">3</td><td></td><td></td><td></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="id-marker-side">ID: NA1640</div>
+    </div>
+
+    <!-- UNIFIED HOSE SPEC & LEGEND TABLE -->
+    <table class="unified-spec-table">
+        <tr>
+            <td class="spec-label-cell" width="140">Hose Spec :</td>
+            <td class="spec-value-cell">@Model.HoseType; @Model.Dimensi; @Model.Material</td>
+            <td class="rotated-legend-cell" rowspan="2" width="30">
+                <span class="rotated-legend-text">Check's</span>
+            </td>
+            <td class="rotated-legend-cell" rowspan="2" width="30">
+                <span class="rotated-legend-text">Condition of symbol</span>
+            </td>
+            <td class="symbol-cell" rowspan="2" width="130">
+                o : Operator<br>
+                ◎ : Supervisor<br>
+                ☆ : Manager<br>
+                □ : 
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="tujuan-cell">
+                <strong>Tujuan:</strong>
+                <div style="margin-left: 20px; margin-top: 4px;">
+                    Menjelaskan kondisi parameter setting dari proses.<br>
+                    Mengandung parameter setting dan metode pengukuran dan pencatatan
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- MAIN PARAMETER TABLE -->
+    <table class="paper-table">
+        <thead class="text-center">
+            <tr>
+                <th rowspan="3" width="40" class="diagonal-cell">No.</th>
+                <th rowspan="3" width="200">Check Item</th>
+                <th rowspan="3" width="40" class="rotated-text-th"><span>Classification</span></th>
+                <th colspan="2">Level of Control</th>
+                <th rowspan="3" width="100">Confirmation Method</th>
+                <th colspan="4">First / Finish Check</th>
+                <th colspan="3">Routine Check</th>
+                <th rowspan="3" width="130">Recording Sheets</th>
+            </tr>
+            <tr>
+                <th rowspan="2" class="small">Ext Tube (In)</th>
+                <th rowspan="2" class="small">Ext Cover (Out)</th>
+                <th colspan="2">Check</th>
+                <th rowspan="2" width="40" class="rotated-text-th"><span>Number</span></th>
+                <th rowspan="2" width="40" class="rotated-text-th"><span>Check</span></th>
+                <th rowspan="2" width="80">Interval</th>
+                <th rowspan="2" width="40" class="rotated-text-th"><span>Number</span></th>
+                <th rowspan="2" width="40" class="rotated-text-th"><span>Check's</span></th>
+            </tr>
+            <tr>
+                <th width="40" class="rotated-text-th"><span>First</span></th>
+                <th width="40" class="rotated-text-th"><span>Finish</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-center">1</td><td>Material Name</td><td></td>
+                <td colspan="2" class="text-center fw-bold">@Model.Material</td>
+                <td class="text-center">Visual</td><td>-</td><td>-</td><td>-</td><td>-</td><td>Each Batch</td><td class="text-center">1</td><td class="text-center">o</td>
+                <td class="text-center fw-bold small">EPR (Parameter Setting)</td>
+            </tr>
+            <tr>
+                <td class="text-center">2</td><td>Use limits of material</td><td></td>
+                <td class="text-center">@Model.UseLimitsInner</td><td class="text-center">@Model.UseLimitsOuter</td>
+                <td class="text-center">Visual</td><td>-</td><td>-</td><td>-</td><td>0</td><td>Each Batch</td><td class="text-center">1</td><td class="text-center">o</td>
+                <td class="text-center fw-bold small">EPR (Parameter Setting)</td>
+            </tr>
+            <tr>
+                <td class="text-center" rowspan="3">3</td>
+                <td>Dies dimension: Nipple (Ø mm)</td><td class="im-marker">Im</td>
+                <td colspan="2" class="text-center">@Model.Nipple</td>
+                <td class="text-center" rowspan="3">Caliper / Tapper</td><td rowspan="3">-</td><td rowspan="3">-</td><td rowspan="3">-</td><td rowspan="3">-</td><td class="text-center" rowspan="3">1x / month</td><td class="text-center" rowspan="3">1</td><td class="text-center" rowspan="3">o</td>
+                <td class="text-center fw-bold small" rowspan="3">Dies Maintenance Checklist</td>
+            </tr>
+            <tr><td>Dies dimension: Tube (Ø mm)</td><td class="im-marker">Im</td><td colspan="2" class="text-center">@Model.TubeDie</td></tr>
+            <tr><td>Dies dimension: Cover (Ø mm)</td><td class="im-marker">Im</td><td colspan="2" class="text-center">@Model.CoverDie</td></tr>
+            
+            <tr>
+                <td class="text-center">4</td><td>Mesh Screen Matrix</td><td></td>
+                <td class="text-center">@Model.MeshScreen1</td><td class="text-center">@Model.MeshScreen2</td>
+                <td class="text-center">Visual</td><td>-</td><td>-</td><td>-</td><td>-</td><td>Mat Change</td><td class="text-center">2</td><td class="text-center">o</td>
+                <td class="text-center fw-bold small">EPR (Parameter Setting)</td>
+            </tr>
+
+            <!-- Temperature -->
+            <tr>
+                <td class="text-center" rowspan="5">5</td>
+                <td>Head Temperature (°C)</td><td></td>
+                <td class="text-center">@Model.HeadTemp1</td><td class="text-center">@Model.HeadTemp2</td>
+                <td class="text-center" rowspan="5">Display</td><td rowspan="5">-</td><td rowspan="5">-</td><td rowspan="5">-</td><td rowspan="5">-</td><td class="text-center" rowspan="5">At Start</td><td class="text-center" rowspan="5">-</td><td class="text-center" rowspan="5">o</td>
+                <td class="text-center fw-bold small" rowspan="5">EPR (Parameter Setting)</td>
+            </tr>
+            <tr><td>Cylinder 1 Temp (°C)</td><td></td><td class="text-center">@Model.Cylinder1_1</td><td class="text-center">@Model.Cylinder1_2</td></tr>
+            <tr><td>Cylinder 2 Temp (°C)</td><td></td><td class="text-center">@Model.Cylinder2_1</td><td class="text-center">@Model.Cylinder2_2</td></tr>
+            <tr><td>FEED Temperature (°C)</td><td></td><td class="text-center">@Model.Feed1</td><td class="text-center">@Model.Feed2</td></tr>
+            <tr><td>Screw Temperature (°C)</td><td></td><td class="text-center">@Model.ScrewTemp1</td><td class="text-center">@Model.ScrewTemp2</td></tr>
+
+            <tr>
+                <td class="text-center">6</td><td>Screw Speed (rpm)</td><td class="re-marker">Re</td>
+                <td class="text-center">@Model.ScrewSpeed1</td><td class="text-center">@Model.ScrewSpeed2</td>
+                <td class="text-center">Display</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">7</td><td>Pressure Head (MPa)</td><td class="re-marker">Re</td>
+                <td class="text-center">@Model.Pressure1</td><td class="text-center">@Model.Pressure2</td>
+                <td class="text-center">Display</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">8</td><td>OD Sensor (Ø mm)</td><td class="re-marker">Re</td>
+                <td colspan="2" class="text-center fw-bold">@Model.OdSensor</td>
+                <td class="text-center">Display</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">9</td><td>Chiller Water Temp (°C)</td><td class="im-marker">Im</td>
+                <td colspan="2" class="text-center fw-bold">@Model.ChillerWaterTemp</td>
+                <td class="text-center">Display</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">10</td><td>Cutting Speed (m/min)</td><td class="re-marker">Re</td>
+                <td colspan="2" class="text-center">@Model.CuttingSpeed</td>
+                <td class="text-center">Display</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">11</td><td>Take-up Speed (m/min)</td><td class="re-marker">Re</td>
+                <td colspan="2" class="text-center">@Model.TakeUpConveyorSpeed</td>
+                <td class="text-center">Display</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">12</td><td>Marking material Text</td><td class="im-marker">Im</td>
+                <td colspan="2" class="text-center">@Model.TextMarkingMaterial</td>
+                <td class="text-center">Visual</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">13</td><td>Marking Colour</td><td class="im-marker">Im</td>
+                <td colspan="2" class="text-center">@Model.MarkingColour</td>
+                <td class="text-center">Visual</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">14</td><td>Marking Sort</td><td></td>
+                <td colspan="2" class="text-center">@Model.MarkingSort</td>
+                <td class="text-center">Visual</td><td>-</td><td>-</td><td>-</td><td>-</td><td>At Start</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR</td>
+            </tr>
+            <tr>
+                <td class="text-center">15</td><td>Inner Diameter (mm)</td><td class="im-marker">Im</td>
+                <td colspan="2" class="text-center fw-bold">@Model.ToleranceInner</td>
+                <td class="text-center">Tapper G.</td><td>-</td><td>-</td><td>-</td><td>-</td><td>30 Min</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR (Dimension)</td>
+            </tr>
+            <tr>
+                <td class="text-center">16</td><td>Thickness Inner (mm)</td><td></td>
+                <td colspan="2" class="text-center">@Model.TebalInner</td>
+                <td class="text-center">Caliper</td><td>-</td><td>-</td><td>-</td><td>-</td><td>30 Min</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR (Dimension)</td>
+            </tr>
+            <tr>
+                <td class="text-center">17</td><td>Thickness Total (mm)</td><td class="im-marker">Im</td>
+                <td colspan="2" class="text-center fw-bold">@Model.TebalTotal</td>
+                <td class="text-center">Caliper</td><td>-</td><td>-</td><td>-</td><td>-</td><td>30 Min</td><td>1</td><td>o</td><td class="text-center fw-bold small">EPR (Dimension)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="mt-2 text-muted fw-bold" style="font-size: 10px;">
+        ↑ Im : Important; Re : Reference; EPR : Extrusion Production Report
+    </div>
+</div>

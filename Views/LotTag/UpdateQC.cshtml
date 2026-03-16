@@ -1,0 +1,117 @@
+@model VelastoProductionSystem.Models.LotTag
+
+@{
+    ViewData["Title"] = "Update Quality Check";
+}
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-clipboard-check"></i> Quality Check Update: @Model.LotTagNumber
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-info-circle-fill h2"></i>
+                        </div>
+                        <div>
+                            <strong>Part Number:</strong> @Model.PartNumber<br>
+                            <strong>Target Qty:</strong> @Model.TargetQty PCS | <strong>Lot Packaging:</strong> @Model.LotPackaging PCS
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="UpdateQC">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="SubconCheck" class="form-label">Subcon Check / Operator</label>
+                                <input asp-for="SubconCheck" class="form-control" placeholder="Nama pemeriksa" />
+                                <span asp-validation-for="SubconCheck" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="MesinCheck" class="form-label">Mesin Check</label>
+                                <input asp-for="MesinCheck" class="form-control" placeholder="Nomor/Nama Mesin" />
+                                <span asp-validation-for="MesinCheck" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group mb-3">
+                                <label asp-for="TanggalCheck" class="form-label">Tanggal & Waktu Check</label>
+                                <input asp-for="TanggalCheck" class="form-control" type="datetime-local" value="@(Model.TanggalCheck?.ToString("yyyy-MM-ddTHH:mm") ?? DateTime.Now.ToString("yyyy-MM-ddTHH:mm"))" />
+                                <span asp-validation-for="TanggalCheck" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="QtyOK" class="form-label text-success">Quantity OK</label>
+                                <input asp-for="QtyOK" class="form-control border-success" type="number" id="qtyOK" />
+                                <span asp-validation-for="QtyOK" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="QtyNG" class="form-label text-danger">Quantity NG</label>
+                                <input asp-for="QtyNG" class="form-control border-danger" type="number" id="qtyNG" />
+                                <span asp-validation-for="QtyNG" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="ActualQty" class="form-label fw-bold">Total Actual (OK+NG)</label>
+                                <input asp-for="ActualQty" class="form-control bg-light" type="number" id="actualQty" readonly />
+                                <span asp-validation-for="ActualQty" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-group mb-3">
+                                <label asp-for="NGReason" class="form-label">Alasan NG (Jika ada)</label>
+                                <textarea asp-for="NGReason" class="form-control" rows="2" placeholder="Sebutkan alasan jika ada produk NG"></textarea>
+                                <span asp-validation-for="NGReason" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top d-flex gap-2">
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="bi bi-check2-circle"></i> Submit Quality Check
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            function calculateTotal() {
+                const ok = parseInt($('#qtyOK').val()) || 0;
+                const ng = parseInt($('#qtyNG').val()) || 0;
+                $('#actualQty').val(ok + ng);
+            }
+
+            $('#qtyOK, #qtyNG').on('input', calculateTotal);
+            calculateTotal();
+        });
+    </script>
+}

@@ -1,0 +1,152 @@
+@model VelastoProductionSystem.Models.ProductionReport
+
+@{
+    ViewData["Title"] = "Production Monitoring Dashboard";
+}
+
+<div class="no-print mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="text-white fw-bold mb-0">PRODUCTION MONITORING</h2>
+        <span class="badge bg-success shadow-sm px-3 rounded-pill">STATUS: @Model.Status</span>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-light"><i class="bi bi-printer me-1"></i> Print Full Report</button>
+        <form asp-action="FinishProduction" method="post" onsubmit="return confirm('Selesaikan produksi ini?')">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-danger px-4 shadow">FINISH PRODUCTION</button>
+        </form>
+    </div>
+</div>
+
+<!-- TAB NAVIGATION -->
+<ul class="nav nav-tabs custom-tabs no-print mb-4" id="prodTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="parameter-tab" data-bs-toggle="tab" href="#parameter" role="tab">
+            <i class="bi bi-thermometer-half me-2"></i> 1. PARAMETER SETTING (Gambar 5)
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="dimension-tab" data-bs-toggle="tab" href="#dimension" role="tab">
+            <i class="bi bi-rulers me-2"></i> 2. DIMENSION REPORT (Gambar 2)
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="material-tab" data-bs-toggle="tab" href="#material" role="tab">
+            <i class="bi bi-box-seam me-2"></i> 3. INITIAL CHECK (Gambar 1)
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content" id="prodTabsContent">
+    <!-- TAB 1: PARAMETER SETTING (Image 5) -->
+    <div class="tab-pane fade show active" id="parameter" role="tabpanel">
+        <div class="production-paper p-4 shadow-lg mb-5">
+            <div class="text-center border-bottom border-dark border-2 mb-3">
+                <h4 class="fw-bold">Extruder Production Report (Parameter Setting)</h4>
+            </div>
+            <!-- Header Grid dari Gambar 5 -->
+            <table class="table table-bordered table-sm border-dark small-table text-center">
+                <thead class="bg-light">
+                    <tr>
+                        <th rowspan="2" class="align-middle">TIME</th>
+                        <th colspan="5">INNER (TUBE 1)</th>
+                        <th colspan="5">OUTER (COVER)</th>
+                        <th rowspan="2" class="align-middle">ACTION</th>
+                    </tr>
+                    <tr>
+                        <th>Head (°C)</th><th>Cyl 1</th><th>Cyl 2</th><th>Speed</th><th>Press</th>
+                        <th>Head (°C)</th><th>Cyl 1</th><th>Cyl 2</th><th>Speed</th><th>Press</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var log in Model.ProductionReadings) {
+                        <tr>
+                            <td>@log.ReadingTime.ToString("HH:mm")</td>
+                            <td>@log.HeadTempInner</td><td>@log.Cylinder1TempInner</td><td>@log.Cylinder2TempInner</td><td>@log.ScrewSpeedInner</td><td>@log.PressureInner</td>
+                            <td>@log.HeadTempOuter</td><td>@log.Cylinder1TempOuter</td><td>@log.Cylinder2TempOuter</td><td>@log.ScrewSpeedOuter</td><td>@log.PressureOuter</td>
+                            <td><button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                    }
+                    <tr class="bg-info bg-opacity-10 no-print">
+                        <td class="extra-small">ADD NEW</td>
+                        <td><input class="log-input" id="h_in" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td>
+                        <td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td>
+                        <td><button class="btn btn-primary btn-xs"><i class="bi bi-plus-lg"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 2: DIMENSION REPORT (Image 2) -->
+    <div class="tab-pane fade" id="dimension" role="tabpanel">
+        <div class="dimension-paper p-4 shadow-lg mb-5">
+            <div class="text-center border-bottom border-dark border-2 mb-3">
+                <h4 class="fw-bold">Extruder Production Report (Dimension)</h4>
+            </div>
+            <!-- Grid Dimension Table dari Gambar 2 -->
+            <div class="row g-0 border border-dark border-2">
+                <div class="col-md-8 border-end border-dark">
+                    <table class="table table-bordered border-dark small-table text-center mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">POINT</th>
+                                <th style="width: 80px;">STD</th>
+                                <th>INIT</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Inner Dia.</td><td class="fw-bold">11.0±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
+                            <tr><td>Inner Thick.</td><td class="fw-bold">1.8±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
+                            <tr><td>Total Thick.</td><td class="fw-bold">3.3±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Right Side: Qty Status -->
+                <div class="col-md-4 p-3 bg-light">
+                    <div class="mb-3">
+                        <label class="fw-bold extra-small text-muted d-block">VIN KODE</label>
+                        <div class="fs-5 fw-bold">@Model.VinCode</div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6"><label class="extra-small">QTY TARGET</label><div class="fw-bold border-bottom border-dark">@Model.QtyTarget pcs</div></div>
+                        <div class="col-6"><label class="extra-small">QTY OK</label><input type="number" class="form-control form-control-sm border-success text-success fw-bold" value="@Model.QtyOk" /></div>
+                        <div class="col-6"><label class="extra-small text-danger">NG DIMENSI</label><input type="number" class="form-control form-control-sm border-danger text-danger" value="@Model.NgDimension" /></div>
+                        <div class="col-6"><label class="extra-small text-danger">NG VISUAL</label><input type="number" class="form-control form-control-sm border-danger text-danger" value="@Model.NgVisual" /></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: MATERIAL CHECK (Image 1) -->
+    <div class="tab-pane fade" id="material" role="tabpanel">
+        <div class="material-paper p-4 shadow-lg mb-5" style="background: #fff8f0; border: 1.5px solid #d4a373;">
+            <h5 class="fw-bold border-bottom border-dark pb-2 mb-3">INITIAL MATERIAL & SETUP (NOW I'M PRODUCE)</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1"><b>Hose Type:</b> @Model.HoseType</p>
+                    <p class="mb-1"><b>Dimension:</b> @Model.Dimension</p>
+                    <p class="mb-1"><b>Yarn:</b> @Model.Yarn</p>
+                </div>
+                <div class="col-md-6 border-start border-dark border-opacity-10">
+                    <p class="mb-1 text-info"><b>Material Inner Lot:</b> @Model.InnerMaterialLotNo (SG: @Model.InnerMaterialSG)</p>
+                    <p class="mb-1 text-info"><b>Material Outer Lot:</b> @Model.OuterMaterialLotNo (SG: @Model.OuterMaterialSG)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .production-paper, .dimension-paper { background: white; color: black; border-radius: 4px; border: 1px solid #dee2e6; }
+    .small-table { font-size: 11px; }
+    .small-table th { background: #f8f9fa; font-weight: 700; color: #333; }
+    .log-input { width: 100%; border: none; outline: none; background: transparent; text-align: center; border-bottom: 1px solid #eee; }
+    .log-input:focus { border-bottom: 2px solid #3b82f6; }
+    .extra-small { font-size: 10px; font-weight: bold; }
+    .custom-tabs .nav-link { border: none; color: rgba(255,255,255,0.6); font-weight: 600; padding: 12px 20px; transition: all 0.3s; }
+    .custom-tabs .nav-link.active { background: rgba(59, 130, 246, 0.1) !important; color: #3b82f6 !important; border-bottom: 3px solid #3b82f6 !important; }
+    .custom-tabs .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    @@media print { .no-print { display: none !important; } .tab-pane { display: block !important; opacity: 1 !important; } .tab-content > .tab-pane { display: block !important; } }
+</style>

@@ -1,0 +1,13 @@
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.doccache
+node_modules/
+.env
+.DS_Store
+wwwroot/lib/*
+!wwwroot/lib/.gitkeep

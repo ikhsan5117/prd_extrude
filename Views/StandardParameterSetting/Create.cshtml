@@ -1,0 +1,411 @@
+@model VelastoProductionSystem.Models.StandardParameterSetting
+
+@{
+    ViewData["Title"] = "Extruder Production Report";
+}
+
+<div class="row fade-in">
+    <div class="col-md-11 mx-auto">
+        <!-- SCANNER SECTION -->
+        <div class="card mb-4 border-0 shadow-lg bg-glass overflow-hidden" style="border-radius: 15px; background: rgba(30, 35, 45, 0.8);">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h4 class="text-white mb-0 fw-bold"><i class="bi bi-qr-code-scan text-primary me-2"></i> SCAN ITEM BARCODE</h4>
+                    <p class="text-white-50 small mb-0">Scan barcode item untuk mengisi standar parameter secara otomatis.</p>
+                </div>
+                <button type="button" class="btn btn-primary btn-lg rounded-pill px-4 shadow" onclick="startScanner()">
+                    <i class="bi bi-camera me-2"></i> Buka Scanner
+                </button>
+            </div>
+            <div id="scanner-container" style="display:none;" class="p-3 border-top border-secondary">
+                <div id="reader" style="width:100%; max-width: 500px; margin: auto; border-radius: 10px; overflow: hidden;"></div>
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="stopScanner()">Tutup Scanner</button>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Create" id="mainForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- PAPER-STYLE REPORT CONTAINER -->
+            <div class="report-paper shadow-2xl mb-5">
+                <!-- HEADER AREA -->
+                <div class="report-header d-flex border-bottom border-dark border-2">
+                    <div class="logo-area p-3 border-end border-dark border-2 d-flex align-items-center justify-content-center" style="width: 200px;">
+                        <img src="/img/velasto-logo-dark.png" alt="Velasto" style="max-height: 50px;" onerror="this.src='https://via.placeholder.com/150x50?text=VELASTO'"/>
+                    </div>
+                    <div class="title-area flex-grow-1 p-2 text-center">
+                        <h4 class="fw-bold mb-0">Extruder Production Report</h4>
+                        <div class="fw-bold small">(Parameter Setting)</div>
+                    </div>
+                    <div class="approval-area d-flex" style="width: 300px;">
+                        <div class="border-start border-dark border-2 p-1 text-center small flex-fill">Disetujui</div>
+                        <div class="border-start border-dark border-2 p-1 text-center small flex-fill">Diperiksa</div>
+                        <div class="border-start border-dark border-2 p-1 text-center small flex-fill">Dibuat</div>
+                    </div>
+                </div>
+
+                <!-- INFO FIELDS AREA -->
+                <div class="info-grid border-bottom border-dark border-2 d-flex flex-wrap">
+                    <div class="p-2 border-end border-dark border-2" style="flex: 1 1 300px;">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="small fw-bold me-2" style="width: 80px;">No. Doc. :</span>
+                            <input asp-for="DocumentNumber" class="form-report-input border-0 bg-transparent flex-grow-1" />
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="small fw-bold me-2" style="width: 80px;">Date :</span>
+                            <input asp-for="EffectiveDate" type="date" class="form-report-input border-0 bg-transparent flex-grow-1" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="small fw-bold me-2" style="width: 80px;">Shift :</span>
+                            <select name="Shift" class="form-report-input border-0 bg-transparent flex-grow-1">
+                                <option>1 (SIANG)</option>
+                                <option>2 (MALAM)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="p-2 border-end border-dark border-2" style="flex: 1 1 300px;">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="small fw-bold me-2" style="width: 100px;">Cust. :</span>
+                            <input asp-for="CustomerName" class="form-report-input border-0 bg-transparent flex-grow-1" placeholder="..." />
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="small fw-bold me-2" style="width: 100px;">Item / PN :</span>
+                            <input asp-for="ProductCode" class="form-report-input border-0 bg-transparent flex-grow-1 fw-bold text-primary" placeholder="Scan Item..." />
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="small fw-bold me-2" style="width: 100px;">Tipe Hose :</span>
+                            <input asp-for="HoseType" class="form-report-input border-0 bg-transparent flex-grow-1" placeholder="..." />
+                        </div>
+                    </div>
+                    <div class="p-2" style="flex: 1 1 200px;">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="small fw-bold me-2">No. Rev. :</span>
+                            <input asp-for="RevisionNumber" class="form-report-input border-0 bg-transparent flex-grow-1 text-center" />
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="small fw-bold me-2">Dimensi :</span>
+                            <input asp-for="Diameter" class="form-report-input border-0 bg-transparent flex-grow-1 text-center" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN PRODUCTION TABLE -->
+                <div class="report-table-wrapper">
+                    <table class="report-table w-100">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">No</th>
+                                <th style="width: 180px;">Parameter</th>
+                                <th style="width: 120px;">Standard</th>
+                                <th style="width: 120px;">Actual (Initial)</th>
+                                <th colspan="5">Periodic Checks (1, 2, 3, 4, 5)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- MATERIAL SECTION -->
+                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">I. MATERIAL</td></tr>
+                            <tr>
+                                <td class="text-center">1</td>
+                                <td>Material Inner</td>
+                                <td><input asp-for="InnerMaterial" class="table-input" /></td>
+                                <td><input name="ActualInner" class="table-input" /></td>
+                                <td colspan="5"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">2</td>
+                                <td>Material Outer</td>
+                                <td><input asp-for="OuterMaterial" class="table-input" /></td>
+                                <td><input name="ActualOuter" class="table-input" /></td>
+                                <td colspan="5"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">3</td>
+                                <td>Yarn / Benang</td>
+                                <td><input asp-for="YarnType" class="table-input" /></td>
+                                <td><input name="ActualYarn" class="table-input" /></td>
+                                <td colspan="5"></td>
+                            </tr>
+
+                            <!-- DIES DIMENSION -->
+                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">II. DIES DIMENSION (mm)</td></tr>
+                            <tr>
+                                <td class="text-center">4</td>
+                                <td>Nipple Die</td>
+                                <td><input asp-for="InnerDie" class="table-input" /></td>
+                                <td><input name="ActualNipple" class="table-input" /></td>
+                                <td colspan="5"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">5</td>
+                                <td>Tube Die</td>
+                                <td><input asp-for="TubeDie" class="table-input" /></td>
+                                <td><input name="ActualTubeDie" class="table-input" /></td>
+                                <td colspan="5"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">6</td>
+                                <td>Cover Die</td>
+                                <td><input asp-for="CoverDie" class="table-input" /></td>
+                                <td><input name="ActualCoverDie" class="table-input" /></td>
+                                <td colspan="5"></td>
+                            </tr>
+
+                            <!-- INNER TUBE -->
+                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">III. INNER (TUBE 1)</td></tr>
+                            <tr>
+                                <td class="text-center">7</td>
+                                <td>Head Temp. (°C)</td>
+                                <td><input asp-for="HeadTemp" class="table-input" /></td>
+                                <td><input name="ActualHeadTemp" class="table-input" /></td>
+                                <td title="S1"><input class="table-input" /></td>
+                                <td title="S2"><input class="table-input" /></td>
+                                <td title="S3"><input class="table-input" /></td>
+                                <td title="S4"><input class="table-input" /></td>
+                                <td title="S5"><input class="table-input" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">8</td>
+                                <td>Cylinder 1 Temp. (°C)</td>
+                                <td><input asp-for="Cylinder1Temp" class="table-input" /></td>
+                                <td><input name="ActualCyl1" class="table-input" /></td>
+                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">9</td>
+                                <td>Cylinder 2 Temp. (°C)</td>
+                                <td><input asp-for="Cylinder2Temp" class="table-input" /></td>
+                                <td><input name="ActualCyl2" class="table-input" /></td>
+                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">10</td>
+                                <td>Screw Speed (rpm)</td>
+                                <td><input asp-for="ScrewSpeed" class="table-input" /></td>
+                                <td><input name="ActualScrewSpeed" class="table-input" /></td>
+                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">11</td>
+                                <td>Pressure (MPa)</td>
+                                <td><input asp-for="Pressure" class="table-input" /></td>
+                                <td><input name="ActualPressure" class="table-input" /></td>
+                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
+                            </tr>
+
+                            <!-- OTHER -->
+                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">IV. OTHERS</td></tr>
+                            <tr>
+                                <td class="text-center">12</td>
+                                <td>Chiller Water Temp (°C)</td>
+                                <td><input asp-for="ChillerWaterTemp" class="table-input" /></td>
+                                <td><input name="ActualChiller" class="table-input" /></td>
+                                <td></td><td></td><td></td><td></td><td></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">13</td>
+                                <td>Take-up Conveyor (m/min)</td>
+                                <td><input asp-for="TakeupConveyorSpeed" class="table-input" /></td>
+                                <td><input name="ActualTakeUp" class="table-input" /></td>
+                                <td></td><td></td><td></td><td></td><td></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">14</td>
+                                <td>Marking Color</td>
+                                <td><input asp-for="MarkingMaterialColor" class="table-input" /></td>
+                                <td><input name="ActualMarking" class="table-input" /></td>
+                                <td colspan="5"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FOOTER AREA -->
+                <div class="report-footer p-2 border-top border-dark border-2">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="small fw-bold">Note:</label>
+                            <textarea class="form-control border-0 bg-transparent small" rows="2" placeholder="Lakukan pengecekan parameter pada saat awal, tengah & akhir proses."></textarea>
+                        </div>
+                        <div class="col-md-4 text-end d-flex align-items-end justify-content-end">
+                            <div class="me-3 text-center">
+                                <div class="small fw-bold">Operator</div>
+                                <div style="height: 50px;"></div>
+                                <div class="small">( ............... )</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-5 d-flex justify-content-end gap-3 no-print">
+                <a asp-action="Index" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                    <i class="bi bi-x-lg"></i> Batal
+                </a>
+                <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow">
+                    <i class="bi bi-check-circle me-2"></i> Simpan Laporan Produksi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .report-paper {
+        background-color: white;
+        color: black;
+        padding: 0;
+        border: 2px solid #000;
+        font-family: 'Arial', sans-serif;
+        min-height: 1000px;
+    }
+    .form-report-input {
+        outline: none;
+        border-bottom: 1px dotted #555 !important;
+        padding: 0 5px;
+    }
+    .report-table {
+        border-collapse: collapse;
+    }
+    .report-table th, .report-table td {
+        border: 1px solid #000;
+        padding: 4px;
+        font-size: 11px;
+    }
+    .report-table th {
+        background-color: #f0f0f0;
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+    .table-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: center;
+        outline: none;
+        font-size: 12px;
+    }
+    .table-input:focus {
+        background: #fdfd96;
+    }
+    .section-row td {
+        background-color: #eee !important;
+    }
+    
+    @@media print {
+        .bg-glass, .no-print, #scanner-container { display: none !important; }
+        body { background: white !important; }
+        .report-paper { border: none; box-shadow: none; margin: 0; padding: 0; }
+    }
+</style>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        let html5QrCode;
+
+        function startScanner() {
+            document.getElementById('scanner-container').style.display = 'block';
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+                .catch(err => {
+                    console.error("Scanner Error:", err);
+                    Swal.fire('Error', 'Gagal mengakses kamera: ' + err, 'error');
+                });
+        }
+
+        function stopScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('scanner-container').style.display = 'none';
+                });
+            }
+        }
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            console.log("Scanned:", decodedText);
+            stopScanner();
+            
+            // Masukkan kode ke input ProductCode
+            document.getElementById('ProductCode').value = decodedText;
+            
+            // Audio feedback
+            try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play(); } catch(e){}
+
+            // Cari data standar ke backend
+            Swal.fire({
+                title: 'Mencari Standar...',
+                text: 'Mengambil data dari SPS Masterlist untuk ' + decodedText,
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch(`/StandardParameterSetting/GetMasterDataByItem?itemCode=${encodeURIComponent(decodedText)}`);
+                const data = await response.json();
+
+                if (data) {
+                    fillForm(data);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Ditemukan',
+                        text: 'Standar parameter untuk ' + decodedText + ' telah diisi otomatis.',
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tidak Ditemukan',
+                        text: 'Item ' + decodedText + ' tidak ada di Masterlist SPS.'
+                    });
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+            }
+        }
+
+        function fillForm(data) {
+            const setV = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val || '';
+            };
+
+            // Mapping Data Masterlist ke Form
+            setV('CustomerName', data.customer);
+            setV('HoseType', data.hoseType);
+            setV('DocumentNumber', data.documentNumber);
+            setV('RevisionNumber', data.revisionNumber);
+            setV('Diameter', data.dimensi);
+            setV('ProductCode', data.itemList);
+            
+            // Materials
+            setV('InnerMaterial', data.innerTube || data.material);
+            setV('OuterMaterial', data.outerCover);
+            
+            // Dies (Numeric)
+            setV('InnerDie', data.nipple);
+            setV('TubeDie', data.tubeDie);
+            setV('CoverDie', data.coverDie);
+            
+            // Temperatures & Speeds (Numeric/Int)
+            setV('HeadTemp', parseInt(data.headTemp1) || 0);
+            setV('Cylinder1Temp', parseInt(data.cylinder1_1) || 0);
+            setV('Cylinder2Temp', parseInt(data.cylinder2_1) || 0);
+            setV('ScrewSpeed', parseFloat(data.screwSpeed1) || 0);
+            setV('Pressure', parseFloat(data.pressure1) || 0);
+            
+            setV('ChillerWaterTemp', data.chillerWaterTemp);
+            setV('TakeupConveyorSpeed', data.takeUpConveyorSpeed);
+            setV('MarkingMaterialColor', data.markingColour);
+            
+            // Optional fields
+            setV('MeshScreen', data.meshScreen1);
+        }
+    </script>
+}

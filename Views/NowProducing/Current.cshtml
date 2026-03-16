@@ -1,0 +1,240 @@
+@model VelastoProductionSystem.Models.NowProducing
+
+@{
+    ViewData["Title"] = "Now Producing - Current Production";
+}
+
+<div class="production-view">
+    @if (Model == null)
+    {
+        <div class="card tactical-glass animate-fadeInUp">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-info-circle text-info fs-1 mb-4"></i>
+                <h3 class="text-white">Tidak ada produksi yang sedang berjalan</h3>
+                <p class="text-white-50 mb-4">Silakan mulai produksi baru melalui halaman dashboard atau link di bawah ini.</p>
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-plus-circle me-2"></i> Start New Production
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card tactical-glass animate-fadeInUp">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="production-header-title">
+                    <i class="bi bi-play-circle-fill me-2" style="font-size: 0.8em; vertical-align: middle; -webkit-text-fill-color: var(--velasto-blue);"></i>
+                    NOW I'M PRODUCE
+                </h4>
+                <div class="no-print d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn tactical-btn tactical-btn-warning">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-light tactical-btn">
+                        <i class="bi bi-printer me-1"></i> Print
+                    </button>
+                    @if (Model?.ProductionEndTime == null)
+                    {
+                        <form asp-action="Complete" asp-route-id="@Model?.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success tactical-btn" onclick="return confirm('Selesaikan produksi ini?')">
+                                <i class="bi bi-check-circle me-1"></i> Complete
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4 mb-5">
+                    <!-- Left Info Column -->
+                    <div class="col-lg-6">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="info-chip-tactical">
+                                    <span class="data-label-tactical">1. Hose Type</span>
+                                    <span class="data-value-tactical text-truncate">@(Model?.HoseType ?? "-")</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-chip-tactical">
+                                    <span class="data-label-tactical">Date</span>
+                                    <span class="data-value-tactical">@(Model?.ProductionDate.ToString("dd MMM yyyy") ?? "-")</span>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="info-chip-tactical">
+                                    <span class="data-label-tactical">2. Class</span>
+                                    <span class="data-value-tactical">@(Model.Class ?? "-")</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-chip-tactical border-start border-primary border-3">
+                                    <span class="data-label-tactical">3. Dimension</span>
+                                    <span class="data-value-tactical">@(Model?.Dimension ?? "-")</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-chip-tactical border-start border-info border-3">
+                                    <span class="data-label-tactical">4. Yarn</span>
+                                    <span class="data-value-tactical text-truncate">@(Model?.Yarn ?? "-")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Performance Table -->
+                    <div class="col-lg-6">
+                        <div class="performance-container">
+                            <h6 class="text-center text-uppercase fw-bold mb-4 opacity-50 small" style="letter-spacing: 2px;">Dandori & Production Time</h6>
+                            <table class="time-table-tactical text-center">
+                                <thead>
+                                    <tr>
+                                        <th class="text-start">Process</th>
+                                        <th>Starting</th>
+                                        <th>Ending</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold text-start text-white-50">Dandori</td>
+                                        <td>@Model.DandoriStartProdTime?.ToString("HH:mm")</td>
+                                        <td>@Model.DandoriEndProdTime?.ToString("HH:mm")</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-start text-white-50">Production</td>
+                                        <td>@Model.ProductionStartTime?.ToString("HH:mm")</td>
+                                        <td>
+                                            @if (Model.ProductionEndTime != null)
+                                            {
+                                                @Model.ProductionEndTime?.ToString("HH:mm")
+                                            }
+                                            else
+                                            {
+                                                <span class="running-glow">Running...</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material Section -->
+                <h5 class="text-uppercase fw-bold mb-4 d-flex align-items-center" style="letter-spacing: 2px;">
+                    <span class="me-3">Material</span>
+                    <hr class="flex-grow-1 opacity-25">
+                </h5>
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="card material-card-tactical inner">
+                            <div class="card-header">1) Inner</div>
+                            <div class="info-row">
+                                <span class="data-label-tactical">Material</span>
+                                <span class="data-value-tactical text-info">@Model.MaterialInner</span>
+                                <hr class="my-2 opacity-10">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <span class="data-label-tactical">No. Lot</span>
+                                        <span class="data-value-tactical fs-6">@Model.MaterialInnerLotNo</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="data-label-tactical">SG</span>
+                                        <span class="data-value-tactical fs-6">@Model.MaterialInnerSG</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.MaterialMiddle))
+                    {
+                        <div class="col-md-4">
+                            <div class="card material-card-tactical middle">
+                                <div class="card-header">2) Middle</div>
+                                <div class="info-row">
+                                    <span class="data-label-tactical">Material</span>
+                                    <span class="data-value-tactical text-warning">@Model.MaterialMiddle</span>
+                                    <hr class="my-2 opacity-10">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <span class="data-label-tactical">No. Lot</span>
+                                            <span class="data-value-tactical fs-6">@Model.MaterialMiddleLotNo</span>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="data-label-tactical">SG</span>
+                                            <span class="data-value-tactical fs-6">@Model.MaterialMiddleSG</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    
+                    <div class="col-md-4">
+                        <div class="card material-card-tactical outer">
+                            <div class="card-header">3) Outer</div>
+                            <div class="info-row">
+                                <span class="data-label-tactical">Material</span>
+                                <span class="data-value-tactical text-success">@Model.MaterialOuter</span>
+                                <hr class="my-2 opacity-10">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <span class="data-label-tactical">No. Lot</span>
+                                        <span class="data-value-tactical fs-6">@Model.MaterialOuterLotNo</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="data-label-tactical">SG</span>
+                                        <span class="data-value-tactical fs-6">@Model.MaterialOuterSG</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Section: SPV Check & Notes -->
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="spv-glow-container @(Model.SPVCheck ? "checked" : "")">
+                            @if (Model.SPVCheck)
+                            {
+                                <i class="bi bi-check-circle-fill spv-icon-glow text-success"></i>
+                                <h4 class="text-white fw-bold mb-1">SUPERVISOR CHECKED</h4>
+                                <p class="text-success opacity-75 mb-0">Production is authorized to continue.</p>
+                            }
+                            else
+                            {
+                                <i class="bi bi-clock-history spv-icon-glow text-warning animate-pulse"></i>
+                                <h4 class="text-white fw-bold mb-1">WAITING FOR SPV CHECK</h4>
+                                <p class="text-warning opacity-75 mb-0">Awaiting supervisor verification.</p>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="h-100 p-4 rounded-4 bg-danger bg-opacity-10 border border-danger border-opacity-20">
+                            <span class="data-label-tactical text-danger opacity-100 d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> IMPORTANT NOTE
+                            </span>
+                            <p class="text-white small mt-3" style="line-height: 1.6;">
+                                JANGAN MENJALANKAN PRODUKSI SEBELUM CHECKSHEET INI DI CHECK OLEH SUPERVISOR.
+                            </p>
+                            <p class="text-white-50 x-small mt-2" style="font-size: 0.75rem;">
+                                Pastikan semua parameter sesuai dengan Standard Parameter Setting (SPS) sebelum melapor ke Supervisor.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-4 no-print d-flex justify-content-between align-items-center">
+        <a asp-action="Index" class="btn btn-dark rounded-pill px-4 border border-white border-opacity-10">
+            <i class="bi bi-arrow-left me-2"></i> Back to List
+        </a>
+        <div class="text-white-50 small">
+            <i class="bi bi-shield-lock me-1"></i> Velasto Secure Production System v4.0
+        </div>
+    </div>
+</div>

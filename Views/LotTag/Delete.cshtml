@@ -1,0 +1,45 @@
+@model VelastoProductionSystem.Models.LotTag
+
+@{
+    ViewData["Title"] = "Delete Lot Tag";
+}
+
+<div class="row">
+    <div class="col-md-6 mx-auto text-center">
+        <div class="card border-danger py-4">
+            <div class="card-body">
+                <div class="mb-4">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="mb-3">Hapus Lot Tag?</h3>
+                <p class="text-muted mb-4">
+                    Apakah Anda yakin ingin menghapus Lot Tag <strong>@Model.LotTagNumber</strong>?<br>
+                    Tindakan ini tidak dapat dibatalkan.
+                </p>
+
+                <div class="mb-4 p-3 bg-glass border rounded text-start">
+                    <div class="row">
+                        <div class="col-6 text-muted">Part Number:</div>
+                        <div class="col-6">@Model.PartNumber</div>
+                        <div class="col-6 text-muted">Target Qty:</div>
+                        <div class="col-6">@Model.TargetQty PCS</div>
+                        <div class="col-6 text-muted">Created By:</div>
+                        <div class="col-6">@Model.CreatedBy</div>
+                    </div>
+                </div>
+
+                <form asp-action="Delete">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="bi bi-trash"></i> Hapus Sekarang
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle"></i> Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

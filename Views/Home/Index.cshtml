@@ -1,0 +1,228 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- Decorative Blobs -->
+<div class="decoration-blob blob-1"></div>
+<div class="decoration-blob blob-2"></div>
+
+<!-- Dashboard Header -->
+<div class="dashboard-header mb-5 animate-fadeInUp">
+    <div>
+        <h1 class="dashboard-title">
+            Production Dashboard
+        </h1>
+        <p class="dashboard-subtitle">
+            <i class="bi bi-cpu"></i> Real-time monitoring & control - PT. Velasto Indonesia Manufacturing Facility 4
+        </p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-1">
+        <div class="card stat-card blue h-100">
+            <a asp-controller="ProductionReport" asp-action="Index" class="stretched-link"></a>
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="stat-icon" style="background: rgba(0, 102, 255, 0.15);">
+                        <i class="bi bi-clipboard2-pulse" style="color: var(--velasto-blue);"></i>
+                    </div>
+                    <div class="d-flex flex-column align-items-center">
+                        <h2 class="stat-number mb-0">@ViewBag.TotalProductions</h2>
+                        <p class="stat-label mb-0">Reports</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="stat-desc">Kelola dan tinjau laporan parameter produk.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-2">
+        <div class="card stat-card green h-100">
+            <a asp-controller="NowProducing" asp-action="Current" class="stretched-link"></a>
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15);">
+                        <i class="bi bi-play-fill" style="color: #10b981;"></i>
+                    </div>
+                    <div class="d-flex flex-column align-items-center">
+                        <h2 class="stat-number mb-0">@ViewBag.ActiveProductions</h2>
+                        <p class="stat-label mb-0">Active</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="stat-desc">Pantau proses produksi yang sedang berjalan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-3">
+        <div class="card stat-card cyan h-100">
+            <a asp-controller="ProductionReport" asp-action="Index" class="stretched-link"></a>
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15);">
+                        <i class="bi bi-calendar3-event" style="color: #3b82f6;"></i>
+                    </div>
+                    <div class="d-flex flex-column align-items-center">
+                        <h2 class="stat-number mb-0">@ViewBag.TodayProductions</h2>
+                        <p class="stat-label mb-0">Today</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="stat-desc">Ringkasan hasil produksi untuk hari ini.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-4">
+        <div class="card stat-card gold h-100">
+            <a asp-controller="LotTag" asp-action="Index" class="stretched-link"></a>
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="stat-icon" style="background: rgba(251, 191, 36, 0.15);">
+                        <i class="bi bi-ui-checks" style="color: #fbbf24;"></i>
+                    </div>
+                    <div class="d-flex flex-column align-items-center">
+                        <h2 class="stat-number mb-0">@ViewBag.TotalLotTags</h2>
+                        <p class="stat-label mb-0">Lot Tags</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="stat-desc">Manajemen penomoran lot dan identifikasi.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions & System Info -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-7 animate-fadeInUp delay-3">
+        <div class="card h-100 glass-panel">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-lightning-charge-fill me-2"></i> Quick Actions</span>
+                <span class="badge bg-primary rounded-pill">Productivity</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="quick-actions">
+                    <a asp-controller="NowProducing" asp-action="Create" class="quick-action-item qa-green">
+                        <div class="qa-icon-wrap">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="action-title">Start New Production</div>
+                            <small class="action-desc">Initialize production tracking & monitoring</small>
+                        </div>
+                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </a>
+
+                    <a asp-controller="ProductionReport" asp-action="Create" class="quick-action-item qa-blue">
+                        <div class="qa-icon-wrap">
+                            <i class="bi bi-file-earmark-plus"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="action-title">Create Production Report</div>
+                            <small class="action-desc">Document production parameters & readings</small>
+                        </div>
+                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </a>
+
+                    <a asp-controller="LotTag" asp-action="Create" class="quick-action-item qa-gold">
+                        <div class="qa-icon-wrap">
+                            <i class="bi bi-tags-fill"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="action-title">Generate Lot Tag</div>
+                            <small class="action-desc">Create product identification label</small>
+                        </div>
+                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </a>
+
+                    <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="quick-action-item qa-red">
+                        <div class="qa-icon-wrap">
+                            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="action-title">SPS Excel Master</div>
+                            <small class="action-desc">Import &amp; sync masterlist SPS double layer</small>
+                        </div>
+                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 animate-fadeInUp delay-4">
+        <div class="card h-100 glass-panel">
+            <div class="card-header">
+                <i class="bi bi-grid-3x3-gap-fill me-2"></i> System Directory
+            </div>
+            <div class="card-body p-4">
+                <div class="dir-grid">
+                    <a asp-controller="StandardParameterSetting" asp-action="Index" class="dir-card">
+                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(0,102,255,0.25), rgba(0,102,255,0.05)); border: 1px solid rgba(0,102,255,0.3);">
+                            <i class="bi bi-sliders2" style="color: #60a5fa;"></i>
+                        </div>
+                        <div class="dir-label">Param. Setting</div>
+                        <div class="dir-sub">Master SPS</div>
+                    </a>
+                    <a asp-controller="NowProducing" asp-action="Current" class="dir-card">
+                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.05)); border: 1px solid rgba(16,185,129,0.3);">
+                            <i class="bi bi-play-circle-fill" style="color: #34d399;"></i>
+                        </div>
+                        <div class="dir-label">Now Producing</div>
+                        <div class="dir-sub">Live Monitor</div>
+                    </a>
+                    <a asp-controller="ProductionReport" asp-action="Index" class="dir-card">
+                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.05)); border: 1px solid rgba(59,130,246,0.3);">
+                            <i class="bi bi-clipboard2-data-fill" style="color: #93c5fd;"></i>
+                        </div>
+                        <div class="dir-label">Prod. Report</div>
+                        <div class="dir-sub">All Reports</div>
+                    </a>
+                    <a asp-controller="LotTag" asp-action="Index" class="dir-card">
+                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(251,191,36,0.25), rgba(251,191,36,0.05)); border: 1px solid rgba(251,191,36,0.3);">
+                            <i class="bi bi-qr-code" style="color: #fcd34d;"></i>
+                        </div>
+                        <div class="dir-label">Lot Tag</div>
+                        <div class="dir-sub">QC &amp; Tags</div>
+                    </a>
+                    <a asp-controller="PackingStandard" asp-action="Index" class="dir-card">
+                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(168,85,247,0.05)); border: 1px solid rgba(168,85,247,0.3);">
+                            <i class="bi bi-box-seam-fill" style="color: #c084fc;"></i>
+                        </div>
+                        <div class="dir-label">Packing Std</div>
+                        <div class="dir-sub">Standards</div>
+                    </a>
+                    <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="dir-card">
+                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.05)); border: 1px solid rgba(239,68,68,0.3);">
+                            <i class="bi bi-file-earmark-spreadsheet-fill" style="color: #f87171;"></i>
+                        </div>
+                        <div class="dir-label">SPS Master</div>
+                        <div class="dir-sub">Excel Import</div>
+                    </a>
+                </div>
+
+                <div class="plant-badge mt-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.3); width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            <i class="bi bi-building-fill-check" style="color: #60a5fa; font-size: 1.4rem;"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-white">PT. Velasto Indonesia</h6>
+                            <p class="mb-0 small" style="color: rgba(255,255,255,0.45);">Plant 2504 &mdash; Tango Factory &bull; Est. 2004</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

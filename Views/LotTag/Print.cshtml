@@ -1,0 +1,243 @@
+@model VelastoProductionSystem.Models.LotTag
+
+@{
+    ViewData["Title"] = "Print Lot Tag";
+    Layout = "_Layout";
+}
+
+<style>
+    @@media print {
+        body {
+            font-size: 11pt;
+        }
+        .lot-tag-container {
+            page-break-inside: avoid;
+        }
+        .barcode {
+            border: 2px solid #000;
+            padding: 5px;
+            text-align: center;
+            font-family: 'Libre Barcode 39', cursive;
+            font-size: 48pt;
+        }
+    }
+    
+    .lot-tag-container {
+        border: 3px solid #000;
+        padding: 20px;
+        background: white;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .velasto-logo {
+        color: #003D82;
+        font-weight: bold;
+        font-size: 24pt;
+    }
+    
+    .header-table {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .header-table td {
+        padding: 5px;
+        border: 1px solid #000;
+    }
+    
+    .content-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .content-table td, .content-table th {
+        border: 1px solid #000;
+        padding: 8px;
+    }
+    
+    .barcode {
+        border: 2px solid #000;
+        padding: 10px;
+        text-align: center;
+        font-family: 'Libre Barcode 128', cursive;
+        font-size: 48pt;
+        margin: 10px 0;
+    }
+    
+    .barcode-text {
+        font-family: 'Courier New', monospace;
+        font-size: 12pt;
+        letter-spacing: 2px;
+    }
+</style>
+
+<div class="no-print mb-3">
+    <button onclick="window.print()" class="btn btn-velasto">
+        <i class="bi bi-printer"></i> Print Lot Tag
+    </button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="lot-tag-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="velasto-logo">
+            <div style="display: flex; align-items: center;">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #003D82 50%, #E30613 50%); margin-right: 10px;"></div>
+                <div>
+                    <div style="font-size: 28pt; line-height: 0.9;">VELASTO</div>
+                    <div style="font-size: 9pt; letter-spacing: 3px;">INDONESIA</div>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; flex-grow: 1;">
+            <h2 style="margin: 0; padding: 10px; border: 2px solid #000;"><strong>LOT TAG HOSE</strong></h2>
+        </div>
+        <div style="text-align: right;">
+            <div style="border: 2px solid #000; padding: 5px; min-width: 150px;">
+                <strong>Lot Number</strong><br>
+                <div class="barcode-text">@Model.LotTagNumber</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Information -->
+    <table class="header-table">
+        <tr>
+            <td width="15%"><strong>Lot Tag No</strong></td>
+            <td width="35%">: <strong>@Model.LotTagNumber</strong></td>
+            <td width="15%"><strong>Plant</strong></td>
+            <td width="35%">: @Model.Plant</td>
+        </tr>
+        <tr>
+            <td><strong>Part Number</strong></td>
+            <td colspan="3">: <strong>@Model.PartNumber</strong><br>
+                <small>@Model.PartDescription</small>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Target Qty</strong></td>
+            <td>: <strong>@Model.TargetQty PCS</strong></td>
+            <td><strong>Lot Packaging</strong></td>
+            <td>: <strong>@Model.LotPackaging PCS</strong></td>
+        </tr>
+    </table>
+
+    <!-- Compound Information -->
+    <table class="content-table">
+        <tr>
+            <th width="20%">Compound</th>
+            <th width="30%">@Model.CompoundCode</th>
+            <th width="25%" colspan="2"></th>
+            <th width="25%" colspan="2" style="text-align: center;"><strong>Daftar Komponen</strong></th>
+        </tr>
+        <tr>
+            <th>Bom Text</th>
+            <td colspan="3"></td>
+            <th width="10%">Prc</th>
+            <th><strong>Komponen</strong></th>
+        </tr>
+        <tr>
+            <th>Qty</th>
+            <td><strong>@(Model.CompoundQty?.ToString("F2")) KG</strong></td>
+            <td colspan="2"></td>
+            <td>EH</td>
+            <td>@Model.DaftarKomponen</td>
+        </tr>
+        <tr>
+            <th>No Lot</th>
+            <td colspan="3">@Model.NoLot</td>
+            <td>EH</td>
+            <td></td>
+        </tr>
+    </table>
+
+    <!-- Barcode -->
+    <div class="barcode">
+        <div>||||| |||| | ||| | |||| |||</div>
+        <div class="barcode-text" style="font-size: 14pt;">@Model.PartNumber</div>
+    </div>
+
+    <!-- Quality Check Section -->
+    <table class="content-table">
+        <tr style="background-color: #f0f0f0;">
+            <th width="20%">Subcon</th>
+            <th width="20%">@(Model.SubconCheck ?? "EH")</th>
+            <td colspan="4"></td>
+        </tr>
+        <tr>
+            <th>Mesin</th>
+            <th>@Model.MesinCheck</th>
+            <td colspan="4"></td>
+        </tr>
+        <tr>
+            <th>Tanggal</th>
+            <th>@Model.TanggalCheck?.ToString("dd/MM/yyyy")</th>
+            <td colspan="4"></td>
+        </tr>
+        <tr style="background-color: #90EE90;">
+            <th>Qty OK</th>
+            <th><strong>@(Model.QtyOK?.ToString() ?? "")</strong></th>
+            <td colspan="4"></td>
+        </tr>
+        <tr style="background-color: #FFB6C1;">
+            <th>Qty NG</th>
+            <th><strong>@(Model.QtyNG?.ToString() ?? "")</strong></th>
+            <td colspan="4"></td>
+        </tr>
+    </table>
+
+    <!-- Footer -->
+    <div style="margin-top: 10px; font-size: 8pt;">
+        <p>Printed date: @DateTime.Now.ToString("dd.MM.yyyy / HH:mm:ss") | Last printed date: @(Model.LastPrintedDate?.ToString("dd.MM.yyyy / HH:mm:ss") ?? "N/A")</p>
+        <p>Print Count: @Model.PrintCount</p>
+    </div>
+</div>
+
+<!-- Duplicate Side Tag -->
+<div class="lot-tag-container mt-4" style="max-width: 400px; float: right;">
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
+        <div class="velasto-logo" style="font-size: 18pt;">VELASTO</div>
+        <h4><strong>LOT TAG HOSE</strong></h4>
+    </div>
+    
+    <table style="width: 100%; font-size: 10pt;">
+        <tr>
+            <td><strong>Plant</strong></td>
+            <td colspan="2">@Model.Plant</td>
+        </tr>
+        <tr>
+            <td><strong>Lot Tag No</strong></td>
+            <td colspan="2"><strong>@Model.LotTagNumber</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Part Number</strong></td>
+            <td colspan="2">@Model.PartNumber<br><small>@Model.PartDescription</small></td>
+        </tr>
+        <tr>
+            <td><strong>Quantity</strong></td>
+            <td colspan="2"><strong>@Model.TargetQty PCS</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Lot Packaging</strong></td>
+            <td colspan="2"><strong>@Model.LotPackaging PCS</strong></td>
+        </tr>
+    </table>
+    
+    <div class="barcode" style="margin-top: 15px; font-size: 36pt;">
+        <div>||||| |||| | ||| |</div>
+        <div class="barcode-text" style="font-size: 10pt;">Lot Number</div>
+    </div>
+</div>
+
+<div style="clear: both;"></div>
+
+@section Scripts {
+    <script>
+        // Auto print jika diperlukan
+        // window.print();
+    </script>
+}

@@ -1,0 +1,258 @@
+@model VelastoProductionSystem.Models.StandardParameterSetting
+
+@{
+    ViewData["Title"] = "Edit Standard Parameter Setting";
+}
+
+<div class="row fade-in">
+    <div class="col-md-11 mx-auto">
+        <form asp-action="Edit" id="mainForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h3 class="mb-0 text-white fw-bold"><i class="bi bi-gear-wide-connected"></i> Standard Parameter Setting (SPS)</h3>
+                    <div class="text-white-50 small mt-1">Pengaturan Parameter Standar Extruder Form</div>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-clock"></i> @DateTime.Now.ToString("dd MMM yyyy")</span>
+                </div>
+            </div>
+
+            <!-- INFORMASI DOKUMEN -->
+            <div class="card mb-4 border-0 shadow-lg bg-glass" style="backdrop-filter: blur(10px); background: rgba(25, 30, 40, 0.7); border-radius: 15px;">
+                <div class="card-header bg-transparent border-bottom border-primary py-3">
+                    <h6 class="mb-0 text-primary fw-bold"><i class="bi bi-file-earmark-text me-2"></i> INFORMASI DOKUMEN & PRODUCE</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label asp-for="DocumentNumber" class="form-label text-white-50 small fw-bold">NO. DOKUMEN</label>
+                            <input asp-for="DocumentNumber" class="form-control bg-dark text-white border-secondary" placeholder="TBD..." />
+                            <span asp-validation-for="DocumentNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="RevisionNumber" class="form-label text-white-50 small fw-bold">NO. REVISI</label>
+                            <input asp-for="RevisionNumber" class="form-control bg-dark text-white border-secondary text-center" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="CustomerName" class="form-label text-white-50 small fw-bold">NAMA CUSTOMER</label>
+                            <input asp-for="CustomerName" class="form-control bg-dark text-white border-secondary" placeholder="Nama..." />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="EffectiveDate" class="form-label text-warning small fw-bold">TANGGAL EFEKTIF</label>
+                            <input asp-for="EffectiveDate" class="form-control bg-dark text-warning border-warning" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="HoseType" class="form-label text-white-50 small fw-bold">TIPE HOSE</label>
+                            <input asp-for="HoseType" class="form-control bg-dark text-white border-secondary" placeholder="Tipe..." />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Diameter" class="form-label text-white-50 small fw-bold">DIAMETER</label>
+                            <input asp-for="Diameter" class="form-control bg-dark text-white border-secondary" placeholder="Dimensi target" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="ProductCode" class="form-label text-white-50 small fw-bold">PART NUMBER / KODE</label>
+                            <input asp-for="ProductCode" class="form-control bg-dark text-white border-secondary fw-bold" placeholder="Kode..." />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="LayerType" class="form-label text-white-50 small fw-bold">TIPE LAYER</label>
+                            <select asp-for="LayerType" class="form-select bg-dark text-white border-secondary">
+                                <option value="2 Layer">2 Layer</option>
+                                <option value="1 Layer">1 Layer</option>
+                                <option value="3 Layer">3 Layer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="InnerMaterial" class="form-label text-white-50 small fw-bold">MATERIAL INNER</label>
+                            <input asp-for="InnerMaterial" class="form-control bg-dark text-info border-secondary" placeholder="Material..." />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="OuterMaterial" class="form-label text-white-50 small fw-bold">MATERIAL OUTER</label>
+                            <input asp-for="OuterMaterial" class="form-control bg-dark text-warning border-secondary" placeholder="Material..." />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="YarnType" class="form-label text-white-50 small fw-bold">TIPE YARN / BENANG</label>
+                            <input asp-for="YarnType" class="form-control bg-dark text-success border-secondary" placeholder="Yarn..." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- DIE & KOMPONEN -->
+                <div class="col-lg-6">
+                    <div class="card h-100 border-0 shadow-lg bg-glass" style="backdrop-filter: blur(10px); background: rgba(25, 30, 40, 0.7); border-radius: 15px;">
+                        <div class="card-header bg-transparent border-bottom border-success py-3">
+                            <h6 class="mb-0 text-success fw-bold"><i class="bi bi-record-circle me-2"></i> DIE SETTINGS (mm)</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3">
+                                <div class="col-md-6"><label class="text-white-50 small fw-bold">Nipple Die / Inner</label><input asp-for="InnerDie" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-6"><label class="text-white-50 small fw-bold">Outer Die / Ring</label><input asp-for="OuterDie" class="form-control bg-dark text-white border-secondary" /></div>
+                                
+                                <div class="col-md-12 mt-3 mb-2"><hr class="border-secondary m-0"/></div>
+
+                                <!-- Toleranced Dies -->
+                                @{ var dies = new[] { ("TubeDie", "Tol_TubeDie", "Tube Die"), ("MiddleDie", "Tol_MiddleDie", "Middle Die"), ("OuterDie", "Tol_OuterDie", "Outer/Ring Target"), ("CoverDie", "Tol_CoverDie", "Cover Die") }; }
+                                @foreach(var d in dies)
+                                {
+                                    <div class="col-md-12">
+                                        <label class="text-white-50 small fw-bold mb-1">@d.Item3</label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" id="@d.Item1" name="@d.Item1" class="form-control text-center bg-dark text-white border-secondary base-input" placeholder="0.0" />
+                                            <span class="input-group-text bg-secondary text-white border-secondary">±</span>
+                                            <input type="number" step="0.01" id="@d.Item2" name="@d.Item2" class="form-control text-center bg-dark text-light border-secondary tol-input" placeholder="0.0" />
+                                            <span class="input-group-text bg-primary border-primary text-white result-display" style="min-width: 100px;">0.0 ~ 0.0</span>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                <div class="col-md-6 mt-3"><label class="text-white-50 small fw-bold">Spacer Die</label><input asp-for="SpacerDie" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-6 mt-3"><label class="text-white-50 small fw-bold">Tolerance Die</label><input asp-for="ToleranceDie" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-12 mt-3"><label class="text-info small fw-bold">Mesh Screen</label><input asp-for="MeshScreen" class="form-control bg-dark text-white border-info" placeholder="#10, #20..." /></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUHU & KECEPATAN -->
+                <div class="col-lg-6">
+                    <div class="card h-100 border-0 shadow-lg bg-glass" style="backdrop-filter: blur(10px); background: rgba(25, 30, 40, 0.7); border-radius: 15px;">
+                        <div class="card-header bg-transparent border-bottom border-danger py-3">
+                            <h6 class="mb-0 text-danger fw-bold"><i class="bi bi-thermometer-sun me-2"></i> SUHU & KECEPATAN MESIN</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <h6 class="text-white-50 fw-bold border-bottom border-secondary pb-1 mb-3">Temperature (°C)</h6>
+                            <div class="row g-2 mb-4">
+                                <div class="col-md-4"><label class="text-white-50 small">Head</label><div class="input-group"><input asp-for="HeadTemp" class="form-control bg-dark text-danger fw-bold border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50">°C</span></div></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Cyl 1</label><input asp-for="Cylinder1Temp" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Cyl 2</label><input asp-for="Cylinder2Temp" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Cyl 3</label><input asp-for="Cylinder3Temp" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Screw</label><input asp-for="ScrewTemp" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Chiller</label><input asp-for="ChillerWaterTemp" class="form-control bg-dark text-info border-info" /></div>
+                            </div>
+                            
+                            <h6 class="text-white-50 fw-bold border-bottom border-secondary pb-1 mb-3">Speed & Pressure</h6>
+                            <div class="row g-2">
+                                <div class="col-md-4"><label class="text-white-50 small">Screw Spd.</label><div class="input-group"><input asp-for="ScrewSpeed" class="form-control bg-dark text-warning border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50 p-1">rpm</span></div></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Feed Ratio</label><div class="input-group"><input asp-for="FeedRollRatio" class="form-control bg-dark text-white border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50 p-1">%</span></div></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Pressure</label><div class="input-group"><input asp-for="Pressure" class="form-control bg-dark text-white border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50 p-1">MPa</span></div></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Set Valve</label><input asp-for="PresetValve" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Air Press.</label><input asp-for="AirPressureA" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Hose Spd.</label><input asp-for="HoseSpeed" class="form-control bg-dark text-white border-secondary" /></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPIRAL & CONVEYOR -->
+            <div class="card mb-4 border-0 shadow-lg bg-glass" style="backdrop-filter: blur(10px); background: rgba(25, 30, 40, 0.7); border-radius: 15px;">
+                <div class="card-header bg-transparent border-bottom border-warning py-3">
+                    <h6 class="mb-0 text-warning fw-bold"><i class="bi bi-arrow-repeat me-2"></i> SPIRAL & CONVEYOR</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Spiral Parameters -->
+                        <div class="col-md-6 border-end border-secondary">
+                            <h6 class="text-white-50 small fw-bold mb-3">SPIRAL SETTINGS</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6"><label class="text-white-50 small">Spiral Speed</label><input asp-for="SpiralSpeed" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-6"><label class="text-white-50 small">Spd. Display</label><input asp-for="SpiralSpeedDisplay" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-12">
+                                    <label class="text-white-50 small fw-bold mb-1">Spiral Pitch (±)</label>
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" id="SpiralPitch" name="SpiralPitch" class="form-control text-center bg-dark text-white border-secondary base-input" placeholder="0.0" />
+                                        <span class="input-group-text bg-secondary text-white border-secondary">±</span>
+                                        <input type="number" step="0.01" id="Tol_SpiralPitch" name="Tol_SpiralPitch" class="form-control text-center bg-dark text-light border-secondary tol-input" placeholder="0.0" />
+                                        <span class="input-group-text bg-warning border-warning text-dark fw-bold result-display" style="min-width: 100px;">0.0 ~ 0.0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mt-3"><label class="text-white-50 small">Pitch Display</label><input asp-for="SpiralPitchDisplay" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-6 mt-3"><label class="text-white-50 small">Preset Temp.</label><input asp-for="PresetTemp" class="form-control bg-dark text-white border-secondary" /></div>
+                            </div>
+                        </div>
+
+                        <!-- Conveyor Parameters -->
+                        <div class="col-md-6">
+                            <h6 class="text-white-50 small fw-bold mb-3">CONVEYOR SETTINGS</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6"><label class="text-white-50 small">Takeup Conv.</label><div class="input-group"><input asp-for="TakeupConveyorSpeed" class="form-control bg-dark text-white border-secondary" /><span class="input-group-text bg-dark border-secondary p-1">m/m</span></div></div>
+                                <div class="col-md-6"><label class="text-white-50 small">Cool Conv.</label><div class="input-group"><input asp-for="CoolConveyorSpeed" class="form-control bg-dark text-info border-secondary" /><span class="input-group-text bg-dark border-secondary p-1">m/m</span></div></div>
+                                <div class="col-md-6"><label class="text-white-50 small">Conv Ratio</label><input asp-for="ConveyorRatio" class="form-control bg-dark text-white border-secondary" placeholder="T/C : C/C" /></div>
+                                <div class="col-md-6"><label class="text-white-50 small">Control Val.</label><input asp-for="ControlValue" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-6"><label class="text-white-50 small">Caterpillar Gap</label><input asp-for="CaterpillarGap" class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-6"><label class="text-white-50 small">Unsmooth Sfc</label><input asp-for="UnsmoothSurface" class="form-control bg-dark text-white border-secondary" /></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-5 mt-4 d-flex justify-content-end gap-3">
+                <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">
+                    <i class="bi bi-x-lg"></i> Batal
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
+                    <i class="bi bi-save"></i> Simpan Perubahan Parameter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Function to calculate derived tolerance min and max
+            function updateToleranceRange(container) {
+                const baseInput = container.querySelector('.base-input');
+                const tolInput = container.querySelector('.tol-input');
+                const displaySpan = container.querySelector('.result-display');
+                if (baseInput && tolInput && displaySpan) {
+                    const baseVal = parseFloat(baseInput.value) || 0;
+                    const tolVal = parseFloat(tolInput.value) || 0;
+                    if(baseVal === 0 && tolVal === 0){
+                        displaySpan.innerText = "0.0 ~ 0.0";
+                    } else {
+                        const min = (baseVal - tolVal).toFixed(2);
+                        const max = (baseVal + tolVal).toFixed(2);
+                        displaySpan.innerText = min + " ~ " + max;
+                    }
+                }
+            }
+
+            // Bind change events
+            document.querySelectorAll('.input-group').forEach(group => {
+                if(group.querySelector('.base-input')){
+                    group.querySelector('.base-input').addEventListener('input', () => updateToleranceRange(group));
+                    group.querySelector('.tol-input').addEventListener('input', () => updateToleranceRange(group));
+                    updateToleranceRange(group); // init
+                }
+            });
+        });
+
+        document.getElementById('mainForm').addEventListener('submit', function(e) {
+            if ($(this).valid()) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Menyimpan Parameter...',
+                    text: 'Standard baru sedang diproses.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                setTimeout(() => {
+                    this.submit();
+                }, 800);
+            }
+        });
+    </script>
+}

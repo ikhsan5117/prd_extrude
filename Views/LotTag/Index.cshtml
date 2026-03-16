@@ -1,0 +1,125 @@
+@model IEnumerable<VelastoProductionSystem.Models.LotTag>
+
+@{
+    ViewData["Title"] = "Lot Tags";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-tags-fill"></i> Lot Tags</h4>
+                <a asp-action="Create" class="btn btn-velasto">
+                    <i class="bi bi-plus-circle"></i> Create New Lot Tag
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Lot Tag No</th>
+                                <th>Part Number</th>
+                                <th>Target Qty</th>
+                                <th>Actual Qty</th>
+                                <th>Status</th>
+                                <th>QC Status</th>
+                                <th>Created</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td><strong>@item.LotTagNumber</strong></td>
+                                    <td>
+                                        @item.PartNumber
+                                        @if (!string.IsNullOrEmpty(item.PartDescription))
+                                        {
+                                            <br><small class="text-muted">@item.PartDescription</small>
+                                        }
+                                    </td>
+                                    <td>@item.TargetQty PCS</td>
+                                    <td>
+                                        @if (item.ActualQty != null)
+                                        {
+                                            <strong>@item.ActualQty PCS</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @switch (item.Status)
+                                        {
+                                            case "Created":
+                                                <span class="badge bg-info">Created</span>
+                                                break;
+                                            case "InProduction":
+                                                <span class="badge bg-warning">In Production</span>
+                                                break;
+                                            case "Completed":
+                                                <span class="badge bg-success">Completed</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@item.Status</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.TanggalCheck != null)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                            <span>OK: @item.QtyOK, NG: @item.QtyNG</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-clock text-warning"></i>
+                                            <span class="text-muted">Pending</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @item.CreatedDate.ToString("dd/MM/yyyy")<br>
+                                        <small class="text-muted">by @item.CreatedBy</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info" title="Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Print" asp-route-id="@item.Id" class="btn btn-secondary" title="Print">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+                                            <a asp-action="UpdateQC" asp-route-id="@item.Id" class="btn btn-success" title="QC Update">
+                                                <i class="bi bi-clipboard-check"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Belum ada lot tag. 
+                        <a asp-action="Create" class="alert-link">Create new lot tag</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add search/filter functionality if needed
+    </script>
+}

@@ -1,0 +1,246 @@
+@model VelastoProductionSystem.Models.ProductionReport
+
+@{
+    ViewData["Title"] = "Edit Production Report";
+}
+
+<div class="row animate-fadeInUp">
+    <div class="col-md-11 mx-auto">
+        <form asp-action="Edit" id="mainForm">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 mb-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171;"></div>
+
+            <!-- DIGITAL PAPER SHEET HEADER (SYNCED WITH CREATE) -->
+            <div class="production-report-sheet mb-4 p-5 rounded-0 shadow-lg" style="background: rgba(18, 22, 38, 0.85); border: 2px solid rgba(255, 255, 255, 0.15);">
+                <div class="row align-items-start">
+                    <div class="col-md-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="bi bi-vimeo fs-1 text-primary me-2"></i>
+                            <h3 class="m-0 fw-black text-white" style="letter-spacing: 1px;">VELASTO<span class="text-white-50 ms-2 fw-light fs-5">INDONESIA</span></h3>
+                        </div>
+                        <div class="metadata-entry-grid">
+                            <div class="meta-entry">
+                                <span class="label">No Doc.</span>
+                                <input asp-for="DocumentNumber" class="meta-input" />
+                            </div>
+                            <div class="meta-entry">
+                                <span class="label">Date</span>
+                                <input asp-for="ProductionDate" type="date" class="meta-input" />
+                            </div>
+                            <div class="meta-entry">
+                                <span class="label">Revisi</span>
+                                <input asp-for="RevisionNumber" class="meta-input" />
+                            </div>
+                            <div class="meta-entry">
+                                <span class="label">Shift</span>
+                                <select asp-for="Shift" class="meta-input">
+                                    <option value="Shift 1">Shift 1</option>
+                                    <option value="Shift 2">Shift 2</option>
+                                    <option value="Shift 3">Shift 3</option>
+                                </select>
+                            </div>
+                            <div class="meta-entry">
+                                <span class="label">Customer</span>
+                                <input asp-for="CustomerName" class="meta-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center pt-5">
+                        <h2 class="text-white fw-bold mt-3 mb-0">Edit Production Report</h2>
+                        <div class="text-white-50 fs-5">(Dimension)</div>
+                        
+                        <div class="mt-4 p-3 border border-info border-opacity-20 rounded-3 bg-info bg-opacity-5">
+                            <div class="d-flex flex-column gap-2 text-start">
+                                <div class="form-group">
+                                    <label class="extra-small text-info fw-bold mb-1">HOSE TYPE</label>
+                                    <input asp-for="HoseType" class="form-control form-control-sm bg-dark border-secondary text-white" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="extra-small text-warning fw-bold mb-1">REFERENCE SPS</label>
+                                    <select asp-for="StandardParameterSettingId" class="form-select form-select-sm bg-dark border-warning text-warning fw-bold" asp-items="ViewBag.StandardParameterSettings">
+                                        <option value="">-- Pilih Rujukan SPS --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="signature-section-grid shadow-sm" style="height: 140px; border: 1px solid rgba(255,255,255,0.2);">
+                            <div class="sig-column">
+                                <div class="sig-header">PREPARED</div>
+                                <div class="sig-body text-info">@Model.CreatedBy.Split(' ')[0]</div>
+                            </div>
+                            <div class="sig-column">
+                                <div class="sig-header">CHECKED</div>
+                                <div class="sig-body">@(Model.CheckedBy?.Split(' ')[0] ?? "-")</div>
+                            </div>
+                            <div class="sig-column">
+                                <div class="sig-header">APPROVED</div>
+                                <div class="sig-body">@(Model.ApprovedBy?.Split(' ')[0] ?? "-")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORM SECTIONS -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="card tactical-glass h-100 border-0 shadow-lg">
+                        <div class="tactical-header-bar material">
+                            <i class="bi bi-pencil-fill"></i>
+                            <span>EDIT MATERIAL (ACTUAL)</span>
+                        </div>
+                        <div class="card-body p-4 pt-1">
+                            <div class="tactical-input-group mb-3">
+                                <label class="text-info fw-bold extra-small mb-2 d-block">INNER MATERIAL</label>
+                                <div class="row g-2">
+                                    <div class="col-5"><input asp-for="InnerMaterialActual" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
+                                    <div class="col-4"><input asp-for="InnerMaterialLotNo" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
+                                    <div class="col-3"><input asp-for="InnerMaterialSG" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
+                                </div>
+                            </div>
+                            <div class="tactical-input-group mb-3">
+                                <label class="text-warning fw-bold extra-small mb-2 d-block">OUTER MATERIAL</label>
+                                <div class="row g-2">
+                                    <div class="col-5"><input asp-for="OuterMaterialActual" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
+                                    <div class="col-4"><input asp-for="OuterMaterialLotNo" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
+                                    <div class="col-3"><input asp-for="OuterMaterialSG" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
+                                </div>
+                            </div>
+                            <div class="info-chip-tactical">
+                                <label class="data-label-tactical">YARN ACTUAL</label>
+                                <input asp-for="YarnActual" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card tactical-glass h-100 border-0 shadow-lg">
+                        <div class="tactical-header-bar die">
+                            <i class="bi bi-check2-circle"></i>
+                            <span>DIE VERIFICATION</span>
+                        </div>
+                        <div class="card-body p-4 pt-1">
+                            <div class="row g-3">
+                                @foreach(var die in new[] { ("NippleDieOK", "Nipple Die"), ("TubeDieOK", "Tube Die"), ("MiddleDieOK", "Middle Die"), ("CoverDieOK", "Cover Die"), ("SpacerDieOK", "Spacer Die"), ("ToleranceDieOK", "Tolerance Die") })
+                                {
+                                    <div class="col-md-6">
+                                        <div class="tactical-switch-container">
+                                            <span class="text-white small fw-bold">@die.Item2 OK</span>
+                                            <div class="form-check form-switch m-0 p-0">
+                                                <input class="form-check-input bg-success border-success" type="checkbox" id="@die.Item1" name="@die.Item1" value="true" @(typeof(VelastoProductionSystem.Models.ProductionReport).GetProperty(die.Item1)?.GetValue(Model) as bool? == true ? "checked" : "") style="width: 32px; height: 16px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS -->
+            <div class="card mb-4 tactical-glass border-0 shadow-lg">
+                <div class="tactical-header-bar result">
+                    <i class="bi bi-bullseye"></i>
+                    <span>PRODUCTION SUMMARY (ACTUAL)</span>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="row g-4 pt-2">
+                        <div class="col-md-4 border-end border-white border-opacity-10">
+                            <div class="info-chip-tactical mb-3">
+                                <label class="data-label-tactical">VIN KODE</label>
+                                <input asp-for="VinCode" class="form-control fs-4 fw-bold text-white" />
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-12"><label class="extra-small text-white-50">Std. Panjang (mm)</label><input asp-for="StandardLength" class="form-control bg-dark border-secondary text-white" /></div>
+                                <div class="col-12"><label class="extra-small text-white-50">Actual Panjang (mm)</label><input asp-for="ActualLength" class="form-control bg-dark border-warning text-warning" /></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="stat-card-tactical primary">
+                                        <label class="stat-label-tactical">Qty Target</label>
+                                        <input asp-for="QtyTarget" class="w-100 text-center bg-transparent border-0 text-primary fw-bold fs-3" style="outline:none;" />
+                                        <div class="stat-unit-tactical">pcs</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-card-tactical success">
+                                        <label class="stat-label-tactical">Qty Actual (OK)</label>
+                                        <input asp-for="QtyOk" class="w-100 text-center bg-transparent border-0 text-success fw-bold fs-3" style="outline:none;" />
+                                        <div class="stat-unit-tactical">pcs</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-card-tactical danger p-2">
+                                        <label class="stat-label-tactical mb-2">Quantities (NG)</label>
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-dark border-danger text-danger extra-small">DIM</span>
+                                                <input asp-for="NgDimension" class="form-control bg-dark border-danger text-danger text-end fw-bold" />
+                                            </div>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-dark border-danger text-danger extra-small">VIS</span>
+                                                <input asp-for="NgVisual" class="form-control bg-dark border-danger text-danger text-end fw-bold" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <div class="info-chip-tactical">
+                                        <label class="data-label-tactical">REMARKS / NOTES</label>
+                                        <textarea asp-for="Remark" class="form-control bg-transparent border-0 text-white p-0 fs-7" rows="2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-4 mb-5">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-dark rounded-0 px-5 border border-white border-opacity-25 bg-opacity-25">
+                    <i class="bi bi-x me-1 fs-5"></i> Batal
+                </a>
+                <button type="submit" class="btn btn-info rounded-0 px-5 py-2 fw-bold shadow-lg">
+                    <i class="bi bi-check-lg me-2 fs-5"></i> Perbarui Laporan Produksi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <style>
+        input[type="date"] { color-scheme: dark; }
+        .extra-small { font-size: 0.65rem; }
+        .fs-7 { font-size: 0.82rem; }
+        
+        /* SYNCED THEME WITH PAPER FORM SHARD WITH CREATE */
+        .metadata-entry-grid { display: flex; flex-direction: column; gap: 8px; }
+        .meta-entry { display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; }
+        .meta-entry .label { width: 100px; color: rgba(255,255,255,0.4); font-size: 0.8rem; font-weight: bold; }
+        .meta-input { background: transparent; border: none; color: #fff; font-weight: 700; flex: 1; padding: 0; outline: none; }
+        .meta-input:focus { color: #0dcaf0; }
+
+        .signature-section-grid { display: flex; border: 1px solid rgba(255,255,255,0.2); }
+        .sig-column { flex: 1; border-right: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; }
+        .sig-column:last-child { border-right: none; }
+        .sig-header { background: rgba(255,255,255,0.05); text-align: center; font-size: 0.65rem; font-weight: 900; padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sig-body { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; text-transform: uppercase; }
+
+        .tactical-glass { background: rgba(18, 22, 38, 0.75) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; backdrop-filter: blur(20px); border-radius: 0 !important; }
+        .tactical-header-bar { background: rgba(43, 49, 71, 0.8) !important; border-radius: 0 !important; padding: 12px 20px !important; }
+        .info-chip-tactical { background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; }
+
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+}

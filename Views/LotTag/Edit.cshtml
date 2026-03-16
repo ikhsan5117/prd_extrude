@@ -1,0 +1,129 @@
+@model VelastoProductionSystem.Models.LotTag
+
+@{
+    ViewData["Title"] = "Edit Lot Tag";
+}
+
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-pencil-square"></i> Edit Lot Tag: @Model.LotTagNumber
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedDate" />
+                    <input type="hidden" asp-for="CreatedBy" />
+                    <input type="hidden" asp-for="PrintCount" />
+                    <input type="hidden" asp-for="PrintedDate" />
+                    <input type="hidden" asp-for="LastPrintedDate" />
+                    <input type="hidden" asp-for="Barcode" />
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3 text-primary"><i class="bi bi-info-circle me-2"></i>Informasi Utama</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="LotTagNumber" class="form-label"></label>
+                                <input asp-for="LotTagNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Plant" class="form-label"></label>
+                                <input asp-for="Plant" class="form-control" />
+                                <span asp-validation-for="Plant" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="PartNumber" class="form-label"></label>
+                                <input asp-for="PartNumber" class="form-control" />
+                                <span asp-validation-for="PartNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="PartDescription" class="form-label"></label>
+                                <input asp-for="PartDescription" class="form-control" />
+                                <span asp-validation-for="PartDescription" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="TargetQty" class="form-label"></label>
+                                <input asp-for="TargetQty" class="form-control" />
+                                <span asp-validation-for="TargetQty" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="ActualQty" class="form-label"></label>
+                                <input asp-for="ActualQty" class="form-control" />
+                                <span asp-validation-for="ActualQty" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="Status" class="form-label"></label>
+                                <select asp-for="Status" class="form-select">
+                                    <option value="Created">Created</option>
+                                    <option value="InProduction">In Production</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Quality Check Hidden but Bound -->
+                        <div class="col-12 mt-4">
+                            <h5 class="border-bottom pb-2 mb-3 text-primary"><i class="bi bi-clipboard-check me-2"></i>Quality Check Data</h5>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="QtyOK" class="form-label"></label>
+                                <input asp-for="QtyOK" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="QtyNG" class="form-label"></label>
+                                <input asp-for="QtyNG" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="TanggalCheck" class="form-label"></label>
+                                <input asp-for="TanggalCheck" class="form-control" type="datetime-local" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top d-flex gap-2">
+                        <button type="submit" class="btn btn-velasto px-4">
+                            <i class="bi bi-save"></i> Simpan Perubahan
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle"></i> Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
