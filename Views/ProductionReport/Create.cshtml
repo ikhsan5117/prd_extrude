@@ -44,15 +44,6 @@
                         <div class="hud-scanner-overlay">
                             <div id="reader"></div>
                             <div class="scan-laser"></div>
-                            
-                            <!-- MOVING TRACKING BOX -->
-                            <div class="tracking-box">
-                                <div class="corner top-left"></div>
-                                <div class="corner top-right"></div>
-                                <div class="corner bottom-left"></div>
-                                <div class="corner bottom-right"></div>
-                                <div class="scanner-dot"></div>
-                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-top border-primary border-opacity-25 py-2">
@@ -454,73 +445,17 @@
     #reader { width: 100% !important; border: none !important; }
     #reader video { object-fit: cover !important; width: 100% !important; height: auto !important; }
     
-    /* Dynamic Scanning Laser */
+    /* Static Scanning Center Line */
     .scan-laser {
         position: absolute;
-        top: 0;
+        top: 50%;
         left: 0;
         width: 100%;
         height: 2px;
         background: linear-gradient(to right, transparent, var(--velasto-blue), #00d2ff, var(--velasto-blue), transparent);
         box-shadow: 0 0 15px #00d2ff, 0 0 30px var(--velasto-blue);
         z-index: 10;
-        animation: scanLines 2.5s ease-in-out infinite;
-    }
-
-    /* Roaming Tracking Box */
-    .tracking-box {
-        position: absolute;
-        width: 260px;
-        height: 260px;
-        z-index: 12;
-        pointer-events: none;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: roamSearch 10s ease-in-out infinite;
-    }
-
-    .scanner-dot {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 4px;
-        height: 4px;
-        background: #00d2ff;
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        box-shadow: 0 0 10px #00d2ff;
-        opacity: 0.5;
-    }
-
-    .corner {
-        position: absolute;
-        width: 35px;
-        height: 35px;
-        border: 3px solid var(--velasto-blue);
-        z-index: 11;
-        opacity: 0.9;
-        transition: all 0.3s ease;
-    }
-    .top-left { top: 0; left: 0; border-right: none; border-bottom: none; }
-    .top-right { top: 0; right: 0; border-left: none; border-bottom: none; }
-    .bottom-left { bottom: 0; left: 0; border-right: none; border-top: none; }
-    .bottom-right { bottom: 0; right: 0; border-left: none; border-top: none; }
-
-    @@keyframes scanLines {
-        0% { top: 5%; opacity: 0; }
-        15% { opacity: 1; }
-        85% { opacity: 1; }
-        100% { top: 95%; opacity: 0; }
-    }
-
-    @@keyframes roamSearch {
-        0%   { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
-        20%  { top: 40%; left: 45%; transform: translate(-50%, -50%) scale(1.1); }
-        40%  { top: 60%; left: 55%; transform: translate(-50%, -50%) scale(0.9); }
-        60%  { top: 55%; left: 40%; transform: translate(-50%, -50%) scale(1.05); }
-        80%  { top: 45%; left: 60%; transform: translate(-50%, -50%) scale(0.95); }
-        100% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
+        transform: translateY(-50%);
     }
 
     .hud-scanner-overlay::after {
@@ -541,45 +476,96 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let html5QrCode;
-        let currentFacingMode = "environment";
+        let cameraDevices = [];
+        let currentCamIdx = 0;
 
-        function startScanner() {
-            var myModal = new bootstrap.Modal(document.getElementById('scannerModal'));
-            myModal.show();
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => initScanner());
-            } else {
+        async function startScanner() {
+            const mEl = document.getElementById('scannerModal');
+            const modal = new bootstrap.Modal(mEl);
+            modal.show();
+            
+            // Re-detect cameras every time to ensure fresh list
+            try {
+                cameraDevices = await Html5Qrcode.getCameras();
+                if (cameraDevices && cameraDevices.length > 0) {
+                    // Try to find the back camera as default
+                    currentCamIdx = cameraDevices.findIndex(c => 
+                        c.label.toLowerCase().includes('back') || 
+                        c.label.toLowerCase().includes('rear') ||
+                        c.label.toLowerCase().includes('environment')
+                    );
+                    if (currentCamIdx === -1) currentCamIdx = 0;
+                }
+                
+                if (html5QrCode && html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
                 initScanner();
+            } catch (err) {
+                console.error("Camera detection error:", err);
+                initScanner(); // Fallback to basic init
             }
         }
 
         function initScanner() {
-            html5QrCode = new Html5Qrcode("reader");
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+            
             const config = { 
                 fps: 20, 
-                qrbox: { width: 250, height: 250 },
                 aspectRatio: 1.0
             };
+
+            // Determine target: specific device or facingMode
+            let target;
+            if (cameraDevices && cameraDevices.length > 0 && cameraDevices[currentCamIdx]) {
+                target = cameraDevices[currentCamIdx].id; // FIXED: property is .id, not .deviceId
+            } else {
+                target = { facingMode: "environment" };
+            }
+
+            if (!target) {
+                target = { facingMode: "environment" };
+            }
             
-            html5QrCode.start(
-                { facingMode: currentFacingMode }, 
-                config, 
-                onScanSuccess
-            ).catch(err => {
-                console.error("Scanner error:", err);
-            });
+            html5QrCode.start(target, config, onScanSuccess)
+                .catch(err => {
+                    console.error("Scanner start error:", err);
+                    // Final fallback to user-facing if environment fails
+                    if (!cameraDevices || cameraDevices.length === 0) {
+                        html5QrCode.start({ facingMode: "user" }, config, onScanSuccess).catch(e => {
+                             console.error("Ultimate fallback failed", e);
+                        });
+                    }
+                });
         }
 
-        function switchCamera() {
-            currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => initScanner());
+        async function switchCamera() {
+            if (!html5QrCode) return;
+            
+            if (cameraDevices.length > 1) {
+                currentCamIdx = (currentCamIdx + 1) % cameraDevices.length;
+                if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                    initScanner();
+                }
+            } else {
+                // Legacy toggle for devices that don't list multiple but have them
+                const currentMode = html5QrCode.isScanning ? "environment" : "user";
+                const nextMode = (currentMode === "environment") ? "user" : "environment";
+                await html5QrCode.stop();
+                html5QrCode.start({ facingMode: nextMode }, { fps: 20, aspectRatio: 1.0 }, onScanSuccess);
             }
         }
 
-        function stopScanner() {
+        async function stopScanner() {
             if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop();
+                try {
+                    await html5QrCode.stop();
+                } catch (e) {
+                    console.error("Stop error:", e);
+                }
             }
             const modalEl = document.getElementById('scannerModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
