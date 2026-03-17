@@ -60,6 +60,8 @@ namespace VelastoProductionSystem.Models
         // Times for Image 1
         public DateTime? DandoriStartTime { get; set; }
         public DateTime? DandoriEndTime { get; set; }
+        public DateTime? DandoriEndStartTime { get; set; }
+        public DateTime? DandoriEndEndTime { get; set; }
         public DateTime? ProductionStartTime { get; set; }
         public DateTime? ProductionEndTime { get; set; }
 

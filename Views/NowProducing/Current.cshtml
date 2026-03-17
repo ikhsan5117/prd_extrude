@@ -102,11 +102,11 @@
                                     </tr>
                                     <tr>
                                         <td class="fw-bold text-start text-white-50">Production</td>
-                                        <td>@Model.ProductionStartTime?.ToString("HH:mm")</td>
+                                        <td>@Model?.ProductionStartTime?.ToString("HH:mm")</td>
                                         <td>
-                                            @if (Model.ProductionEndTime != null)
+                                            @if (Model?.ProductionEndTime != null)
                                             {
-                                                @Model.ProductionEndTime?.ToString("HH:mm")
+                                                @Model?.ProductionEndTime?.ToString("HH:mm")
                                             }
                                             else
                                             {
