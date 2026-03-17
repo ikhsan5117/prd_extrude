@@ -29,11 +29,46 @@
             </div>
         </div>
 
-        <!-- SCANNER CONTAINER -->
-        <div id="scanner-container" style="display:none;" class="scanner-glass-box mb-3 no-print">
-            <div class="card-body p-3 text-center">
-                <div id="reader"></div>
-                <button type="button" class="btn btn-danger-glass btn-sm mt-3 px-4" onclick="stopScanner()">CLOSE</button>
+        <!-- SCANNER MODAL -->
+        <div class="modal fade no-print" id="scannerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content scanner-modal-glass">
+                    <div class="modal-header border-bottom border-primary border-opacity-25 pb-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-qr-code-scan text-primary me-2 fs-4"></i>
+                            <h5 class="modal-title text-white fw-bold">HUD SCANNER SYSTEM</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopScanner()"></button>
+                    </div>
+                    <div class="modal-body p-0 position-relative overflow-hidden bg-black">
+                        <div class="hud-scanner-overlay">
+                            <div id="reader"></div>
+                            <div class="scan-laser"></div>
+                            
+                            <!-- MOVING TRACKING BOX -->
+                            <div class="tracking-box">
+                                <div class="corner top-left"></div>
+                                <div class="corner top-right"></div>
+                                <div class="corner bottom-left"></div>
+                                <div class="corner bottom-right"></div>
+                                <div class="scanner-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-primary border-opacity-25 py-2">
+                        <div class="d-flex w-100 justify-content-between align-items-center px-2">
+                            <span class="text-white-50 extra-small tracking-widest"><i class="bi bi-broadcast pulse-blue me-1"></i> SCANNING FOR DATA...</span>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary-glass btn-sm px-4" onclick="switchCamera()">
+                                    <i class="bi bi-camera-rotate me-1"></i> SWITCH
+                                </button>
+                                <button type="button" class="btn btn-danger-glass btn-sm px-4" data-bs-dismiss="modal" onclick="stopScanner()">
+                                    CLOSE
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -184,7 +219,7 @@
                     </div>
 
                     <!-- RIGHT COLUMN: TARGETS -->
-                    <div class="col-lg-3 col-md-12 p-3 border-start border-primary border-opacity-20 bg-hud-navy">
+                    <div class="col-lg-3 col-md-12 p-2 border-start border-primary border-opacity-20 bg-hud-navy overflow-hidden">
                         <div class="target-card mb-3">
                             <div class="target-header">CHS 2 L DANDORI TARGET</div>
                             <table class="table table-dark table-xs m-0 text-center border-white border-opacity-10">
@@ -366,10 +401,6 @@
     .glass-table-container { border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 0px; background: rgba(15, 23, 42, 0.4); }
     .table-header-min { background: rgba(37, 99, 235, 0.3); color: #fff; font-size: 10px; font-weight: 900; text-align: center; padding: 5px; letter-spacing: 1px; border-bottom: 1px solid rgba(59, 130, 246, 0.3); }
     .table-header-min.secondary { background: rgba(71, 85, 105, 0.3); }
-    
-    .target-card { border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 0px; background: rgba(15, 23, 42, 0.4); }
-    .target-header { background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-size: 10px; font-weight: 900; text-align: center; padding: 5px; border-bottom: 1px solid rgba(59, 130, 246, 0.3); }
-    .target-header.secondary { background: rgba(71, 85, 105, 0.2); color: #94a3b8; }
 
     /* Material Rows Sharp */
     .material-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -399,9 +430,109 @@
     /* Tablet Responsive Sharp */
     @@media (max-width: 992px) {
         .main-content { padding: 5px !important; }
-        .material-row { flex-direction: column; align-items: flex-start; }
-        .mat-inputs { width: 100%; }
         .border-end { border-right: none !important; border-bottom: 1px solid #30363d !important; }
+    }
+
+    /* Scanner Enhanced HUD Style in Popup */
+    .scanner-modal-glass { 
+        background: rgba(10, 14, 23, 0.9) !important; 
+        backdrop-filter: blur(25px); 
+        border: 1px solid rgba(0, 102, 255, 0.3); 
+        border-radius: 0;
+        box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    }
+    
+    .hud-scanner-overlay { 
+        position: relative; 
+        background: #000; 
+        width: 100%; 
+        aspect-ratio: 4/3;
+        overflow: hidden; 
+        margin: 0 auto; 
+    }
+    
+    #reader { width: 100% !important; border: none !important; }
+    #reader video { object-fit: cover !important; width: 100% !important; height: auto !important; }
+    
+    /* Dynamic Scanning Laser */
+    .scan-laser {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(to right, transparent, var(--velasto-blue), #00d2ff, var(--velasto-blue), transparent);
+        box-shadow: 0 0 15px #00d2ff, 0 0 30px var(--velasto-blue);
+        z-index: 10;
+        animation: scanLines 2.5s ease-in-out infinite;
+    }
+
+    /* Roaming Tracking Box */
+    .tracking-box {
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        z-index: 12;
+        pointer-events: none;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: roamSearch 10s ease-in-out infinite;
+    }
+
+    .scanner-dot {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 4px;
+        height: 4px;
+        background: #00d2ff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 10px #00d2ff;
+        opacity: 0.5;
+    }
+
+    .corner {
+        position: absolute;
+        width: 35px;
+        height: 35px;
+        border: 3px solid var(--velasto-blue);
+        z-index: 11;
+        opacity: 0.9;
+        transition: all 0.3s ease;
+    }
+    .top-left { top: 0; left: 0; border-right: none; border-bottom: none; }
+    .top-right { top: 0; right: 0; border-left: none; border-bottom: none; }
+    .bottom-left { bottom: 0; left: 0; border-right: none; border-top: none; }
+    .bottom-right { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+    @@keyframes scanLines {
+        0% { top: 5%; opacity: 0; }
+        15% { opacity: 1; }
+        85% { opacity: 1; }
+        100% { top: 95%; opacity: 0; }
+    }
+
+    @@keyframes roamSearch {
+        0%   { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
+        20%  { top: 40%; left: 45%; transform: translate(-50%, -50%) scale(1.1); }
+        40%  { top: 60%; left: 55%; transform: translate(-50%, -50%) scale(0.9); }
+        60%  { top: 55%; left: 40%; transform: translate(-50%, -50%) scale(1.05); }
+        80%  { top: 45%; left: 60%; transform: translate(-50%, -50%) scale(0.95); }
+        100% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .hud-scanner-overlay::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: 
+            linear-gradient(rgba(0, 102, 255, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 102, 255, 0.08) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: 5;
+        pointer-events: none;
     }
 </style>
 
@@ -410,13 +541,49 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let html5QrCode;
+        let currentFacingMode = "environment";
+
         function startScanner() {
-            document.getElementById('scanner-container').style.display = 'block';
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, onScanSuccess);
+            var myModal = new bootstrap.Modal(document.getElementById('scannerModal'));
+            myModal.show();
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => initScanner());
+            } else {
+                initScanner();
+            }
         }
+
+        function initScanner() {
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { 
+                fps: 20, 
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            html5QrCode.start(
+                { facingMode: currentFacingMode }, 
+                config, 
+                onScanSuccess
+            ).catch(err => {
+                console.error("Scanner error:", err);
+            });
+        }
+
+        function switchCamera() {
+            currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => initScanner());
+            }
+        }
+
         function stopScanner() {
-            if (html5QrCode) html5QrCode.stop().then(() => document.getElementById('scanner-container').style.display = 'none');
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop();
+            }
+            const modalEl = document.getElementById('scannerModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
         }
         async function onScanSuccess(decodedText) {
             stopScanner();
