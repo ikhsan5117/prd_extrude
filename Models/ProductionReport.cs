@@ -21,15 +21,14 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Shift")]
         public string Shift { get; set; } = string.Empty;
 
-        [Required]
         [Display(Name = "Customer")]
-        public string CustomerName { get; set; } = string.Empty;
+        public string? CustomerName { get; set; }
 
         [Display(Name = "Tipe Hose")]
-        public string HoseType { get; set; } = string.Empty;
+        public string? HoseType { get; set; } 
 
         [Display(Name = "Dimensi")]
-        public string Dimension { get; set; } = string.Empty;
+        public string? Dimension { get; set; } 
 
         [Display(Name = "Parameter Setting ID")]
         public int? StandardParameterSettingId { get; set; }
@@ -37,25 +36,25 @@ namespace VelastoProductionSystem.Models
 
         // IMAGE 1: NOW I'M PRODUCE (Keeping legacy names to avoid breakage)
         [Display(Name = "Material Inner")]
-        public string InnerMaterial { get; set; } = string.Empty; // Legacy field
+        public string? InnerMaterial { get; set; } 
 
         [Display(Name = "No. Lot Inner")]
-        public string InnerMaterialLotNo { get; set; } = string.Empty;
+        public string? InnerMaterialLotNo { get; set; } 
 
         [Display(Name = "SG Inner")]
-        public decimal InnerMaterialSG { get; set; } // Back to decimal
+        public decimal? InnerMaterialSG { get; set; } 
 
         [Display(Name = "Material Outer")]
-        public string OuterMaterial { get; set; } = string.Empty;
+        public string? OuterMaterial { get; set; } 
 
         [Display(Name = "No. Lot Outer")]
-        public string OuterMaterialLotNo { get; set; } = string.Empty;
+        public string? OuterMaterialLotNo { get; set; } 
 
         [Display(Name = "SG Outer")]
-        public decimal OuterMaterialSG { get; set; } // Back to decimal
+        public decimal? OuterMaterialSG { get; set; } 
 
         [Display(Name = "Yarn")]
-        public string Yarn { get; set; } = string.Empty;
+        public string? Yarn { get; set; }
 
         // Times for Image 1
         public DateTime? DandoriStartTime { get; set; }
@@ -72,9 +71,9 @@ namespace VelastoProductionSystem.Models
         public bool ToleranceDieOK { get; set; }
 
         // Fields used in Edit/Dashboard
-        public string InnerMaterialActual { get; set; } = string.Empty;
-        public string OuterMaterialActual { get; set; } = string.Empty;
-        public string YarnActual { get; set; } = string.Empty;
+        public string? InnerMaterialActual { get; set; } 
+        public string? OuterMaterialActual { get; set; } 
+        public string? YarnActual { get; set; } 
 
         // PRODUCTION EVALUATION (IMAGE 2)
         [Display(Name = "VIN Kode")]
@@ -114,7 +113,7 @@ namespace VelastoProductionSystem.Models
         public string Status { get; set; } = "NOW PRODUCING"; 
 
         [Display(Name = "Dibuat Oleh")]
-        public string CreatedBy { get; set; } = string.Empty;
+        public string? CreatedBy { get; set; } 
 
         [Display(Name = "Tanggal Dibuat")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;

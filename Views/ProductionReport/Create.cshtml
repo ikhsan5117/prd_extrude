@@ -64,6 +64,7 @@
         </div>
 
         <form asp-action="Create" id="mainForm">
+            <div asp-validation-summary="All" class="alert alert-danger mb-4 bg-danger bg-opacity-10 border-danger text-danger extra-small py-2 px-3 rounded-0 no-print"></div>
             <div class="main-glass-card shadow-2xl">
                 
                 <!-- TOP HEADER: TITLE & COMPACT DOC INFO -->
@@ -97,11 +98,33 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label">Effective Date</td>
-                                <td class="pe-2 py-0 border-0 align-middle">
+                                <td class="text-white-50 ps-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle header-label">Effective Date</td>
+                                <td class="pe-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle">
                                     <div class="d-flex align-items-center">
                                         <span class="text-primary fw-bold me-1">:</span>
                                         <input name="EffectiveDate" id="EffectiveDate" class="header-input" value="" placeholder="01/01/2024" />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-white-50 ps-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle header-label">Customer</td>
+                                <td class="pe-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle">
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-primary fw-bold me-1">:</span>
+                                        <input asp-for="CustomerName" class="header-input" placeholder="Nama Customer" />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label">Shift</td>
+                                <td class="pe-2 py-0 border-0 align-middle">
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-primary fw-bold me-1">:</span>
+                                        <select asp-for="Shift" class="header-input bg-dark">
+                                            <option value="Shift A">Shift A</option>
+                                            <option value="Shift B">Shift B</option>
+                                            <option value="Shift C">Shift C</option>
+                                        </select>
                                     </div>
                                 </td>
                             </tr>

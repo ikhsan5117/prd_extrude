@@ -60,6 +60,7 @@ namespace VelastoProductionSystem.Controllers
             
             if (ModelState.IsValid)
             {
+                report.CreatedBy = report.CreatedBy ?? "Operator 1";
                 report.CreatedDate = DateTime.Now;
                 report.Status = "NOW PRODUCING";
                 _context.Add(report);
