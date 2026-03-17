@@ -40,20 +40,10 @@
                         </div>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopScanner()"></button>
                     </div>
-                    <div class="modal-body p-0 position-relative overflow-hidden bg-black">
-                        <div class="hud-scanner-overlay">
-                            <div id="reader"></div>
-                            <div class="scan-laser"></div>
-                            
-                            <!-- MOVING TRACKING BOX -->
-                            <div class="tracking-box">
-                                <div class="corner top-left"></div>
-                                <div class="corner top-right"></div>
-                                <div class="corner bottom-left"></div>
-                                <div class="corner bottom-right"></div>
-                                <div class="scanner-dot"></div>
-                            </div>
-                        </div>
+                    <div class="modal-body p-0 position-relative bg-black overflow-hidden" style="height: 400px;">
+                        <video id="video" style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <canvas id="canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
+                        <div class="scan-laser"></div>
                     </div>
                     <div class="modal-footer border-top border-primary border-opacity-25 py-2">
                         <div class="d-flex w-100 justify-content-between align-items-center px-2">
@@ -467,60 +457,11 @@
         animation: scanLines 2.5s ease-in-out infinite;
     }
 
-    /* Roaming Tracking Box */
-    .tracking-box {
-        position: absolute;
-        width: 260px;
-        height: 260px;
-        z-index: 12;
-        pointer-events: none;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: roamSearch 10s ease-in-out infinite;
-    }
-
-    .scanner-dot {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 4px;
-        height: 4px;
-        background: #00d2ff;
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        box-shadow: 0 0 10px #00d2ff;
-        opacity: 0.5;
-    }
-
-    .corner {
-        position: absolute;
-        width: 35px;
-        height: 35px;
-        border: 3px solid var(--velasto-blue);
-        z-index: 11;
-        opacity: 0.9;
-        transition: all 0.3s ease;
-    }
-    .top-left { top: 0; left: 0; border-right: none; border-bottom: none; }
-    .top-right { top: 0; right: 0; border-left: none; border-bottom: none; }
-    .bottom-left { bottom: 0; left: 0; border-right: none; border-top: none; }
-    .bottom-right { bottom: 0; right: 0; border-left: none; border-top: none; }
-
     @@keyframes scanLines {
         0% { top: 5%; opacity: 0; }
         15% { opacity: 1; }
         85% { opacity: 1; }
         100% { top: 95%; opacity: 0; }
-    }
-
-    @@keyframes roamSearch {
-        0%   { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
-        20%  { top: 40%; left: 45%; transform: translate(-50%, -50%) scale(1.1); }
-        40%  { top: 60%; left: 55%; transform: translate(-50%, -50%) scale(0.9); }
-        60%  { top: 55%; left: 40%; transform: translate(-50%, -50%) scale(1.05); }
-        80%  { top: 45%; left: 60%; transform: translate(-50%, -50%) scale(0.95); }
-        100% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
     }
 
     .hud-scanner-overlay::after {
@@ -537,50 +478,133 @@
 </style>
 
 @section Scripts {
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/@@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        let html5QrCode;
-        let currentFacingMode = "environment";
+        const hints = new Map();
+        const formats = [
+            ZXing.BarcodeFormat.QR_CODE,
+            ZXing.BarcodeFormat.CODE_128,
+            ZXing.BarcodeFormat.CODE_39,
+            ZXing.BarcodeFormat.EAN_13,
+            ZXing.BarcodeFormat.EAN_8,
+            ZXing.BarcodeFormat.ITF,
+            ZXing.BarcodeFormat.DATA_MATRIX,
+            ZXing.BarcodeFormat.UPC_A,
+            ZXing.BarcodeFormat.UPC_E
+        ];
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+        hints.set(ZXing.DecodeHintType.ASSUME_GS1_CODE_128, true);
+        
+        const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+        let selectedDeviceId;
 
         function startScanner() {
-            var myModal = new bootstrap.Modal(document.getElementById('scannerModal'));
-            myModal.show();
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => initScanner());
-            } else {
-                initScanner();
+            const modalEl = document.getElementById('scannerModal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+            
+            initScanner();
+        }
+
+        async function initScanner() {
+            try {
+                const videoDevices = await codeReader.listVideoInputDevices();
+                selectedDeviceId = videoDevices[0].deviceId;
+                
+                // Try to find rear camera
+                const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear'));
+                if (rearCamera) selectedDeviceId = rearCamera.deviceId;
+
+                const video = document.getElementById('video');
+                
+                // ULTRA STRENGTH CONSTRAINTS
+                const constraints = {
+                    video: {
+                        deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        facingMode: { ideal: "environment" },
+                        frameRate: { ideal: 60, min: 30 },
+                        advanced: [
+                            { focusMode: "continuous" },
+                            { exposureMode: "continuous" },
+                            { whiteBalanceMode: "continuous" }
+                        ]
+                    }
+                };
+
+                codeReader.decodeFromConstraints(constraints, 'video', (result, err) => {
+                    const canvas = document.getElementById('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Sync canvas resolution with video stream
+                    if (video.videoWidth > 0 && (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight)) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                    }
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    if (result) {
+                        drawResultPoints(result.resultPoints, ctx);
+                        if (result.text) {
+                            // Instant reaction for better experience
+                            setTimeout(() => onScanSuccess(result.text), 400);
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error(err);
             }
         }
 
-        function initScanner() {
-            html5QrCode = new Html5Qrcode("reader");
-            const config = { 
-                fps: 20, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            };
+        function drawResultPoints(points, ctx) {
+            if (!points || points.length === 0) return;
             
-            html5QrCode.start(
-                { facingMode: currentFacingMode }, 
-                config, 
-                onScanSuccess
-            ).catch(err => {
-                console.error("Scanner error:", err);
-            });
+            ctx.strokeStyle = '#00d2ff';
+            ctx.fillStyle = 'rgba(0, 102, 255, 0.2)';
+            ctx.lineWidth = 6;
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            
+            // If barcode (usually 2 points), draw a thick highlight bar
+            if (points.length === 2) {
+                const p1 = points[0];
+                const p2 = points[1];
+                const height = 40; // width of the highlight
+                ctx.moveTo(p1.x, p1.y - height/2);
+                ctx.lineTo(p2.x, p2.y - height/2);
+                ctx.lineTo(p2.x, p2.y + height/2);
+                ctx.lineTo(p1.x, p1.y + height/2);
+            } else {
+                // If QR code or more (usually 3-4 points)
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+            }
+            
+            ctx.closePath();
+            ctx.fill();
+            
+            // Outer Glow
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00d2ff';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         }
 
         function switchCamera() {
-            currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => initScanner());
-            }
+            codeReader.reset();
+            // Simple toggle logic could be improved for multiple cameras
+            initScanner();
         }
 
         function stopScanner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop();
-            }
+            codeReader.reset();
             const modalEl = document.getElementById('scannerModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();

@@ -18,6 +18,8 @@
         margin-bottom: 0;
         border-collapse: separate;
         border-spacing: 0;
+        width: max-content; /* Ensure table stretches to its full content width inside the scroll div */
+        min-width: 100%;
     }
     .main-table thead th {
         position: sticky;
@@ -32,8 +34,13 @@
         text-transform: uppercase;
         vertical-align: middle;
     }
-    .main-table thead th.sub-header {
-        top: 45px; /* Adjust based on primary header height */
+    .main-table thead tr:nth-child(1) th {
+        top: 0;
+        z-index: 15;
+    }
+    .main-table thead tr:nth-child(2) th {
+        top: 40px; /* Adjust based on primary header height */
+        z-index: 14;
     }
     .main-table tbody td {
         white-space: nowrap;
@@ -46,9 +53,16 @@
     .sticky-id {
         position: sticky;
         left: 0;
-        z-index: 11;
+        z-index: 12;
         background-color: #1a1d21 !important;
         border-right: 2px solid #0d6efd !important;
+    }
+    .sticky-hose {
+        position: sticky;
+        left: 100px; /* Adjust based on ID width */
+        z-index: 11;
+        background-color: #1a1d21 !important;
+        border-right: 1px solid rgba(255,255,255,0.2) !important;
     }
     .group-label {
         background-color: #0d6efd !important;
@@ -182,7 +196,7 @@
                     </button>
                 </div>
             </div>
-        </div>
+        <div class="table-container shadow-lg">
             <table class="table table-dark table-hover main-table" id="spsTable">
                 <thead>
                     <!-- Primary Header Category -->
@@ -205,7 +219,7 @@
                         <th>NO. DOC</th>
                         <th>MC</th>
                         
-                        <th class="marker-im"><span class="badge-im">IM</span>Customer</th>
+                        <th class="marker-im sticky-hose"><span class="badge-im">IM</span>Customer/Hose</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Hose Type</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Material</th>
                         <th>Dimensi</th>
@@ -252,7 +266,7 @@
                             <td class="x-small text-white-50">@item.DocumentNumber</td>
                             <td class="fw-bold text-warning">@item.MachineCode</td>
                             
-                            <td class="fw-bold">@item.Customer</td>
+                            <td class="sticky-hose fw-bold">@item.Customer</td>
                             <td class="small text-truncate" style="max-width: 140px;">@item.HoseType</td>
                             <td><span class="badge bg-secondary">@item.Material</span></td>
                             <td class="text-info">@item.Dimensi</td>
