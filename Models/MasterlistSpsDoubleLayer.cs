@@ -46,6 +46,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Outer | #cover")]
         public string? OuterCover { get; set; }
 
+        [Display(Name = "Yarn")]
+        public string? Yarn { get; set; }
+
         [Display(Name = "Use limits of the material | #Inner")]
         public string? UseLimitsInner { get; set; }
 
