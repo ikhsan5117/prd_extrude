@@ -4,11 +4,11 @@
     ViewData["Title"] = "NOW I'M PRODUCE";
 }
 
-<div class="production-dashboard fade-in">
+<div class="production-dashboard-sapphire fade-in">
     <div class="container-fluid py-3 px-0">
         
         <!-- COMPACT HEADER ACTION BAR -->
-        <div class="d-flex justify-content-between align-items-center mb-3 no-print header-glass p-2 px-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 no-print header-sapphire-glass p-2 px-3">
             <div class="d-flex align-items-center">
                 <div class="brand-hexagon me-2">
                     <i class="bi bi-hexagon-fill text-primary shadow-glow"></i>
@@ -351,13 +351,29 @@
 </div>
 
 <style>
-    /* HUD Redesign Classes */
-    .section-tag { background: rgba(59, 130, 246, 0.15); border-left: 3px solid var(--neon-blue); color: #60a5fa; font-size: 10px; font-weight: 900; padding: 4px 10px; letter-spacing: 2px; text-transform: uppercase; display: inline-block; }
+    .production-dashboard-sapphire {
+        min-height: 100vh;
+        padding: 1.5rem;
+        background-color: #020617;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.1) 0, transparent 50%);
+        position: relative;
+    }
+
+    .header-sapphire-glass {
+        background: rgba(30, 58, 138, 0.15);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
     
-    .bg-hud-navy { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
-    .spec-card { background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(59, 130, 246, 0.2); border-left: 4px solid var(--neon-blue); padding: 12px 20px; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
-    .spec-card::after { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--neon-blue); opacity: 0.5; }
-    .spec-card:focus-within { border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+    .section-tag { background: rgba(59, 130, 246, 0.15); border-left: 3px solid #3b82f6; color: #60a5fa; font-size: 10px; font-weight: 900; padding: 4px 10px; letter-spacing: 2px; text-transform: uppercase; display: inline-block; }
+    
+    .bg-hud-navy { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); }
+    .spec-card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; padding: 12px 20px; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
+    .spec-card:focus-within { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
     .spec-label { color: #60a5fa; font-size: 11px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
     .spec-input { background: transparent; border: none; color: white; font-size: 18px; font-weight: 700; width: 100%; outline: none; }
     .spec-input.highlight { color: #60a5fa; text-shadow: var(--neon-glow); }

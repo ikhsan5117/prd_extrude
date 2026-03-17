@@ -2,151 +2,808 @@
 
 @{
     ViewData["Title"] = "Production Monitoring Dashboard";
+    var readings = Model.ProductionReadings.OrderBy(r => r.ReadingTime).ToList();
+    var std = Model.StandardParameterSetting ?? new VelastoProductionSystem.Models.StandardParameterSetting();
+    var currentPortal = Context.Request.Query["portal"].ToString();
 }
 
-<div class="no-print mb-4 d-flex justify-content-between align-items-center">
-    <div>
-        <h2 class="text-white fw-bold mb-0">PRODUCTION MONITORING</h2>
-        <span class="badge bg-success shadow-sm px-3 rounded-pill">STATUS: @Model.Status</span>
+<div class="production-dashboard-sapphire fade-in">
+    <!-- PORTAL SELECTION / TOGGLE (No Print) -->
+    <div class="d-flex justify-content-center gap-3 mb-4 no-print header-sapphire-glass p-3">
+        <a href="?portal=parameter" class="portal-btn @(currentPortal == "parameter" || string.IsNullOrEmpty(currentPortal) ? "active" : "")">
+            <i class="bi bi-gear-wide-connected fs-4"></i>
+            <div>
+                <span class="small fw-bold d-block text-white-50">OPERATOR 1</span>
+                <span class="fw-black">PARAMETER SETTING</span>
+            </div>
+        </a>
+        <a href="?portal=dimension" class="portal-btn @(currentPortal == "dimension" ? "active" : "")">
+            <i class="bi bi-rulers fs-4"></i>
+            <div>
+                <span class="small fw-bold d-block text-white-50">OPERATOR 2</span>
+                <span class="fw-black">DIMENSION REPORT</span>
+            </div>
+        </a>
+        
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button onclick="window.print()" class="btn btn-outline-glass btn-sm">
+                <i class="bi bi-printer me-1"></i> PRINT
+            </button>
+            <button type="button" class="btn btn-danger-glass btn-sm" data-bs-toggle="modal" data-bs-target="#finishProductionModal">
+                <i class="bi bi-flag-fill me-1"></i> FINISH
+            </button>
+        </div>
     </div>
-    <div class="d-flex gap-2">
-        <button onclick="window.print()" class="btn btn-light"><i class="bi bi-printer me-1"></i> Print Full Report</button>
-        <form asp-action="FinishProduction" method="post" onsubmit="return confirm('Selesaikan produksi ini?')">
-            <input type="hidden" name="id" value="@Model.Id" />
-            <button type="submit" class="btn btn-danger px-4 shadow">FINISH PRODUCTION</button>
-        </form>
+
+    @if (currentPortal == "dimension")
+    {
+        <!-- ============================================= -->
+        <!-- PORTAL 2: DIMENSION (Modern HUD Wrapper)      -->
+        <!-- ============================================= -->
+        <div class="hud-container fade-in">
+            <div class="paper-replica shadow-2xl mx-auto mb-5">
+                <div class="paper-padding text-uppercase">
+                    <div class="row g-0 border-form-bold mb-3">
+                        <div class="col-3 p-3 border-end-form d-flex align-items-center justify-content-center">
+                             <div class="d-flex align-items-center bg-dark p-2 rounded">
+                                <h4 class="fw-black mb-0 text-white" style="font-family: Arial Black; letter-spacing: -1px; font-size: 24px;">V</h4>
+                                <div class="ms-1">
+                                    <h5 class="fw-black mb-0 text-white" style="letter-spacing: 2px; font-size: 14px; line-height: 1;">VELASTO</h5>
+                                </div>
+                             </div>
+                        </div>
+                        <div class="col-6 p-2 text-center border-end-form align-middle">
+                            <h5 class="fw-bold mb-0">Extruder Production Report</h5>
+                            <div class="fw-bold small">(Dimension)</div>
+                        </div>
+                        <div class="col-3 p-2 text-center d-flex flex-column justify-content-center">
+                             <div class="super-small fw-bold">NO DOC: @Model.DocumentNumber</div>
+                             <div class="super-small fw-bold">DATE: @Model.ProductionDate.ToString("dd/MM/yy")</div>
+                        </div>
+                    </div>
+
+                    <div class="table-container-modern">
+                         <table class="grid-form w-100">
+                            <thead>
+                                <tr>
+                                    <th>TIME</th><th>ITEM</th><th>INNER DIA</th><th>IN THICK X</th><th>IN THICK Y</th><th>TOTAL X</th><th>TOTAL Y</th><th>PITCH</th><th>VISUAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(var r in readings) {
+                                    <tr class="row-hover">
+                                        <td>@r.ReadingTime.ToString("HH:mm")</td>
+                                        <td>@Model.HoseType</td>
+                                        <td class="text-center">@r.InnerDiameter</td>
+                                        <td class="text-center">@r.InnerThicknessX</td>
+                                        <td class="text-center">@r.InnerThicknessY</td>
+                                        <td class="text-center">@r.TotalThicknessX</td>
+                                        <td class="text-center">@r.TotalThicknessY</td>
+                                        <td class="text-center">@r.SpiralPitch</td>
+                                        <td class="text-center fw-bold @(r.VisualCheck == "OK" ? "text-success" : "text-danger")">@r.VisualCheck</td>
+                                    </tr>
+                                }
+                            </tbody>
+                         </table>
+                    </div>
+
+                    <div class="mt-4 no-print d-flex justify-content-center">
+                        <button type="button" class="btn btn-velasto-glow-green px-5 rounded-pill" data-bs-toggle="modal" data-bs-target="#addDimModal">
+                            <i class="bi bi-rulers me-2"></i> INPUT DATA KUALITAS (DIMENSI)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- ============================================= -->
+        <!-- PORTAL 1: PARAMETER SETTING (Modern HUD)      -->
+        <!-- ============================================= -->
+        <div class="hud-container fade-in">
+            <div class="paper-replica shadow-2xl mx-auto mb-5">
+            <div class="paper-padding text-uppercase" style="font-size: 10px;">
+                
+                <!-- 1. HEADER & INFO SECTION (Pixel Perfect Integration) -->
+                <div class="border-form-bold">
+                    <!-- TOP ROW -->
+                    <div class="row g-0 border-bottom-form-bold">
+                        <div class="col-3 border-end-form p-2 d-flex align-items-center justify-content-center">
+                             <div class="d-flex align-items-center">
+                                <h4 class="fw-black mb-0 me-2" style="font-family: Arial Black, sans-serif; letter-spacing: -1px; font-size: 24px;">V</h4>
+                                <div>
+                                    <h5 class="fw-black mb-0" style="letter-spacing: 2px; font-size: 18px; line-height: 1;">VELASTO</h5>
+                                    <div class="super-small fw-bold" style="letter-spacing: 3px; font-size: 7px;">INDONESIA</div>
+                                </div>
+                             </div>
+                        </div>
+                        <div class="col-5 border-end-form p-2 d-flex flex-column justify-content-center align-items-center text-center">
+                            <h6 class="fw-bold mb-0" style="font-size: 15px; letter-spacing: 0.5px;">Extruder Production Report</h6>
+                            <div class="fw-bold" style="font-size: 12px;">(Parameter Setting)</div>
+                        </div>
+                        <div class="col-4">
+                            <table class="w-100 h-100 text-center fw-bold m-0 border-0" style="font-size: 9px;">
+                                <tr>
+                                    <td class="border-end-form border-bottom-form p-1" style="width: 33.33%;">Disetujui</td>
+                                    <td class="border-end-form border-bottom-form p-1" style="width: 33.33%;">Diperiksa</td>
+                                    <td class="border-bottom-form p-1" style="width: 33.33%;">Dibuat</td>
+                                </tr>
+                                <tr style="height: 45px;">
+                                    <td class="border-end-form"></td>
+                                    <td class="border-end-form"></td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- BOTTOM ROW -->
+                    <div class="row g-0 h-100">
+                        <div class="col-5 border-end-form p-2">
+                            <div class="mb-1 d-flex">
+                                <span style="width: 60px;">No. Doc.</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.DocumentNumber</span>
+                            </div>
+                            <div class="mb-1 d-flex">
+                                <span style="width: 60px;">Date</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.ProductionDate.ToString("dd.MM.yy")</span>
+                            </div>
+                            <div class="mb-1 d-flex">
+                                <span style="width: 60px;">Shift</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.Shift</span>
+                            </div>
+                            <div class="mb-1 d-flex">
+                                <span style="width: 60px;">Cust.</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.CustomerName</span>
+                            </div>
+                            <div class="d-flex">
+                                <span style="width: 60px;">Tipe</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.HoseType @Model.Dimension</span>
+                            </div>
+                        </div>
+                        <div class="col-1 border-end-form d-flex align-items-center justify-content-center bg-white">
+                            <table class="p-0 border-form m-2 text-center" style="width: 40px; font-size: 9px;">
+                                <tr class="border-bottom-form"><td>DARI</td></tr>
+                                <tr><td class="fw-bold fs-6">1</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-6">
+                            <table class="w-100 h-100 m-0 border-0 text-center align-middle" style="font-size: 8px;">
+                                <tr class="border-bottom-form fw-bold" style="height: 20px;">
+                                    <td class="border-end-form" style="width: 20%;">No. Rev.</td>
+                                    <td class="border-end-form" style="width: 50%;">Description</td>
+                                    <td style="width: 30%;">Date</td>
+                                </tr>
+                                <tr class="border-bottom-form" style="height: 15px;"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                                <tr class="border-bottom-form" style="height: 15px;"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                                <tr style="height: 15px;"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. TOP GRID (Material, Dies, Mesh) -->
+                <div class="row g-0 border-form mb-0">
+                    <!-- MATERIAL & DIES -->
+                    <div class="col-6 border-end-form">
+                         <table class="w-100 grid-form border-0">
+                            <tr><th colspan="2" width="130">MATERIAL</th><th width="100">STANDARD</th><th width="100">ACTUAL</th></tr>
+                            <tr><td colspan="2" class="ps-1">INNER(MATERIAL)</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td></tr>
+                            <tr><td colspan="2" class="ps-1">OUTER(MATERIAL)</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td></tr>
+                            <tr><td colspan="2" class="ps-1">YARN</td><td class="text-center">ARAMID</td><td class="text-center">ARAMID</td></tr>
+                            
+                            <tr class="border-top-form"><th width="110">DIES</th><th width="60">CEK VISUAL</th><th>STANDARD</th><th>BEFORE / AFTER</th></tr>
+                            <tr><td class="ps-1">Ø Nipple Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.InnerDie == 0 ? "-" : std.InnerDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">Ø Tube Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.TubeDie == 0 ? "-" : std.TubeDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">Ø Middle Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.MiddleDie == 0 ? "-" : std.MiddleDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">Ø Cover Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.CoverDie == 0 ? "-" : std.CoverDie.ToString())</td><td class="text-center"></td></tr>
+                        </table>
+                    </div>
+                    <!-- MESH & EMBOSS -->
+                    <div class="col-6">
+                        <table class="w-100 grid-form border-0">
+                            <tr><th width="120">TIPE MESH</th><th width="100">CONTENT</th><th width="100">Ø96 #10</th><th width="100">Ø96 #40</th></tr>
+                            <tr><td class="ps-1">SEBELUM PROSES</td><td class="text-center">INNER / OUTER</td><td class="text-center"></td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">SESUDAH PROSES</td><td class="text-center">INNER / OUTER</td><td class="text-center"></td><td class="text-center"></td></tr>
+                            <tr class="border-top-form"><th colspan="2">EMBOSS MARKING CHECK</th><th>STATUS</th><th>RESULT</th></tr>
+                            <tr><td colspan="2" class="ps-1">TEXT / DATE</td><td class="text-center">CLEAN/KOTOR</td><td class="text-center"></td></tr>
+                            <tr><td colspan="2" class="ps-1">SURFACE</td><td class="text-center">OK / SCRATCH</td><td class="text-center"></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. MAIN MONITORING TABLE (Tablet-Friendly Sticky Labels) -->
+                <div class="table-container-modern shadow-inner mt-2">
+                    <div class="table-responsive-modern border border-dark">
+                        <table class="grid-form w-100 m-0">
+                            <thead class="sticky-top bg-light">
+                                <tr>
+                                    <th class="sticky-col label-col" width="180">TIME / PARAMETER</th>
+                                    <th class="sticky-col std-col" width="100">STANDARD</th>
+                                    <th class="initial-col" width="80">INITIAL</th>
+                                    @for(int i=1; i<=7; i++) { <th width="60">@i</th> }
+                                    <th width="40" class="bg-secondary text-white">...</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- INNER SECTION -->
+                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">INNER (TUBE 1)</td></tr>
+                                 @{
+                                    var innerRows = new[] {
+                                        new { Label = "Head Temp. (°C)", Key = "HeadTempInner", Std = (std.HeadTemp == 0 ? "90" : std.HeadTemp.ToString()) + " ± 5" },
+                                        new { Label = "Cylinder 1 (°C)", Key = "Cylinder1TempInner", Std = (std.Cylinder1Temp == 0 ? "90" : std.Cylinder1Temp.ToString()) + " ± 5" },
+                                        new { Label = "Cylinder 2 (°C)", Key = "Cylinder2TempInner", Std = (std.Cylinder2Temp == 0 ? "90" : std.Cylinder2Temp.ToString()) + " ± 5" },
+                                        new { Label = "Cylinder 3 (°C)", Key = "Cylinder3TempInner", Std = (std.Cylinder3Temp == 0 ? "90" : std.Cylinder3Temp.ToString()) + " ± 5" },
+                                        new { Label = "Screw Temp. (°C)", Key = "ScrewTempInner", Std = (std.ScrewTemp == 0 ? "90" : std.ScrewTemp.ToString()) + " ± 5" },
+                                        new { Label = "Screw Speed (rpm)", Key = "ScrewSpeedInner", Std = (std.ScrewSpeed == 0 ? "6.1" : std.ScrewSpeed.ToString()) + " ± 2.5" },
+                                        new { Label = "Feed Roll Ratio (%)", Key = "FeedRollRatioInner", Std = "MAX. 120" },
+                                        new { Label = "Pressure (MPa)", Key = "PressureInner", Std = "MAX. " + (std.Pressure == 0 ? "50" : std.Pressure.ToString()) }
+                                    };
+                                }
+                                @foreach(var row in innerRows) {
+                                    <tr class="row-hover">
+                                        <td class="ps-2 sticky-col label-col bg-white">@row.Label</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.Std</td>
+                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
+                                        @for(int i=1; i<=7; i++) {
+                                            <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td>
+                                        }
+                                        <td class="bg-light"></td>
+                                    </tr>
+                                }
+
+                                <!-- OUTER SECTION -->
+                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">OUTER (COVER)</td></tr>
+                                 @{
+                                    var outerRows = new[] {
+                                        new { Label = "Head Temp. (°C)", Key = "HeadTempOuter", Std = "90 ± 5" },
+                                        new { Label = "Cylinder 1 (°C)", Key = "Cylinder1TempOuter", Std = "90 ± 5" },
+                                        new { Label = "Cylinder 2 (°C)", Key = "Cylinder2TempOuter", Std = "90 ± 5" },
+                                        new { Label = "Cylinder 3 (°C)", Key = "Cylinder3TempOuter", Std = "-" },
+                                        new { Label = "Screw Temp. (°C)", Key = "ScrewTempOuter", Std = "90 ± 5" },
+                                        new { Label = "Screw Speed (rpm)", Key = "ScrewSpeedOuter", Std = "8.2 ± 2.5" },
+                                        new { Label = "Feed Roll Ratio (%)", Key = "FeedRollRatioOuter", Std = "MAX. 120" },
+                                        new { Label = "Pressure (MPa)", Key = "PressureOuter", Std = "MAX. 50" }
+                                    };
+                                }
+                                @foreach(var row in outerRows) {
+                                    <tr class="row-hover">
+                                        <td class="ps-2 sticky-col label-col bg-white">@row.Label</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.Std</td>
+                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
+                                        @for(int i=1; i<=7; i++) {
+                                            <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td>
+                                        }
+                                        <td class="bg-light"></td>
+                                    </tr>
+                                }
+
+                                <!-- SPIRAL SECTION -->
+                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">SPIRAL</td></tr>
+                                @foreach(var row in (new[] { 
+                                    new { L="Spiral Speed (rpm)", K="SpiralSpeed", S="98±20" },
+                                    new { L="Spiral Pitch (Setting)", K="SpiralPitchSetting", S="35±5" },
+                                    new { L="Spiral Pitch (Display)", K="SpiralPitchDisplay", S="35±5" }
+                                })) {
+                                    <tr class="row-hover">
+                                        <td class="ps-2 sticky-col label-col bg-white">@row.L</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.S</td>
+                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
+                                        @for(int i=1; i<=7; i++) { <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td> }
+                                        <td class="bg-light"></td>
+                                    </tr>
+                                }
+
+                                <!-- OTHER SECTION -->
+                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">OTHERS</td></tr>
+                                @foreach(var row in (new[] { 
+                                    new { L="Preset Value (Ø mm)", K="PresetValue", S="18.5±0.2" },
+                                    new { L="Control Value (Ø mm)", K="ControlValue", S="18.5±0.2" },
+                                    new { L="Hose Speed (m/min)", K="HoseSpeed", S="3.4±2" },
+                                    new { L="Take up Speed (m/min)", K="TakeupConveyorSpeed", S="3.4±3" },
+                                    new { L="Cool Conveyor Speed", K="CoolConveyorSpeed", S="3.4±4" },
+                                    new { L="Conveyor Ratio", K="ConveyorRatio", S="100%±10" },
+                                    new { L="Un smooth surface", K="UnsmoothSurface", S="0.5" },
+                                    new { L="Chiller Water Temp", K="ChillerWaterTemp", S="MAX. 15" },
+                                    new { L="Caterpillar Gap (mm)", K="CaterpillarGap", S="18.2±1" }
+                                })) {
+                                    <tr class="row-hover">
+                                        <td class="ps-2 sticky-col label-col bg-white">@row.L</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.S</td>
+                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
+                                        @for(int i=1; i<=7; i++) { <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td> }
+                                        <td class="bg-light"></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5. WASTE SECTION (Modernized) -->
+                <div class="row g-0 border-form-bold mt-2 bg-light">
+                    <div class="col-8 border-end-form">
+                        <table class="grid-form w-100 border-0 m-0">
+                            <tr class="bg-secondary text-white"><th colspan="2">WASTE (KG)</th><th class="text-center">AWAL</th><th class="text-center">AKHIR</th></tr>
+                            <tr class="bg-white">
+                                <td rowspan="2" class="text-center align-middle fw-bold" width="100">DANDORY (CLEANING)</td>
+                                <td class="ps-2">INNER</td><td class="text-center">@(Model.WasteInnerAwal)</td><td class="text-center">@(Model.WasteInnerAkhir)</td>
+                            </tr>
+                            <tr class="bg-white">
+                                <td class="ps-2">COVER</td><td class="text-center">@(Model.WasteCoverAwal)</td><td class="text-center">@(Model.WasteCoverAkhir)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-4 p-2 d-flex align-items-center justify-content-center text-center">
+                        <div class="small fw-bold text-danger">
+                            <i class="bi bi-info-circle-fill me-1"></i> NOTE: <br/>LAKUKAN PENGECEKAN PARAMETER PADA SAAT AWAL, TENGAH & AKHIR PROSES.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INPUT TRIGGER PARAMETER -->
+                <div class="mt-4 no-print d-flex justify-content-center">
+                    <button type="button" class="btn btn-velasto-glow px-5 rounded-pill" data-bs-toggle="modal" data-bs-target="#addReadingModal">
+                        <i class="bi bi-plus-circle-fill me-2"></i> INPUT DATA PARAMETER (JAM KE-@(readings.Count))
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
+
+<!-- ============================================= -->
+<!-- MODALS FOR INPUT                              -->
+<!-- ============================================= -->
+
+<!-- MODAL OPERATOR 1 (FULL PARAMETER HUD) -->
+<div class="modal fade no-print" id="addReadingModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content scanner-modal-glass border-0">
+            <div class="modal-header border-bottom border-primary border-opacity-25 pb-3">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box me-3"><i class="bi bi-cpu text-primary fs-3"></i></div>
+                    <div>
+                        <h4 class="modal-title text-white fw-black mb-0">OPERATOR 1 MONITORING</h4>
+                        <div class="text-primary-50 small fw-bold">INPUT PARAMETER MESIN - JAM KE-@(readings.Count + 1)</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="AddReading" method="post" id="parameterForm">
+                <input type="hidden" name="ProductionReportId" value="@Model.Id" />
+                <input type="hidden" name="RecordedBy" value="Operator 1" />
+                <div class="modal-body p-0">
+                    <ul class="nav nav-tabs hud-tabs border-0" id="readingTabs" role="tablist">
+                        <li class="nav-item flex-grow-1"><button class="nav-link active w-100 py-3" data-bs-toggle="tab" data-bs-target="#tab-inner">INNER (TUBE 1)</button></li>
+                        <li class="nav-item flex-grow-1"><button class="nav-link w-100 py-3" data-bs-toggle="tab" data-bs-target="#tab-outer">OUTER (COVER)</button></li>
+                        <li class="nav-item flex-grow-1"><button class="nav-link w-100 py-3" data-bs-toggle="tab" data-bs-target="#tab-spiral">SPIRAL & OTHERS</button></li>
+                    </ul>
+
+                    <div class="tab-content p-4 bg-hud-navy-dark">
+                        <!-- TAB INNER -->
+                        <div class="tab-pane fade show active" id="tab-inner">
+                            <div class="row g-4">
+                                @foreach(var f in new[] { 
+                                    new { L="Head Temp", N="HeadTempInner", U="°C" }, new { L="Cyl 1", N="Cylinder1TempInner", U="°C" },
+                                    new { L="Cyl 2", N="Cylinder2TempInner", U="°C" }, new { L="Cyl 3", N="Cylinder3TempInner", U="°C" },
+                                    new { L="Screw Temp", N="ScrewTempInner", U="°C" }, new { L="Screw Speed", N="ScrewSpeedInner", U="RPM" },
+                                    new { L="Feed Roll", N="FeedRollRatioInner", U="%" }, new { L="Pressure", N="PressureInner", U="MPa" }
+                                }) {
+                                    <div class="col-md-3">
+                                        <div class="hud-input-group">
+                                            <label class="hud-label">@f.L <span class="unit">(@f.U)</span></label>
+                                            <input name="@f.N" type="number" step="0.1" class="hud-input-lg w-100" placeholder="0.0" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- TAB OUTER -->
+                        <div class="tab-pane fade" id="tab-outer">
+                            <div class="row g-4">
+                                @foreach(var f in new[] { 
+                                    new { L="Head Temp", N="HeadTempOuter", U="°C" }, new { L="Cyl 1", N="Cylinder1TempOuter", U="°C" },
+                                    new { L="Cyl 2", N="Cylinder2TempOuter", U="°C" }, new { L="Cyl 3", N="Cylinder3TempOuter", U="°C" },
+                                    new { L="Screw Temp", N="ScrewTempOuter", U="°C" }, new { L="Screw Speed", N="ScrewSpeedOuter", U="RPM" },
+                                    new { L="Feed Roll", N="FeedRollRatioOuter", U="%" }, new { L="Pressure", N="PressureOuter", U="MPa" }
+                                }) {
+                                    <div class="col-md-3">
+                                        <div class="hud-input-group">
+                                            <label class="hud-label text-warning">@f.L <span class="unit">(@f.U)</span></label>
+                                            <input name="@f.N" type="number" step="0.1" class="hud-input-lg w-100 border-warning-subtle" placeholder="0.0" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- TAB SPIRAL & OTHERS -->
+                        <div class="tab-pane fade" id="tab-spiral">
+                            <div class="row g-4">
+                                <div class="col-md-3"><label class="hud-label text-info">Spiral Speed (rpm)</label><input name="SpiralSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-3"><label class="hud-label text-info">Pitch (Set)</label><input name="SpiralPitchSetting" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-3"><label class="hud-label text-info">Pitch (Disp)</label><input name="SpiralPitchDisplay" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-3"><label class="hud-label text-info">Hose Speed (m/min)</label><input name="HoseSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                
+                                <div class="col-md-4"><label class="hud-label text-success">Take-up Speed</label><input name="TakeupConveyorSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-4"><label class="hud-label text-success">Cool Conv Speed</label><input name="CoolConveyorSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-4"><label class="hud-label text-success">Conv Ratio (%)</label><input name="ConveyorRatio" type="text" class="hud-input-lg w-100" placeholder="100%" /></div>
+                                
+                                <div class="col-md-3"><label class="hud-label">Chiller Temp</label><input name="ChillerWaterTemp" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-3"><label class="hud-label">Preset View</label><input name="PresetValue" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-3"><label class="hud-label">Control Value</label><input name="ControlValue" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                <div class="col-md-3"><label class="hud-label">Caterpillar Gap</label><input name="CaterpillarGap" type="number" step="0.1" class="hud-input-lg w-100" /></div>
+                                
+                                <div class="col-12"><label class="hud-label text-danger">Unsmooth Surface (mm)</label><input name="UnsmoothSurface" type="number" step="0.01" class="hud-input-lg w-100 text-danger" placeholder="0.5" /></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-primary border-opacity-10 bg-hud-navy">
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-primary px-5 fw-bold neon-pulse-blue">SUBMIT ALL READINGS</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<!-- TAB NAVIGATION -->
-<ul class="nav nav-tabs custom-tabs no-print mb-4" id="prodTabs" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" id="parameter-tab" data-bs-toggle="tab" href="#parameter" role="tab">
-            <i class="bi bi-thermometer-half me-2"></i> 1. PARAMETER SETTING (Gambar 5)
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="dimension-tab" data-bs-toggle="tab" href="#dimension" role="tab">
-            <i class="bi bi-rulers me-2"></i> 2. DIMENSION REPORT (Gambar 2)
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="material-tab" data-bs-toggle="tab" href="#material" role="tab">
-            <i class="bi bi-box-seam me-2"></i> 3. INITIAL CHECK (Gambar 1)
-        </a>
-    </li>
-</ul>
-
-<div class="tab-content" id="prodTabsContent">
-    <!-- TAB 1: PARAMETER SETTING (Image 5) -->
-    <div class="tab-pane fade show active" id="parameter" role="tabpanel">
-        <div class="production-paper p-4 shadow-lg mb-5">
-            <div class="text-center border-bottom border-dark border-2 mb-3">
-                <h4 class="fw-bold">Extruder Production Report (Parameter Setting)</h4>
-            </div>
-            <!-- Header Grid dari Gambar 5 -->
-            <table class="table table-bordered table-sm border-dark small-table text-center">
-                <thead class="bg-light">
-                    <tr>
-                        <th rowspan="2" class="align-middle">TIME</th>
-                        <th colspan="5">INNER (TUBE 1)</th>
-                        <th colspan="5">OUTER (COVER)</th>
-                        <th rowspan="2" class="align-middle">ACTION</th>
-                    </tr>
-                    <tr>
-                        <th>Head (°C)</th><th>Cyl 1</th><th>Cyl 2</th><th>Speed</th><th>Press</th>
-                        <th>Head (°C)</th><th>Cyl 1</th><th>Cyl 2</th><th>Speed</th><th>Press</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(var log in Model.ProductionReadings) {
-                        <tr>
-                            <td>@log.ReadingTime.ToString("HH:mm")</td>
-                            <td>@log.HeadTempInner</td><td>@log.Cylinder1TempInner</td><td>@log.Cylinder2TempInner</td><td>@log.ScrewSpeedInner</td><td>@log.PressureInner</td>
-                            <td>@log.HeadTempOuter</td><td>@log.Cylinder1TempOuter</td><td>@log.Cylinder2TempOuter</td><td>@log.ScrewSpeedOuter</td><td>@log.PressureOuter</td>
-                            <td><button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button></td>
-                        </tr>
-                    }
-                    <tr class="bg-info bg-opacity-10 no-print">
-                        <td class="extra-small">ADD NEW</td>
-                        <td><input class="log-input" id="h_in" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td>
-                        <td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td>
-                        <td><button class="btn btn-primary btn-xs"><i class="bi bi-plus-lg"></i></button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- TAB 2: DIMENSION REPORT (Image 2) -->
-    <div class="tab-pane fade" id="dimension" role="tabpanel">
-        <div class="dimension-paper p-4 shadow-lg mb-5">
-            <div class="text-center border-bottom border-dark border-2 mb-3">
-                <h4 class="fw-bold">Extruder Production Report (Dimension)</h4>
-            </div>
-            <!-- Grid Dimension Table dari Gambar 2 -->
-            <div class="row g-0 border border-dark border-2">
-                <div class="col-md-8 border-end border-dark">
-                    <table class="table table-bordered border-dark small-table text-center mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 150px;">POINT</th>
-                                <th style="width: 80px;">STD</th>
-                                <th>INIT</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>Inner Dia.</td><td class="fw-bold">11.0±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
-                            <tr><td>Inner Thick.</td><td class="fw-bold">1.8±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
-                            <tr><td>Total Thick.</td><td class="fw-bold">3.3±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Right Side: Qty Status -->
-                <div class="col-md-4 p-3 bg-light">
-                    <div class="mb-3">
-                        <label class="fw-bold extra-small text-muted d-block">VIN KODE</label>
-                        <div class="fs-5 fw-bold">@Model.VinCode</div>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-6"><label class="extra-small">QTY TARGET</label><div class="fw-bold border-bottom border-dark">@Model.QtyTarget pcs</div></div>
-                        <div class="col-6"><label class="extra-small">QTY OK</label><input type="number" class="form-control form-control-sm border-success text-success fw-bold" value="@Model.QtyOk" /></div>
-                        <div class="col-6"><label class="extra-small text-danger">NG DIMENSI</label><input type="number" class="form-control form-control-sm border-danger text-danger" value="@Model.NgDimension" /></div>
-                        <div class="col-6"><label class="extra-small text-danger">NG VISUAL</label><input type="number" class="form-control form-control-sm border-danger text-danger" value="@Model.NgVisual" /></div>
+<!-- MODAL OPERATOR 2 (DIMENSION HUD) -->
+<div class="modal fade no-print" id="addDimModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content scanner-modal-glass border-0">
+            <div class="modal-header border-bottom border-success border-opacity-25 pb-3">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box bg-success bg-opacity-10 me-3"><i class="bi bi-rulers text-success fs-3"></i></div>
+                    <div>
+                        <h4 class="modal-title text-white fw-black mb-0">OPERATOR 2 - QUALITY CONTROL</h4>
+                        <div class="text-success-50 small fw-bold">INPUT DIMENSI & VISUAL - @DateTime.Now.ToString("HH:mm")</div>
                     </div>
                 </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+            <form asp-action="AddDimensionReading" method="post">
+                <input type="hidden" name="ProductionReportId" value="@Model.Id" />
+                <div class="modal-body p-4 bg-hud-navy-dark">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="hud-input-group border-success border-opacity-10">
+                                <label class="hud-label text-success">Inner Diameter (mm)</label>
+                                <input name="InnerDiameter" type="number" step="0.01" class="hud-input-lg w-100 text-success" placeholder="0.00" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="hud-input-group">
+                                <label class="hud-label">Thick X (mm)</label>
+                                <input name="InnerThicknessX" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="hud-input-group">
+                                <label class="hud-label">Thick Y (mm)</label>
+                                <input name="InnerThicknessY" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="hud-input-group">
+                                <label class="hud-label">Total X (mm)</label>
+                                <input name="TotalThicknessX" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="hud-input-group">
+                                <label class="hud-label">Total Y (mm)</label>
+                                <input name="TotalThicknessY" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="hud-input-group">
+                                <label class="hud-label">Spiral Pitch (mm)</label>
+                                <input name="SpiralPitch" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="hud-input-group bg-dark bg-opacity-25">
+                                <label class="hud-label">Visual Status Check</label>
+                                <div class="d-flex gap-2">
+                                    <input type="radio" class="btn-check" name="VisualCheck" id="v-ok" value="OK" checked>
+                                    <label class="btn btn-outline-success flex-grow-1 py-3 fw-bold" for="v-ok">OK - PASSED</label>
+                                    
+                                    <input type="radio" class="btn-check" name="VisualCheck" id="v-sc" value="SC">
+                                    <label class="btn btn-outline-warning flex-grow-1 py-3 fw-bold" for="v-sc">SC - SCRATCH</label>
+                                    
+                                    <input type="radio" class="btn-check" name="VisualCheck" id="v-ng" value="NG">
+                                    <label class="btn btn-outline-danger flex-grow-1 py-3 fw-bold" for="v-ng">NG - REJECT</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-success border-opacity-10 bg-hud-navy">
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-success px-5 fw-bold">SAVE QUALITY DATA</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <!-- TAB 3: MATERIAL CHECK (Image 1) -->
-    <div class="tab-pane fade" id="material" role="tabpanel">
-        <div class="material-paper p-4 shadow-lg mb-5" style="background: #fff8f0; border: 1.5px solid #d4a373;">
-            <h5 class="fw-bold border-bottom border-dark pb-2 mb-3">INITIAL MATERIAL & SETUP (NOW I'M PRODUCE)</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-1"><b>Hose Type:</b> @Model.HoseType</p>
-                    <p class="mb-1"><b>Dimension:</b> @Model.Dimension</p>
-                    <p class="mb-1"><b>Yarn:</b> @Model.Yarn</p>
+<!-- MODAL FINISH PRODUCTION & WASTE -->
+<div class="modal fade no-print" id="finishProductionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content scanner-modal-glass border-0">
+            <div class="modal-header border-bottom border-danger border-opacity-25 pb-3">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box bg-danger bg-opacity-10 me-3"><i class="bi bi-flag-fill text-danger fs-3"></i></div>
+                    <div>
+                        <h4 class="modal-title text-white fw-black mb-0">PRODUCTION FINAL RECAP</h4>
+                        <div class="text-danger-50 small fw-bold">INPUT WASTE & SELESAIKAN PROSES</div>
+                    </div>
                 </div>
-                <div class="col-md-6 border-start border-dark border-opacity-10">
-                    <p class="mb-1 text-info"><b>Material Inner Lot:</b> @Model.InnerMaterialLotNo (SG: @Model.InnerMaterialSG)</p>
-                    <p class="mb-1 text-info"><b>Material Outer Lot:</b> @Model.OuterMaterialLotNo (SG: @Model.OuterMaterialSG)</p>
-                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+            <form asp-action="FinishProduction" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-body p-4 bg-hud-navy-dark">
+                    <div class="row g-4">
+                        <!-- WASTE SECTION -->
+                        <div class="col-12">
+                            <h6 class="text-white-50 border-bottom border-white border-opacity-10 pb-2 mb-3 fw-bold">DANDORY & WASTE (KG)</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3"><label class="hud-label">INNER AWAL</label><input name="WasteInnerAwal" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteInnerAwal" /></div>
+                                <div class="col-md-3"><label class="hud-label">INNER AKHIR</label><input name="WasteInnerAkhir" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteInnerAkhir" /></div>
+                                <div class="col-md-3"><label class="hud-label">COVER AWAL</label><input name="WasteCoverAwal" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteCoverAwal" /></div>
+                                <div class="col-md-3"><label class="hud-label">COVER AKHIR</label><input name="WasteCoverAkhir" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteCoverAkhir" /></div>
+                            </div>
+                        </div>
+
+                        <!-- RECAP SECTION -->
+                        <div class="col-12">
+                            <h6 class="text-white-50 border-bottom border-white border-opacity-10 pb-2 mb-3 fw-bold">FINAL ACCOMPLISHMENT</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4"><label class="hud-label text-info">Qty OK (Pcs/m)</label><input name="qtyOk" id="finish-ok" type="number" class="hud-input-lg w-100" value="@Model.QtyOk" /></div>
+                                <div class="col-md-4"><label class="hud-label text-warning">NG Dimension</label><input name="ngDim" id="finish-ng-dim" type="number" class="hud-input-lg w-100" value="@Model.NgDimension" /></div>
+                                <div class="col-md-4"><label class="hud-label text-danger">NG Visual</label><input name="ngVis" id="finish-ng-vis" type="number" class="hud-input-lg w-100" value="@Model.NgVisual" /></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-danger border-opacity-10 bg-hud-navy">
+                    <div class="me-auto text-white">
+                        <span class="small opacity-50 fw-bold">TOTAL QTY:</span>
+                        <span class="fs-4 fw-black text-primary" id="finish-total-display">0</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-danger px-5 fw-bold neon-pulse-red" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan produksi ini?')">FINISH PRODUCTION</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <style>
-    .production-paper, .dimension-paper { background: white; color: black; border-radius: 4px; border: 1px solid #dee2e6; }
-    .small-table { font-size: 11px; }
-    .small-table th { background: #f8f9fa; font-weight: 700; color: #333; }
-    .log-input { width: 100%; border: none; outline: none; background: transparent; text-align: center; border-bottom: 1px solid #eee; }
-    .log-input:focus { border-bottom: 2px solid #3b82f6; }
-    .extra-small { font-size: 10px; font-weight: bold; }
-    .custom-tabs .nav-link { border: none; color: rgba(255,255,255,0.6); font-weight: 600; padding: 12px 20px; transition: all 0.3s; }
-    .custom-tabs .nav-link.active { background: rgba(59, 130, 246, 0.1) !important; color: #3b82f6 !important; border-bottom: 3px solid #3b82f6 !important; }
-    .custom-tabs .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
-    @@media print { .no-print { display: none !important; } .tab-pane { display: block !important; opacity: 1 !important; } .tab-content > .tab-pane { display: block !important; } }
+    .portal-btn {
+        background: rgba(30, 58, 138, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 12px 28px;
+        border-radius: 16px;
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.7;
+        backdrop-filter: blur(5px);
+    }
+    .portal-btn i { color: rgba(59, 130, 246, 0.5); font-size: 1.5rem; }
+    .portal-btn.active { 
+        background: rgba(37, 99, 235, 0.4); 
+        border-color: #3b82f6; 
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2);
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+    .portal-btn.active i { color: #60a5fa; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+    .portal-btn:hover { opacity: 1; background: rgba(30, 58, 138, 0.3); border-color: rgba(59, 130, 246, 0.5); }
+
+    .paper-replica { 
+        background: rgba(255, 255, 255, 0.98); 
+        color: #0f172a; 
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 4px;
+    }
+    .paper-padding { padding: 30px; }
+    .border-form-bold { border: 2px solid #000 !important; }
+    .border-bottom-form-bold { border-bottom: 2px solid #000 !important; }
+    .border-form { border: 1px solid #000 !important; }
+    .border-end-form { border-right: 1px solid #000 !important; }
+    .border-bottom-form { border-bottom: 1px solid #000 !important; }
+    .border-top-form { border-top: 1px solid #000 !important; }
+    .grid-form th, .grid-form td { border: 1px solid #000 !important; padding: 6px 4px; font-size: 11px; }
+    .grid-form th { background: #e9ecef; color: #333; font-weight: 800; text-transform: uppercase; }
+    
+    /* Modern Industrial HUD refinements */
+    .table-container-modern { overflow: hidden; border-radius: 4px; }
+    .table-responsive-modern { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .sticky-col { position: sticky; left: 0; z-index: 5; border-right: 2px solid #000 !important; }
+    .label-col { left: 0; background: #fff !important; min-width: 180px; }
+    .std-col { left: 180px; background: #f8f9fa !important; min-width: 100px; border-right: 3px double #000 !important; }
+    .bg-light-blue { background-color: #e3f2fd !important; }
+    
+    .section-divider { background: #343a40 !important; color: #fff !important; }
+    .row-hover:hover td { background-color: rgba(59, 130, 246, 0.05) !important; }
+    .cell-active { background-color: #fffde7; font-weight: bold; border: 1px solid #fbc02d !important; }
+    .cell-input { font-family: 'Courier New', Courier, monospace; font-weight: 600; color: #1a237e; }
+    
+    .super-small { font-size: 9px; }
+    .h-33 { height: 33.33%; }
+    
+    .hud-container {
+        padding: 25px;
+        background: radial-gradient(circle at 0% 0%, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.95) 100%),
+                    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 20px;
+        position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(59, 130, 246, 0.05);
+        z-index: 1;
+        overflow: hidden;
+    }
+    .hud-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.4), transparent);
+        z-index: 2;
+    }
+    .hud-container::after {
+        content: '';
+        position: absolute;
+        bottom: 0; right: 0; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+        z-index: -1;
+    }
+
+    .btn-velasto-glow-green {
+        background: var(--btn-green);
+        color: white;
+        border: 1px solid var(--neon-green);
+        box-shadow: 0 0 10px var(--neon-green-glow);
+        transition: all 0.3s;
+    }
+    .btn-velasto-glow-green:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--neon-green-glow); color: white; }
+
+    /* Modal Tweaks */
+    .hud-tabs .nav-link { 
+        background: rgba(15, 23, 42, 0.8); 
+        color: rgba(255,255,255,0.5); 
+        border: none; 
+        border-right: 1px solid rgba(255,255,255,0.1);
+        font-weight: bold;
+    }
+    .hud-tabs .nav-link.active { background: #1e293b; color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+    .bg-hud-navy-dark { background: #0f172a; }
+    .hud-input-group { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+    .hud-label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .hud-label .unit { font-size: 9px; opacity: 0.6; }
+    .hud-input-lg { 
+        background: #1e293b; 
+        border: 1px solid rgba(59, 130, 246, 0.4); 
+        border-radius: 6px; 
+        color: #60a5fa; 
+        padding: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        outline: none;
+    }
+    .hud-input-lg:focus { border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+
+    .neon-pulse-blue { animation: neon-pulse-blue 2s infinite ease-in-out; }
+    .neon-pulse-red { animation: neon-pulse-red 2s infinite ease-in-out; }
+    
+    @@keyframes neon-pulse-blue {
+        0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+        50% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); }
+        100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+    }
+    @@keyframes neon-pulse-red {
+        0% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.5); }
+        50% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.8); }
+        100% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.5); }
+    }
+
+    .production-dashboard-sapphire {
+        min-height: 100vh;
+        padding: 2rem;
+        background-color: #020617;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.1) 0, transparent 50%);
+        position: relative;
+    }
+
+    .header-sapphire-glass {
+        background: rgba(30, 58, 138, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(59, 130, 246, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .btn-outline-glass {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.3s;
+    }
+    .btn-outline-glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .btn-danger-glass {
+        background: rgba(220, 38, 38, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        color: #f87171;
+        transition: all 0.3s;
+    }
+    .btn-danger-glass:hover {
+        background: rgba(220, 38, 38, 0.2);
+        border-color: rgba(220, 38, 38, 0.4);
+        color: white;
+        box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+    }
+
+    @@media print {
+        .hud-container { padding: 0; background: transparent !important; backdrop-filter: none; border: none; box-shadow: none; }
+        .production-dashboard-sapphire { background: transparent !important; padding: 0; }
+        .no-print { display: none !important; }
+        .paper-replica { border: none !important; box-shadow: none !important; margin: 0; padding: 0 !important; width: 100% !important; background: white !important; }
+        body { background: #fff !important; }
+    }
 </style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        async function saveRecap() {
+            const data = {
+                reportId: @Model.Id,
+                vinCode: document.getElementById('rec-vincode').value,
+                qtyOk: document.getElementById('rec-ok').value,
+                ngDim: document.getElementById('rec-ngdim').value,
+                ngVis: document.getElementById('rec-ngvis').value,
+                remark: document.getElementById('rec-remark').value
+            };
+
+            const res = await fetch('/ProductionReport/UpdateRecap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({ icon: 'success', title: 'Recap Saved!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+            }
+        }
+
+        // Live Total Qty Calculation for Finish Modal
+        const finishInputs = ['finish-ok', 'finish-ng-dim', 'finish-ng-vis'];
+        function updateFinishTotal() {
+            const ok = parseInt(document.getElementById('finish-ok')?.value) || 0;
+            const ngDim = parseInt(document.getElementById('finish-ng-dim')?.value) || 0;
+            const ngVis = parseInt(document.getElementById('finish-ng-vis')?.value) || 0;
+            const display = document.getElementById('finish-total-display');
+            if (display) display.innerText = ok + ngDim + ngVis;
+        }
+        finishInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateFinishTotal);
+        });
+        updateFinishTotal(); // Initial call
+    </script>
+}

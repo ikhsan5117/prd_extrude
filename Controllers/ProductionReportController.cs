@@ -72,7 +72,8 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> FinishProduction(int id, int qtyOk, int ngDim, int ngVis)
+        public async Task<IActionResult> FinishProduction(int id, int qtyOk, int ngDim, int ngVis, 
+            decimal? WasteInnerAwal, decimal? WasteInnerAkhir, decimal? WasteCoverAwal, decimal? WasteCoverAkhir)
         {
             var report = await _context.ProductionReports.FindAsync(id);
             if (report != null)
@@ -80,6 +81,11 @@ namespace VelastoProductionSystem.Controllers
                 report.QtyOk = qtyOk;
                 report.NgDimension = ngDim;
                 report.NgVisual = ngVis;
+                report.WasteInnerAwal = WasteInnerAwal;
+                report.WasteInnerAkhir = WasteInnerAkhir;
+                report.WasteCoverAwal = WasteCoverAwal;
+                report.WasteCoverAkhir = WasteCoverAkhir;
+
                 report.Status = "COMPLETED";
                 report.ProductionEndTime = DateTime.Now;
                 await _context.SaveChangesAsync();
@@ -124,12 +130,43 @@ namespace VelastoProductionSystem.Controllers
             if (reading.ProductionReportId != 0)
             {
                 reading.ReadingTime = DateTime.Now;
-                reading.RecordedBy = "Operator"; // Default
+                reading.RecordedBy = reading.RecordedBy ?? "Operator 1";
                 _context.ProductionReadings.Add(reading);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Details), new { id = reading.ProductionReportId });
+                return RedirectToAction(nameof(Details), new { id = reading.ProductionReportId, portal = "parameter" });
             }
             return BadRequest();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddDimensionReading(ProductionReading reading)
+        {
+            if (reading.ProductionReportId != 0)
+            {
+                reading.ReadingTime = DateTime.Now;
+                reading.RecordedBy = "Operator 2";
+                _context.ProductionReadings.Add(reading);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Details), new { id = reading.ProductionReportId, portal = "dimension" });
+            }
+            return BadRequest();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateRecap(int reportId, string vinCode, int qtyOk, int ngDim, int ngVis, string remark)
+        {
+            var report = await _context.ProductionReports.FindAsync(reportId);
+            if (report != null)
+            {
+                report.VinCode = vinCode;
+                report.QtyOk = qtyOk;
+                report.NgDimension = ngDim;
+                report.NgVisual = ngVis;
+                report.Remark = remark;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
         }
     }
 }

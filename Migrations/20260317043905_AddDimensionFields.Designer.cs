@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VelastoProductionSystem.Data;
 
@@ -11,9 +12,11 @@ using VelastoProductionSystem.Data;
 namespace VelastoProductionSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260317043905_AddDimensionFields")]
+    partial class AddDimensionFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -683,9 +686,6 @@ namespace VelastoProductionSystem.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<decimal?>("PresetValue")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal?>("PressureInner")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -894,24 +894,6 @@ namespace VelastoProductionSystem.Migrations
 
                     b.Property<string>("VinCode")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("WasteCoverAkhir")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("WasteCoverAwal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("WasteInnerAkhir")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("WasteInnerAwal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("WasteWeightAkhir")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("WasteWeightAwal")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Yarn")
                         .IsRequired()

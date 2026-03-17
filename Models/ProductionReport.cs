@@ -101,6 +101,14 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Remark")]
         public string? Remark { get; set; }
 
+        // WASTE TRACKING (IMAGE 5)
+        public decimal? WasteWeightAwal { get; set; }
+        public decimal? WasteWeightAkhir { get; set; }
+        public decimal? WasteInnerAwal { get; set; }
+        public decimal? WasteInnerAkhir { get; set; }
+        public decimal? WasteCoverAwal { get; set; }
+        public decimal? WasteCoverAkhir { get; set; }
+
         // Status
         [Display(Name = "Status")]
         public string Status { get; set; } = "NOW PRODUCING"; 
