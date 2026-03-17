@@ -22,6 +22,18 @@ namespace VelastoProductionSystem.Controllers
             return View(await _context.MasterlistSpsDoubleLayers.ToListAsync());
         }
 
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var item = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.Id == id);
+            
+            if (item == null) return NotFound();
+
+            return View(item);
+        }
+
         [HttpPost]
         public async Task<IActionResult> ClearData()
         {

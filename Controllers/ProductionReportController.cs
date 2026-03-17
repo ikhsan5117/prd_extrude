@@ -95,5 +95,41 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(m => m.ItemList == itemCode);
             return Json(master);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateStandards(int reportId, string itemCode)
+        {
+            var report = await _context.ProductionReports.FindAsync(reportId);
+            var master = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.ItemList == itemCode);
+
+            if (report != null && master != null)
+            {
+                report.HoseType = master.HoseType ?? "";
+                report.Dimension = master.Dimensi ?? "";
+                report.InnerMaterial = master.InnerTube ?? master.Material ?? "";
+                report.OuterMaterial = master.OuterCover ?? "";
+                
+                // Logic to update or create StandardParameterSetting can be added here
+                
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddReading(ProductionReading reading)
+        {
+            if (reading.ProductionReportId != 0)
+            {
+                reading.ReadingTime = DateTime.Now;
+                reading.RecordedBy = "Operator"; // Default
+                _context.ProductionReadings.Add(reading);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Details), new { id = reading.ProductionReportId });
+            }
+            return BadRequest();
+        }
     }
 }
