@@ -64,7 +64,10 @@
         </div>
 
         <form asp-action="Create" id="mainForm">
-            <div asp-validation-summary="All" class="alert alert-danger mb-4 bg-danger bg-opacity-10 border-danger text-danger extra-small py-2 px-3 rounded-0 no-print"></div>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="alert alert-danger mb-4 bg-danger bg-opacity-10 border-danger text-danger extra-small py-2 px-3 rounded-0 no-print"></div>
+            }
             <div class="main-glass-card shadow-2xl">
                 
                 <!-- TOP HEADER: TITLE & COMPACT DOC INFO -->
@@ -80,8 +83,8 @@
                     <div class="col-lg-3 p-0 border-start border-primary border-opacity-25 bg-hud-navy">
                         <table class="table table-dark table-sm m-0 extra-small doc-header-table border-0 h-100">
                             <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle header-label" style="width: 130px;">No. Dokumen</td>
-                                <td class="pe-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle">
+                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label" style="width: 130px;">No. Dokumen</td>
+                                <td class="pe-2 py-0 border-0 align-middle">
                                     <div class="d-flex align-items-center">
                                         <span class="text-primary fw-bold me-1">:</span>
                                         <input asp-for="DocumentNumber" id="DocumentNumber" class="header-input" value="" placeholder="VI-SOP-PROD-131" />
@@ -89,42 +92,11 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle header-label">No. Revisi</td>
-                                <td class="pe-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-primary fw-bold me-1">:</span>
-                                        <input asp-for="RevisionNumber" id="RevisionNumber" type="text" class="header-input" value="" placeholder="0" />
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle header-label">Effective Date</td>
-                                <td class="pe-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-primary fw-bold me-1">:</span>
-                                        <input name="EffectiveDate" id="EffectiveDate" class="header-input" value="" placeholder="01/01/2024" />
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle header-label">Customer</td>
-                                <td class="pe-2 py-0 border-0 border-bottom border-primary border-opacity-10 align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-primary fw-bold me-1">:</span>
-                                        <input asp-for="CustomerName" class="header-input" placeholder="Nama Customer" />
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label">Shift</td>
+                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label">No. Revisi</td>
                                 <td class="pe-2 py-0 border-0 align-middle">
                                     <div class="d-flex align-items-center">
                                         <span class="text-primary fw-bold me-1">:</span>
-                                        <select asp-for="Shift" class="header-input bg-dark">
-                                            <option value="Shift A">Shift A</option>
-                                            <option value="Shift B">Shift B</option>
-                                            <option value="Shift C">Shift C</option>
-                                        </select>
+                                        <input asp-for="RevisionNumber" id="RevisionNumber" type="text" class="header-input" value="" placeholder="0" />
                                     </div>
                                 </td>
                             </tr>
@@ -141,7 +113,16 @@
                             <div class="spec-group">
                                 <div class="spec-label mb-2"><i class="bi bi-upc-scan me-2"></i>1. HOSE TYPE</div>
                                 <div class="spec-card">
-                                    <input asp-for="HoseType" class="spec-input fw-bold" placeholder="SCAN BARCODE..." />
+                                    <input asp-for="HoseType" id="HoseType" class="spec-input fw-bold" placeholder="---" list="hoseList" autocomplete="off" />
+                                    <datalist id="hoseList">
+                                        @if (ViewBag.HoseTypes != null)
+                                        {
+                                            @foreach (var item in (SelectList)ViewBag.HoseTypes)
+                                            {
+                                                <option value="@item.Value"></option>
+                                            }
+                                        }
+                                    </datalist>
                                 </div>
                             </div>
                             <div class="spec-group">
@@ -159,7 +140,7 @@
                             <div class="spec-group">
                                 <div class="spec-label mb-2"><i class="bi bi-puzzle me-2"></i>4. YARN</div>
                                 <div class="spec-card">
-                                    <input asp-for="Yarn" id="Yarn" class="spec-input" placeholder="---" />
+                                    <input asp-for="Yarn" id="Yarn" class="spec-input" value="---" />
                                 </div>
                             </div>
                             <div class="flex-grow-1"></div>
@@ -610,16 +591,79 @@
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
         }
+        // Auto-fill when HoseType dropdown changes
+        document.getElementById('HoseType').addEventListener('change', async function() {
+            const hoseType = this.value;
+            if (!hoseType) return;
+
+            Swal.fire({
+                title: 'SYNCING SPECIFICATIONS...',
+                allowOutsideClick: false,
+                background: '#0d1117',
+                color: '#fff',
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                const res = await fetch(`/ProductionReport/GetMasterByHoseType?hoseType=${encodeURIComponent(hoseType)}`);
+                const data = await res.json();
+                if (data) {
+                    populateFormData(data);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'SPECIFICATIONS SYNCED',
+                        text: `Auto-populated data for ${hoseType}`,
+                        background: '#0d1117',
+                        color: '#fff',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'SYNC ERROR', background: '#0d1117', color: '#fff' });
+            }
+        });
+
+        function populateFormData(data) {
+            if (!data) return;
+
+            // Get values regardless of casing
+            const docNum = data.documentNumber || data.DocumentNumber;
+            const revNum = data.revisionNumber || data.RevisionNumber;
+            const dim = data.dimensi || data.Dimensi;
+            const yarn = data.yarn || data.Yarn;
+            const hose = data.hoseType || data.HoseType;
+            const inner = data.innerTube || data.InnerTube;
+            const outer = data.outerCover || data.OuterCover;
+
+            // Update Header Documents
+            if (docNum) document.getElementById('DocumentNumber').value = docNum;
+            if (revNum) document.getElementById('RevisionNumber').value = revNum;
+
+            // Update main fields
+            if (dim) document.getElementById('Dimension').value = dim;
+            document.getElementById('Yarn').value = yarn || 'ARAMID';
+            
+            // Update HoseType (Input or Datalist)
+            if (hose) {
+                const el = document.getElementById('HoseType');
+                if (el) el.value = hose;
+            }
+            
+            // Update material codes
+            if (inner) document.getElementById('InnerMaterial').value = inner;
+            if (outer) document.getElementById('OuterMaterial').value = outer;
+        }
+
         async function onScanSuccess(decodedText) {
             stopScanner();
-            document.getElementById('HoseType').value = decodedText;
             
             Swal.fire({
-                title: 'SYNCING...',
+                title: 'CONNECTING MASTER...',
+                allowOutsideClick: false,
                 background: '#0d1117',
-                color: '#60a5fa',
-                showConfirmButton: false,
-                timer: 1000,
+                color: '#fff',
                 didOpen: () => Swal.showLoading()
             });
             
@@ -627,17 +671,7 @@
                 const res = await fetch(`/ProductionReport/GetMasterByItem?itemCode=${encodeURIComponent(decodedText)}`);
                 const data = await res.json();
                 if (data) {
-                    // Update Header Documents
-                    document.getElementById('DocumentNumber').value = data.documentNumber || '';
-                    document.getElementById('RevisionNumber').value = data.revisionNumber || '';
-                    document.getElementById('EffectiveDate').value = data.revisionDate || '';
-
-                    // Update main fields
-                    document.getElementById('Dimension').value = data.dimensi || '';
-                    document.getElementById('Yarn').value = data.yarn || 'ARAMID'; 
-                    // Update material codes automatically
-                    document.getElementById('InnerMaterial').value = data.innerTube || '';
-                    document.getElementById('OuterMaterial').value = data.outerCover || '';
+                    populateFormData(data);
                     
                     Swal.fire({
                         icon: 'success',

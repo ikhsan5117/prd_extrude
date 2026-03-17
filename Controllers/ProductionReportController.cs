@@ -40,13 +40,23 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: ProductionReport/Create (The "NOW I'M PRODUCE" Form - Gambar 1)
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var hoseTypes = await _context.MasterlistSpsDoubleLayers
+                .Where(m => !string.IsNullOrEmpty(m.HoseType))
+                .Select(m => m.HoseType)
+                .Distinct()
+                .OrderBy(h => h)
+                .ToListAsync();
+
+            ViewBag.HoseTypes = new SelectList(hoseTypes);
+
             return View(new ProductionReport 
             { 
                 ProductionDate = DateTime.Today,
                 DocumentNumber = "VI-SOP-PROD-131",
-                Status = "NOW PRODUCING"
+                Status = "NOW PRODUCING",
+                Yarn = "---"
             });
         }
 
@@ -61,6 +71,8 @@ namespace VelastoProductionSystem.Controllers
             if (ModelState.IsValid)
             {
                 report.CreatedBy = report.CreatedBy ?? "Operator 1";
+                report.Shift = report.Shift ?? "Shift 1";
+                report.CustomerName = report.CustomerName ?? "-";
                 report.CreatedDate = DateTime.Now;
                 report.Status = "NOW PRODUCING";
                 _context.Add(report);
@@ -93,6 +105,14 @@ namespace VelastoProductionSystem.Controllers
                 TempData["SuccessMessage"] = "Produksi Selesai!";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMasterByHoseType(string hoseType)
+        {
+            var master = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.HoseType == hoseType);
+            return Json(master);
         }
 
         [HttpGet]

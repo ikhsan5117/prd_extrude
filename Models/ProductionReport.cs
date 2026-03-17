@@ -17,9 +17,8 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Tanggal Produksi")]
         public DateTime ProductionDate { get; set; }
 
-        [Required]
         [Display(Name = "Shift")]
-        public string Shift { get; set; } = string.Empty;
+        public string? Shift { get; set; }
 
         [Display(Name = "Customer")]
         public string? CustomerName { get; set; }
