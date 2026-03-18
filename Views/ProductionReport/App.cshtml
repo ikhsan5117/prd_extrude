@@ -688,19 +688,24 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
         }
 
         .data-row {
             display: flex;
-            gap: 30px;
+            gap: 25px;
             align-items: stretch;
+            margin-bottom: 10px;
         }
 
         .data-item {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
             flex: 1;
+            min-width: 0;
         }
 
         .data-item.full-width {
@@ -710,46 +715,46 @@
         .data-item .label {
             font-size: 11px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--accent-blue);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 4px 8px;
+            letter-spacing: 0.5px;
+            padding: 6px 10px;
             background: rgba(59, 130, 246, 0.1);
             border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 4px 4px 0 0;
+            border-radius: 6px;
         }
 
         .data-item .value {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--text-primary);
-            padding: 10px 12px;
-            background: rgba(30, 41, 59, 0.3);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-top: none;
-            border-radius: 0 0 4px 4px;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
             min-height: 40px;
             display: flex;
             align-items: center;
+            justify-content: center;
         }
 
         .simple-input {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--text-primary);
-            padding: 10px 12px;
-            background: rgba(30, 41, 59, 0.3);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            outline: none;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
             transition: all 0.3s ease;
-            min-height: 40px;
+            width: 100%;
         }
 
         .simple-input:focus {
-            border-color: var(--accent-light);
-            background: rgba(59, 130, 246, 0.1);
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(255, 255, 255, 0.12);
         }
 
         .simple-input.full-width {
@@ -887,10 +892,11 @@
         }
 
         /* Responsive Design - Tablet Optimized */
-        @@media (max-width: 1200px) {
+        @@media (max-width: 1366px) {
             .app-container {
-                padding: 10px;
-                max-width: 100%;
+                padding: 10px 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
             }
             
             .header-top {
@@ -905,34 +911,52 @@
             }
 
             .content-card {
-                margin-bottom: 15px;
+                margin: 0 !important;
+                margin-bottom: 10px !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                border-left: none !important; /* Remove card border to merge with table */
+                border-right: none !important;
+            }
+            
+            .card-header {
+                padding: 10px 15px !important; /* Keep padding only for header */
+                margin-bottom: 0 !important;
             }
 
             .data-table-container {
-                margin: 10px;
-                overflow-x: visible; /* Remove horizontal scroll */
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                border-radius: 0 !important;
+                overflow-x: auto;
+            }
+            
+            .point-name {
+                padding-left: 2px !important; /* Touch the line */
             }
 
             .data-table {
-                width: 100%; /* Full width */
-                font-size: 11px; /* Slightly smaller but still readable */
-                table-layout: fixed; /* Fixed layout for better control */
+                width: 100% !important;
+                font-size: 11px;
+                table-layout: fixed;
+                border-left: none !important;
+                border-right: none !important;
             }
 
             .data-table th {
                 font-size: 9px; /* Readable size */
-                padding: 4px 1px; /* Reduced padding */
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                padding: 4px 2px; /* Slightly more padding */
+                white-space: normal; /* Allow wrapping */
+                line-height: 1.1;
+                vertical-align: middle;
             }
 
             .data-table td {
                 font-size: 10px; /* Readable size */
-                padding: 3px 1px; /* Reduced padding */
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                padding: 3px 2px;
+                white-space: normal;
+                word-break: break-word;
             }
 
             .data-table input {
@@ -942,23 +966,17 @@
                 box-sizing: border-box;
             }
 
-            /* Adjust column widths for tablet */
-            .data-table th:nth-child(1),
-            .data-table td:nth-child(1) { width: 22%; } /* POINT */
-            .data-table th:nth-child(2),
-            .data-table td:nth-child(2) { width: 14%; } /* FREKUENSI */
-            .data-table th:nth-child(3),
-            .data-table td:nth-child(3) { width: 18%; } /* STD DIMENSI */
-            .data-table th:nth-child(4),
-            .data-table td:nth-child(4),
-            .data-table th:nth-child(5),
-            .data-table td:nth-child(5),
-            .data-table th:nth-child(6),
-            .data-table td:nth-child(6),
-            .data-table th:nth-child(7),
-            .data-table td:nth-child(7),
-            .data-table th:nth-child(8),
-            .data-table td:nth-child(8) { width: 9%; } /* 1-5 */
+            .data-table thead tr:nth-child(2) th:nth-child(1), .data-table tbody td:nth-child(1) { 
+                width: 12% !important; 
+                text-align: left; 
+                padding-left: 2px !important; /* Minimize gap to line */
+                border-left: 1px solid rgba(59, 130, 246, 0.3) !important; /* Ensure vertical line is visible */
+            }
+            .data-table thead tr:nth-child(2) th:nth-child(2), .data-table tbody td:nth-child(2) { width: 12% !important; } /* FREKUENSI */
+            .data-table thead tr:nth-child(2) th:nth-child(3), .data-table tbody td:nth-child(3) { width: 15% !important; } /* STD DIMENSI */
+            .data-table thead tr:nth-child(2) th:nth-child(4), .data-table tbody td:nth-child(4) { width: 8% !important; }  /* SCALE */
+            .data-table thead tr:nth-child(2) th:nth-child(5), .data-table tbody td:nth-child(5) { width: 11% !important; } /* INITIAL */
+            .data-table thead tr:nth-child(2) th:nth-child(n+6), .data-table tbody td:nth-child(n+6) { width: 8.4% !important; } /* 1-5 */
 
             .simple-production-data {
                 padding: 15px;
@@ -1189,47 +1207,40 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header Section -->
         <div class="app-header fade-in">
+            <!-- Header Top -->
             <div class="header-top">
-                <!-- Logo -->
                 <div class="header-logo">
-                    <div class="header-logo-v">
-                        <span>V</span>
-                    </div>
+                    <div class="header-logo-v"><span>V</span></div>
                     <div class="header-logo-text">
                         <div class="velasto">VELASTO</div>
                         <div class="indonesia">INDONESIA</div>
                     </div>
                 </div>
-                
-                <!-- Title -->
                 <div class="header-title">
-                    <h1>Extruder Production Report</h1>
-                    <h2>(Dimension)</h2>
+                    <h1>EXTRUDER PRODUCTION REPORT</h1>
+                    <h2>( DIMENSION )</h2>
                 </div>
-                
-                <!-- Signature Section -->
                 <div class="signature-section">
                     <table class="signature-table">
                         <thead>
                             <tr>
-                                <th>PREPARED</th>
-                                <th>CHECKED</th>
                                 <th>APPROVED</th>
+                                <th>CHECKED</th>
+                                <th>PREPARED</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>@Model.CreatedBy?.Split(' ')[0] ?? "Operator 1"</td>
-                                <td>@(Model.CheckedBy?.Split(' ')[0] ?? "")</td>
-                                <td>@(Model.ApprovedBy?.Split(' ')[0] ?? "")</td>
+                                <td>SPV</td>
+                                <td>LDR</td>
+                                <td>OPR</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            
+                    
             <!-- Document Info -->
             <div class="header-info-row">
                 <div><span>NO DOC :</span> @Model.DocumentNumber</div>
@@ -1263,52 +1274,91 @@
                 <div class="data-table-container">
                     <table class="data-table">
                         <thead>
-                            <tr>
-                                <th colspan="3"></th>
-                                <th colspan="6">PUKUL / JAM</th>
+                            <tr style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 10px;">
+                                <th colspan="4" class="py-1 border-bottom border-primary border-opacity-25 tracking-widest fw-black text-center text-uppercase">PUKUL / JAM</th>
+                                @for(int i=0; i<6; i++) {
+                                    <th class="p-0 border border-primary border-opacity-25" style="height: 25px;">
+                                        <input type="text" class="w-100 h-100 border-0 text-center bg-transparent text-info fw-bold" style="font-size: 10px;" placeholder="00:00" />
+                                    </th>
+                                }
                             </tr>
-                            <tr>
-                                <th>POINT</th>
-                                <th>FREKUENSI</th>
-                                <th>STD DIMENSI</th>
-                                <th>1</th>
-                                <th>2</th>
-                                <th>3</th>
-                                <th>4</th>
-                                <th>5</th>
+                            <tr style="background: rgba(30, 41, 59, 0.7); color: #94a3b8; font-size: 9px;">
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">POINT</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">FREKUENSI</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">STD DIMENSI</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle" style="width: 70px;">SCALE</th>
+                                <th class="p-1 border border-primary border-opacity-25" style="width: 75px;">INITIAL</th>
+                                @for(int i=1; i<=5; i++) {
+                                    <th class="p-1 border border-primary border-opacity-25">@i</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
                             @{
-                                var measurementPoints = new[] {
-                                    new { Name = "Inner Diameter", Std = "11.0 ± 0.2", Freq = "30m Sekali", Scale = "0.01" },
-                                    new { Name = "Inner Thickness (x)", Std = "1.8 ± 0.2", Freq = "30m Sekali", Scale = "0.01" },
-                                    new { Name = "Inner Thickness (y)", Std = "1.8 ± 0.2", Freq = "30m Sekali", Scale = "0.01" },
-                                    new { Name = "Total Thickness (x)", Std = "3.3 ± 0.2", Freq = "30m Sekali", Scale = "0.01" },
-                                    new { Name = "Total Thickness (y)", Std = "3.3 ± 0.2", Freq = "30m Sekali", Scale = "0.01" },
-                                    new { Name = "Spiral Pitch", Std = "38 ± 5", Freq = "30m Sekali", Scale = "1" },
-                                    new { Name = "Visual Check", Std = "No Burry, No Flow, No Bubble, No Scratch", Freq = "30m Sekali", Scale = "N/A" }
+                                var stdVal = Model.StandardParameterSetting;
+                                var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
+
+                                // Helper to parse string to decimal
+                                decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                                
+                                // Override standards if masterlist is present and std is null/zero
+                                decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 11.0m) : 11.0m);
+                                decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0.2m) : 0.2m);
+                                decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 1.8m) : 1.8m);
+                                decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0.2m;
+                                decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 3.3m) : 3.3m);
+                                decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m);
+
+                                var sections = new[] {
+                                    new { Label = "Inner Diameter", Nom = idNom, Tol = idTol },
+                                    new { Label = "In Thick (X)", Nom = tubeNom, Tol = tubeTol },
+                                    new { Label = "In Thick (Y)", Nom = tubeNom, Tol = tubeTol },
+                                    new { Label = "Total Thick (X)", Nom = coverNom, Tol = coverTol },
+                                    new { Label = "Total Thick (Y)", Nom = coverNom, Tol = coverTol }
                                 };
                             }
 
-                            @foreach (var point in measurementPoints)
-                            {
-                                <tr>
-                                    <td class="point-name">@point.Name</td>
-                                    <td>@point.Freq</td>
-                                    <td class="std-dimension">@point.Std</td>
-                                    <td><input type="text" placeholder="-" /></td>
-                                    <td><input type="text" placeholder="-" /></td>
-                                    <td><input type="text" placeholder="-" /></td>
-                                    <td><input type="text" placeholder="-" /></td>
-                                    <td><input type="text" placeholder="-" /></td>
-                                </tr>
+                            @foreach(var sec in sections) {
+                                for(int rIdx=0; rIdx<5; rIdx++) {
+                                    decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
+                                    <tr style="height: 22px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
+                                        @if(rIdx == 0) {
+                                            <td rowspan="5" class="point-name align-middle p-1" style="font-size: 10px;">@sec.Label</td>
+                                            <td rowspan="5" class="align-middle border-end border-primary border-opacity-25" style="font-size: 8px;">30m Sekali</td>
+                                            <td rowspan="5" class="std-dimension align-middle border-end border-primary border-opacity-25" style="font-size: 10px;">@sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")</td>
+                                        }
+                                        <td class="border-end border-primary border-opacity-25 bg-white-5" style="font-size: 9px; color: #94a3b8;">@scaleValue.ToString("0.00")</td>
+                                        @for(int h=0; h<6; h++) {
+                                            <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 11px;" placeholder="-" /></td>
+                                        }
+                                    </tr>
+                                }
                             }
+
+                            <!-- Spiral & Visual -->
+                            <tr style="height: 40px;">
+                                <td class="point-name align-middle">Spiral Pitch</td>
+                                <td class="align-middle">30m Sekali</td>
+                                <td class="std-dimension align-middle">@(stdVal?.SpiralPitch ?? 38) ± @(stdVal?.Tol_SpiralPitch ?? 5)</td>
+                                <td style="background: rgba(255,255,255,0.05); font-size: 10px;">NOM</td>
+                                @for(int h=0; h<6; h++) {
+                                    <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
+                                }
+                            </tr>
+                            <tr style="height: 45px;">
+                                <td class="point-name align-middle">Visual Check</td>
+                                <td class="align-middle">30m Sekali</td>
+                                <td colspan="2" class="align-middle" style="font-size: 9px; color: #94a3b8; text-align: left; padding-left: 10px;">No Burry, No Line, No Bubble, No Scratch</td>
+                                @for(int h=0; h<6; h++) {
+                                    <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
+                                }
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            
             <!-- Production Data Card -->
             <div class="content-card fade-in">
                 <div class="card-header">
@@ -1388,6 +1438,7 @@
                 </div>
             </div>
 
+            
             <!-- Action Buttons -->
             <div class="action-buttons">
                 <button class="btn-app btn-primary" onclick="saveData()">

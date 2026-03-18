@@ -35,6 +35,10 @@ namespace VelastoProductionSystem.Controllers
 
             if (report == null) return NotFound();
 
+            // Fetch Masterlist data as fallback standards
+            ViewBag.Masterlist = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType);
+
             return View(report);
         }
 
@@ -49,6 +53,10 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (report == null) return NotFound();
+
+            // Fetch Masterlist data as fallback standards
+            ViewBag.Masterlist = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType);
 
             return View(report);
         }

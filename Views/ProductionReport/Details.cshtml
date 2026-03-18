@@ -38,224 +38,175 @@
     @if (currentPortal == "dimension")
     {
         <div class="hud-container fade-in">
-            <!-- PORTAL 2: DIMENSION (Modernized Glass Paper Structure) -->
-            <div class="glass-paper shadow-2xl mx-auto mb-4 border-cyber-blue">
-                <!-- 1. HEADER SECTION -->
-                <div class="row g-0 border-bottom-cyber" style="background: rgba(30, 58, 138, 0.4);">
-                    <div class="col-3 border-end-cyber p-3 d-flex align-items-center justify-content-center">
-                         <div class="d-flex align-items-center gap-2">
-                             <h2 class="fw-black text-info mb-0" style="font-family: Arial Black; letter-spacing: -2px; font-size: 38px;">V</h2>
-                             <div class="lh-1">
-                                 <h6 class="fw-black text-white mb-0 tracking-widest" style="font-size: 18px;">VELASTO</h6>
-                                 <span class="extra-small text-info opacity-75 fw-bold" style="letter-spacing: 3px; font-size: 8px;">I N D O N E S I A</span>
-                             </div>
-                         </div>
-                    </div>
-                    <div class="col-6 border-end-cyber p-3 d-flex flex-column justify-content-center align-items-center text-center">
-                        <h4 class="fw-black text-white mb-1 tracking-widest text-uppercase">Extruder Production Report</h4>
-                        <div class="text-info fw-bold small tracking-widest">(Dimension)</div>
-                    </div>
-                    <div class="col-3">
-                         <table class="w-100 h-100 text-center m-0 border-0 super-small text-white opacity-90">
-                             <tr style="height: 25px;">
-                                 <td class="border-end-cyber border-bottom-cyber py-1">PREPARED</td>
-                                 <td class="border-end-cyber border-bottom-cyber py-1">CHECKED</td>
-                                 <td class="border-end-cyber border-bottom-cyber py-1 text-nowrap">APPROVED</td>
-                             </tr>
-                             <tr style="height: 50px;">
-                                 <td class="border-end-cyber border-bottom-cyber align-middle font-size-8 text-info fw-bold">@Model.CreatedBy</td>
-                                 <td class="border-end-cyber border-bottom-cyber align-middle font-size-8 text-white-50">@Model.CheckedBy</td>
-                                 <td class="border-bottom-cyber align-middle font-size-8 text-white-50">@Model.ApprovedBy</td>
-                             </tr>
-                             <tr>
-                                 <td class="border-end-cyber"></td>
-                                 <td class="border-end-cyber"></td>
-                                 <td></td>
-                             </tr>
-                         </table>
-                    </div>
-                </div>
-
-                <!-- 2. META INFO BAR & TIPE -->
-                <div class="row g-0 border-bottom-cyber bg-white-5">
-                    <div class="col-6 border-end-cyber p-2">
-                        <div class="row g-0 text-start ps-2">
-                            <div class="col-6">
-                                <div class="hud-label text-info opacity-75 mb-0">No Doc : <span class="text-white">@Model.DocumentNumber</span></div>
-                                <div class="hud-label text-info opacity-75 mb-0">Revisi : <span class="text-white">@Model.RevisionNumber</span></div>
-                            </div>
-                            <div class="col-6">
-                                <div class="hud-label text-info opacity-75 mb-0">Date : <span class="text-white">@Model.ProductionDate.ToString("dd/MM/yyyy")</span></div>
-                                <div class="hud-label text-info opacity-75 mb-0">Shift : <span class="text-white">@Model.Shift</span></div>
+            <!-- PORTAL 2: DIMENSION (App Sync Layout) -->
+            <div class="content-card shadow-2xl mx-auto mb-4" style="background: rgba(15, 23, 42, 0.8); border: 2px solid var(--accent-blue); border-radius: 12px; overflow: hidden;">
+                <!-- 1. HEADER SYNC WITH APP -->
+                <div class="p-3 border-bottom-cyber" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <span style="font-weight: 900; font-size: 20px; color: white;">V</span>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 900; font-size: 16px; color: #60a5fa; line-height: 1;">VELASTO</div>
+                                    <div style="font-size: 8px; color: #94a3b8; border-bottom: 1px solid #3b82f6; letter-spacing: 2px;">INDONESIA</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-6 p-2 text-start ps-3 d-flex flex-column justify-content-center">
-                        <div class="hud-label text-info opacity-75 mb-1">Customer : <span class="text-white">@(Model.CustomerName ?? "-")</span></div>
-                        <div class="fw-bold text-warning small tracking-widest">
-                            Tipe : @Model.HoseType / @Model.Dimension / @(std.ProductCode ?? "-")
+                        <div class="col-4 text-center">
+                            <h5 class="fw-black text-white mb-0 text-uppercase tracking-widest">Extruder Production Report</h5>
+                            <div class="text-info fw-bold extra-small">(Dimension)</div>
+                        </div>
+                        <div class="col-4 d-flex justify-content-end">
+                            <table class="signature-table" style="width: 180px; border: 1px solid #3b82f6; font-size: 9px; background: rgba(15,23,42,0.5);">
+                                <tr style="background: #3b82f6; color: white; font-weight: bold;">
+                                    <th class="p-1 border text-center">PREPARED</th>
+                                    <th class="p-1 border text-center">CHECKED</th>
+                                    <th class="p-1 border text-center">APPROVED</th>
+                                </tr>
+                                <tr style="height: 40px;">
+                                    <td class="border text-center align-middle text-info fw-bold">@Model.CreatedBy</td>
+                                    <td class="border text-center align-middle text-white-50">@Model.CheckedBy</td>
+                                    <td class="border text-center align-middle text-white-50">@Model.ApprovedBy</td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- 3. MAIN GRID AREA -->
-                <div class="row g-0">
-                    <!-- LEFT COLUMN: DIMENSION MONITORING (Hour Matrix) -->
-                    <div class="col-7 border-end-cyber">
-                        <div class="table-responsive">
-                            <table class="dimension-glass-grid w-100 text-center">
-                                <thead>
-                                    <tr>
-                                        <th colspan="4" class="p-1 border-bottom-cyber bg-white-10 tracking-widest fw-black text-info">PUKUL / JAM</th>
-                                        @for(int i=0; i<6; i++) {
-                                            <th class="border-bottom-cyber border-start-cyber bg-white-10 text-white font-size-10">@(i==0 ? "INIT" : i.ToString())</th>
-                                        }
-                                    </tr>
-                                    <tr class="sub-th font-size-8 bg-white-5">
-                                        <th style="width: 18%;">POINT</th>
-                                        <th style="width: 10%;">FREQ</th>
-                                        <th style="width: 18%;">STD. DIMENSI</th>
-                                        <th style="width: 10%;">SCALE</th>
-                                        @for(int i=0; i<6; i++) {
-                                            <th class="border-start-cyber"></th>
-                                        }
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @{
-                                        var sections = new[] {
-                                            new { Label = "Inner Diameter", Nom = std.InnerDie, Tol = std.ToleranceDie, Prop = "InnerDiameter" },
-                                            new { Label = "In Thick (X)", Nom = std.TubeDie, Tol = std.Tol_TubeDie, Prop = "InnerThicknessX" },
-                                            new { Label = "In Thick (Y)", Nom = std.TubeDie, Tol = std.Tol_TubeDie, Prop = "InnerThicknessY" },
-                                            new { Label = "Total Thick (X)", Nom = std.CoverDie, Tol = std.Tol_CoverDie, Prop = "TotalThicknessX" },
-                                            new { Label = "Total Thick (Y)", Nom = std.CoverDie, Tol = std.Tol_CoverDie, Prop = "TotalThicknessY" }
-                                        };
-                                    }
+                <!-- 2. META INFO BAR -->
+                <div class="row g-0 border-bottom-cyber px-3 py-2" style="background: rgba(30, 41, 59, 0.4); font-size: 11px;">
+                    <div class="col-3"><span class="text-info fw-bold">NO DOC :</span> <span class="text-white">@Model.DocumentNumber</span></div>
+                    <div class="col-2"><span class="text-info fw-bold">REVISI :</span> <span class="text-white">@Model.RevisionNumber</span></div>
+                    <div class="col-3"><span class="text-info fw-bold">DATE :</span> <span class="text-white">@Model.ProductionDate.ToString("dd/MMM/yyyy")</span></div>
+                    <div class="col-2"><span class="text-info fw-bold">SHIFT :</span> <span class="text-white">@Model.Shift</span></div>
+                    <div class="col-2 text-end"><span class="text-warning fw-bold">@Model.HoseType / @Model.Dimension</span></div>
+                </div>
 
-                                    @foreach(var sec in sections) {
-                                        for(int rIdx=0; rIdx<5; rIdx++) {
-                                            decimal scale = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
-                                            <tr class="scale-row border-bottom-cyber-thin" style="height: @(rIdx == 2 ? "28px" : "22px");">
-                                                @if(rIdx == 0) {
-                                                    <td rowspan="5" class="fw-black text-info border-end-cyber text-start p-2 align-middle font-size-9">@sec.Label</td>
-                                                    <td rowspan="5" class="border-end-cyber align-middle font-size-7 text-white-50">30 MIN</td>
-                                                    <td rowspan="5" class="border-end-cyber align-middle text-warning fw-black font-size-9">@sec.Nom ± @sec.Tol</td>
-                                                }
-                                                <td class="bg-white-5 border-end-cyber fw-bold font-size-8 text-white-50">@scale.ToString("0.00")</td>
-                                                @for(int h=0; h<6; h++) {
-                                                    var reading = h < readings.Count ? readings[h] : null;
-                                                    var val = (decimal?)reading?.GetType().GetProperty(sec.Prop)?.GetValue(reading);
-                                                    
-                                                    decimal step = sec.Tol * 0.5m;
-                                                    bool isMatch = false;
-                                                    if (val != null) {
-                                                        if (Math.Abs(val.Value - scale) < (step * 0.51m)) { isMatch = true; }
-                                                    }
-                                                    <td class="border-start-cyber p-0 position-relative @(isMatch ? "bg-info-glow" : "")">
-                                                        @if(isMatch) { <span class="val-display">@val?.ToString("0.00")</span> }
-                                                    </td>
-                                                }
-                                            </tr>
-                                        }
-                                    }
+                <!-- 3. MAIN DATA TABLE (Fixed Pukul/Jam Matrix) -->
+                <div class="p-0">
+                    <table class="data-table w-100 text-center" style="border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 10px;">
+                                <th colspan="4" class="py-1 border-bottom border-primary border-opacity-25 tracking-widest fw-black text-center text-uppercase text-nowrap">PUKUL / JAM</th>
+                                @for(int i=0; i<6; i++) {
+                                    <th class="p-0 border border-primary border-opacity-25" style="height: 25px;">
+                                        <input type="text" class="w-100 h-100 border-0 text-center bg-transparent text-info fw-bold" style="font-size: 10px;" placeholder="00:00" />
+                                    </th>
+                                }
+                            </tr>
+                            <tr style="background: rgba(30, 41, 59, 0.7); color: #94a3b8; font-size: 9px;">
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">POINT</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">FREKUENSI</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">STD DIMENSI</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle" style="width: 70px;">SCALE</th>
+                                <th class="p-1 border border-primary border-opacity-25" style="width: 75px;">INITIAL</th>
+                                @for(int i=1; i<=5; i++) {
+                                    <th class="p-1 border border-primary border-opacity-25">@i</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var stdVal = Model.StandardParameterSetting;
+                                var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
 
-                                    <!-- Spiral & Visual -->
-                                    <tr class="special-row border-top-cyber" style="height: 35px;">
-                                        <td class="p-2 text-start fw-black text-info font-size-9">Spiral Pitch</td>
-                                        <td class="font-size-7 text-white-50">30 MIN</td>
-                                        <td class="text-warning fw-black font-size-9">@std.SpiralPitch ± @std.Tol_SpiralPitch</td>
-                                        <td class="bg-white-5 font-size-8 text-white-50">NOM</td>
+                                // Helper to parse string to decimal
+                                decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+
+                                // Override standards if masterlist is present and std is null/zero
+                                decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 11.0m) : 11.0m);
+                                decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0.2m) : 0.2m);
+                                decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 1.8m) : 1.8m);
+                                decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0.2m;
+                                decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 3.3m) : 3.3m);
+                                decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m);
+
+                                var sections = new[] {
+                                    new { Label = "Inner Diameter", Nom = idNom, Tol = idTol, Prop = "InnerDiameter" },
+                                    new { Label = "In Thick (X)", Nom = tubeNom, Tol = tubeTol, Prop = "InnerThicknessX" },
+                                    new { Label = "In Thick (Y)", Nom = tubeNom, Tol = tubeTol, Prop = "InnerThicknessY" },
+                                    new { Label = "Total Thick (X)", Nom = coverNom, Tol = coverTol, Prop = "TotalThicknessX" },
+                                    new { Label = "Total Thick (Y)", Nom = coverNom, Tol = coverTol, Prop = "TotalThicknessY" }
+                                };
+                            }
+
+                            @foreach(var sec in sections) {
+                                for(int rIdx=0; rIdx<5; rIdx++) {
+                                    decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
+                                    <tr style="height: 22px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
+                                        @if(rIdx == 0) {
+                                            <td rowspan="5" class="p-1 border-end border-primary border-opacity-25 text-start fw-bold text-info" style="font-size: 10px;">@sec.Label</td>
+                                            <td rowspan="5" class="border-end border-primary border-opacity-25 text-white-50" style="font-size: 8px;">30m Sekali</td>
+                                            <td rowspan="5" class="border-end border-primary border-opacity-25 text-warning fw-bold" style="font-size: 10px;">@sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")</td>
+                                        }
+                                        <td class="border-end border-primary border-opacity-25 bg-white-5" style="font-size: 9px; color: #94a3b8;">@scaleValue.ToString("0.00")</td>
                                         @for(int h=0; h<6; h++) {
-                                            var r = h < readings.Count ? readings[h] : null;
-                                            <td class="border-start-cyber text-white fw-black font-size-10">@r?.SpiralPitch?.ToString("0.0")</td>
+                                            var reading = h < readings.Count ? readings[h] : null;
+                                            var val = (decimal?)reading?.GetType().GetProperty(sec.Prop)?.GetValue(reading);
+                                            bool isMatch = val != null && Math.Abs(val.Value - scaleValue) < (sec.Tol * 0.26m);
+                                            
+                                            <td class="border-end border-primary border-opacity-25 p-0 position-relative @(isMatch ? "bg-info-glow" : "")">
+                                                @if(isMatch) { <span class="val-display" style="font-size: 10px; font-weight: 800; color: white; text-shadow: 0 0 5px #3b82f6;">@val?.ToString("0.00")</span> }
+                                            </td>
                                         }
                                     </tr>
-                                    <tr class="special-row border-top-cyber" style="height: 40px;">
-                                        <td class="p-2 text-start fw-black text-info font-size-9">Visual Check</td>
-                                        <td class="font-size-7 text-white-50">30 MIN</td>
-                                        <td colspan="2" class="font-size-7 text-start ps-2 py-1 lh-1 text-white-50 opacity-75">No Burry, No Line, No Bubble, No Scratch</td>
-                                        @for(int h=0; h<6; h++) {
-                                            var r = h < readings.Count ? readings[h] : null;
-                                            <td class="border-start-cyber @(r?.VisualCheck == "NG" ? "text-danger" : "text-success") fw-black font-size-10">@r?.VisualCheck</td>
-                                        }
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="p-2 border-top-cyber bg-white-5 text-start">
-                             <span class="hud-label text-info opacity-50 extra-small">Note :</span>
-                             <div class="text-white-50 font-size-8 ms-3 mt-1">@Model.Remark</div>
-                        </div>
+                                }
+                            }
+
+                            <!-- Spiral & Visual -->
+                            <tr style="height: 40px; border-top: 2px solid rgba(59, 130, 246, 0.3);">
+                                <td class="p-2 text-start fw-bold text-info" style="font-size: 11px;">Spiral Pitch</td>
+                                <td class="text-white-50" style="font-size: 9px;">30m Sekali</td>
+                                <td class="text-warning fw-bold" style="font-size: 11px;">@(std?.SpiralPitch ?? 38) ± @(std?.Tol_SpiralPitch ?? 5)</td>
+                                <td class="bg-white-5" style="font-size: 10px;">NOM</td>
+                                @for(int h=0; h<6; h++) {
+                                    var r = h < readings.Count ? readings[h] : null;
+                                    <td class="border-start border-primary border-opacity-25 text-white fw-bold">@r?.SpiralPitch?.ToString("0.0")</td>
+                                }
+                            </tr>
+                            <tr style="height: 45px; border-top: 1px solid rgba(59, 130, 246, 0.3);">
+                                <td class="p-2 text-start fw-bold text-info" style="font-size: 11px;">Visual Check</td>
+                                <td class="text-white-50" style="font-size: 9px;">30m Sekali</td>
+                                <td colspan="2" class="text-start ps-2 py-1 lh-1 text-white-50" style="font-size: 9px; opacity: 0.7;">No Burry, No Line, No Bubble, No Scratch</td>
+                                @for(int h=0; h<6; h++) {
+                                    var r = h < readings.Count ? readings[h] : null;
+                                    <td class="border-start border-primary border-opacity-25 @(r?.VisualCheck == "NG" ? "text-danger" : "text-success") fw-black">@r?.VisualCheck</td>
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 4. FOOTER NOTE & ATTENTION -->
+                <div class="row g-0 border-top-cyber" style="background: rgba(15, 23, 42, 0.5);">
+                    <div class="col-7 p-2 border-end border-primary border-opacity-25 text-start">
+                        <span class="text-info extra-small opacity-50">Note :</span>
+                        <div class="text-white-50 font-size-8 ms-2 mt-1">@Model.Remark</div>
                     </div>
-
-                    <!-- RIGHT COLUMN: EVALUATION GRID -->
-                    <div class="col-5">
-                        <div class="table-responsive h-100" style="min-height: 500px;">
-                            <table class="dimension-glass-grid w-100 text-center h-100">
-                                <thead>
-                                    <tr class="bg-white-10 font-size-8 text-info fw-black">
-                                        <th>PART NUMBER</th>
-                                        <th>VIN KODE</th>
-                                        <th>STD PNJNG</th>
-                                        <th>ACT PNJNG</th>
-                                        <th>QTY TRGT</th>
-                                        <th colspan="3" class="border-start-cyber border-end-cyber bg-white-10">QTY ACTUAL</th>
-                                        <th>REMARK</th>
-                                    </tr>
-                                    <tr class="sub-th bg-white-5 font-size-7 text-white-50">
-                                        <th colspan="5"></th>
-                                        <th class="border-start-cyber">OK</th>
-                                        <th>NG DIM</th>
-                                        <th class="border-end-cyber text-nowrap">NG VIS</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr style="height: 40px;" class="border-bottom-cyber-thin">
-                                        <td class="font-size-7 text-white fw-bold">@(std.ProductCode ?? "-")</td>
-                                        <td class="font-size-8 text-info fw-black">@(Model.VinCode ?? "-")</td>
-                                        <td class="font-size-8 text-white">@(Model.StandardLength ?? "-")</td>
-                                        <td class="p-0 border-start-cyber"><input type="text" class="input-glass-sm w-100 h-100 border-0 text-center text-white fw-bold" value="@Model.ActualLength" /></td>
-                                        <td class="font-size-9 text-warning fw-black">@Model.QtyTarget</td>
-                                        <td class="border-start-cyber text-success fw-black font-size-10">@Model.QtyOk</td>
-                                        <td class="text-danger fw-bold font-size-9">@Model.NgDimension</td>
-                                        <td class="border-end-cyber text-danger fw-bold font-size-9">@Model.NgVisual</td>
-                                        <td class="font-size-7 text-white-50 text-start ps-1">@Model.Remark</td>
-                                    </tr>
-                                    @for(int i=0; i<18; i++) {
-                                        <tr class="border-bottom-cyber-thin opacity-25" style="height: 28px;">
-                                            <td colspan="9"></td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- Attention -->
-                        <div class="p-2 border-top-cyber text-start bg-white-5">
-                             <div class="hud-label text-warning opacity-75 mb-1 extra-small">Attention :</div>
-                             <div class="text-white-50 font-size-7 ps-2 lh-condensed">
-                                1. Setiap operator wajib menggunakan APD (Sepatu safety & Sarung tangan)<br/>
-                                2. Periksa Dies Sebelum dan sesudah proses<br/>
-                                3. Pastikan semua parameter sesuai dengan SPS
-                             </div>
+                    <div class="col-5 p-2 text-start">
+                        <div class="text-warning extra-small opacity-75">Attention :</div>
+                        <div class="text-white-50 font-size-7 ps-2 mt-1 lh-sm">
+                            1. Operator wajib menggunakan APD lengkap<br/>
+                            2. Periksa Dies Sebelum dan sesudah proses<br/>
+                            3. Parameter harus sesuai Standard Parameter Setting (SPS)
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ACTIONS (No Print) -->
-            <div class="no-print d-flex justify-content-center gap-4 mt-3 mb-5">
-                <button type="button" class="btn btn-velasto-glow px-5 py-3 rounded-pill shadow-lg" data-bs-toggle="modal" data-bs-target="#addDimModal">
-                    <i class="bi bi-rulers me-2"></i> INPUT DATA QUALITY JAM @(readings.Count + 1)
+            <!-- ACTIONS -->
+            <div class="no-print d-flex justify-content-center gap-3 mt-2 mb-4">
+                <button type="button" class="btn btn-primary px-4 rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#addDimModal">
+                    <i class="bi bi-plus-circle me-2"></i> INPUT DATA QUALITY JAM @(readings.Count + 1)
                 </button>
-                <div class="d-flex gap-2">
-                    <button onclick="window.print()" class="btn btn-outline-info px-4 rounded-pill">
-                        <i class="bi bi-printer me-2"></i> CETAK LAPORAN
-                    </button>
-                    <a href="@Url.Action("Index")" class="btn btn-outline-glass px-4 rounded-pill">
-                        <i class="bi bi-arrow-left me-2"></i> KEMBALI
-                    </a>
-                </div>
+                <button onclick="window.print()" class="btn btn-outline-info px-4 rounded-pill">
+                    <i class="bi bi-printer me-2"></i> PRINT REPORT
+                </button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary px-4 rounded-pill">
+                    <i class="bi bi-arrow-left me-2"></i> BACK TO LIST
+                </a>
             </div>
         </div>
     }
