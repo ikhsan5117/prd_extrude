@@ -105,31 +105,41 @@
             <div class="paper-replica shadow-2xl mx-auto mb-5">
             <div class="paper-padding text-uppercase" style="font-size: 10px;">
                 
-                <!-- 1. HEADER & INFO SECTION (Pixel Perfect Integration) -->
-                <div class="border-form-bold">
+                <!-- 1. HEADER & INFO SECTION -->
+                <div class="border-form-bold mb-2 bg-white text-dark">
                     <!-- TOP ROW -->
                     <div class="row g-0 border-bottom-form-bold">
+                        <!-- Logo -->
                         <div class="col-3 border-end-form p-2 d-flex align-items-center justify-content-center">
-                             <div class="d-flex align-items-center">
-                                <h4 class="fw-black mb-0 me-2" style="font-family: Arial Black, sans-serif; letter-spacing: -1px; font-size: 24px;">V</h4>
+                             <div class="d-flex align-items-center mb-1">
+                                <h4 class="fw-black text-secondary mb-0 me-2" style="font-family: Arial Black, sans-serif; letter-spacing: -1px; font-size: 32px; transform: scaleX(1.2);">V</h4>
                                 <div>
-                                    <h5 class="fw-black mb-0" style="letter-spacing: 2px; font-size: 18px; line-height: 1;">VELASTO</h5>
-                                    <div class="super-small fw-bold" style="letter-spacing: 3px; font-size: 7px;">INDONESIA</div>
+                                    <h5 class="fw-black text-secondary mb-0" style="letter-spacing: 2px; font-size: 20px; line-height: 1;">VELASTO</h5>
+                                    <div class="super-small fw-bold text-secondary" style="letter-spacing: 4px; font-size: 7px;">I N D O N E S I A</div>
                                 </div>
                              </div>
                         </div>
+                        <!-- Title -->
                         <div class="col-5 border-end-form p-2 d-flex flex-column justify-content-center align-items-center text-center">
-                            <h6 class="fw-bold mb-0" style="font-size: 15px; letter-spacing: 0.5px;">Extruder Production Report</h6>
-                            <div class="fw-bold" style="font-size: 12px;">(Parameter Setting)</div>
+                            <h6 class="fw-bold mb-1" style="font-size: 16px; letter-spacing: 0.5px;">Extruder Production Report</h6>
+                            <div class="fw-bold" style="font-size: 14px;">(Parameter Setting)</div>
                         </div>
+                        <!-- Signature Block -->
                         <div class="col-4">
-                            <table class="w-100 h-100 text-center fw-bold m-0 border-0" style="font-size: 9px;">
-                                <tr>
-                                    <td class="border-end-form border-bottom-form p-1" style="width: 33.33%;">Disetujui</td>
-                                    <td class="border-end-form border-bottom-form p-1" style="width: 33.33%;">Diperiksa</td>
-                                    <td class="border-bottom-form p-1" style="width: 33.33%;">Dibuat</td>
+                            <table class="w-100 h-100 text-center m-0 border-0" style="font-size: 10px; table-layout: fixed;">
+                                <tr style="height: 20px;">
+                                    <td class="border-end-form border-bottom-form align-middle">Disetujui</td>
+                                    <td class="border-end-form border-bottom-form align-middle">Diperiksa</td>
+                                    <td class="border-bottom-form align-middle">Dibuat</td>
                                 </tr>
-                                <tr style="height: 45px;">
+                                <tr>
+                                    <td class="border-end-form border-bottom-form" style="height: 35px;"></td>
+                                    <td class="border-end-form border-bottom-form"></td>
+                                    <td class="border-bottom-form" style="position: relative;">
+                                        <!-- Simulated Signature Placeholder -->
+                                    </td>
+                                </tr>
+                                <tr style="height: 15px;">
                                     <td class="border-end-form"></td>
                                     <td class="border-end-form"></td>
                                     <td></td>
@@ -140,39 +150,60 @@
 
                     <!-- BOTTOM ROW -->
                     <div class="row g-0 h-100">
-                        <div class="col-5 border-end-form p-2">
-                            <div class="mb-1 d-flex">
-                                <span style="width: 60px;">No. Doc.</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.DocumentNumber</span>
-                            </div>
-                            <div class="mb-1 d-flex">
-                                <span style="width: 60px;">Date</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.ProductionDate.ToString("dd.MM.yy")</span>
-                            </div>
-                            <div class="mb-1 d-flex">
-                                <span style="width: 60px;">Shift</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.Shift</span>
-                            </div>
-                            <div class="mb-1 d-flex">
-                                <span style="width: 60px;">Cust.</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.CustomerName</span>
-                            </div>
-                            <div class="d-flex">
-                                <span style="width: 60px;">Tipe</span>: <span class="border-bottom border-dark flex-grow-1 ms-1 ps-2">@Model.HoseType @Model.Dimension</span>
-                            </div>
-                        </div>
-                        <div class="col-1 border-end-form d-flex align-items-center justify-content-center bg-white">
-                            <table class="p-0 border-form m-2 text-center" style="width: 40px; font-size: 9px;">
-                                <tr class="border-bottom-form"><td>DARI</td></tr>
-                                <tr><td class="fw-bold fs-6">1</td></tr>
+                        <!-- Info Block (No. Doc, Date, etc.) -->
+                        <div class="col-5 border-end-form">
+                            <table class="w-100 m-0 border-0 text-start fw-bold" style="font-size: 10px;">
+                                <tr>
+                                    <td style="width: 70px;" class="border-bottom-form py-1 ps-2">No. Doc.</td>
+                                    <td style="width: 15px;" class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2">@Model.DocumentNumber</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">Date</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2">
+                                        <input type="text" class="input-transparent w-100 text-dark fw-bold" value='@(Model.ProductionDate.ToString("dd.MM.yy"))' />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">Shift</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2">
+                                        <input type="text" class="input-transparent w-100 text-dark fw-bold" value='@Model.Shift' />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">Cust.</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2">@Model.CustomerName</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1 ps-2">Tipe</td>
+                                    <td class="py-1 text-center">:</td>
+                                    <td class="py-1 pe-2">@Model.HoseType @Model.Dimension</td>
+                                </tr>
                             </table>
                         </div>
+                        
+                        <!-- EMBEL/LEMBAR Block -->
+                        <div class="col-1 border-end-form d-flex align-items-center justify-content-center p-0">
+                            <table class="p-0 border-form m-0 text-center" style="width: 45px; font-size: 8px;">
+                                <tr><td class="border-bottom-form bg-light p-0">EMBEL</td></tr>
+                                <tr><td class="fw-bold p-0">1</td></tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Revision Table -->
                         <div class="col-6">
-                            <table class="w-100 h-100 m-0 border-0 text-center align-middle" style="font-size: 8px;">
-                                <tr class="border-bottom-form fw-bold" style="height: 20px;">
-                                    <td class="border-end-form" style="width: 20%;">No. Rev.</td>
+                            <table class="w-100 h-100 m-0 border-0 text-center align-middle" style="font-size: 9px; table-layout: fixed;">
+                                <tr class="border-bottom-form" style="height: 22px;">
+                                    <td class="border-end-form" style="width: 25%;">No. Rev.</td>
                                     <td class="border-end-form" style="width: 50%;">Description</td>
-                                    <td style="width: 30%;">Date</td>
+                                    <td style="width: 25%;">Date</td>
                                 </tr>
-                                <tr class="border-bottom-form" style="height: 15px;"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
-                                <tr class="border-bottom-form" style="height: 15px;"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
-                                <tr style="height: 15px;"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                                <tr class="border-bottom-form"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                                <tr class="border-bottom-form"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                                <tr><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
                             </table>
                         </div>
                     </div>
@@ -509,34 +540,53 @@
                     </div>
                 </div>
 
-                <!-- 5. WASTE SECTION (Modernized) -->
-                <div class="row g-0 border-form-bold mt-2 bg-light">
-                    <div class="col-9 border-end-form">
-                        <table class="grid-form w-100 border-0 m-0">
-                            <tr class="bg-secondary text-white">
-                                <th width="120">WASTE (KG)</th>
-                                <th class="text-center" width="80">CONTENT</th>
-                                <th class="text-center">AWAL</th>
-                                <th class="text-center">AKHIR</th>
-                            </tr>
-                            <tr class="bg-white">
-                                <td rowspan="2" class="text-center align-middle fw-bold">DANDORY AWAL (CLEANING)</td>
-                                <td class="ps-2">INNER</td>
-                                <td class="text-center">@(Model.WasteInnerAwal)</td>
-                                <td class="text-center">@(Model.WasteInnerAkhir)</td>
-                            </tr>
-                            <tr class="bg-white">
-                                <td class="ps-2">COVER</td>
-                                <td class="text-center">@(Model.WasteCoverAwal)</td>
-                                <td class="text-center">@(Model.WasteCoverAkhir)</td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-3 p-2 d-flex align-items-center justify-content-center text-center">
-                        <div class="small fw-bold text-danger" style="line-height: 1.2;">
-                            <i class="bi bi-info-circle-fill me-1"></i> NOTE: <br/>LAKUKAN PENGECEKAN PARAMETER PADA SAAT AWAL, TENGAH & AKHIR PROSES.
-                        </div>
-                    </div>
+                <!-- 5. WASTE SECTION -->
+                <div class="table-container-modern shadow-inner mt-2 border-form">
+                    <table class="grid-form w-100 border-0 m-0 bg-white" style="table-layout: fixed;">
+                        <tr>
+                            <td rowspan="6" width="30" class="align-middle text-center p-0 border-bottom-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">WASTE</td>
+                            <td colspan="2" class="text-center align-middle p-1" style="background:#f4f4f4; color:#333; font-size: 13px;">Initial Setting</td>
+                            <td width="90" class="text-center p-1" style="background:#f4f4f4;"></td>
+                            <td width="100" class="text-center p-1" style="background:#f4f4f4;"></td>
+                            <td width="100" class="text-center p-1 border-end-form" style="background:#f4f4f4;"></td>
+                            <td rowspan="6" class="align-top p-2 bg-light border-bottom-0" style="color:#212529; font-size: 13px; line-height: 1.5;">
+                                <div class="fw-bold text-decoration-underline mb-1">NOTE :</div>
+                                Lakukan pengecekan parameter pada saat<br/>awal, tengah & akhir proses.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="text-center align-middle p-1" style="background:#f4f4f4; color:#333; font-size: 13px;">Berat (kg)</td>
+                            <td class="text-center p-1" style="background:#f4f4f4;"></td>
+                            <td class="text-center align-middle p-1" style="background:#f4f4f4; color:#333; font-size: 13px;">Awal</td>
+                            <td class="text-center align-middle p-1 border-end-form" style="background:#f4f4f4; color:#333; font-size: 13px;">Akhir</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2" class="text-center align-middle" style="background:#f4f4f4; color:#555; width: 140px; font-size: 12px;">Dandory Awal<br/>(Cleaning)</td>
+                            <td class="text-center align-middle" style="background:#f4f4f4; color:#555; width: 60px; font-size: 12px;">Inner</td>
+                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteInnerAwal)" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteInnerAkhir)" placeholder="" /></td>
+                        </tr>
+                        <tr>
+                            <td class="text-center align-middle" style="background:#f4f4f4; color:#555; font-size: 12px;">Cover</td>
+                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteCoverAwal)" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteCoverAkhir)" placeholder="" /></td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2" class="text-center align-middle border-bottom-0" style="background:#f4f4f4; color:#555; font-size: 12px;">Dandory Akhir<br/>(Remain Material)</td>
+                            <td class="text-center align-middle" style="background:#f4f4f4; color:#555; font-size: 12px;">Inner</td>
+                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
+                        </tr>
+                        <tr>
+                            <td class="text-center align-middle border-bottom-0" style="background:#f4f4f4; color:#555; font-size: 12px;">Cover</td>
+                            <td class="text-center p-0 cell-active border-bottom-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active border-bottom-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
+                            <td class="text-center p-0 cell-active border-end-form border-bottom-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
+                        </tr>
+                    </table>
                 </div>
 
                 <!-- INPUT TRIGGER PARAMETER -->
