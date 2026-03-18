@@ -388,101 +388,125 @@
                         <table class="grid-form w-100 m-0">
                             <thead class="sticky-top bg-light">
                                 <tr>
-                                    <th class="sticky-col label-col" width="180">TIME / PARAMETER</th>
-                                    <th class="sticky-col std-col" width="100">STANDARD</th>
-                                    <th class="initial-col" width="80">INITIAL</th>
-                                    @for(int i=1; i<=7; i++) { <th width="60">@i</th> }
-                                    <th width="40" class="bg-secondary text-white">...</th>
+                                    <th colspan="2" class="sticky-col label-col text-center align-middle" width="220" style="background:#f0f0f0; font-size: 13px;">TIME</th>
+                                    <th class="sticky-col std-col text-center" width="100" style="background:#f0f0f0; font-size: 13px;">INITIAL<br/>:</th>
+                                    @for(int i=1; i<=7; i++) { <th width="60" class="text-center" style="background:#f0f0f0; font-size: 13px;">@i<br/>:</th> }
+                                    <th width="40" class="bg-secondary text-white text-center border-start-0">...</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <!-- INNER SECTION -->
-                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">INNER (TUBE 1)</td></tr>
                                  @{
                                     var innerRows = new[] {
-                                        new { Label = "Head Temp. (°C)", Key = "HeadTempInner", Std = (std.HeadTemp == 0 ? "90" : std.HeadTemp.ToString()) + " ± 5" },
-                                        new { Label = "Cylinder 1 (°C)", Key = "Cylinder1TempInner", Std = (std.Cylinder1Temp == 0 ? "90" : std.Cylinder1Temp.ToString()) + " ± 5" },
-                                        new { Label = "Cylinder 2 (°C)", Key = "Cylinder2TempInner", Std = (std.Cylinder2Temp == 0 ? "90" : std.Cylinder2Temp.ToString()) + " ± 5" },
-                                        new { Label = "Cylinder 3 (°C)", Key = "Cylinder3TempInner", Std = (std.Cylinder3Temp == 0 ? "90" : std.Cylinder3Temp.ToString()) + " ± 5" },
-                                        new { Label = "Screw Temp. (°C)", Key = "ScrewTempInner", Std = (std.ScrewTemp == 0 ? "90" : std.ScrewTemp.ToString()) + " ± 5" },
-                                        new { Label = "Screw Speed (rpm)", Key = "ScrewSpeedInner", Std = (std.ScrewSpeed == 0 ? "6.1" : std.ScrewSpeed.ToString()) + " ± 2.5" },
-                                        new { Label = "Feed Roll Ratio (%)", Key = "FeedRollRatioInner", Std = "MAX. 120" },
-                                        new { Label = "Pressure (MPa)", Key = "PressureInner", Std = "MAX. " + (std.Pressure == 0 ? "50" : std.Pressure.ToString()) }
+                                        new { Label = "HEAD TEMP. (°C)", Key = "HeadTempInner", Std = (std.HeadTemp == 0 ? "90" : std.HeadTemp.ToString()) + "±5" },
+                                        new { Label = "CYLINDER 1 (°C)", Key = "Cylinder1TempInner", Std = (std.Cylinder1Temp == 0 ? "90" : std.Cylinder1Temp.ToString()) + "±5" },
+                                        new { Label = "CYLINDER 2 (°C)", Key = "Cylinder2TempInner", Std = (std.Cylinder2Temp == 0 ? "90" : std.Cylinder2Temp.ToString()) + "±5" },
+                                        new { Label = "CYLINDER 3 (°C)", Key = "Cylinder3TempInner", Std = (std.Cylinder3Temp == 0 ? "90" : std.Cylinder3Temp.ToString()) + "±5" },
+                                        new { Label = "SCREW TEMP. (°C)", Key = "ScrewTempInner", Std = (std.ScrewTemp == 0 ? "90" : std.ScrewTemp.ToString()) + "±5" },
+                                        new { Label = "SCREW SPEED (RPM)", Key = "ScrewSpeedInner", Std = (std.ScrewSpeed == 0 ? "6.1" : std.ScrewSpeed.ToString()) + "±2.5" },
+                                        new { Label = "FEED ROLL RATIO (%)", Key = "FeedRollRatioInner", Std = "MAX. 120" },
+                                        new { Label = "PRESSURE(MPa)", Key = "PressureInner", Std = "MAX. " + (std.Pressure == 0 ? "50" : std.Pressure.ToString()) }
                                     };
                                 }
-                                @foreach(var row in innerRows) {
+                                @for(int r = 0; r < innerRows.Length; r++) {
+                                    var row = innerRows[r];
                                     <tr class="row-hover">
-                                        <td class="ps-2 sticky-col label-col bg-white">@row.Label</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.Std</td>
-                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
-                                        @for(int i=1; i<=7; i++) {
-                                            <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td>
+                                        @if(r == 0) {
+                                            <td rowspan="@innerRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">INNER (TUBE 1)</td>
                                         }
-                                        <td class="bg-light"></td>
+                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
+                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                        @for(int i=1; i<=7; i++) {
+                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                        }
+                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
 
                                 <!-- OUTER SECTION -->
-                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">OUTER (COVER)</td></tr>
                                  @{
                                     var outerRows = new[] {
-                                        new { Label = "Head Temp. (°C)", Key = "HeadTempOuter", Std = "90 ± 5" },
-                                        new { Label = "Cylinder 1 (°C)", Key = "Cylinder1TempOuter", Std = "90 ± 5" },
-                                        new { Label = "Cylinder 2 (°C)", Key = "Cylinder2TempOuter", Std = "90 ± 5" },
-                                        new { Label = "Cylinder 3 (°C)", Key = "Cylinder3TempOuter", Std = "-" },
-                                        new { Label = "Screw Temp. (°C)", Key = "ScrewTempOuter", Std = "90 ± 5" },
-                                        new { Label = "Screw Speed (rpm)", Key = "ScrewSpeedOuter", Std = "8.2 ± 2.5" },
-                                        new { Label = "Feed Roll Ratio (%)", Key = "FeedRollRatioOuter", Std = "MAX. 120" },
-                                        new { Label = "Pressure (MPa)", Key = "PressureOuter", Std = "MAX. 50" }
+                                        new { Label = "HEAD TEMP. (°C)", Key = "HeadTempOuter", Std = "90±5" },
+                                        new { Label = "CYLINDER 1 (°C)", Key = "Cylinder1TempOuter", Std = "90±5" },
+                                        new { Label = "CYLINDER 2 (°C)", Key = "Cylinder2TempOuter", Std = "90±5" },
+                                        new { Label = "CYLINDER 3 (°C)", Key = "Cylinder3TempOuter", Std = "-" },
+                                        new { Label = "SCREW TEMP. (°C)", Key = "ScrewTempOuter", Std = "90±5" },
+                                        new { Label = "SCREW SPEED (RPM)", Key = "ScrewSpeedOuter", Std = "8.2±2.5" },
+                                        new { Label = "FEED ROLL RATIO (%)", Key = "FeedRollRatioOuter", Std = "MAX. 120" },
+                                        new { Label = "PRESSURE(MPa)", Key = "PressureOuter", Std = "MAX. 50" }
                                     };
                                 }
-                                @foreach(var row in outerRows) {
+                                <tr class="border-top-form"></tr>
+                                @for(int r = 0; r < outerRows.Length; r++) {
+                                    var row = outerRows[r];
                                     <tr class="row-hover">
-                                        <td class="ps-2 sticky-col label-col bg-white">@row.Label</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.Std</td>
-                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
-                                        @for(int i=1; i<=7; i++) {
-                                            <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td>
+                                        @if(r == 0) {
+                                            <td rowspan="@outerRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">OUTER (COVER)</td>
                                         }
-                                        <td class="bg-light"></td>
+                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
+                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                        @for(int i=1; i<=7; i++) {
+                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                        }
+                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
 
                                 <!-- SPIRAL SECTION -->
-                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">SPIRAL</td></tr>
-                                @foreach(var row in (new[] { 
-                                    new { L="Spiral Speed (rpm)", K="SpiralSpeed", S="98±20" },
-                                    new { L="Spiral Pitch (Setting)", K="SpiralPitchSetting", S="35±5" },
-                                    new { L="Spiral Pitch (Display)", K="SpiralPitchDisplay", S="35±5" }
-                                })) {
+                                 @{
+                                    var spiralRows = new[] {
+                                        new { Label = "SPIRAL SPEED (RPM)", Key = "SpiralSpeed", Std = "98±20" },
+                                        new { Label = "SPIRAL PITCH (SETTING)", Key = "SpiralPitchSetting", Std = "35±5" },
+                                        new { Label = "SPIRAL PITCH (DISPLAY)", Key = "SpiralPitchDisplay", Std = "35±5" }
+                                    };
+                                }
+                                <tr class="border-top-form"></tr>
+                                @for(int r = 0; r < spiralRows.Length; r++) {
+                                    var row = spiralRows[r];
                                     <tr class="row-hover">
-                                        <td class="ps-2 sticky-col label-col bg-white">@row.L</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.S</td>
-                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
-                                        @for(int i=1; i<=7; i++) { <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td> }
-                                        <td class="bg-light"></td>
+                                        @if(r == 0) {
+                                            <td rowspan="@spiralRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">SPIRAL</td>
+                                        }
+                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
+                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                        @for(int i=1; i<=7; i++) {
+                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                        }
+                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
 
                                 <!-- OTHER SECTION -->
-                                <tr class="section-divider"><td colspan="12" class="fw-bold ps-2 py-1">OTHERS</td></tr>
-                                @foreach(var row in (new[] { 
-                                    new { L="Preset Value (Ø mm)", K="PresetValue", S="18.5±0.2" },
-                                    new { L="Control Value (Ø mm)", K="ControlValue", S="18.5±0.2" },
-                                    new { L="Hose Speed (m/min)", K="HoseSpeed", S="3.4±2" },
-                                    new { L="Take up Conveyor Speed (m/min)", K="TakeupConveyorSpeed", S="3.4±3" },
-                                    new { L="Cool Conveyor Speed (m/min)", K="CoolConveyorSpeed", S="3.4±4" },
-                                    new { L="Conveyor Ratio (Take up : Cool)", K="ConveyorRatio", S="100%±10" },
-                                    new { L="Un smooth surface", K="UnsmoothSurface", S="0.5" },
-                                    new { L="Chiller water temperature (°C)", K="ChillerWaterTemp", S="Max. 15" },
-                                    new { L="Caterpillar gap (mm)", K="CaterpillarGap", S="18.2±1" }
-                                })) {
+                                 @{
+                                    var otherRows = new[] {
+                                        new { Label = "PRESET VALUE (Ø mm)", Key = "PresetValue", Std = "18.5±0.2" },
+                                        new { Label = "CONTROL VALUE (Ø mm)", Key = "ControlValue", Std = "18.5±0.2" },
+                                        new { Label = "HOSE SPEED (m/min)", Key = "HoseSpeed", Std = "3.4±2" },
+                                        new { Label = "TAKE UP CONVEYOR SPEED (m/min)", Key = "TakeupConveyorSpeed", Std = "3.4±3" },
+                                        new { Label = "COOL CONVEYOR SPEED (m/min)", Key = "CoolConveyorSpeed", Std = "3.4±4" },
+                                        new { Label = "CONVEYOR RATIO (TAKE UP : COOL)", Key = "ConveyorRatio", Std = "100%±10" },
+                                        new { Label = "UN SMOOTH SURFACE", Key = "UnsmoothSurface", Std = "0.5" },
+                                        new { Label = "CHILLER WATER TEMPERATURE (°C)", Key = "ChillerWaterTemp", Std = "MAX. 15" },
+                                        new { Label = "CATERPILLAR GAP (mm)", Key = "CaterpillarGap", Std = "18.2±1" }
+                                    };
+                                }
+                                <tr class="border-top-form"></tr>
+                                @for(int r = 0; r < otherRows.Length; r++) {
+                                    var row = otherRows[r];
                                     <tr class="row-hover">
-                                        <td class="ps-2 sticky-col label-col bg-white">@row.L</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light-blue">@row.S</td>
-                                        <td class="text-center cell-active">@(readings.FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.FirstOrDefault()) ?? "-")</td>
-                                        @for(int i=1; i<=7; i++) { <td class="text-center cell-input">@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "-")</td> }
-                                        <td class="bg-light"></td>
+                                        @if(r == 0) {
+                                            <td rowspan="@otherRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">OTHER</td>
+                                        }
+                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
+                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
+                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                        @for(int i=1; i<=7; i++) {
+                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                        }
+                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
                             </tbody>
