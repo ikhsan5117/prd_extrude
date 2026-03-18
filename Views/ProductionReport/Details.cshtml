@@ -183,74 +183,201 @@
                     <!-- MATERIAL & DIES -->
                     <div class="col-6 border-end-form">
                          <table class="w-100 grid-form border-0">
+                            <!-- MATERIAL SECTION -->
                             <tr>
-                                <th width="125" style="background:#f0f0f0;">MATERIAL</th>
-                                <th width="90" style="background:#f0f0f0;">STANDARD</th>
-                                <th width="90" style="background:#f0f0f0;">ACTUAL</th>
+                                <th width="30" rowspan="4" class="align-middle text-center p-0 border-bottom-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#f0f0f0; letter-spacing: 2px;">MATERIAL</th>
+                                <th colspan="2" style="background:#f0f0f0; border-bottom: 0;"></th>
+                                <th width="90" style="background:#f0f0f0;" class="text-center">STANDARD</th>
+                                <th width="120" style="background:#f0f0f0;" class="text-center border-end-0">ACTUAL</th>
+                                <th rowspan="4" width="60" style="background:#f4f4f4;" class="border-start-form"></th>
                             </tr>
-                            <tr><td class="ps-1">INNER(MATERIAL)</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td></tr>
-                            <tr><td class="ps-1">OUTER(MATERIAL)</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td></tr>
-                            <tr><td class="ps-1">YARN</td><td class="text-center">ARAMID</td><td class="text-center">ARAMID</td></tr>
+                            <tr>
+                                <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
+                                <td class="text-center">@(Model.InnerMaterial ?? "-")</td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="text-start ps-2">OUTER(MATERIAL)</td>
+                                <td class="text-center">@(Model.OuterMaterial ?? "-")</td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="text-start ps-2">YARN</td>
+                                <td class="text-center">ARAMID</td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
+                            </tr>
                             
+                            <!-- DIES DIMENSION SECTION -->
                             <tr class="border-top-form">
-                                <th style="background:#f0f0f0;">DIES</th>
-                                <th style="background:#f0f0f0;">STANDARD</th>
-                                <th style="background:#f0f0f0;">BEFORE / AFTER</th>
+                                <th width="30" rowspan="7" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#f0f0f0; letter-spacing: 2px;">DIES DIMENSION</th>
+                                <th style="background:#f0f0f0;" class="text-start ps-2">DIES</th>
+                                <th width="100" style="background:#f0f0f0;" class="text-center">CEK VISUAL</th>
+                                <th width="90" style="background:#f0f0f0;" class="text-center">STANDARD</th>
+                                <th width="60" style="background:#f0f0f0;" class="text-center">BEFORE</th>
+                                <th width="60" style="background:#f0f0f0; border-right: 0 !important;" class="text-center">AFTER</th>
                             </tr>
-                            <tr><td class="ps-1">Ø Nipple Die</td><td class="text-center">@(std.InnerDie == 0 ? "8.8±0.1" : std.InnerDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">Ø Tube Die</td><td class="text-center">@(std.TubeDie == 0 ? "11.1±0.1" : std.TubeDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">Ø Middle Die</td><td class="text-center">@(std.MiddleDie == 0 ? "14.2±0.1" : std.MiddleDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">Ø Cover Die</td><td class="text-center">@(std.CoverDie == 0 ? "15.1±0.1" : std.CoverDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">Ø Spacer Die</td><td class="text-center">@(std.SpacerDie == 0 ? "7.3±0.1" : std.SpacerDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">A Distance</td><td class="text-center">0.4±0.1</td><td class="text-center"></td></tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø NIPPLE DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@(std.InnerDie == 0 ? "8.8±0.1" : std.InnerDie.ToString())</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø TUBE DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@(std.TubeDie == 0 ? "11.1±0.1" : std.TubeDie.ToString())</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø MIDDLE DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@(std.MiddleDie == 0 ? "14.2±0.1" : std.MiddleDie.ToString())</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø COVER DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@(std.CoverDie == 0 ? "15.1±0.1" : std.CoverDie.ToString())</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø SPACER DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@(std.SpacerDie == 0 ? "7.3±0.1" : std.SpacerDie.ToString())</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">A DISTANCE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">0.4±0.1</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                            </tr>
                         </table>
                     </div>
                     <!-- MESH & EMBOSS -->
                     <div class="col-6">
-                        <table class="w-100 grid-form border-0">
+                        <table class="w-100 grid-form border-0 h-100">
+                            <!-- Header -->
                             <tr>
-                                <th style="background:#f0f0f0;" width="140">BEFORE / AFTER</th>
-                                <th style="background:#f0f0f0;">CONTENT</th>
-                                <th width="70" style="background:#f0f0f0;">Ø96 #10</th>
-                                <th width="70" style="background:#f0f0f0;">Ø96 #40</th>
+                                <th width="80" style="background:#f0f0f0;" class="border-end-0"></th>
+                                <th width="80" style="background:#f0f0f0;" class="text-start ps-2 border-start-0">Content</th>
+                                <th style="background:#f0f0f0;" class="text-center">Ø96 #10</th>
+                                <th colspan="2" style="background:#f0f0f0;" class="text-center border-end-0">Ø96 #40</th>
+                            </tr>
+
+                            <!-- Tipe Mesh -->
+                            <tr>
+                                <td rowspan="2" class="align-middle text-center p-1" style="background-color: #f4f4f4; font-size: 11px;">Tipe Mesh<br/>(Sebelum<br/>Proses)</td>
+                                <td class="text-start ps-2">Inner</td>
+                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
                             </tr>
                             <tr>
-                                <td rowspan="2" class="align-middle fw-bold ps-2 text-center" style="background-color: #f8f9fa;">MESH CHECKING<br/><span class="fw-normal small">(Sebelum Proses)</span></td>
-                                <td class="text-center">INNER</td>
-                                <td class="text-center">✔</td>
-                                <td class="text-center">✔</td>
+                                <td class="text-start ps-2">Outer</td>
+                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
                             </tr>
-                            <tr>
-                                <td class="text-center">OUTER</td>
-                                <td class="text-center">✔</td>
-                                <td class="text-center">✔</td>
-                            </tr>
+
+                            <!-- Mesh Checking -->
                             <tr class="border-top-form">
-                                <td rowspan="2" class="align-middle fw-bold ps-2 text-center" style="background-color: #f8f9fa;">MESH CONDITION<br/><span class="fw-normal small">(Sesudah Proses)</span></td>
-                                <td style="background:#f0f0f0;" class="text-center fw-bold">INNER / OUTER</td>
-                                <td style="background:#f0f0f0;" class="text-center fw-bold">✔ / OK</td>
-                                <td style="background:#f0f0f0;" class="text-center fw-bold">BOLONG / ASING</td>
+                                <td rowspan="2" class="align-middle text-center p-1" style="background-color: #f4f4f4; font-size: 11px;">Mesh<br/>Checking<br/>(Setelah<br/>Proses)</td>
+                                <td class="text-start ps-2">Inner</td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> OK</label>
+                                </td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Bolong</label>
+                                </td>
+                                <td class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Material Asing</label>
+                                </td>
                             </tr>
                             <tr>
-                                <td class="text-center">INNER</td>
-                                <td class="text-center">✔</td>
-                                <td class="text-center">-</td>
+                                <td class="text-start ps-2">Outer</td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> OK</label>
+                                </td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Bolong</label>
+                                </td>
+                                <td class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Material Asing</label>
+                                </td>
                             </tr>
-                            <tr>
-                                <td class="text-center bg-light border-0"></td>
-                                <td class="text-center border-top-0">OUTER</td>
-                                <td class="text-center border-top-0">✔</td>
-                                <td class="text-center border-top-0">-</td>
-                            </tr>
-                            
+
+                            <!-- Emboss Marking -->
                             <tr class="border-top-form">
-                                <th colspan="2" style="background:#f0f0f0;">EMBOSS MARKING CHECK</th>
-                                <th style="background:#f0f0f0;">STATUS</th>
-                                <th style="background:#f0f0f0;">RESULT</th>
+                                <td rowspan="5" class="align-middle text-center p-1 border-bottom-0" style="background-color: #f4f4f4; font-size: 11px;">Emboss<br/>Marking<br/>Check<br/>(Setelah<br/>Proses)</td>
+                                <td class="text-start ps-2">Text</td>
+                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" placeholder="~" /></td>
                             </tr>
-                            <tr><td colspan="2" class="ps-1">TEXT / DATE</td><td class="text-center">CLEAN</td><td class="text-center">✔</td></tr>
-                            <tr><td colspan="2" class="ps-1">SURFACE (OK/SCRATCH)</td><td class="text-center">OK</td><td class="text-center">✔</td></tr>
-                            <tr><td colspan="2" class="ps-1">CONDITION (TERBACA)</td><td class="text-center">TERBACA</td><td class="text-center">✔</td></tr>
+                            <tr>
+                                <td class="text-start ps-2">Date</td>
+                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" placeholder="~" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Condition</td>
+                                <td colspan="1" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Bersih</label>
+                                </td>
+                                <td colspan="2" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Kotor</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Surface</td>
+                                <td colspan="1" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> OK</label>
+                                </td>
+                                <td colspan="2" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Scratch</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2 border-bottom-0">Text</td>
+                                <td colspan="1" class="p-0 align-middle px-2 border-end-0 border-bottom-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Terbaca</label>
+                                </td>
+                                <td colspan="2" class="p-0 align-middle px-2 border-end-0 border-bottom-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Tdk Terbaca</label>
+                                </td>
+                            </tr>
                         </table>
                     </div>
                 </div>
@@ -731,6 +858,19 @@
     .cell-active { background-color: #fffde7; font-weight: bold; border: 1px solid #fbc02d !important; }
     .cell-input { font-family: 'Courier New', Courier, monospace; font-weight: 600; color: #1a237e; }
     
+    .input-transparent {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #1a237e;
+        width: 100%;
+        text-align: center;
+        padding: 4px 2px;
+    }
+    .input-transparent:focus {
+        background: #fff9c4;
+    }
+
     .super-small { font-size: 9px; }
     .h-33 { height: 33.33%; }
     
