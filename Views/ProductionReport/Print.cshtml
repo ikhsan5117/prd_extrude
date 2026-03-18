@@ -2,7 +2,6 @@
 
 @{
     Layout = null;
-    var dimensionReadings = ViewBag.DimensionReadings as IEnumerable<VelastoProductionSystem.Models.DimensionReading> ?? new List<VelastoProductionSystem.Models.DimensionReading>();
 }
 
 <!DOCTYPE html>
@@ -61,35 +60,78 @@
     <button class="no-print-btn" onclick="window.close()" style="background:#6c757d; margin-left: 10px;">Close Window</button>
 
     <div class="print-container">
-        <div class="header-section">
-            <div class="header-left">
-                <div style="font-weight: 900; font-size: 14pt;">VELASTO</div>
-                <div style="font-size: 8pt; border-bottom: 1px solid #000; display: inline-block;">INDONESIA</div>
-                <table class="meta-table" style="margin-top: 5px;">
-                    <tr><td class="label">No Doc.</td><td>: @Model.DocumentNumber</td></tr>
-                    <tr><td class="label">Revisi</td><td>: @Model.RevisionNumber</td></tr>
-                    <tr><td class="label">Date</td><td>: @Model.ProductionDate.ToString("dd MMM yyyy")</td></tr>
-                    <tr><td class="label">Shift</td><td>: @Model.Shift</td></tr>
-                    <tr><td class="label">Customer</td><td>: @Model.CustomerName</td></tr>
-                </table>
-            </div>
-            <div class="header-center">
-                <h1 class="report-title">Extruder Production Report</h1>
-                <h2 class="report-subtitle">(Dimension)</h2>
-            </div>
-            <div class="header-right">
-                <table class="signature-table">
+        <div class="header-section" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); color: #e2e8f0; padding: 15px; border: 2px solid #3b82f6; border-radius: 8px; margin-bottom: 15px;">
+            <!-- Baris 1: Logo, Judul, dan TTD -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <!-- Logo Kiri -->
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                        <span style="font-weight: 900; font-size: 20px; color: white;">V</span>
+                    </div>
+                    <div>
+                        <div style="font-weight: 900; font-size: 16px; color: #60a5fa;">VELASTO</div>
+                        <div style="font-size: 9px; color: #94a3b8; border-bottom: 1px solid #3b82f6; padding-bottom: 1px;">INDONESIA</div>
+                    </div>
+                </div>
+                
+                <!-- Judul Tengah -->
+                <div style="text-align: center;">
+                    <h1 style="font-size: 18px; font-weight: 900; margin: 0; color: #f1f5f9; text-transform: uppercase;">EXTRUDER PRODUCTION REPORT</h1>
+                    <h2 style="font-size: 12px; font-weight: 500; margin: 2px 0 0 0; color: #3b82f6;">(Dimension)</h2>
+                </div>
+                
+                <!-- TTD Kanan -->
+                <table style="width: 180px; border: 1px solid #3b82f6; border-collapse: collapse; font-size: 8px;">
                     <thead>
-                        <tr><th width="33%">PREPARED</th><th width="33%">CHECKED</th><th width="34%">APPROVED</th></tr>
+                        <tr>
+                            <th style="border: 1px solid #3b82f6; padding: 4px; background: #3b82f6; color: white; font-weight: bold;">PREPARED</th>
+                            <th style="border: 1px solid #3b82f6; padding: 4px; background: #3b82f6; color: white; font-weight: bold;">CHECKED</th>
+                            <th style="border: 1px solid #3b82f6; padding: 4px; background: #3b82f6; color: white; font-weight: bold;">APPROVED</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>@Model.CreatedBy.Split(' ')[0]</td>
-                            <td>@(Model.CheckedBy?.Split(' ')[0] ?? "-")</td>
-                            <td>@(Model.ApprovedBy?.Split(' ')[0] ?? "-")</td>
+                            <td style="border: 1px solid #3b82f6; height: 35px; text-align: center; color: #60a5fa; font-weight: bold;">Operator 1</td>
+                            <td style="border: 1px solid #3b82f6; height: 35px;"></td>
+                            <td style="border: 1px solid #3b82f6; height: 35px;"></td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Baris 2: Informasi Dokumen -->
+            <div style="display: flex; justify-content: space-between; font-size: 9px; padding: 8px 0; border-top: 1px solid #3b82f6; border-bottom: 1px solid #3b82f6;">
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">NO DOC :</span> SOP/PROD/HOSE/SPS/24/10/05
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">REVISI :</span> 0
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">DATE :</span> 17/Mar/2026
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">SHIFT :</span> 2
+                </div>
+            </div>
+            
+            <!-- Baris 3: Customer dan Product Info -->
+            <div style="display: flex; justify-content: space-between; font-size: 9px; padding-top: 8px;">
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">CUSTOMER :</span> PT. TMMIN
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">TYPE :</span> TSHSS01G-1C
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">HOSE :</span> 11 mm x 18 mm
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">WIRE :</span> 0.30 mm x 7 x 7
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">BY PASS :</span> 2.5 mm
+                </div>
             </div>
         </div>
 

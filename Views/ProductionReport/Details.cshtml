@@ -37,61 +37,224 @@
 
     @if (currentPortal == "dimension")
     {
-        <!-- ============================================= -->
-        <!-- PORTAL 2: DIMENSION (Modern HUD Wrapper)      -->
-        <!-- ============================================= -->
         <div class="hud-container fade-in">
-            <div class="paper-replica shadow-2xl mx-auto mb-5">
-                <div class="paper-padding text-uppercase">
-                    <div class="row g-0 border-form-bold mb-3">
-                        <div class="col-3 p-3 border-end-form d-flex align-items-center justify-content-center">
-                             <div class="d-flex align-items-center bg-dark p-2 rounded">
-                                <h4 class="fw-black mb-0 text-white" style="font-family: Arial Black; letter-spacing: -1px; font-size: 24px;">V</h4>
-                                <div class="ms-1">
-                                    <h5 class="fw-black mb-0 text-white" style="letter-spacing: 2px; font-size: 14px; line-height: 1;">VELASTO</h5>
-                                </div>
+            <!-- PORTAL 2: DIMENSION (Modernized Glass Paper Structure) -->
+            <div class="glass-paper shadow-2xl mx-auto mb-4 border-cyber-blue">
+                <!-- 1. HEADER SECTION -->
+                <div class="row g-0 border-bottom-cyber" style="background: rgba(30, 58, 138, 0.4);">
+                    <div class="col-3 border-end-cyber p-3 d-flex align-items-center justify-content-center">
+                         <div class="d-flex align-items-center gap-2">
+                             <h2 class="fw-black text-info mb-0" style="font-family: Arial Black; letter-spacing: -2px; font-size: 38px;">V</h2>
+                             <div class="lh-1">
+                                 <h6 class="fw-black text-white mb-0 tracking-widest" style="font-size: 18px;">VELASTO</h6>
+                                 <span class="extra-small text-info opacity-75 fw-bold" style="letter-spacing: 3px; font-size: 8px;">I N D O N E S I A</span>
                              </div>
-                        </div>
-                        <div class="col-6 p-2 text-center border-end-form align-middle">
-                            <h5 class="fw-bold mb-0">Extruder Production Report</h5>
-                            <div class="fw-bold small">(Dimension)</div>
-                        </div>
-                        <div class="col-3 p-2 text-center d-flex flex-column justify-content-center">
-                             <div class="super-small fw-bold">NO DOC: @Model.DocumentNumber</div>
-                             <div class="super-small fw-bold">DATE: @Model.ProductionDate.ToString("dd/MM/yy")</div>
-                        </div>
+                         </div>
                     </div>
-
-                    <div class="table-container-modern">
-                         <table class="grid-form w-100">
-                            <thead>
-                                <tr>
-                                    <th>TIME</th><th>ITEM</th><th>INNER DIA</th><th>IN THICK X</th><th>IN THICK Y</th><th>TOTAL X</th><th>TOTAL Y</th><th>PITCH</th><th>VISUAL</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach(var r in readings) {
-                                    <tr class="row-hover">
-                                        <td>@r.ReadingTime.ToString("HH:mm")</td>
-                                        <td>@Model.HoseType</td>
-                                        <td class="text-center">@r.InnerDiameter</td>
-                                        <td class="text-center">@r.InnerThicknessX</td>
-                                        <td class="text-center">@r.InnerThicknessY</td>
-                                        <td class="text-center">@r.TotalThicknessX</td>
-                                        <td class="text-center">@r.TotalThicknessY</td>
-                                        <td class="text-center">@r.SpiralPitch</td>
-                                        <td class="text-center fw-bold @(r.VisualCheck == "OK" ? "text-success" : "text-danger")">@r.VisualCheck</td>
-                                    </tr>
-                                }
-                            </tbody>
+                    <div class="col-6 border-end-cyber p-3 d-flex flex-column justify-content-center align-items-center text-center">
+                        <h4 class="fw-black text-white mb-1 tracking-widest text-uppercase">Extruder Production Report</h4>
+                        <div class="text-info fw-bold small tracking-widest">(Dimension)</div>
+                    </div>
+                    <div class="col-3">
+                         <table class="w-100 h-100 text-center m-0 border-0 super-small text-white opacity-90">
+                             <tr style="height: 25px;">
+                                 <td class="border-end-cyber border-bottom-cyber py-1">PREPARED</td>
+                                 <td class="border-end-cyber border-bottom-cyber py-1">CHECKED</td>
+                                 <td class="border-end-cyber border-bottom-cyber py-1 text-nowrap">APPROVED</td>
+                             </tr>
+                             <tr style="height: 50px;">
+                                 <td class="border-end-cyber border-bottom-cyber align-middle font-size-8 text-info fw-bold">@Model.CreatedBy</td>
+                                 <td class="border-end-cyber border-bottom-cyber align-middle font-size-8 text-white-50">@Model.CheckedBy</td>
+                                 <td class="border-bottom-cyber align-middle font-size-8 text-white-50">@Model.ApprovedBy</td>
+                             </tr>
+                             <tr>
+                                 <td class="border-end-cyber"></td>
+                                 <td class="border-end-cyber"></td>
+                                 <td></td>
+                             </tr>
                          </table>
                     </div>
+                </div>
 
-                    <div class="mt-4 no-print d-flex justify-content-center">
-                        <button type="button" class="btn btn-velasto-glow-green px-5 rounded-pill" data-bs-toggle="modal" data-bs-target="#addDimModal">
-                            <i class="bi bi-rulers me-2"></i> INPUT DATA KUALITAS (DIMENSI)
-                        </button>
+                <!-- 2. META INFO BAR & TIPE -->
+                <div class="row g-0 border-bottom-cyber bg-white-5">
+                    <div class="col-6 border-end-cyber p-2">
+                        <div class="row g-0 text-start ps-2">
+                            <div class="col-6">
+                                <div class="hud-label text-info opacity-75 mb-0">No Doc : <span class="text-white">@Model.DocumentNumber</span></div>
+                                <div class="hud-label text-info opacity-75 mb-0">Revisi : <span class="text-white">@Model.RevisionNumber</span></div>
+                            </div>
+                            <div class="col-6">
+                                <div class="hud-label text-info opacity-75 mb-0">Date : <span class="text-white">@Model.ProductionDate.ToString("dd/MM/yyyy")</span></div>
+                                <div class="hud-label text-info opacity-75 mb-0">Shift : <span class="text-white">@Model.Shift</span></div>
+                            </div>
+                        </div>
                     </div>
+                    <div class="col-6 p-2 text-start ps-3 d-flex flex-column justify-content-center">
+                        <div class="hud-label text-info opacity-75 mb-1">Customer : <span class="text-white">@(Model.CustomerName ?? "-")</span></div>
+                        <div class="fw-bold text-warning small tracking-widest">
+                            Tipe : @Model.HoseType / @Model.Dimension / @(std.ProductCode ?? "-")
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. MAIN GRID AREA -->
+                <div class="row g-0">
+                    <!-- LEFT COLUMN: DIMENSION MONITORING (Hour Matrix) -->
+                    <div class="col-7 border-end-cyber">
+                        <div class="table-responsive">
+                            <table class="dimension-glass-grid w-100 text-center">
+                                <thead>
+                                    <tr>
+                                        <th colspan="4" class="p-1 border-bottom-cyber bg-white-10 tracking-widest fw-black text-info">PUKUL / JAM</th>
+                                        @for(int i=0; i<6; i++) {
+                                            <th class="border-bottom-cyber border-start-cyber bg-white-10 text-white font-size-10">@(i==0 ? "INIT" : i.ToString())</th>
+                                        }
+                                    </tr>
+                                    <tr class="sub-th font-size-8 bg-white-5">
+                                        <th style="width: 18%;">POINT</th>
+                                        <th style="width: 10%;">FREQ</th>
+                                        <th style="width: 18%;">STD. DIMENSI</th>
+                                        <th style="width: 10%;">SCALE</th>
+                                        @for(int i=0; i<6; i++) {
+                                            <th class="border-start-cyber"></th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var sections = new[] {
+                                            new { Label = "Inner Diameter", Nom = std.InnerDie, Tol = std.ToleranceDie, Prop = "InnerDiameter" },
+                                            new { Label = "In Thick (X)", Nom = std.TubeDie, Tol = std.Tol_TubeDie, Prop = "InnerThicknessX" },
+                                            new { Label = "In Thick (Y)", Nom = std.TubeDie, Tol = std.Tol_TubeDie, Prop = "InnerThicknessY" },
+                                            new { Label = "Total Thick (X)", Nom = std.CoverDie, Tol = std.Tol_CoverDie, Prop = "TotalThicknessX" },
+                                            new { Label = "Total Thick (Y)", Nom = std.CoverDie, Tol = std.Tol_CoverDie, Prop = "TotalThicknessY" }
+                                        };
+                                    }
+
+                                    @foreach(var sec in sections) {
+                                        for(int rIdx=0; rIdx<5; rIdx++) {
+                                            decimal scale = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
+                                            <tr class="scale-row border-bottom-cyber-thin" style="height: @(rIdx == 2 ? "28px" : "22px");">
+                                                @if(rIdx == 0) {
+                                                    <td rowspan="5" class="fw-black text-info border-end-cyber text-start p-2 align-middle font-size-9">@sec.Label</td>
+                                                    <td rowspan="5" class="border-end-cyber align-middle font-size-7 text-white-50">30 MIN</td>
+                                                    <td rowspan="5" class="border-end-cyber align-middle text-warning fw-black font-size-9">@sec.Nom ± @sec.Tol</td>
+                                                }
+                                                <td class="bg-white-5 border-end-cyber fw-bold font-size-8 text-white-50">@scale.ToString("0.00")</td>
+                                                @for(int h=0; h<6; h++) {
+                                                    var reading = h < readings.Count ? readings[h] : null;
+                                                    var val = (decimal?)reading?.GetType().GetProperty(sec.Prop)?.GetValue(reading);
+                                                    
+                                                    decimal step = sec.Tol * 0.5m;
+                                                    bool isMatch = false;
+                                                    if (val != null) {
+                                                        if (Math.Abs(val.Value - scale) < (step * 0.51m)) { isMatch = true; }
+                                                    }
+                                                    <td class="border-start-cyber p-0 position-relative @(isMatch ? "bg-info-glow" : "")">
+                                                        @if(isMatch) { <span class="val-display">@val?.ToString("0.00")</span> }
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    }
+
+                                    <!-- Spiral & Visual -->
+                                    <tr class="special-row border-top-cyber" style="height: 35px;">
+                                        <td class="p-2 text-start fw-black text-info font-size-9">Spiral Pitch</td>
+                                        <td class="font-size-7 text-white-50">30 MIN</td>
+                                        <td class="text-warning fw-black font-size-9">@std.SpiralPitch ± @std.Tol_SpiralPitch</td>
+                                        <td class="bg-white-5 font-size-8 text-white-50">NOM</td>
+                                        @for(int h=0; h<6; h++) {
+                                            var r = h < readings.Count ? readings[h] : null;
+                                            <td class="border-start-cyber text-white fw-black font-size-10">@r?.SpiralPitch?.ToString("0.0")</td>
+                                        }
+                                    </tr>
+                                    <tr class="special-row border-top-cyber" style="height: 40px;">
+                                        <td class="p-2 text-start fw-black text-info font-size-9">Visual Check</td>
+                                        <td class="font-size-7 text-white-50">30 MIN</td>
+                                        <td colspan="2" class="font-size-7 text-start ps-2 py-1 lh-1 text-white-50 opacity-75">No Burry, No Line, No Bubble, No Scratch</td>
+                                        @for(int h=0; h<6; h++) {
+                                            var r = h < readings.Count ? readings[h] : null;
+                                            <td class="border-start-cyber @(r?.VisualCheck == "NG" ? "text-danger" : "text-success") fw-black font-size-10">@r?.VisualCheck</td>
+                                        }
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-2 border-top-cyber bg-white-5 text-start">
+                             <span class="hud-label text-info opacity-50 extra-small">Note :</span>
+                             <div class="text-white-50 font-size-8 ms-3 mt-1">@Model.Remark</div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: EVALUATION GRID -->
+                    <div class="col-5">
+                        <div class="table-responsive h-100" style="min-height: 500px;">
+                            <table class="dimension-glass-grid w-100 text-center h-100">
+                                <thead>
+                                    <tr class="bg-white-10 font-size-8 text-info fw-black">
+                                        <th>PART NUMBER</th>
+                                        <th>VIN KODE</th>
+                                        <th>STD PNJNG</th>
+                                        <th>ACT PNJNG</th>
+                                        <th>QTY TRGT</th>
+                                        <th colspan="3" class="border-start-cyber border-end-cyber bg-white-10">QTY ACTUAL</th>
+                                        <th>REMARK</th>
+                                    </tr>
+                                    <tr class="sub-th bg-white-5 font-size-7 text-white-50">
+                                        <th colspan="5"></th>
+                                        <th class="border-start-cyber">OK</th>
+                                        <th>NG DIM</th>
+                                        <th class="border-end-cyber text-nowrap">NG VIS</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="height: 40px;" class="border-bottom-cyber-thin">
+                                        <td class="font-size-7 text-white fw-bold">@(std.ProductCode ?? "-")</td>
+                                        <td class="font-size-8 text-info fw-black">@(Model.VinCode ?? "-")</td>
+                                        <td class="font-size-8 text-white">@(Model.StandardLength ?? "-")</td>
+                                        <td class="p-0 border-start-cyber"><input type="text" class="input-glass-sm w-100 h-100 border-0 text-center text-white fw-bold" value="@Model.ActualLength" /></td>
+                                        <td class="font-size-9 text-warning fw-black">@Model.QtyTarget</td>
+                                        <td class="border-start-cyber text-success fw-black font-size-10">@Model.QtyOk</td>
+                                        <td class="text-danger fw-bold font-size-9">@Model.NgDimension</td>
+                                        <td class="border-end-cyber text-danger fw-bold font-size-9">@Model.NgVisual</td>
+                                        <td class="font-size-7 text-white-50 text-start ps-1">@Model.Remark</td>
+                                    </tr>
+                                    @for(int i=0; i<18; i++) {
+                                        <tr class="border-bottom-cyber-thin opacity-25" style="height: 28px;">
+                                            <td colspan="9"></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Attention -->
+                        <div class="p-2 border-top-cyber text-start bg-white-5">
+                             <div class="hud-label text-warning opacity-75 mb-1 extra-small">Attention :</div>
+                             <div class="text-white-50 font-size-7 ps-2 lh-condensed">
+                                1. Setiap operator wajib menggunakan APD (Sepatu safety & Sarung tangan)<br/>
+                                2. Periksa Dies Sebelum dan sesudah proses<br/>
+                                3. Pastikan semua parameter sesuai dengan SPS
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIONS (No Print) -->
+            <div class="no-print d-flex justify-content-center gap-4 mt-3 mb-5">
+                <button type="button" class="btn btn-velasto-glow px-5 py-3 rounded-pill shadow-lg" data-bs-toggle="modal" data-bs-target="#addDimModal">
+                    <i class="bi bi-rulers me-2"></i> INPUT DATA QUALITY JAM @(readings.Count + 1)
+                </button>
+                <div class="d-flex gap-2">
+                    <button onclick="window.print()" class="btn btn-outline-info px-4 rounded-pill">
+                        <i class="bi bi-printer me-2"></i> CETAK LAPORAN
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-glass px-4 rounded-pill">
+                        <i class="bi bi-arrow-left me-2"></i> KEMBALI
+                    </a>
                 </div>
             </div>
         </div>
@@ -1062,11 +1225,140 @@
         box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
     }
 
+    /* DIMENSION PORTAL SPECIFIC STYLES */
+    .dim-info-card {
+        background: rgba(30, 58, 138, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .dim-readings-card {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .dim-matrix-table th {
+        background: rgba(30, 58, 138, 0.3);
+        color: rgba(147, 197, 253, 0.6);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 12px 8px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .dim-matrix-table td {
+        padding: 14px 8px;
+        border: 1px solid rgba(255,255,255,0.03);
+        color: white;
+        font-size: 13px;
+        text-align: center;
+    }
+    .dim-matrix-table .point-cell {
+        text-align: left;
+        font-weight: 700;
+        color: #93c5fd;
+        padding-left: 20px;
+        background: rgba(255,255,255,0.02);
+    }
+    .dim-matrix-table .std-cell {
+        font-weight: 900;
+        color: #fbbf24;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .read-cell {
+        font-weight: 800;
+        font-size: 14px;
+        min-width: 70px;
+    }
+    .out-of-spec { color: #f87171 !important; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); font-weight: 900; }
+    .in-spec { color: #34d399 !important; }
+
+    .dim-recap-card {
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(15, 23, 42, 0.6) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+    .recap-input {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 10px 15px;
+        color: white;
+        font-weight: 800;
+        width: 100%;
+        outline: none;
+        transition: all 0.3s;
+    }
+    .recap-input:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+    .recap-item .value { font-size: 18px; font-weight: 900; color: white; margin-top: 2px; }
+
+    /* MODERN GLASS PAPER GRID (DIMENSION PORTAL) */
+    .glass-paper {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(25px) saturate(160%);
+        border: 2px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+    }
+    .border-cyber-blue { border-color: rgba(59, 130, 246, 0.4) !important; }
+    .border-bottom-cyber { border-bottom: 2px solid rgba(59, 130, 246, 0.3) !important; }
+    .border-bottom-cyber-thin { border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important; }
+    .border-end-cyber { border-right: 2px solid rgba(59, 130, 246, 0.3) !important; }
+    .border-start-cyber { border-left: 2px solid rgba(59, 130, 246, 0.3) !important; }
+    .border-top-cyber { border-top: 2px solid rgba(59, 130, 246, 0.3) !important; }
+
+    .dimension-glass-grid th {
+        padding: 5px 2px;
+        background: rgba(30, 58, 138, 0.5);
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    .dimension-glass-grid td {
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .bg-white-5 { background: rgba(255, 255, 255, 0.05); }
+    .bg-white-10 { background: rgba(255, 255, 255, 0.1); }
+    
+    .bg-info-glow { 
+        background: rgba(59, 130, 246, 0.4); 
+        box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+    .val-display {
+        color: #fff;
+        font-weight: 900;
+        font-size: 11px;
+        text-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+    }
+    
+    .font-size-7 { font-size: 7px; }
+    .font-size-8 { font-size: 8px; }
+    .font-size-9 { font-size: 9px; }
+    .font-size-10 { font-size: 10px; }
+    .lh-condensed { line-height: 1.1; }
+
+    .input-glass-sm {
+        background: rgba(255, 255, 255, 0.03);
+        color: #fff;
+        border: none;
+        outline: none;
+        font-size: 10px;
+    }
+    .input-glass-sm:focus { background: rgba(59, 130, 246, 0.1); }
+
     @@media print {
         .hud-container { padding: 0; background: transparent !important; backdrop-filter: none; border: none; box-shadow: none; }
         .production-dashboard-sapphire { background: transparent !important; padding: 0; }
         .no-print { display: none !important; }
-        .paper-replica { border: none !important; box-shadow: none !important; margin: 0; padding: 0 !important; width: 100% !important; background: white !important; }
+        .glass-paper { background: white !important; border: 2px solid #000 !important; color: #000 !important; }
+        .glass-paper * { border-color: #000 !important; color: #000 !important; text-shadow: none !important; box-shadow: none !important; background: transparent !important; }
         body { background: #fff !important; }
     }
 </style>
@@ -1211,6 +1503,36 @@
             const result = await res.json();
             if (result.success) {
                 Swal.fire({ icon: 'success', title: 'Recap Saved!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+            }
+        }
+
+        async function saveDimRecap() {
+            const data = {
+                reportId: @Model.Id,
+                actualLength: document.getElementById('rec-actlen').value,
+                qtyOk: document.getElementById('rec-qtyok').value,
+                ngDim: document.getElementById('rec-ngdim').value,
+                ngVis: document.getElementById('rec-ngvis').value,
+                remark: document.getElementById('rec-remark-dim').value
+            };
+
+            const res = await fetch('/ProductionReport/UpdateRecap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'DIMENSION RECAP UPDATED', 
+                    toast: true, 
+                    position: 'top-end', 
+                    showConfirmButton: false, 
+                    timer: 2000,
+                    background: '#0d1117',
+                    color: '#fff'
+                });
             }
         }
 

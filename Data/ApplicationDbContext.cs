@@ -13,7 +13,6 @@ namespace VelastoProductionSystem.Data
         public DbSet<StandardParameterSetting> StandardParameterSettings { get; set; }
         public DbSet<ProductionReport> ProductionReports { get; set; }
         public DbSet<ProductionReading> ProductionReadings { get; set; }
-        public DbSet<DimensionReading> DimensionReadings { get; set; }
         public DbSet<NowProducing> NowProducings { get; set; }
         public DbSet<LotTag> LotTags { get; set; }
         public DbSet<PackingStandard> PackingStandards { get; set; }
@@ -34,12 +33,6 @@ namespace VelastoProductionSystem.Data
                 .HasOne(p => p.ProductionReport)
                 .WithMany(r => r.ProductionReadings)
                 .HasForeignKey(p => p.ProductionReportId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<DimensionReading>()
-                .HasOne(d => d.ProductionReport)
-                .WithMany()
-                .HasForeignKey(d => d.ProductionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LotTag>()

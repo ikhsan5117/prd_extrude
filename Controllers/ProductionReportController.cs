@@ -24,6 +24,20 @@ namespace VelastoProductionSystem.Controllers
             return View(reports);
         }
 
+        // GET: ProductionReport/App (New Tablet App Interface)
+        public async Task<IActionResult> App(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var report = await _context.ProductionReports
+                .Include(p => p.StandardParameterSetting)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (report == null) return NotFound();
+
+            return View(report);
+        }
+
         // GET: ProductionReport/Details/5 (The Monitoring Dashboard - Gambar 2 & 5)
         public async Task<IActionResult> Details(int? id)
         {
@@ -228,17 +242,82 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddDimensionReading(ProductionReading reading)
+        public async Task<IActionResult> SaveAppData([FromBody] ProductionReportAppData data)
         {
-            if (reading.ProductionReportId != 0)
+            try
             {
-                reading.ReadingTime = DateTime.Now;
-                reading.RecordedBy = "Operator 2";
-                _context.ProductionReadings.Add(reading);
+                var report = await _context.ProductionReports.FindAsync(data.ReportId);
+                if (report == null) return Json(new { success = false, message = "Report not found" });
+
+                // Update dimension readings
+                report.ActualLength = data.ActualLength;
+                report.QtyOk = data.QtyOk;
+                report.NgDimension = data.NgDimension;
+                report.NgVisual = data.NgVisual;
+                report.Remark = data.Remark ?? "";
+
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Details), new { id = reading.ProductionReportId, portal = "dimension" });
+                return Json(new { success = true, message = "Data saved successfully" });
             }
-            return BadRequest();
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SubmitAppReport([FromBody] ProductionReportAppData data)
+        {
+            try
+            {
+                var report = await _context.ProductionReports.FindAsync(data.ReportId);
+                if (report == null) return Json(new { success = false, message = "Report not found" });
+
+                // Update all data
+                report.ActualLength = data.ActualLength;
+                report.QtyOk = data.QtyOk;
+                report.NgDimension = data.NgDimension;
+                report.NgVisual = data.NgVisual;
+                report.Remark = data.Remark ?? "";
+                
+                // Update status
+                report.Status = "SUBMITTED";
+                report.CheckedBy = "QC Inspector";
+                report.ApprovedBy = "Production Manager";
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Report submitted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportAppData(int id)
+        {
+            var report = await _context.ProductionReports
+                .Include(p => p.StandardParameterSetting)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (report == null) return NotFound();
+
+            // Create CSV export
+            var csv = $"Document Number,{report.DocumentNumber}\n" +
+                     $"Date,{report.ProductionDate:yyyy-MM-dd}\n" +
+                     $"Shift,{report.Shift}\n" +
+                     $"Customer,{report.CustomerName}\n" +
+                     $"Hose Type,{report.HoseType}\n" +
+                     $"Dimension,{report.Dimension}\n" +
+                     $"Actual Length,{report.ActualLength}\n" +
+                     $"Quantity OK,{report.QtyOk}\n" +
+                     $"NG Dimension,{report.NgDimension}\n" +
+                     $"NG Visual,{report.NgVisual}\n" +
+                     $"Remark,{report.Remark}\n";
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            return File(bytes, "text/csv", $"ProductionReport_{report.DocumentNumber}_{DateTime.Now:yyyyMMdd}.csv");
         }
 
         [HttpPost]
