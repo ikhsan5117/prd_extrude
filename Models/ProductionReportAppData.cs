@@ -3,12 +3,18 @@ namespace VelastoProductionSystem.Models
     public class DimensionReportAppData
     {
         public int ReportId { get; set; }
+        public string? HoseType { get; set; }
+        public string? DimensionDisplay { get; set; }
+        public string? CustomerName { get; set; }
+        public string? Yarn { get; set; }
+        public string? VinCode { get; set; }
         public string? ActualLength { get; set; }
+        public int QtyTarget { get; set; }
         public int QtyOk { get; set; }
         public int NgDimension { get; set; }
         public int NgVisual { get; set; }
         public string? Remark { get; set; }
-        public string? VinCode { get; set; }
+        public string? ByPass { get; set; }
         
         // Dimension readings array
         public List<DimensionReadingData> DimensionReadings { get; set; } = new List<DimensionReadingData>();

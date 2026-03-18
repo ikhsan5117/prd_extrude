@@ -38,6 +38,7 @@ namespace VelastoProductionSystem.Models
         public int NgDimension { get; set; }
         public int NgVisual { get; set; }
         public string? Remark { get; set; }
+        public string? ByPass { get; set; }
 
         [Display(Name = "Status")]
         public string Status { get; set; } = "ACTIVE"; // ACTIVE, COMPLETED

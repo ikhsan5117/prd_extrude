@@ -2,7 +2,7 @@
 
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Dimension QC Tablet";
+    ViewData["Title"] = "Extruder Production Report";
 }
 
 @Html.AntiForgeryToken()
@@ -10,352 +10,409 @@
 @section Styles {
     <style>
         :root {
-            --primary-bg: #0f172a;
-            --secondary-bg: #1e293b;
-            --tertiary-bg: #334155;
-            --accent-blue: #3b82f6;
-            --accent-light: #60a5fa;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --border-color: #3b82f6;
-            --success-green: #10b981;
-            --warning-yellow: #f59e0b;
-            --danger-red: #ef4444;
+            --paper-bg: #ffffff;
+            --table-border: #2d3748;
+            --text-dark: #1a202c;
+            --header-gray: #f7fafc;
+            --accent-blue: #3182ce;
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 1400px;
+        body {
+            background-color: #e2e8f0;
+            color: var(--text-dark);
+            font-family: 'Times New Roman', Times, serif; /* Traditional report feel */
+            padding: 20px;
+        }
+
+        .report-paper {
+            background: var(--paper-bg);
+            max-width: 1300px;
             margin: 0 auto;
-            padding: 10px 20px;
-        }
-        
-        .app-header {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(51, 65, 85, 0.8) 100%);
-            border: 2px solid var(--accent-blue);
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
-            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+            border: 1px solid #cbd5e0;
         }
 
-        .header-top {
+        /* Top Section */
+        .report-header {
+            display: grid;
+            grid-template-columns: 200px 1fr 280px;
+            align-items: flex-start;
+            margin-bottom: 5px;
+        }
+
+        .logo-box img { height: 50px; }
+
+        .title-box { text-align: center; }
+        .title-box h1 { font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase; }
+        .title-box p { font-size: 16px; font-weight: bold; margin: 0; }
+
+        .sign-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }
+        .sign-table th, .sign-table td { border: 1px solid var(--table-border); }
+        .sign-table th { background: var(--header-gray); height: 20px; padding: 2px; }
+        .sign-table td { height: 60px; }
+
+        /* Meta Info Section */
+        .meta-info {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .meta-left div { display: grid; grid-template-columns: 80px 1fr; margin-bottom: 2px; }
+        .meta-left span, .meta-left input { 
+            font-weight: bold; 
+            border-bottom: 1px solid #ddd; 
+            width: 100%;
+            display: inline-block;
+        }
+
+        .sub-header-row {
+            border: 1px solid var(--table-border);
+            background: var(--header-gray);
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+            gap: 20px;
+        }
+        .sub-header-row span { color: var(--accent-blue); }
+
+        /* Main Split Table */
+        .main-content-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 0;
+            border: 1.5px solid var(--table-border);
         }
 
-        .header-logo { display: flex; align-items: center; }
-        .header-logo-v {
-            width: 45px; height: 45px; background: var(--accent-blue);
-            border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            margin-right: 12px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        .table-section { border-right: 1.5px solid var(--table-border); }
+        .qc-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .qc-table th, .qc-table td { border: 1px solid var(--table-border); padding: 5px 2px; text-align: center; }
+        .qc-table th { background: var(--header-gray); }
+
+        .point-name { text-align: left; padding-left: 5px; font-weight: bold; width: 100px; }
+        
+        .input-cell { 
+            width: 100%; border: none; background: transparent; 
+            text-align: center; font-size: 11px; font-weight: bold;
+            outline: none;
         }
-        .header-logo-v span { font-weight: 900; font-size: 22px; color: white; }
-        .header-logo-text .velasto { font-weight: 900; font-size: 16px; color: var(--accent-light); letter-spacing: 1px; }
-        .header-logo-text .indonesia { font-size: 9px; color: var(--text-secondary); border-bottom: 1px solid var(--accent-blue); }
+        .input-cell:focus { background: #ebf8ff; }
 
-        .header-title { text-align: center; flex: 1; }
-        .header-title h1 { font-size: 18px; font-weight: 900; margin: 0; color: #f1f5f9; text-transform: uppercase; letter-spacing: 2px; }
-        .header-title h2 { font-size: 12px; font-weight: 500; margin: 2px 0 0 0; color: var(--accent-blue); }
-
-        .signature-table { width: 180px; border: 1px solid var(--accent-blue); border-collapse: collapse; font-size: 9px; }
-        .signature-table th { border: 1px solid var(--accent-blue); padding: 4px; background: var(--accent-blue); color: white; text-align: center; }
-        .signature-table td { border: 1px solid var(--accent-blue); height: 35px; text-align: center; color: var(--accent-light); font-weight: bold; background: rgba(15, 23, 42, 0.5); }
-
-        .header-info-row { display: flex; justify-content: space-between; font-size: 11px; padding: 8px 0; border-top: 1px solid rgba(59, 130, 246, 0.3); border-bottom: 1px solid rgba(59, 130, 246, 0.3); margin-top: 5px; }
-        .header-info-row span { color: var(--accent-light); font-weight: bold; margin-right: 5px; }
-
-        .product-info-row { display: flex; justify-content: space-between; font-size: 11px; padding-top: 8px; }
-        .product-info-row span { color: var(--accent-light); font-weight: bold; margin-right: 5px; }
-
-        .content-card {
-            background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 12px; padding: 20px; position: relative; overflow: hidden;
-            backdrop-filter: blur(10px); margin-bottom: 25px;
+        /* Right Side: Production Data */
+        .data-section { padding: 0; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .data-table th, .data-table td { border: 1px solid var(--table-border); padding: 8px 5px; text-align: center; }
+        .data-table th { background: var(--header-gray); font-size: 10px; }
+        
+        .data-input { 
+            width: 100%; border: none; background: #fff; 
+            text-align: center; font-weight: bold; outline: none; 
         }
-        .content-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-blue); opacity: 0.6; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(59, 130, 246, 0.1); padding-bottom: 10px; }
-        .card-title { font-size: 16px; font-weight: 700; color: var(--accent-light); text-transform: uppercase; margin: 0; }
 
-        .data-table-container { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.1); }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .data-table th, .data-table td { border: 1px solid rgba(59, 130, 246, 0.2); padding: 8px 5px; text-align: center; }
-        .data-table th { background: rgba(30, 41, 59, 0.8); color: var(--accent-light); font-weight: 600; text-transform: uppercase; font-size: 10px; }
-
-        .point-name { background: rgba(30, 41, 59, 0.9); color: var(--text-primary); font-weight: 700; text-align: left !important; padding-left: 10px !important; }
-        .std-dimension { background: rgba(59, 130, 246, 0.05); color: var(--warning-yellow); font-weight: 700; }
-
-        .input-cell { background: transparent; border: none; color: #fff; width: 100%; text-align: center; font-size: 12px; }
-        .input-cell:focus { background: rgba(59, 130, 246, 0.15); outline: none; }
-
-        .simple-production-data {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
-            border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);
+        /* Footer Notes */
+        .report-footer {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+            border: 1.5px solid var(--table-border); border-top: none;
+            font-size: 10px;
         }
-        .data-item { display: flex; flex-direction: column; gap: 5px; }
-        .data-item .label { font-size: 10px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; background: rgba(59, 130, 246, 0.1); padding: 4px 8px; border-radius: 4px; }
-        .simple-input { font-size: 13px; font-weight: 600; color: #fff; padding: 8px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 5px; width: 100%; }
+        .note-box { padding: 5px; border-right: 1px solid var(--table-border); }
+        .attention-box { padding: 5px; }
+        .footer-title { font-weight: bold; text-decoration: underline; margin-bottom: 3px; }
 
-        .qty-toggle-buttons { display: flex; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 3px; gap: 3px; }
-        .qty-toggle-btn { flex: 1; padding: 6px; border-radius: 4px; background: transparent; color: var(--text-secondary); font-size: 10px; font-weight: 700; border: none; }
-        .qty-toggle-btn.active.ok-btn { background: rgba(16, 185, 129, 0.3); color: var(--success-green); }
-        .qty-toggle-btn.active.ng-btn { background: rgba(239, 68, 68, 0.3); color: var(--danger-red); }
+        /* Controls */
+        .scanner-pill {
+            display: flex; gap: 10px; align-items: center; margin-bottom: 15px;
+            background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e0;
+        }
+        .scanner-pill input {
+            padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; width: 250px;
+        }
+        .btn-blue { background: #3182ce; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-green { background: #38a169; color: white; border: none; padding: 12px 30px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
 
-        .action-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 10px; margin-bottom: 50px; }
-        .btn-app { padding: 10px 25px; border-radius: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: var(--accent-blue); color: #fff; }
-        .btn-success { background: var(--success-green); color: #fff; }
-        .btn-app:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .action-container { margin-top: 20px; text-align: right; }
 
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 10000; flex-direction: column; }
-        .spinner { width: 50px; height: 50px; border: 5px solid rgba(59, 130, 246, 0.2); border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @@keyframes spin { to { transform: rotate(360deg); } }
-
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @@media print {
+            body { background: white; padding: 0; }
+            .report-paper { box-shadow: none; border: none; }
+            .scanner-pill, .action-container { display: none; }
+        }
     </style>
 }
 
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-    <div class="text-white mt-3 fw-bold tracking-widest" id="loadingText">SAVING DATA...</div>
-</div>
+<div class="report-paper">
+    <!-- Scanner (Digital Only) -->
+    <div class="scanner-pill">
+        <strong style="color: #3182ce;"><i class="bi bi-qr-code-scan"></i> SCAN BARCODE/QR EXTRUDER:</strong>
+        <input type="text" id="spsLookup" placeholder="Contoh: VHFUNC-TA1080-EH" autofocus oninput="checkAutoScan(this)" />
+        <button class="btn-blue" onclick="lookupSps()">CARI DATA</button>
+        <span id="scanStatus" style="font-size: 11px; margin-left: 10px; color: #a0aec0; display:none;">Searching...</span>
+    </div>
 
-<div class="app-container">
-    <div class="app-header fade-in">
-        <div class="header-top">
-            <div class="header-logo">
-                <div class="header-logo-v"><span>V</span></div>
-                <div class="header-logo-text">
-                    <div class="velasto">VELASTO</div>
-                    <div class="indonesia">INDONESIA</div>
-                </div>
-            </div>
-            <div class="header-title">
-                <h1>EXTRUDER PRODUCTION REPORT</h1>
-                <h2>( QUALITY DIMENSION QC )</h2>
-            </div>
-            <div class="signature-section">
-                <table class="signature-table">
-                    <thead><tr><th>APPROVED</th><th>CHECKED</th><th>PREPARED</th></tr></thead>
-                    <tbody><tr><td>QC-SPV</td><td>QC-LDR</td><td>QC-OPR</td></tr></tbody>
-                </table>
-            </div>
+    <!-- Paper Header -->
+    <header class="report-header">
+        <div class="logo-box"><img src="/images/velasto-logo-e1700056160273.png" alt="Logo" /></div>
+        <div class="title-box">
+            <h1>EXTRUDER PRODUCTION REPORT</h1>
+            <p>(DIMENSION)</p>
         </div>
-        
-        <div class="header-info-row">
-            <div><span>NO DOC :</span> <strong class="text-white">@Model.DocumentNumber</strong></div>
-            <div><span>DATE :</span> <strong class="text-white">@Model.ProductionDate.ToString("dd MMM yyyy")</strong></div>
-            <div><span>SHIFT :</span> <strong class="text-white">@Model.Shift</strong></div>
+        <div>
+            <table class="sign-table">
+                <thead><tr><th>PREPARED</th><th>CHECKED</th><th>APPROVED</th></tr></thead>
+                <tbody><tr><td></td><td></td><td></td></tr></tbody>
+                <tfoot><tr><td style="height:15px">OPR EXTRUDER</td><td style="height:15px">LDR EXTRUDER</td><td style="height:15px">SPV EXTRUDER</td></tr></tfoot>
+            </table>
         </div>
-        
-        <div class="product-info-row">
-            <div><span>TYPE :</span> <strong class="text-white">@Model.HoseType</strong></div>
-            <div><span>DIMENSI :</span> <strong class="text-white">@Model.DimensionDisplay</strong></div>
-            <div><span>WIRE/YARN :</span> <strong class="text-white">@Model.Yarn</strong></div>
+    </header>
+
+    <!-- Meta Fields -->
+    <div class="meta-info">
+        <div class="meta-left">
+            <div><strong>No Doc. :</strong> <span id="docNo" class="input-cell" style="text-align:left;">@(Model.DocumentNumber ?? "-")</span></div>
+            <div><strong>Revisi :</strong> <span id="revNo" class="input-cell" style="text-align:left;">-</span></div>
+            <div><strong>Date :</strong> <span class="input-cell" style="text-align:left;">@Model.ProductionDate.ToString("dd MMMM yyyy")</span></div>
+            <div><strong>Shift :</strong> <span class="input-cell" style="text-align:left;">@Model.Shift</span></div>
+            <div><strong>Customer:</strong> <span id="customer" class="input-cell" style="text-align:left;">@(Model.CustomerName ?? "-")</span></div>
+        </div>
+        <div style="text-align:right; font-size: 11px;">
+            <p style="margin:0;">Printed: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
         </div>
     </div>
 
-    <div class="main-content">
-        <div class="content-card fade-in">
-            <div class="card-header">
-                <h3 class="card-title">Dimension Measurements</h3>
-                <div class="badge bg-success bg-opacity-10 text-info border border-info border-opacity-25 py-2 px-3">
-                    <i class="bi bi-cpu me-2"></i> STAND-ALONE QC SESSION #@Model.Id
-                </div>
-            </div>
-            
-            <div class="data-table-container">
-                <table class="data-table" id="measurementTable">
-                    <thead>
-                        <tr style="background: rgba(59, 130, 246, 0.15);">
-                            <th colspan="4">PUKUL / JAM</th>
-                            @for(int i=0; i<6; i++) {
-                                <th class="p-0"><input type="text" class="input-cell time-header" placeholder="00:00" data-col="@i" /></th>
-                            }
-                        </tr>
-                        <tr style="background: rgba(30, 41, 59, 0.7);">
-                            <th>POINT</th><th>FREKUENSI</th><th>STD DIMENSI</th><th style="width: 70px;">SCALE</th><th style="width: 75px;">INITIAL</th>
-                            @for(int i=1; i<=5; i++) { <th>@i</th> }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
-                            decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
-                            
-                            decimal idNom = master != null ? D(master.Dimensi, 11.0m) : 11.0m;
-                            decimal idTol = master != null ? D(master.ToleranceInner, 0.2m) : 0.2m;
-                            decimal tubeNom = master != null ? D(master.TebalInner, 1.8m) : 1.8m;
-                            decimal coverNom = master != null ? D(master.TebalTotal, 3.3m) : 3.3m;
-                            decimal coverTol = master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m;
+    <div class="sub-header-row">
+        Tipe: <span id="hoseTypeDisp">@Model.HoseType</span>
+        &nbsp;|&nbsp;
+        By Pass: <span id="bypassDisp">@Model.ByPass</span>
+    </div>
 
-                            var sections = new[] {
-                                new { Label = "Inner Diameter", Nom = idNom, Tol = idTol },
-                                new { Label = "In Thick (X)", Nom = tubeNom, Tol = 0.2m },
-                                new { Label = "In Thick (Y)", Nom = tubeNom, Tol = 0.2m },
-                                new { Label = "Total Thick (X)", Nom = coverNom, Tol = coverTol },
-                                new { Label = "Total Thick (Y)", Nom = coverNom, Tol = coverTol }
-                            };
+    <div class="main-content-grid">
+        <!-- Measurement Left Section -->
+        <div class="table-section">
+            <table class="qc-table" id="measurementTable">
+                <thead>
+                    <tr>
+                        <th colspan="4" style="text-align:right; padding-right:10px;">PUKUL / JAM</th>
+                        @for(int i=0; i<6; i++) {
+                            <th><input type="text" class="input-cell time-header" data-col="@i" placeholder="00:00" /></th>
                         }
-
-                        @foreach(var sec in sections) {
-                            for(int rIdx=0; rIdx<5; rIdx++) {
-                                decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
-                                string scaleStr = scaleValue.ToString("0.00");
-                                <tr class="measurement-row" data-point="@sec.Label" data-std="@sec.Nom ± @sec.Tol" data-scale="@scaleStr">
-                                    @if(rIdx == 0) {
-                                        <td rowspan="5" class="point-name">@sec.Label</td>
-                                        <td rowspan="5">30m Sekali</td>
-                                        <td rowspan="5" class="std-dimension">@sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")</td>
-                                    }
-                                    <td class="text-white-50">@scaleStr</td>
-                                    @for(int h=0; h<6; h++) {
-                                        var m = Model.Measurements.FirstOrDefault(x => x.PointName == sec.Label && x.Initial == scaleStr);
-                                        string val = "-";
-                                        // Simplified mapping: just trying to show SOMETHING if it exists
-                                        if(m != null && h == 0) val = m.R1?.ToString("0.00") ?? "-";
-                                        
-                                        <td class="p-0 row-cell" data-col="@h"><input type="text" class="input-cell val-input" value="@(val == "-" ? "" : val)" placeholder="-" /></td>
-                                    }
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    </tr>
+                    <tr>
+                        <th style="width:100px">POINT</th>
+                        <th style="width:80px">FREKUENSI</th>
+                        <th style="width:100px">STD DIMENSI</th>
+                        <th style="width:50px">INITIAL</th>
+                        @for(int i=1; i<=5; i++) { <th>@i</th> }
+                    </tr>
+                </thead>
+                <tbody id="measurementTableBody">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
         </div>
 
-        <div class="content-card fade-in">
-            <div class="card-header"><h3 class="card-title">Production Evaluation & Remarks</h3></div>
-            <div class="simple-production-data">
-                <div class="data-item"><span class="label">VIN KODE</span><input type="text" id="vinCode" value="@Model.VinCode" class="simple-input" /></div>
-                <div class="data-item"><span class="label">QTY TARGET</span><div class="simple-input bg-dark bg-opacity-25">@Model.QtyTarget</div></div>
-                
-                <div class="data-item">
-                    <span class="label">QTY ACTUAL (OK / NG)</span>
-                    <div class="qty-toggle-buttons mb-2">
-                        <button type="button" class="qty-toggle-btn ok-btn @(Model.QtyOk > 0 || (Model.NgDimension == 0 && Model.NgVisual == 0) ? "active" : "")" id="btnOk">OK MODE</button>
-                        <button type="button" class="qty-toggle-btn ng-btn @(Model.NgDimension > 0 || Model.NgVisual > 0 ? "active" : "")" id="btnNg">NG MODE</button>
-                    </div>
-                    <div id="okContainer" style="display: @(Model.QtyOk > 0 || (Model.NgDimension == 0 && Model.NgVisual == 0) ? "block" : "none")"><input type="number" id="qtyOk" value="@Model.QtyOk" class="qty-main-input simple-input text-center fs-4" /></div>
-                    <div id="ngContainer" style="display: @(Model.NgDimension > 0 || Model.NgVisual > 0 ? "flex" : "none")" class="row g-2">
-                        <div class="col-6"><label class="small text-white-50 d-block text-center mb-1">DIMENSI</label><input type="number" id="ngDim" value="@Model.NgDimension" class="simple-input text-center" /></div>
-                        <div class="col-6"><label class="small text-white-50 d-block text-center mb-1">VISUAL</label><input type="number" id="ngVis" value="@Model.NgVisual" class="simple-input text-center" /></div>
-                    </div>
-                </div>
-                
-                <div class="data-item"><span class="label">REMARK / NOTES</span><input type="text" id="remark" value="@Model.Remark" class="simple-input" /></div>
-            </div>
+        <!-- Production Right Section -->
+        <div class="data-section">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">PART NUMBER</th>
+                        <th rowspan="2">VIN KODE</th>
+                        <th rowspan="2">STD PANJANG</th>
+                        <th rowspan="2">ACT PANJANG</th>
+                        <th rowspan="2">QTY TARGET</th>
+                        <th colspan="3">QTY ACTUAL</th>
+                        <th rowspan="2">REMARK</th>
+                    </tr>
+                    <tr>
+                        <th style="font-size:8px">OK</th>
+                        <th colspan="2" style="font-size:8px">NG<br/>(Dim/Vis)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(int r=0; r<20; r++) {
+                        <tr>
+                            <td><input type="text" class="input-cell" id="partNum_@r" /></td>
+                            <td><input type="text" class="input-cell" id="vin_@r" /></td>
+                            <td><input type="text" class="input-cell" id="stdPanjang_@r" /></td>
+                            <td><input type="text" class="input-cell" id="actPanjang_@r" /></td>
+                            <td><input type="text" class="input-cell" id="qtyTarget_@r" /></td>
+                            <td><input type="text" class="input-cell" id="qtyOk_@r" /></td>
+                            <td><input type="text" class="input-cell" id="ngDim_@r" /></td>
+                            <td><input type="text" class="input-cell" id="ngVis_@r" /></td>
+                            <td><input type="text" class="input-cell" id="remark_@r" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
+    </div>
 
-        <div class="action-buttons">
-            <button class="btn-app btn-primary" onclick="saveActiveSession()"><i class="bi bi-save me-2"></i> Save Session</button>
-            <button class="btn-app btn-success" onclick="submitFinalReport()"><i class="bi bi-check-all me-2"></i> Submit & Finish QC</button>
+    <div class="report-footer">
+        <div class="note-box">
+            <div class="footer-title">Note :</div>
+            <textarea id="remarkOverall" style="width:100%; height:40px; border:none; outline:none; font-family:serif; font-size:10px;">@Model.Remark</textarea>
         </div>
+        <div class="attention-box">
+            <div class="footer-title">Attention :</div>
+            <p style="margin:0;">1. Setiap operator wajib menggunakan APD (Safety shoes & Sarung tangan)</p>
+            <p style="margin:0;">2. Periksa Dies Sebelum dan sesudah proses</p>
+            <p style="margin:0;">3. Pastikan semua parameter sesuai dengan SPS</p>
+        </div>
+    </div>
+
+    <div class="action-container">
+        <button class="btn-green" onclick="saveReport()">SIMPAN & SELESAI</button>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        const reportId = @Model.Id;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // Restore Time Headers if they were saved (Placeholder logic for now)
-            const savedTimes = @Html.Raw(Json.Serialize(Model.Measurements.Select(m => m.TimeSection).Distinct().Take(6)));
-            if(savedTimes && savedTimes.length > 0) {
-                document.querySelectorAll('.time-header').forEach((input, index) => {
-                    if(savedTimes[index]) input.value = savedTimes[index];
-                });
-            }
-            // QTY Toggle Logic
-            const btnOk = document.getElementById('btnOk');
-            const btnNg = document.getElementById('btnNg');
-            const okC = document.getElementById('okContainer');
-            const ngC = document.getElementById('ngContainer');
+        let reportId = @Model.Id;
+        const mTBody = document.getElementById('measurementTableBody');
 
-            btnOk.onclick = () => { btnOk.classList.add('active'); btnNg.classList.remove('active'); okC.style.display='block'; ngC.style.display='none'; };
-            btnNg.onclick = () => { btnNg.classList.add('active'); btnOk.classList.remove('active'); okC.style.display='none'; ngC.style.display='flex'; };
+        document.addEventListener('DOMContentLoaded', () => {
+            initBlank();
+            const existingHose = "@Model.HoseType";
+            if (existingHose && reportId > 0) lookupSps(existingHose, true);
 
-            // Auto-pulse on input
-            document.querySelectorAll('input').forEach(input => {
-                input.onfocus = () => input.closest('td, .data-item')?.classList.add('active');
-                input.onblur = () => input.closest('td, .data-item')?.classList.remove('active');
+            // Force focus with delay for better tablet support
+            setTimeout(() => {
+                const searchInput = document.getElementById('spsLookup');
+                if (searchInput) {
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            }, 500);
+
+            document.getElementById('spsLookup').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') lookupSps();
             });
         });
 
-        function collectData() {
-            const timeHeaders = Array.from(document.querySelectorAll('.time-header')).map(i => i.value || "00:00");
-            const readings = [];
+        function checkAutoScan(input) {
+            // Some physical scanners append a delay or specific length. 
+            // For now, we'll let Enter trigger it, but if barcode is long, we can detect it.
+        }
+
+        function initBlank() {
+            mTBody.innerHTML = `<tr><td colspan="10" style="padding: 40px; text-align:center; color:#a0aec0;">SILAKAN SCAN BARCODE ATAU TIPE UNTUK MEMULAI...</td></tr>`;
+        }
+
+        async function lookupSps(typeOverride = null, silent = false) {
+            const val = typeOverride || document.getElementById('spsLookup').value;
+            if(!val) return;
+
+            document.getElementById('scanStatus').style.display = 'inline';
+            try {
+                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(val)}`);
+                const result = await res.json();
+                document.getElementById('scanStatus').style.display = 'none';
+                if(result.success) {
+                    populate(result.data);
+                    // Clear search box for next scan
+                    if(!typeOverride) document.getElementById('spsLookup').value = "";
+                } else if(!silent) alert(result.message);
+            } catch(e) { console.error(e); document.getElementById('scanStatus').style.display = 'none'; }
+        }
+
+        function populate(data) {
+            document.getElementById('hoseTypeDisp').innerText = data.hoseType;
+            document.getElementById('bypassDisp').innerText = data.bypass || "-";
+            document.getElementById('docNo').innerText = data.docNo || "VI-SOP-PROD";
+            document.getElementById('revNo').innerText = data.revNo || "6";
+            document.getElementById('customer').innerText = data.customer || "-";
+
+            // Pre-fill part number in all 20 rows of the data table
+            for (let i = 0; i < 20; i++) {
+                const pn = document.getElementById(`partNum_${i}`);
+                if (pn) pn.value = data.excelId || data.hoseType;
+            }
             
-            document.querySelectorAll('.measurement-row').forEach(row => {
-                const point = row.dataset.point;
-                const scale = row.dataset.scale;
-                
-                for(let col=0; col<6; col++) {
-                    const input = row.querySelector(`.row-cell[data-col="${col}"] input`);
-                    if(input && input.value) {
-                        readings.push({
-                            PointName: point,
-                            TimeSection: timeHeaders[col],
-                            Reading1: input.value, // Simplified for now, or you could map R1-R5 differently
-                            Initial: row.dataset.scale // Using scale as proxy for mapping
-                        });
+            const pSet = [
+                { n: "Inner Diameter", s: data.dimensi, t: data.toleranceInner, m: true },
+                { n: "Inner Thickness (x)", s: data.tebalInner, t: "0.2", m: true },
+                { n: "Inner Thickness (y)", s: data.tebalInner, t: "0.2", m: true },
+                { n: "Total Thickness (x)", s: data.tebalTotal, t: data.toleranceOuter, m: true },
+                { n: "Total Thickness (y)", s: data.tebalTotal, t: data.toleranceOuter, m: true },
+                { n: "Spiral Pitch", s: "32 ± 5", t: "-", m: false },
+                { n: "Visual Check", s: "No Burry, No line, No Bubble", t: "-", m: false }
+            ];
+
+            let html = "";
+            pSet.forEach(p => {
+                if(p.m) {
+                    const sv = parseFloat(p.s) || 0;
+                    const tv = parseFloat(p.t) || 0;
+                    for(let r=0; r<5; r++) {
+                        const sc = sv + (tv - (tv * 0.5 * r));
+                        const scs = isNaN(sc) ? p.s : sc.toFixed(2);
+                        html += `<tr class="data-row" data-point="${p.n}" data-scale="${scs}">`;
+                        if(r === 0) {
+                            html += `<td rowspan="5" class="point-name">${p.n}</td>`;
+                            html += `<td rowspan="5">30 Menit Sekali</td>`;
+                            html += `<td rowspan="5"><strong>${p.s} ± ${p.t}</strong></td>`;
+                        }
+                        html += `<td>${scs}</td>`;
+                        for(let c=0; c<6; c++) html += `<td><input type="text" class="input-cell v-input" data-col="${c}" /></td>`;
+                        html += `</tr>`;
                     }
+                } else {
+                    html += `<tr class="data-row" data-point="${p.n}" data-scale="-">`;
+                    html += `<td class="point-name">${p.n}</td><td>30 Menit Sekali</td><td><strong>${p.s}</strong></td><td>-</td>`;
+                    for(let c=0; c<6; c++) html += `<td><input type="text" class="input-cell v-input" data-col="${c}" /></td>`;
+                    html += `</tr>`;
                 }
             });
+            mTBody.innerHTML = html;
+        }
 
-            return {
+        async function saveReport() {
+            const times = Array.from(document.querySelectorAll('.time-header')).map(i => i.value || "00:00");
+            const rs = [];
+            document.querySelectorAll('.data-row').forEach(row => {
+                row.querySelectorAll('.v-input').forEach(input => {
+                    if(input.value) {
+                        rs.push({
+                            PointName: row.dataset.point,
+                            TimeSection: times[input.dataset.col],
+                            Initial: row.dataset.scale,
+                            Reading1: input.value
+                        });
+                    }
+                });
+            });
+
+            // Simplified: we'll just send the first row of Production Data for now 
+            // since our model is single-row oriented. To support multiple rows properly
+            // we'd need another mapping or child records.
+            const payload = {
                 ReportId: reportId,
-                VinCode: document.getElementById('vinCode').value,
-                QtyOk: parseInt(document.getElementById('qtyOk').value) || 0,
-                NgDimension: parseInt(document.getElementById('ngDim').value) || 0,
-                NgVisual: parseInt(document.getElementById('ngVis').value) || 0,
-                Remark: document.getElementById('remark').value,
-                DimensionReadings: readings
+                HoseType: document.getElementById('hoseTypeDisp').innerText,
+                DimensionDisplay: document.getElementById('hoseTypeDisp').innerText,
+                CustomerName: document.getElementById('customer').innerText,
+                ByPass: document.getElementById('bypassDisp').innerText,
+                VinCode: document.getElementById('vin_0').value,
+                ActualLength: document.getElementById('act_0').value,
+                QtyOk: parseInt(document.getElementById('ok_0').value) || 0,
+                NgDimension: parseInt(document.getElementById('ngD_0').value) || 0,
+                NgVisual: parseInt(document.getElementById('ngV_0').value) || 0,
+                Remark: document.getElementById('remarkOverall').value,
+                DimensionReadings: rs
             };
-        }
 
-        async function saveActiveSession() {
             try {
-                showLoading('SAVING PROGRESS...');
-                const data = collectData();
-                const response = await fetch('/Dimensi/SaveData', {
+                const res = await fetch('/Dimensi/SubmitReport', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(payload)
                 });
-                const result = await response.json();
-                hideLoading();
-                if(result.success) alert('Success: Session progress saved.');
-                else alert('Error: ' + result.message);
-            } catch(e) { hideLoading(); alert('Network Error: ' + e.message); }
+                const result = await res.json();
+                if(result.success) { alert("Berhasil Disimpan!"); window.location.href = "/Dimensi/Index"; }
+                else alert("Error: " + result.message);
+            } catch(e) { alert("Error koneksi!"); }
         }
-
-        async function submitFinalReport() {
-            if(!confirm('Are you sure you want to FINAL SUBMIT this QC report? This will mark it as Completed.')) return;
-            try {
-                showLoading('SUBMITTING FINAL REPORT...');
-                const data = collectData();
-                const response = await fetch('/Dimensi/SubmitReport', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                hideLoading();
-                if(result.success) {
-                    alert('QC Report Submitted Successfully!');
-                    window.location.href = result.redirectUrl;
-                } else alert('Error: ' + result.message);
-            } catch(e) { hideLoading(); alert('Network Error: ' + e.message); }
-        }
-
-        function showLoading(text) { document.getElementById('loadingText').innerText = text; document.getElementById('loadingOverlay').style.display = 'flex'; }
-        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
     </script>
 }

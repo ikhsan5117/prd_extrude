@@ -15,58 +15,64 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: /Dimensi/Index
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            // If we want "Dimensi" to show the live measurement immediately,
-            // we redirect to the current active dimension report.
-            var activeDimensionReport = await _context.DimensionReports
-                .Where(d => d.Status == "ACTIVE")
-                .OrderByDescending(d => d.CreatedDate)
-                .FirstOrDefaultAsync();
-
-            if (activeDimensionReport != null)
+            // Just return a blank report view
+            var report = new DimensionReport
             {
-                return RedirectToAction(nameof(App), new { id = activeDimensionReport.Id });
-            }
+                DocumentNumber = "",
+                ProductionDate = DateTime.Now,
+                Shift = GetCurrentShift(),
+                Status = "DRAFT"
+            };
+            return View("App", report);
+        }
 
-            // If no active report, check if there's any active production (NowProducing) 
-            // that doesn't have a DimensionReport yet.
-            var activeProduction = await _context.NowProducings
-                .Where(n => n.ProductionEndTime == null)
-                .OrderByDescending(n => n.CreatedDate)
-                .FirstOrDefaultAsync();
+        private string GetCurrentShift()
+        {
+            var hour = DateTime.Now.Hour;
+            if (hour >= 7 && hour < 15) return "Shift 1";
+            if (hour >= 15 && hour < 23) return "Shift 2";
+            return "Shift 3";
+        }
 
-            if (activeProduction != null)
+        [HttpGet]
+        public async Task<JsonResult> GetSpsStandard(string hoseType)
+        {
+            if (string.IsNullOrEmpty(hoseType)) return Json(new { success = false, message = "Input empty" });
+
+            // Search across multiple identifier fields
+            var standard = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => 
+                    m.HoseType == hoseType || 
+                    m.ExcelId == hoseType || 
+                    m.DocumentNumber == hoseType || 
+                    m.ItemList == hoseType ||
+                    (m.HoseType != null && m.HoseType.Contains(hoseType))
+                );
+            
+            if (standard != null)
             {
-                // Auto-create a new Dimension Report for this active production
-                var newReport = new DimensionReport
-                {
-                    DocumentNumber = "DIM-" + DateTime.Now.ToString("yyyyMMdd-HHmm"),
-                    ProductionDate = activeProduction.ProductionDate,
-                    HoseType = activeProduction.HoseType,
-                    DimensionDisplay = activeProduction.Dimension,
-                    Yarn = activeProduction.Yarn,
-                    StandardLength = "100.0", // Defaul or should it be in NowProducing?
-                    CustomerName = "-", 
-                    Shift = "Shift 1",
-                    Status = "ACTIVE",
-                    CreatedBy = "QC Operator",
-                    CreatedDate = DateTime.Now
-                };
-
-                _context.DimensionReports.Add(newReport);
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(App), new { id = newReport.Id });
+                return Json(new { 
+                    success = true, 
+                    data = new {
+                        hoseType = standard.HoseType,
+                        dimensi = standard.Dimensi,
+                        innerTube = standard.InnerTube,
+                        outerCover = standard.OuterCover,
+                        toleranceInner = standard.ToleranceInner,
+                        toleranceOuter = standard.ToleranceOuter,
+                        tebalInner = standard.TebalInner,
+                        tebalTotal = standard.TebalTotal,
+                        yarn = "ARAMID", 
+                        customer = standard.Customer,
+                        docNo = standard.DocumentNumber,
+                        excelId = standard.ExcelId,
+                        bypass = "2.0 mm" 
+                    }
+                });
             }
-
-            // If absolutely nothing is happening, show the history list
-            var reports = await _context.DimensionReports
-                .OrderByDescending(d => d.CreatedDate)
-                .Take(20)
-                .ToListAsync();
-
-            return View(reports);
+            return Json(new { success = false, message = "Standard not found in SPS Masterlist: " + hoseType });
         }
 
         // GET: /Dimensi/App/5
@@ -101,22 +107,48 @@ namespace VelastoProductionSystem.Controllers
         {
             try
             {
-                var report = await _context.DimensionReports
-                    .Include(r => r.Measurements)
-                    .FirstOrDefaultAsync(r => r.Id == data.ReportId);
+                DimensionReport? report;
+                if (data.ReportId > 0)
+                {
+                    report = await _context.DimensionReports
+                        .Include(r => r.Measurements)
+                        .FirstOrDefaultAsync(r => r.Id == data.ReportId);
+                }
+                else
+                {
+                    // Create new report if it doesn't exist
+                    report = new DimensionReport
+                    {
+                        DocumentNumber = "DIM-" + DateTime.Now.ToString("yyyyMMdd-HHmm"),
+                        ProductionDate = DateTime.Now,
+                        Status = "ACTIVE",
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = "QC Operator"
+                    };
+                    _context.DimensionReports.Add(report);
+                    await _context.SaveChangesAsync();
+                }
 
                 if (report == null) return Json(new { success = false, message = "Report not found" });
 
                 // Update Report fields
+                report.HoseType = data.HoseType ?? "";
+                report.DimensionDisplay = data.DimensionDisplay ?? "";
                 report.VinCode = data.VinCode ?? "";
                 report.ActualLength = data.ActualLength ?? "";
                 report.QtyOk = data.QtyOk;
                 report.NgDimension = data.NgDimension;
                 report.NgVisual = data.NgVisual;
                 report.Remark = data.Remark ?? "";
+                report.ByPass = data.ByPass ?? "";
+                report.CustomerName = data.CustomerName ?? "-";
+                report.Yarn = data.Yarn ?? "";
 
-                // Clear and Re-add measurements for simplicity (or update existing)
-                _context.DimensionMeasurements.RemoveRange(report.Measurements);
+                // Clear and Re-add measurements for simplicity
+                if (report.Measurements != null)
+                {
+                    _context.DimensionMeasurements.RemoveRange(report.Measurements);
+                }
                 
                 if (data.DimensionReadings != null)
                 {
@@ -140,7 +172,7 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                return Json(new { success = true });
+                return Json(new { success = true, reportId = report.Id });
             }
             catch (Exception ex)
             {
