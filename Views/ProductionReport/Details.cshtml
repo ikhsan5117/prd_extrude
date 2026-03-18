@@ -390,8 +390,7 @@
                                 <tr>
                                     <th colspan="2" class="sticky-col label-col text-center align-middle" width="220" style="background:#f0f0f0; font-size: 13px;">TIME</th>
                                     <th class="sticky-col std-col text-center" width="100" style="background:#f0f0f0; font-size: 13px;">INITIAL<br/>:</th>
-                                    @for(int i=1; i<=7; i++) { <th width="60" class="text-center" style="background:#f0f0f0; font-size: 13px;">@i<br/>:</th> }
-                                    <th width="40" class="bg-secondary text-white text-center border-start-0">...</th>
+                                    @for(int i=1; i<=7; i++) { <th class="text-center" style="background:#f0f0f0; font-size: 13px;">@i<br/>:</th> }
                                 </tr>
                             </thead>
                             <tbody>
@@ -418,9 +417,8 @@
                                         <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
                                         <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
                                         @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
                                         }
-                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
 
@@ -448,9 +446,8 @@
                                         <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
                                         <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
                                         @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
                                         }
-                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
 
@@ -473,9 +470,8 @@
                                         <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
                                         <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
                                         @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
                                         }
-                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
 
@@ -504,9 +500,8 @@
                                         <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
                                         <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
                                         @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
+                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
                                         }
-                                        <td class="bg-light border-start-form"></td>
                                     </tr>
                                 }
                             </tbody>
