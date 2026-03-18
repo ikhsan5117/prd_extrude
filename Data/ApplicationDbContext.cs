@@ -17,6 +17,8 @@ namespace VelastoProductionSystem.Data
         public DbSet<LotTag> LotTags { get; set; }
         public DbSet<PackingStandard> PackingStandards { get; set; }
         public DbSet<MasterlistSpsDoubleLayer> MasterlistSpsDoubleLayers { get; set; }
+        public DbSet<DimensionReport> DimensionReports { get; set; }
+        public DbSet<DimensionMeasurement> DimensionMeasurements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,6 +35,12 @@ namespace VelastoProductionSystem.Data
                 .HasOne(p => p.ProductionReport)
                 .WithMany(r => r.ProductionReadings)
                 .HasForeignKey(p => p.ProductionReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DimensionMeasurement>()
+                .HasOne(d => d.DimensionReport)
+                .WithMany(r => r.Measurements)
+                .HasForeignKey(d => d.DimensionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LotTag>()

@@ -27,7 +27,31 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/App (New Tablet App Interface)
         public async Task<IActionResult> App(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                // If no ID is specified, redirect to the latest active report
+                var latestReport = await _context.ProductionReports
+                    .Where(pr => pr.Status == "NOW PRODUCING")
+                    .OrderByDescending(pr => pr.CreatedDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestReport != null)
+                {
+                    return RedirectToAction(nameof(App), new { id = latestReport.Id });
+                }
+
+                // If no active report, find any latest report
+                latestReport = await _context.ProductionReports
+                    .OrderByDescending(pr => pr.CreatedDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestReport != null)
+                {
+                    return RedirectToAction(nameof(App), new { id = latestReport.Id });
+                }
+
+                return NotFound("Belum ada laporan produksi yang tersedia.");
+            }
 
             var report = await _context.ProductionReports
                 .Include(p => p.StandardParameterSetting)
@@ -250,7 +274,7 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveAppData([FromBody] ProductionReportAppData data)
+        public async Task<IActionResult> SaveAppData([FromBody] DimensionReportAppData data)
         {
             try
             {
@@ -274,7 +298,7 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SubmitAppReport([FromBody] ProductionReportAppData data)
+        public async Task<IActionResult> SubmitAppReport([FromBody] DimensionReportAppData data)
         {
             try
             {

@@ -1,0 +1,180 @@
+@model IEnumerable<VelastoProductionSystem.Models.DimensionReport>
+
+@{
+    ViewData["Title"] = "Dimension Control History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="dimensi-dashboard fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 header-glass p-3 px-4">
+        <div class="d-flex align-items-center">
+            <div class="hud-icon-box bg-info bg-opacity-10 me-3">
+                <i class="bi bi-rulers text-info fs-3"></i>
+            </div>
+            <div>
+                <h2 class="text-white fw-black mb-0 tracking-tighter">DIMENSION CONTROL</h2>
+                <div class="text-info opacity-50 super-small fw-bold letter-spacing-2">STAND-ALONE QUALITY FEED</div>
+            </div>
+        </div>
+        <div class="text-end text-white-50 small">
+            <i class="bi bi-shield-check me-1"></i> Quality Gate System v2.0
+        </div>
+    </div>
+
+    <!-- Stats Row (Summary) -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card glass-card success">
+                <div class="label">ACTIVE QC REPORTS</div>
+                <div class="value">@Model.Count(r => r.Status == "ACTIVE")</div>
+                <div class="icon"><i class="bi bi-broadcast pulse"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card glass-card info">
+                <div class="label">TOTAL LOGGED</div>
+                <div class="value">@Model.Count()</div>
+                <div class="icon"><i class="bi bi-database"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hud-table-outer">
+        <div class="table-responsive">
+            <table class="table table-dark mb-0 custom-table">
+                <thead>
+                    <tr class="header-row">
+                        <th class="ps-4">DATE</th>
+                        <th>DOC NUMBER</th>
+                        <th>SPECIFICATION</th>
+                        <th>OPERATOR/SHIFT</th>
+                        <th class="text-center">STATUS</th>
+                        <th class="text-center pe-4">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="align-middle">
+                            <td class="ps-4 fw-bold">@item.ProductionDate.ToString("dd/MM/yyyy")</td>
+                            <td><span class="doc-code">@item.DocumentNumber</span></td>
+                            <td>
+                                <div class="hose-badge">@item.HoseType</div>
+                                <div class="super-small text-white-50 mt-1">@item.DimensionDisplay</div>
+                            </td>
+                            <td>
+                                <div class="small">@item.CreatedBy</div>
+                                <div class="super-small text-info">@item.Shift</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="status-pill @(item.Status == "ACTIVE" ? "active" : "completed")">
+                                    @(item.Status == "ACTIVE" ? "ACTIVE" : "COMPLETED")
+                                </span>
+                            </td>
+                            <td class="text-center pe-4">
+                                <a asp-action="App" asp-route-id="@item.Id" class="btn btn-dimension-action @(item.Status == "ACTIVE" ? "btn-blue" : "btn-outline-light")">
+                                    <i class="bi bi-tablet-landscape me-1"></i>
+                                    @(item.Status == "ACTIVE" ? "QC INPUT" : "VIEW DATA")
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-rulers text-white-50 opacity-25" style="font-size: 4rem;"></i>
+                    <p class="text-white-50 mt-3">No Dimension Reports available.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .dimensi-dashboard {
+        padding: 1.5rem;
+        background: #020617;
+        min-height: 100vh;
+    }
+
+    .header-glass {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-card {
+        padding: 20px;
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stat-card.success { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-left: 4px solid #10b981; }
+    .stat-card.info { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)); border-left: 4px solid #3b82f6; }
+
+    .stat-card .label { font-size: 10px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
+    .stat-card .value { font-size: 24px; font-weight: 900; color: white; margin-top: 5px; }
+    .stat-card .icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 2rem; opacity: 0.1; }
+
+    .hud-table-outer {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(59, 130, 246, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+
+    .custom-table { margin: 0; }
+    .custom-table thead th {
+        background: rgba(30, 41, 59, 0.8);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 15px;
+    }
+
+    .custom-table tbody td {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        color: #e2e8f0;
+    }
+
+    .doc-code { font-family: monospace; color: #3b82f6; font-weight: bold; }
+    .hose-badge { color: white; font-weight: 700; font-size: 13px; }
+
+    .status-pill {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
+    .status-pill.active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .status-pill.completed { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .btn-dimension-action {
+        border-radius: 8px;
+        padding: 6px 15px;
+        font-size: 11px;
+        font-weight: 700;
+        transition: all 0.2s;
+    }
+    .btn-blue { background: #2563eb; color: white; border: none; }
+    .btn-blue:hover { background: #1d4ed8; color: white; transform: scale(1.05); }
+
+    .pulse { animation: i-pulse 2s infinite; }
+    @@keyframes i-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+
+    .fw-black { font-weight: 900; }
+    .super-small { font-size: 10px; }
+    .tracking-tighter { letter-spacing: -1px; }
+    .letter-spacing-2 { letter-spacing: 2px; }
+</style>

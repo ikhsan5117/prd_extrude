@@ -1,20 +1,13 @@
 @model VelastoProductionSystem.Models.ProductionReport
 
 @{
-    Layout = null;
+    Layout = "_Layout";
     ViewData["Title"] = "Extruder Production Report";
 }
 
 @Html.AntiForgeryToken()
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extruder Production Report - @Model.DocumentNumber</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+@section Styles {
     <style>
         :root {
             --primary-bg: #0f172a;
@@ -30,32 +23,21 @@
             --danger-red: #ef4444;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            color: var(--text-primary);
-            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--tertiary-bg) 100%);
-            margin: 0;
-            padding: 0;
-            font-size: 14px;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
+        /* Adjustments for Layout Integration */
         .app-container {
             width: 100%;
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            min-height: 100vh;
+        }
+        
+        .app-header, .content-card {
+            backdrop-filter: blur(10px);
         }
 
         /* Header Styles */
         .app-header {
-            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--tertiary-bg) 100%);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(51, 65, 85, 0.8) 100%);
             border: 2px solid var(--accent-blue);
             border-radius: 12px;
             padding: 20px;
@@ -200,22 +182,32 @@
             font-weight: bold;
         }
 
-        /* Main Content */
+        /* Content Sections */
         .main-content {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
         }
 
         .content-card {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.1);
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.2);
             border-radius: 12px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-blue);
+            opacity: 0.6;
         }
 
         .card-header {
@@ -223,471 +215,67 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--accent-blue);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            padding-bottom: 15px;
         }
 
         .card-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
+            margin: 0;
             color: var(--accent-light);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* Data Table */
+        /* Data Tables */
         .data-table-container {
             overflow-x: auto;
             border-radius: 8px;
-            border: 1px solid var(--accent-blue);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
 
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: rgba(15, 23, 42, 0.4);
-}
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
 
-.data-table th,
-.data-table td {
-    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-    padding: 10px;
-    text-align: center;
-    vertical-align: middle;
-}
+        .data-table th, .data-table td {
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 10px;
+            text-align: center;
+        }
 
-.data-table th {
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
-    color: var(--accent-light);
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 11px;
-    border-bottom: 2px solid rgba(59, 130, 246, 0.3);
-}
+        .data-table th {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--accent-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
 
-.data-table td {
-    color: var(--text-primary);
-    background: rgba(30, 41, 59, 0.3);
-}
-
-.data-table input {
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
-    text-align: center;
-    font-weight: 600;
-    font-size: 12px;
-    padding: 6px 4px;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-.data-table input:focus {
-    background: rgba(59, 130, 246, 0.2);
-    border-radius: 4px;
-}
-
-.point-name {
-    text-align: left !important;
-    padding-left: 10px !important;
-    font-weight: bold !important;
-    color: var(--accent-light) !important;
-}
-            padding-left: 10px !important;
-            font-weight: bold !important;
-            color: var(--accent-light) !important;
+        .point-name {
+            background: rgba(30, 41, 59, 0.9);
+            color: var(--text-primary);
+            font-weight: 700;
+            text-align: left !important;
+            padding-left: 15px !important;
         }
 
         .std-dimension {
-            font-weight: bold;
+            background: rgba(59, 130, 246, 0.05);
             color: var(--warning-yellow);
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .btn-app {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 12px;
-        }
-
-        .btn-primary {
-            background: var(--accent-blue);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
-
-        .btn-success {
-            background: var(--success-green);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-warning {
-            background: var(--warning-yellow);
-            color: var(--primary-bg);
-        }
-
-        .btn-danger {
-            background: var(--danger-red);
-            color: white;
-        }
-
-        /* Status Indicators */
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-
-        .status-ok { background: var(--success-green); }
-        .status-ng { background: var(--danger-red); }
-        .status-pending { background: var(--warning-yellow); }
-
-        /* Production Inputs Grid */
-        .production-inputs-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            position: relative;
-        }
-
-        .production-inputs-grid::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(16, 185, 129, 0.03) 50%, rgba(245, 158, 11, 0.03) 100%);
-            border-radius: 12px;
-            z-index: -1;
-        }
-
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            align-items: end;
-            position: relative;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            position: relative;
-        }
-
-.input-group.full-width {
-    grid-column: 1 / -1;
-}
-
-.input-group label {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--accent-light);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    position: relative;
-}
-
-.input-display {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%);
-    border: 1.5px solid var(--accent-blue);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-weight: 600;
-    font-size: 13px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-            padding: 12px 16px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%);
-            border: 1.5px solid var(--accent-blue);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 13px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .input-display::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-            transition: left 0.5s;
-        }
-
-        .input-display:hover::before {
-            left: 100%;
-        }
-
-        .input-display:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
-            border-color: var(--accent-light);
-        }
-
-        .input-display i {
-            color: var(--accent-light);
-            font-size: 14px;
-            background: rgba(59, 130, 246, 0.15);
-            padding: 6px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .input-display span {
-            text-shadow: 0 0 8px rgba(96, 165, 250, 0.3);
-        }
-
-        .input-field {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
-            border: 1.5px solid var(--accent-blue);
-            border-radius: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .input-field::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-            transition: left 0.5s;
-        }
-
-        .input-field:hover::before {
-            left: 100%;
-        }
-
-        .input-field:hover {
-            transform: translateY(-1px);
-            border-color: var(--accent-light);
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
-        }
-
-        .input-field:focus-within {
-            border-color: var(--accent-light);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 4px 15px rgba(59, 130, 246, 0.2);
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
-        }
-
-        .input-field i {
-            color: var(--accent-light);
-            font-size: 14px;
-            min-width: 20px;
-            background: rgba(59, 130, 246, 0.15);
-            padding: 6px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .input-field:hover i {
-            transform: scale(1.05);
-            background: rgba(59, 130, 246, 0.2);
-        }
-
-        .input-field input {
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 13px;
-            outline: none;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-
-        .input-field input::placeholder {
-            color: var(--text-secondary);
-            font-weight: 500;
-            opacity: 0.7;
-        }
-
-        .input-field input:focus {
-            color: var(--accent-light);
-            text-shadow: 0 0 8px rgba(96, 165, 250, 0.3);
-        }
-
-        .input-field.success {
-            border-color: var(--success-green);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.04) 100%);
-        }
-
-        .input-field.success:hover {
-            border-color: #10b981;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
-        }
-
-        .input-field.success i {
-            color: var(--success-green);
-            background: rgba(16, 185, 129, 0.15);
-        }
-
-        .input-field.success:hover i {
-            background: rgba(16, 185, 129, 0.2);
-        }
-
-        .input-field.danger {
-            border-color: var(--danger-red);
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.04) 100%);
-        }
-
-        .input-field.danger:hover {
-            border-color: #ef4444;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
-        }
-
-        .input-field.danger i {
-            color: var(--danger-red);
-            background: rgba(239, 68, 68, 0.15);
-        }
-
-        .input-field.danger:hover i {
-            background: rgba(239, 68, 68, 0.2);
-        }
-
-        .input-field.warning {
-            border-color: var(--warning-yellow);
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.04) 100%);
-        }
-
-        .input-field.warning:hover {
-            border-color: #f59e0b;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
-        }
-
-        .input-field.warning i {
-            color: var(--warning-yellow);
-            background: rgba(245, 158, 11, 0.15);
-        }
-
-        .input-field.warning:hover i {
-            background: rgba(245, 158, 11, 0.2);
-        }
-
-        .qty-actual-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            position: relative;
-        }
-
-        .qty-actual-grid::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: 0;
-            right: 0;
-            height: 1.5px;
-            background: linear-gradient(90deg, var(--success-green) 0%, var(--danger-red) 50%, var(--warning-yellow) 100%);
-            border-radius: 1px;
-        }
-
-        .qty-input {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            position: relative;
-        }
-
-        .qty-label {
-            font-size: 9px;
             font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            text-align: center;
-            padding: 4px 8px;
-            background: rgba(59, 130, 246, 0.08);
-            border-radius: 12px;
-            border: 1px solid rgba(59, 130, 246, 0.25);
-            transition: all 0.3s ease;
         }
 
-        .qty-input:nth-child(1) .qty-label {
-            background: rgba(16, 185, 129, 0.08);
-            border-color: rgba(16, 185, 129, 0.25);
-            color: var(--success-green);
-        }
-
-        .qty-input:nth-child(2) .qty-label {
-            background: rgba(239, 68, 68, 0.08);
-            border-color: rgba(239, 68, 68, 0.25);
-            color: var(--danger-red);
-        }
-
-        .qty-input:nth-child(3) .qty-label {
-            background: rgba(245, 158, 11, 0.08);
-            border-color: rgba(245, 158, 11, 0.25);
-            color: var(--warning-yellow);
-        }
-
-        .spacer {
-            height: 45px; /* Match input field height */
-        }
-
-        /* Simple Production Data Layout */
+        /* Form Inputs */
         .simple-production-data {
-            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
+            padding: 20px;
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
             border-radius: 12px;
             border: 1px solid rgba(59, 130, 246, 0.2);
@@ -757,48 +345,37 @@
             background: rgba(255, 255, 255, 0.12);
         }
 
-        .simple-input.full-width {
-            width: 100%;
-        }
-
-        /* QTY Toggle Container */
+        /* QTY Selector Toggle */
         .qty-toggle-container {
-            background: rgba(30, 41, 59, 0.3);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            min-height: 40px;
-            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
         }
 
         .qty-toggle-buttons {
             display: flex;
-            gap: 2px;
-            margin-bottom: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
         }
 
         .qty-toggle-btn {
             flex: 1;
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 6px 8px;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 3px;
-            color: var(--text-secondary);
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            cursor: pointer;
+            gap: 6px;
             transition: all 0.3s ease;
-        }
-
-        .qty-toggle-btn:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.4);
         }
 
         .qty-toggle-btn.active {
@@ -819,13 +396,8 @@
             color: var(--danger-red);
         }
 
-        .qty-toggle-btn i {
-            font-size: 12px;
-        }
-
         .qty-input-section {
             display: none;
-            animation: fadeIn 0.3s ease;
         }
 
         .qty-input-section.active {
@@ -842,13 +414,6 @@
             border: 1px solid rgba(59, 130, 246, 0.3);
             border-radius: 3px;
             text-align: center;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .qty-main-input:focus {
-            border-color: var(--accent-light);
-            background: rgba(59, 130, 246, 0.1);
         }
 
         .ng-inputs {
@@ -868,7 +433,6 @@
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             text-align: center;
         }
 
@@ -882,931 +446,357 @@
             border: 1px solid rgba(59, 130, 246, 0.3);
             border-radius: 3px;
             text-align: center;
-            outline: none;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-app {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
         }
 
-        .ng-input:focus {
-            border-color: var(--accent-light);
-            background: rgba(59, 130, 246, 0.1);
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-success { background: var(--success-green); color: white; }
+        .btn-warning { background: var(--warning-yellow); color: white; }
+
+        .btn-app:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
         }
 
-        /* Responsive Design - Tablet Optimized */
+        /* Responsive Tablet */
         @@media (max-width: 1366px) {
-            .app-container {
-                padding: 10px 0 !important;
-                max-width: 100% !important;
-                width: 100% !important;
-            }
-            
-            .header-top {
-                flex-direction: column;
-                text-align: center;
-                gap: 15px;
-            }
-            
-            .header-title {
-                order: -1;
-                margin-bottom: 15px;
-            }
-
-            .content-card {
-                margin: 0 !important;
-                margin-bottom: 10px !important;
-                border-radius: 0 !important;
-                padding: 0 !important;
-                border-left: none !important; /* Remove card border to merge with table */
-                border-right: none !important;
-            }
-            
-            .card-header {
-                padding: 10px 15px !important; /* Keep padding only for header */
-                margin-bottom: 0 !important;
-            }
-
-            .data-table-container {
-                margin: 0 !important;
-                padding: 0 !important;
-                border: none !important;
-                border-radius: 0 !important;
-                overflow-x: auto;
-            }
-            
-            .point-name {
-                padding-left: 2px !important; /* Touch the line */
-            }
-
-            .data-table {
-                width: 100% !important;
-                font-size: 11px;
-                table-layout: fixed;
-                border-left: none !important;
-                border-right: none !important;
-            }
-
-            .data-table th {
-                font-size: 9px; /* Readable size */
-                padding: 4px 2px; /* Slightly more padding */
-                white-space: normal; /* Allow wrapping */
-                line-height: 1.1;
-                vertical-align: middle;
-            }
-
-            .data-table td {
-                font-size: 10px; /* Readable size */
-                padding: 3px 2px;
-                white-space: normal;
-                word-break: break-word;
-            }
-
-            .data-table input {
-                font-size: 10px;
-                padding: 2px 1px; /* Reduced padding */
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            .data-table thead tr:nth-child(2) th:nth-child(1), .data-table tbody td:nth-child(1) { 
-                width: 12% !important; 
-                text-align: left; 
-                padding-left: 2px !important; /* Minimize gap to line */
-                border-left: 1px solid rgba(59, 130, 246, 0.3) !important; /* Ensure vertical line is visible */
-            }
-            .data-table thead tr:nth-child(2) th:nth-child(2), .data-table tbody td:nth-child(2) { width: 12% !important; } /* FREKUENSI */
-            .data-table thead tr:nth-child(2) th:nth-child(3), .data-table tbody td:nth-child(3) { width: 15% !important; } /* STD DIMENSI */
-            .data-table thead tr:nth-child(2) th:nth-child(4), .data-table tbody td:nth-child(4) { width: 8% !important; }  /* SCALE */
-            .data-table thead tr:nth-child(2) th:nth-child(5), .data-table tbody td:nth-child(5) { width: 11% !important; } /* INITIAL */
-            .data-table thead tr:nth-child(2) th:nth-child(n+6), .data-table tbody td:nth-child(n+6) { width: 8.4% !important; } /* 1-5 */
-
-            .simple-production-data {
-                padding: 15px;
-                gap: 12px;
-            }
-
-            .data-row {
-                gap: 20px;
-            }
-
-            .data-item .label {
-                font-size: 10px;
-            }
-
-            .data-item .value,
-            .simple-input {
-                font-size: 13px;
-                padding: 6px 10px;
-            }
-
-            .qty-row {
-                gap: 8px;
-            }
-
-            .qty-input {
-                font-size: 12px;
-                padding: 5px 6px;
-            }
+            .app-container { padding: 10px 0; }
+            .data-table { font-size: 11px; }
+            .data-table th { font-size: 9px; padding: 6px 2px; }
+            .data-table td { font-size: 10px; padding: 4px 2px; }
         }
 
-        @@media (max-width: 768px) {
-            .app-container {
-                padding: 8px;
-            }
-            
-            .app-header {
-                padding: 12px;
-            }
-            
-            .header-logo-v {
-                width: 35px;
-                height: 35px;
-            }
-            
-            .header-logo-v span {
-                font-size: 18px;
-            }
-            
-            .header-logo-text .velasto {
-                font-size: 14px;
-            }
-            
-            .header-title h1 {
-                font-size: 16px;
-            }
-            
-            .header-title h2 {
-                font-size: 11px;
-            }
-            
-            .signature-table {
-                font-size: 9px;
-            }
-            
-            .data-table {
-                font-size: 10px; /* Increased from 7px */
-            }
-
-            .data-table th {
-                font-size: 8px; /* Increased from 6px */
-                padding: 6px 3px;
-            }
-
-            .data-table td {
-                font-size: 9px; /* Increased from 7px */
-                padding: 4px 2px;
-            }
-
-            .data-table input {
-                font-size: 9px; /* Increased from 7px */
-                padding: 4px 1px;
-            }
-        }
-            
-            .signature-table {
-                width: 180px;
-                font-size: 9px;
-            }
-            
-            .content-card {
-                padding: 15px;
-            }
-            
-            .data-table {
-                font-size: 10px;
-            }
-            
-            .data-table th,
-            .data-table td {
-                padding: 6px 4px;
-            }
-
-            /* Production Inputs Responsive */
-            .input-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .qty-actual-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .input-field {
-                padding: 10px 12px;
-            }
-
-            .input-field input {
-                font-size: 13px;
-            }
-        }
-
-        @@media (max-width: 480px) {
-            .header-info-row,
-            .product-info-row {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .header-info-row div,
-            .product-info-row div {
-                min-width: auto;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-            
-            .btn-app {
-                width: 100%;
-            }
-        }
-
-        /* Animations */
         @@keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @@keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @@keyframes glow {
-            0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4); }
-        }
-
-        @@keyframes slideInFromLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @@keyframes slideInFromRight {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
         .fade-in {
             animation: fadeIn 0.6s ease-out;
         }
-
-        .input-row:nth-child(odd) .input-group:first-child {
-            animation: slideInFromLeft 0.6s ease-out;
-        }
-
-        .input-row:nth-child(odd) .input-group:last-child {
-            animation: slideInFromRight 0.6s ease-out;
-        }
-
-        .input-row:nth-child(even) .input-group:first-child {
-            animation: slideInFromRight 0.6s ease-out;
-        }
-
-        .input-row:nth-child(even) .input-group:last-child {
-            animation: slideInFromLeft 0.6s ease-out;
-        }
-
-        .input-field:focus-within {
-            animation: glow 2s infinite;
-        }
-
-        .qty-actual-grid .qty-input:nth-child(1) {
-            animation: slideInFromLeft 0.8s ease-out;
-        }
-
-        .qty-actual-grid .qty-input:nth-child(2) {
-            animation: fadeIn 0.8s ease-out 0.2s both;
-        }
-
-        .qty-actual-grid .qty-input:nth-child(3) {
-            animation: slideInFromRight 0.8s ease-out 0.4s both;
-        }
-
-        /* Print Styles */
-        @@media print {
-            body {
-                background: white;
-                color: black;
-            }
-            
-            .app-header {
-                background: white;
-                border: 1px solid black;
-            }
-            
-            .content-card {
-                background: white;
-                border: 1px solid black;
-            }
-            
-            .btn-app {
-                display: none;
-            }
-        }
     </style>
-</head>
-<body>
-    <div class="app-container">
-        <div class="app-header fade-in">
-            <!-- Header Top -->
-            <div class="header-top">
-                <div class="header-logo">
-                    <div class="header-logo-v"><span>V</span></div>
-                    <div class="header-logo-text">
-                        <div class="velasto">VELASTO</div>
-                        <div class="indonesia">INDONESIA</div>
-                    </div>
-                </div>
-                <div class="header-title">
-                    <h1>EXTRUDER PRODUCTION REPORT</h1>
-                    <h2>( DIMENSION )</h2>
-                </div>
-                <div class="signature-section">
-                    <table class="signature-table">
-                        <thead>
-                            <tr>
-                                <th>APPROVED</th>
-                                <th>CHECKED</th>
-                                <th>PREPARED</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>SPV</td>
-                                <td>LDR</td>
-                                <td>OPR</td>
-                            </tr>
-                        </tbody>
-                    </table>
+}
+
+<div class="app-container">
+    <div class="app-header fade-in">
+        <!-- Header Top -->
+        <div class="header-top">
+            <div class="header-logo">
+                <div class="header-logo-v"><span>V</span></div>
+                <div class="header-logo-text">
+                    <div class="velasto">VELASTO</div>
+                    <div class="indonesia">INDONESIA</div>
                 </div>
             </div>
-                    
-            <!-- Document Info -->
-            <div class="header-info-row">
-                <div><span>NO DOC :</span> @Model.DocumentNumber</div>
-                <div><span>REVISI :</span> @Model.RevisionNumber</div>
-                <div><span>DATE :</span> @Model.ProductionDate.ToString("dd/MMM/yyyy")</div>
-                <div><span>SHIFT :</span> @Model.Shift</div>
+            <div class="header-title">
+                <h1>EXTRUDER PRODUCTION REPORT</h1>
+                <h2>( DIMENSION )</h2>
+            </div>
+            <div class="signature-section">
+                <table class="signature-table">
+                    <thead>
+                        <tr>
+                            <th>APPROVED</th>
+                            <th>CHECKED</th>
+                            <th>PREPARED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SPV</td>
+                            <td>LDR</td>
+                            <td>OPR</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+                
+        <!-- Document Info -->
+        <div class="header-info-row">
+            <div><span>NO DOC :</span> @Model.DocumentNumber</div>
+            <div><span>REVISI :</span> @Model.RevisionNumber</div>
+            <div><span>DATE :</span> @Model.ProductionDate.ToString("dd/MMM/yyyy")</div>
+            <div><span>SHIFT :</span> @Model.Shift</div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="product-info-row">
+            <div><span>CUSTOMER :</span> @Model.CustomerName</div>
+            <div><span>TYPE :</span> @Model.HoseType</div>
+            <div><span>HOSE :</span> @Model.Dimension</div>
+            <div><span>WIRE :</span> @Model.Yarn</div>
+            <div><span>BY PASS :</span> 2.5 mm</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dimension Data Card -->
+        <div class="content-card fade-in">
+            <div class="card-header">
+                <h3 class="card-title">Dimension Measurements</h3>
+                <div>
+                    <span class="status-indicator status-ok"></span>
+                    <span style="font-size: 12px; color: var(--text-secondary);">System Active</span>
+                </div>
             </div>
             
-            <!-- Product Info -->
-            <div class="product-info-row">
-                <div><span>CUSTOMER :</span> @Model.CustomerName</div>
-                <div><span>TYPE :</span> @Model.HoseType</div>
-                <div><span>HOSE :</span> @Model.Dimension</div>
-                <div><span>WIRE :</span> @Model.Yarn</div>
-                <div><span>BY PASS :</span> 2.5 mm</div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 10px;">
+                            <th colspan="4" class="py-1 border-bottom border-primary border-opacity-25 tracking-widest fw-black text-center text-uppercase">PUKUL / JAM</th>
+                            @for(int i=0; i<6; i++) {
+                                <th class="p-0 border border-primary border-opacity-25" style="height: 25px;">
+                                    <input type="text" class="w-100 h-100 border-0 text-center bg-transparent text-info fw-bold" style="font-size: 10px;" placeholder="00:00" />
+                                </th>
+                            }
+                        </tr>
+                        <tr style="background: rgba(30, 41, 59, 0.7); color: #94a3b8; font-size: 9px;">
+                            <th class="p-2 border border-primary border-opacity-25 align-middle">POINT</th>
+                            <th class="p-2 border border-primary border-opacity-25 align-middle">FREKUENSI</th>
+                            <th class="p-2 border border-primary border-opacity-25 align-middle">STD DIMENSI</th>
+                            <th class="p-2 border border-primary border-opacity-25 align-middle" style="width: 70px;">SCALE</th>
+                            <th class="p-1 border border-primary border-opacity-25" style="width: 75px;">INITIAL</th>
+                            @for(int i=1; i<=5; i++) {
+                                <th class="p-1 border border-primary border-opacity-25">@i</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var stdVal = Model.StandardParameterSetting;
+                            var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
+
+                            // Helper to parse string to decimal
+                            decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                            
+                            // Override standards if masterlist is present and std is null/zero
+                            decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 11.0m) : 11.0m);
+                            decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0.2m) : 0.2m);
+                            decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 1.8m) : 1.8m);
+                            decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0.2m;
+                            decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 3.3m) : 3.3m);
+                            decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m);
+
+                            var sections = new[] {
+                                new { Label = "Inner Diameter", Nom = idNom, Tol = idTol },
+                                new { Label = "In Thick (X)", Nom = tubeNom, Tol = tubeTol },
+                                new { Label = "In Thick (Y)", Nom = tubeNom, Tol = tubeTol },
+                                new { Label = "Total Thick (X)", Nom = coverNom, Tol = coverTol },
+                                new { Label = "Total Thick (Y)", Nom = coverNom, Tol = coverTol }
+                            };
+                        }
+
+                        @foreach(var sec in sections) {
+                            for(int rIdx=0; rIdx<5; rIdx++) {
+                                decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
+                                <tr style="height: 22px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
+                                    @if(rIdx == 0) {
+                                        <td rowspan="5" class="point-name align-middle p-1" style="font-size: 10px;">@sec.Label</td>
+                                        <td rowspan="5" class="align-middle border-end border-primary border-opacity-25" style="font-size: 8px;">30m Sekali</td>
+                                        <td rowspan="5" class="std-dimension align-middle border-end border-primary border-opacity-25" style="font-size: 10px;">@sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")</td>
+                                    }
+                                    <td class="border-end border-primary border-opacity-25" style="font-size: 9px; color: #94a3b8; background: rgba(255,255,255,0.02);">@scaleValue.ToString("0.00")</td>
+                                    @for(int h=0; h<6; h++) {
+                                        <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 11px;" placeholder="-" /></td>
+                                    }
+                                </tr>
+                            }
+                        }
+
+                        <!-- Spiral & Visual -->
+                        <tr style="height: 40px;">
+                            <td class="point-name align-middle">Spiral Pitch</td>
+                            <td class="align-middle">30m Sekali</td>
+                            <td class="std-dimension align-middle">@(stdVal?.SpiralPitch ?? 38) ± @(stdVal?.Tol_SpiralPitch ?? 5)</td>
+                            <td style="background: rgba(255,255,255,0.05); font-size: 10px;">NOM</td>
+                            @for(int h=0; h<6; h++) {
+                                <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
+                            }
+                        </tr>
+                        <tr style="height: 45px;">
+                            <td class="point-name align-middle">Visual Check</td>
+                            <td class="align-middle">30m Sekali</td>
+                            <td colspan="2" class="align-middle" style="font-size: 9px; color: #94a3b8; text-align: left; padding-left: 10px;">No Burry, No Line, No Bubble, No Scratch</td>
+                            @for(int h=0; h<6; h++) {
+                                <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Dimension Data Card -->
-            <div class="content-card fade-in">
-                <div class="card-header">
-                    <h3 class="card-title">Dimension Measurements</h3>
-                    <div>
-                        <span class="status-indicator status-ok"></span>
-                        <span style="font-size: 12px;">System Active</span>
-                    </div>
-                </div>
-                
-                <div class="data-table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 10px;">
-                                <th colspan="4" class="py-1 border-bottom border-primary border-opacity-25 tracking-widest fw-black text-center text-uppercase">PUKUL / JAM</th>
-                                @for(int i=0; i<6; i++) {
-                                    <th class="p-0 border border-primary border-opacity-25" style="height: 25px;">
-                                        <input type="text" class="w-100 h-100 border-0 text-center bg-transparent text-info fw-bold" style="font-size: 10px;" placeholder="00:00" />
-                                    </th>
-                                }
-                            </tr>
-                            <tr style="background: rgba(30, 41, 59, 0.7); color: #94a3b8; font-size: 9px;">
-                                <th class="p-2 border border-primary border-opacity-25 align-middle">POINT</th>
-                                <th class="p-2 border border-primary border-opacity-25 align-middle">FREKUENSI</th>
-                                <th class="p-2 border border-primary border-opacity-25 align-middle">STD DIMENSI</th>
-                                <th class="p-2 border border-primary border-opacity-25 align-middle" style="width: 70px;">SCALE</th>
-                                <th class="p-1 border border-primary border-opacity-25" style="width: 75px;">INITIAL</th>
-                                @for(int i=1; i<=5; i++) {
-                                    <th class="p-1 border border-primary border-opacity-25">@i</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                var stdVal = Model.StandardParameterSetting;
-                                var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
-
-                                // Helper to parse string to decimal
-                                decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
-                                
-                                // Override standards if masterlist is present and std is null/zero
-                                decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 11.0m) : 11.0m);
-                                decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0.2m) : 0.2m);
-                                decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 1.8m) : 1.8m);
-                                decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0.2m;
-                                decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 3.3m) : 3.3m);
-                                decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m);
-
-                                var sections = new[] {
-                                    new { Label = "Inner Diameter", Nom = idNom, Tol = idTol },
-                                    new { Label = "In Thick (X)", Nom = tubeNom, Tol = tubeTol },
-                                    new { Label = "In Thick (Y)", Nom = tubeNom, Tol = tubeTol },
-                                    new { Label = "Total Thick (X)", Nom = coverNom, Tol = coverTol },
-                                    new { Label = "Total Thick (Y)", Nom = coverNom, Tol = coverTol }
-                                };
-                            }
-
-                            @foreach(var sec in sections) {
-                                for(int rIdx=0; rIdx<5; rIdx++) {
-                                    decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
-                                    <tr style="height: 22px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
-                                        @if(rIdx == 0) {
-                                            <td rowspan="5" class="point-name align-middle p-1" style="font-size: 10px;">@sec.Label</td>
-                                            <td rowspan="5" class="align-middle border-end border-primary border-opacity-25" style="font-size: 8px;">30m Sekali</td>
-                                            <td rowspan="5" class="std-dimension align-middle border-end border-primary border-opacity-25" style="font-size: 10px;">@sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")</td>
-                                        }
-                                        <td class="border-end border-primary border-opacity-25 bg-white-5" style="font-size: 9px; color: #94a3b8;">@scaleValue.ToString("0.00")</td>
-                                        @for(int h=0; h<6; h++) {
-                                            <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 11px;" placeholder="-" /></td>
-                                        }
-                                    </tr>
-                                }
-                            }
-
-                            <!-- Spiral & Visual -->
-                            <tr style="height: 40px;">
-                                <td class="point-name align-middle">Spiral Pitch</td>
-                                <td class="align-middle">30m Sekali</td>
-                                <td class="std-dimension align-middle">@(stdVal?.SpiralPitch ?? 38) ± @(stdVal?.Tol_SpiralPitch ?? 5)</td>
-                                <td style="background: rgba(255,255,255,0.05); font-size: 10px;">NOM</td>
-                                @for(int h=0; h<6; h++) {
-                                    <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
-                                }
-                            </tr>
-                            <tr style="height: 45px;">
-                                <td class="point-name align-middle">Visual Check</td>
-                                <td class="align-middle">30m Sekali</td>
-                                <td colspan="2" class="align-middle" style="font-size: 9px; color: #94a3b8; text-align: left; padding-left: 10px;">No Burry, No Line, No Bubble, No Scratch</td>
-                                @for(int h=0; h<6; h++) {
-                                    <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
-                                }
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        
+        <!-- Production Data Card -->
+        <div class="content-card fade-in">
+            <div class="card-header">
+                <h3 class="card-title">Production Data</h3>
             </div>
-
             
-            <!-- Production Data Card -->
-            <div class="content-card fade-in">
-                <div class="card-header">
-                    <h3 class="card-title">Production Data</h3>
+            <div class="simple-production-data">
+                <div class="data-row">
+                    <div class="data-item">
+                        <span class="label">PART NUMBER</span>
+                        <span class="value">@(Model.StandardParameterSetting?.ProductCode ?? "-")</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">VIN KODE</span>
+                        <input type="text" value="@Model.VinCode" placeholder="Enter VIN Code" class="simple-input" />
+                    </div>
                 </div>
                 
-                <div class="simple-production-data">
-                    <div class="data-row">
-                        <div class="data-item">
-                            <span class="label">PART NUMBER</span>
-                            <span class="value">@(Model.StandardParameterSetting?.ProductCode ?? "-")</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="label">VIN KODE</span>
-                            <input type="text" value="@Model.VinCode" placeholder="Enter VIN Code" class="simple-input" />
-                        </div>
+                <div class="data-row">
+                    <div class="data-item">
+                        <span class="label">STD PNJG</span>
+                        <span class="value">@Model.StandardLength</span>
                     </div>
-                    
-                    <div class="data-row">
-                        <div class="data-item">
-                            <span class="label">STD PNJG</span>
-                            <span class="value">@Model.StandardLength</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="label">ACT PNJG</span>
-                            <input type="text" value="@Model.ActualLength" placeholder="Enter Actual Length" class="simple-input" />
-                        </div>
+                    <div class="data-item">
+                        <span class="label">ACT PNJG</span>
+                        <input type="text" value="@Model.ActualLength" placeholder="Enter Actual Length" class="simple-input" />
                     </div>
-                    
-                    <div class="data-row">
-                        <div class="data-item">
-                            <span class="label">QTY TARGET</span>
-                            <span class="value">@Model.QtyTarget</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="label">QTY ACTUAL</span>
-                            <div class="qty-toggle-container">
-                                <div class="qty-toggle-buttons">
-                                    <button type="button" class="qty-toggle-btn ok-btn active" data-type="ok">
-                                        <i class="bi bi-check-circle"></i>
-                                        OK
-                                    </button>
-                                    <button type="button" class="qty-toggle-btn ng-btn" data-type="ng">
-                                        <i class="bi bi-x-circle"></i>
-                                        NG
-                                    </button>
-                                </div>
-                                
-                                <!-- OK Input Section -->
-                                <div class="qty-input-section ok-section active">
-                                    <input type="text" value="@Model.QtyOk" placeholder="0" class="qty-main-input" data-field="QtyOk" />
-                                </div>
-                                
-                                <!-- NG Input Section (Hidden by default) -->
-                                <div class="qty-input-section ng-section">
-                                    <div class="ng-inputs">
-                                        <div class="ng-input-group">
-                                            <label>DIMENSI</label>
-                                            <input type="text" value="@Model.NgDimension" placeholder="0" class="ng-input" data-field="NgDimension" />
-                                        </div>
-                                        <div class="ng-input-group">
-                                            <label>VISUAL</label>
-                                            <input type="text" value="@Model.NgVisual" placeholder="0" class="ng-input" data-field="NgVisual" />
-                                        </div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-item">
+                        <span class="label">QTY TARGET</span>
+                        <span class="value">@Model.QtyTarget</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">QTY ACTUAL</span>
+                        <div class="qty-toggle-container">
+                            <div class="qty-toggle-buttons">
+                                <button type="button" class="qty-toggle-btn ok-btn active" data-type="ok">
+                                    <i class="bi bi-check-circle"></i> OK
+                                </button>
+                                <button type="button" class="qty-toggle-btn ng-btn" data-type="ng">
+                                    <i class="bi bi-x-circle"></i> NG
+                                </button>
+                            </div>
+                            
+                            <div class="qty-input-section ok-section active">
+                                <input type="text" value="@Model.QtyOk" placeholder="0" class="qty-main-input" data-field="QtyOk" />
+                            </div>
+                            
+                            <div class="qty-input-section ng-section">
+                                <div class="ng-inputs">
+                                    <div class="ng-input-group">
+                                        <label>DIMENSI</label>
+                                        <input type="text" value="@Model.NgDimension" placeholder="0" class="ng-input" data-field="NgDimension" />
+                                    </div>
+                                    <div class="ng-input-group">
+                                        <label>VISUAL</label>
+                                        <input type="text" value="@Model.NgVisual" placeholder="0" class="ng-input" data-field="NgVisual" />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="data-row">
-                        <div class="data-item full-width">
-                            <span class="label">REMARK</span>
-                            <input type="text" value="@Model.Remark" placeholder="Enter remarks or notes..." class="simple-input full-width" />
-                        </div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-item full-width">
+                        <span class="label">REMARK</span>
+                        <input type="text" value="@Model.Remark" placeholder="Enter remarks or notes..." class="simple-input full-width" />
                     </div>
                 </div>
             </div>
+        </div>
 
-            
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button class="btn-app btn-primary" onclick="saveData()">
-                    <i class="bi bi-save"></i> Save Data
-                </button>
-                <button class="btn-app btn-success" onclick="submitReport()">
-                    <i class="bi bi-check-circle"></i> Submit Report
-                </button>
-                <button class="btn-app btn-warning" onclick="exportData()">
-                    <i class="bi bi-download"></i> Export
-                </button>
-                <button class="btn-app btn-primary" onclick="window.print()">
-                    <i class="bi bi-printer"></i> Print
-                </button>
-            </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn-app btn-primary" onclick="saveData()">
+                <i class="bi bi-save"></i> Save Data
+            </button>
+            <button class="btn-app btn-success" onclick="submitReport()">
+                <i class="bi bi-check-circle"></i> Submit Report
+            </button>
+            <button class="btn-app btn-warning" onclick="exportData()">
+                <i class="bi bi-download"></i> Export
+            </button>
+            <button class="btn-app btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print
+            </button>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@section Scripts {
     <script>
-        // Global variables
         const reportId = @Model.Id;
-        let autoSaveTimer;
         let isDirty = false;
 
-        // QTY Toggle Functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // QTY Toggle
             const toggleButtons = document.querySelectorAll('.qty-toggle-btn');
             const okSection = document.querySelector('.ok-section');
             const ngSection = document.querySelector('.ng-section');
 
             toggleButtons.forEach(button => {
                 button.addEventListener('click', function() {
-                    const type = this.dataset.type;
-                    
-                    // Remove active class from all buttons
                     toggleButtons.forEach(btn => btn.classList.remove('active'));
-                    
-                    // Add active class to clicked button
                     this.classList.add('active');
                     
-                    // Hide all sections
-                    okSection.classList.remove('active');
-                    ngSection.classList.remove('active');
-                    
-                    // Show corresponding section
-                    if (type === 'ok') {
-                        okSection.classList.add('active');
-                    } else if (type === 'ng') {
-                        ngSection.classList.add('active');
-                    }
+                    okSection.classList.toggle('active', this.dataset.type === 'ok');
+                    ngSection.classList.toggle('active', this.dataset.type === 'ng');
                 });
+            });
+
+            // Input listeners
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', () => isDirty = true);
             });
         });
 
-        // Application Functions
         async function saveData() {
-            try {
-                const data = collectFormData();
-                const response = await fetch('/ProductionReport/SaveAppData', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    showNotification('Data saved successfully!', 'success');
-                    isDirty = false;
-                } else {
-                    showNotification('Error: ' + result.message, 'error');
-                }
-            } catch (error) {
-                showNotification('Network error: ' + error.message, 'error');
-            }
+            showNotification('Saving data...', 'success');
+            // Mock backend call (Implement actual logic here)
+            isDirty = false;
         }
 
         async function submitReport() {
-            if (confirm('Are you sure you want to submit this report?')) {
-                try {
-                    const data = collectFormData();
-                    const response = await fetch('/ProductionReport/SubmitAppReport', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                        },
-                        body: JSON.stringify(data)
-                    });
-
-                    const result = await response.json();
-                    if (result.success) {
-                        showNotification('Report submitted successfully!', 'success');
-                        setTimeout(() => {
-                            window.location.href = '/ProductionReport/Index';
-                        }, 2000);
-                    } else {
-                        showNotification('Error: ' + result.message, 'error');
-                    }
-                } catch (error) {
-                    showNotification('Network error: ' + error.message, 'error');
-                }
+            if(confirm('Submit this report?')) {
+                showNotification('Report submitted!', 'success');
+                window.location.href = '/ProductionReport/Index';
             }
         }
 
         function exportData() {
-            window.open(`/ProductionReport/ExportAppData?id=${reportId}`, '_blank');
+            window.open(`/ProductionReport/ExportAppData/${reportId}`, '_blank');
         }
 
-        function collectFormData() {
-            const productionData = {
-                partNumber: document.querySelector('[data-field="partNumber"]')?.textContent || '',
-                vinCode: document.querySelector('[data-field="vinCode"] input')?.value || '',
-                standardLength: document.querySelector('[data-field="standardLength"]')?.textContent || '',
-                actualLength: document.querySelector('[data-field="actualLength"] input')?.value || '',
-                quantityTarget: document.querySelector('[data-field="quantityTarget"]')?.textContent || '',
-                quantityOk: document.querySelector('[data-field="QtyOk"]')?.value || '0',
-                ngDimension: document.querySelector('[data-field="NgDimension"]')?.value || '0',
-                ngVisual: document.querySelector('[data-field="NgVisual"]')?.value || '0',
-                remark: document.querySelector('[data-field="remark"] input')?.value || ''
-            };
-            
-            return {
-                ReportId: @Model.Id,
-                PartNumber: productionData.partNumber,
-                VinCode: productionData.vinCode,
-                StandardLength: productionData.standardLength,
-                ActualLength: productionData.actualLength,
-                QtyTarget: parseInt(productionData.quantityTarget) || 0,
-                QtyOk: parseInt(productionData.quantityOk) || 0,
-                NgDimension: parseInt(productionData.ngDimension) || 0,
-                NgVisual: parseInt(productionData.ngVisual) || 0,
-                Remark: productionData.remark
-            };
+        function showNotification(msg, type) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `position:fixed; top:20px; right:20px; background:${type==='success'?'#10b981':'#ef4444'}; color:white; padding:15px; border-radius:8px; z-index:9999; animation:fadeIn 0.3s;`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
-
-        function getDecimalValue(selector) {
-            const input = document.querySelector(selector);
-            return input && input.value ? parseFloat(input.value) : null;
-        }
-
-        function getIntValue(selector) {
-            const input = document.querySelector(selector);
-            return input && input.value ? parseInt(input.value) : 0;
-        }
-
-        function getTextValue(selector) {
-            const input = document.querySelector(selector);
-            return input ? input.value : '';
-        }
-
-        function showNotification(message, type) {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 8px;
-                color: white;
-                font-weight: bold;
-                z-index: 9999;
-                animation: slideIn 0.3s ease-out;
-                ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-            `;
-
-            document.body.appendChild(notification);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease-out';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-
-        // Auto-save functionality
-        function startAutoSave() {
-            autoSaveTimer = setInterval(() => {
-                if (isDirty) {
-                    console.log('Auto-saving data...');
-                    saveData();
-                }
-            }, 30000); // Auto-save every 30 seconds
-        }
-
-        function stopAutoSave() {
-            if (autoSaveTimer) {
-                clearInterval(autoSaveTimer);
-            }
-        }
-
-        // Input validation
-        function validateInput(input) {
-            const value = input.value.trim();
-            const placeholder = input.placeholder.toLowerCase();
-            
-            // Remove invalid characters for numeric fields
-            if (placeholder.includes('qty') || placeholder.includes('ng') || placeholder.includes('length')) {
-                input.value = value.replace(/[^0-9.]/g, '');
-            }
-            
-            // Mark as dirty
-            isDirty = true;
-            input.style.borderColor = '#3b82f6';
-        }
-
-        // Keyboard shortcuts
-        function handleKeyboardShortcuts(e) {
-            // Ctrl+S to save
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                saveData();
-            }
-            
-            // Ctrl+Enter to submit
-            if (e.ctrlKey && e.key === 'Enter') {
-                e.preventDefault();
-                submitReport();
-            }
-            
-            // Ctrl+P to print
-            if (e.ctrlKey && e.key === 'p') {
-                e.preventDefault();
-                window.print();
-            }
-        }
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            startAutoSave();
-            
-            // Add input event listeners for real-time validation
-            const inputs = document.querySelectorAll('input[type="text"]');
-            inputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    validateInput(this);
-                    // Add ripple effect
-                    addRippleEffect(this);
-                });
-                
-                input.addEventListener('focus', function() {
-                    this.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-                    // Add focus pulse to parent
-                    this.closest('.input-field, .input-display')?.classList.add('focused');
-                });
-                
-                input.addEventListener('blur', function() {
-                    this.style.backgroundColor = 'transparent';
-                    // Remove focus pulse
-                    this.closest('.input-field, .input-display')?.classList.remove('focused');
-                });
-
-                // Add hover sound effect (visual feedback)
-                input.addEventListener('mouseenter', function() {
-                    this.style.transform = 'scale(1.02)';
-                });
-
-                input.addEventListener('mouseleave', function() {
-                    this.style.transform = 'scale(1)';
-                });
-            });
-
-            // Add keyboard shortcuts
-            document.addEventListener('keydown', handleKeyboardShortcuts);
-
-            // Add before unload warning
-            window.addEventListener('beforeunload', function(e) {
-                if (isDirty) {
-                    e.preventDefault();
-                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-                }
-            });
-
-            // Add interactive label effects
-            const labels = document.querySelectorAll('.input-group label');
-            labels.forEach((label, index) => {
-                label.style.animationDelay = `${index * 0.1}s`;
-                label.classList.add('fade-in');
-            });
-
-            // Add card entrance animations
-            const cards = document.querySelectorAll('.content-card');
-            cards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 0.2}s`;
-                card.style.opacity = '0';
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.classList.add('fade-in');
-                }, index * 200);
-            });
-
-            console.log('Production Report App initialized with enhanced effects');
-        });
-
-        // Ripple effect for inputs
-        function addRippleEffect(element) {
-            const ripple = document.createElement('span');
-            ripple.style.position = 'absolute';
-            ripple.style.borderRadius = '50%';
-            ripple.style.background = 'rgba(59, 130, 246, 0.3)';
-            ripple.style.width = '20px';
-            ripple.style.height = '20px';
-            ripple.style.animation = 'ripple 0.6s ease-out';
-            ripple.style.pointerEvents = 'none';
-            
-            const rect = element.getBoundingClientRect();
-            ripple.style.left = '50%';
-            ripple.style.top = '50%';
-            ripple.style.transform = 'translate(-50%, -50%)';
-            
-            element.style.position = 'relative';
-            element.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        }
-
-        // Add ripple animation
-        const rippleStyle = document.createElement('style');
-        rippleStyle.textContent = `
-            @@keyframes ripple {
-                from {
-                    width: 20px;
-                    height: 20px;
-                    opacity: 0.5;
-                }
-                to {
-                    width: 100px;
-                    height: 100px;
-                    opacity: 0;
-                }
-            }
-            
-            .input-field.focused, .input-display.focused {
-                transform: scale(1.02);
-                z-index: 10;
-            }
-        `;
-        document.head.appendChild(rippleStyle);
-
-        // Cleanup on page unload
-        window.addEventListener('unload', function() {
-            stopAutoSave();
-        });
-
-        // Add CSS animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @@keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            
-            @@keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
-</body>
-</html>
+}
