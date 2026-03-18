@@ -154,33 +154,33 @@
                         <div class="col-5 border-end-form">
                             <table class="w-100 m-0 border-0 text-start fw-bold" style="font-size: 10px;">
                                 <tr>
-                                    <td style="width: 70px;" class="border-bottom-form py-1 ps-2">No. Doc.</td>
+                                    <td style="width: 70px;" class="border-bottom-form py-1 ps-2">NO. DOC.</td>
                                     <td style="width: 15px;" class="border-bottom-form py-1 text-center">:</td>
-                                    <td class="border-bottom-form py-1 pe-2">@Model.DocumentNumber</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1">@Model.DocumentNumber</td>
                                 </tr>
                                 <tr>
-                                    <td class="border-bottom-form py-1 ps-2">Date</td>
+                                    <td class="border-bottom-form py-1 ps-2">DATE</td>
                                     <td class="border-bottom-form py-1 text-center">:</td>
                                     <td class="border-bottom-form py-1 pe-2">
-                                        <input type="text" class="input-transparent w-100 text-dark fw-bold" value='@(Model.ProductionDate.ToString("dd.MM.yy"))' />
+                                        <input type="text" class="input-transparent text-start w-100 text-dark fw-bold ps-1" value='@(Model.ProductionDate.ToString("dd.MM.yy"))' />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="border-bottom-form py-1 ps-2">Shift</td>
+                                    <td class="border-bottom-form py-1 ps-2">SHIFT</td>
                                     <td class="border-bottom-form py-1 text-center">:</td>
                                     <td class="border-bottom-form py-1 pe-2">
-                                        <input type="text" class="input-transparent w-100 text-dark fw-bold" value='@Model.Shift' />
+                                        <input type="text" class="input-transparent text-start w-100 text-dark fw-bold ps-1" value='@Model.Shift' />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="border-bottom-form py-1 ps-2">Cust.</td>
+                                    <td class="border-bottom-form py-1 ps-2">CUST.</td>
                                     <td class="border-bottom-form py-1 text-center">:</td>
-                                    <td class="border-bottom-form py-1 pe-2">@Model.CustomerName</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1">@(string.IsNullOrEmpty(Model.CustomerName) ? "-" : Model.CustomerName)</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1 ps-2">Tipe</td>
+                                    <td class="py-1 ps-2">TIPE</td>
                                     <td class="py-1 text-center">:</td>
-                                    <td class="py-1 pe-2">@Model.HoseType @Model.Dimension</td>
+                                    <td class="py-1 pe-2 ps-1">@Model.HoseType @Model.Dimension</td>
                                 </tr>
                             </table>
                         </div>
