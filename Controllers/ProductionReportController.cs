@@ -70,18 +70,86 @@ namespace VelastoProductionSystem.Controllers
             
             if (ModelState.IsValid)
             {
-                report.CreatedBy = report.CreatedBy ?? "Operator 1";
-                report.Shift = report.Shift ?? "Shift 1";
-                report.CustomerName = report.CustomerName ?? "-";
-                report.CreatedDate = DateTime.Now;
-                report.Status = "NOW PRODUCING";
-                _context.Add(report);
-                await _context.SaveChangesAsync();
-                
-                TempData["SuccessMessage"] = "Produksi Dimulai! Silakan monitor di Dashboard.";
-                return RedirectToAction(nameof(Details), new { id = report.Id });
+                try
+                {
+                    if (report.ProductionDate == default)
+                        report.ProductionDate = DateTime.Today;
+
+                    report.CreatedBy = report.CreatedBy ?? "Operator 1";
+                    report.Shift = report.Shift ?? "Shift 1";
+                    report.CustomerName = report.CustomerName ?? "-";
+                    report.CreatedDate = DateTime.Now;
+                    report.Status = "NOW PRODUCING";
+
+                    // Set default values for NOT NULL columns not present in the form
+                    report.InnerMaterialActual = report.InnerMaterialActual ?? report.InnerMaterial ?? "-";
+                    report.OuterMaterialActual = report.OuterMaterialActual ?? report.OuterMaterial ?? "-";
+                    report.YarnActual = report.YarnActual ?? report.Yarn ?? "-";
+
+                    _context.Add(report);
+                    await _context.SaveChangesAsync();
+                    
+                    TempData["SuccessMessage"] = "Produksi Dimulai! Silakan monitor di Dashboard.";
+                    return RedirectToAction(nameof(Details), new { id = report.Id });
+                }
+                catch (Exception ex)
+                {
+                    var innerMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    if (ex.InnerException?.InnerException != null) 
+                        innerMsg = ex.InnerException.InnerException.Message;
+
+                    Console.WriteLine($"Error saving production report: {innerMsg}");
+                    ModelState.AddModelError("", "Gagal Simpan ke Database: " + innerMsg);
+                }
             }
             return View(report);
+        }
+
+        // GET: ProductionReport/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var report = await _context.ProductionReports.FindAsync(id);
+            if (report == null) return NotFound();
+
+            ViewBag.StandardParameterSettings = new SelectList(_context.StandardParameterSettings.OrderByDescending(s => s.CreatedDate), "Id", "DocumentNumber", report.StandardParameterSettingId);
+
+            return View(report);
+        }
+
+        // POST: ProductionReport/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, ProductionReport report)
+        {
+            if (id != report.Id) return NotFound();
+
+            ModelState.Remove("CreatedBy");
+            
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(report);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Data berhasil diupdate!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ProductionReportExists(report.Id)) return NotFound();
+                    else throw;
+                }
+            }
+
+            ViewBag.StandardParameterSettings = new SelectList(_context.StandardParameterSettings.OrderByDescending(s => s.CreatedDate), "Id", "DocumentNumber", report.StandardParameterSettingId);
+            return View(report);
+        }
+
+        private bool ProductionReportExists(int id)
+        {
+            return _context.ProductionReports.Any(e => e.Id == id);
         }
 
         [HttpPost]

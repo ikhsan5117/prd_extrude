@@ -1,0 +1,298 @@
+@model IEnumerable<VelastoProductionSystem.Models.DimensionReading>
+
+@{
+    ViewData["Title"] = "Dimension Reading Monitor";
+}
+
+<div class="dim-dashboard fade-in">
+    <div class="row">
+        <div class="col-12">
+
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center mb-4 dim-header-glass p-3 px-4">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box me-3">
+                        <i class="bi bi-rulers text-info fs-3"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-white fw-black mb-0 tracking-tighter">DIMENSION READING</h2>
+                        <div class="text-info super-small fw-bold letter-spacing-2">QUALITY MEASUREMENT LOG</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <form method="get" class="d-flex gap-2">
+                        <input name="search" value="@ViewBag.Search" class="dim-search-input" placeholder="🔍  Cari Hose / Part / VIN..." />
+                        <button type="submit" class="btn dim-btn-primary btn-sm px-3">CARI</button>
+                        @if (!string.IsNullOrEmpty(ViewBag.Search?.ToString()))
+                        {
+                            <a asp-action="Index" class="btn dim-btn-outline btn-sm px-3">RESET</a>
+                        }
+                    </form>
+                    <a asp-action="Create" class="btn dim-btn-glow btn-sm px-4">
+                        <i class="bi bi-plus-circle-fill me-1"></i> INPUT DIMENSI
+                    </a>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="dim-table-wrapper">
+                <div class="dim-scroll-container">
+                    <table class="table table-dark mb-0 dim-table">
+                        <thead>
+                            <tr class="dim-header-row">
+                                <th class="ps-3 text-nowrap">TANGGAL</th>
+                                <th class="text-nowrap">HOSE TYPE</th>
+                                <th class="text-nowrap">PART / VIN</th>
+                                <th class="text-center text-nowrap">ID (mm)</th>
+                                <th class="text-center text-nowrap">THK INNER (mm)</th>
+                                <th class="text-center text-nowrap">THK TOTAL (mm)</th>
+                                <th class="text-center text-nowrap">SPIRAL PITCH</th>
+                                <th class="text-center text-nowrap">VISUAL</th>
+                                <th class="text-center text-nowrap">QTY OK</th>
+                                <th class="text-center text-nowrap">QTY NG</th>
+                                <th class="text-center pe-3 text-nowrap">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="align-middle dim-row">
+                                    <td class="ps-3 text-nowrap">
+                                        <div class="fw-bold">@item.ReadingTime.ToString("dd MMM yyyy")</div>
+                                        <div class="super-small text-white-50">@item.ReadingTime.ToString("HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        @if (item.ProductionReport != null)
+                                        {
+                                            <div class="dim-hose-tag">@item.ProductionReport.HoseType</div>
+                                            <div class="super-small text-white-50 mt-1">@item.ProductionReport.Dimension</div>
+                                        }
+                                        else { <span class="text-white-50">-</span> }
+                                    </td>
+                                    <td>
+                                        <div class="small fw-bold text-info">@item.PartNumber</div>
+                                        <div class="super-small text-white-50">@item.VinCode</div>
+                                    </td>
+                                    <!-- Inner Diameter -->
+                                    <td class="text-center">
+                                        <div class="dim-std-label">STD: @item.InnerDiameterStandard</div>
+                                        <div class="dim-readings-wrap">
+                                            <span class="dim-val">@item.InnerDiameter1?.ToString("F2")</span>
+                                            <span class="dim-val">@item.InnerDiameter2?.ToString("F2")</span>
+                                            <span class="dim-val">@item.InnerDiameter3?.ToString("F2")</span>
+                                        </div>
+                                    </td>
+                                    <!-- Inner Thickness -->
+                                    <td class="text-center">
+                                        <div class="dim-std-label">STD: @item.InnerThicknessStandard</div>
+                                        <div class="dim-readings-wrap">
+                                            <span class="dim-val">@item.InnerThickness1?.ToString("F2")</span>
+                                            <span class="dim-val">@item.InnerThickness2?.ToString("F2")</span>
+                                            <span class="dim-val">@item.InnerThickness3?.ToString("F2")</span>
+                                        </div>
+                                    </td>
+                                    <!-- Total Thickness -->
+                                    <td class="text-center">
+                                        <div class="dim-std-label">STD: @item.TotalThicknessStandard</div>
+                                        <div class="dim-readings-wrap">
+                                            <span class="dim-val">@item.TotalThickness1?.ToString("F2")</span>
+                                            <span class="dim-val">@item.TotalThickness2?.ToString("F2")</span>
+                                            <span class="dim-val">@item.TotalThickness3?.ToString("F2")</span>
+                                        </div>
+                                    </td>
+                                    <!-- Spiral Pitch -->
+                                    <td class="text-center">
+                                        <div class="dim-std-label">STD: @item.SpiralPitchStandard</div>
+                                        <span class="dim-val-lg">@item.SpiralPitchActual?.ToString("F2")</span>
+                                    </td>
+                                    <!-- Visual -->
+                                    <td class="text-center">
+                                        @if (item.VisualCheckOK)
+                                        {
+                                            <span class="dim-status-ok"><i class="bi bi-check-circle-fill me-1"></i>OK</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="dim-status-ng"><i class="bi bi-x-circle-fill me-1"></i>NG</span>
+                                        }
+                                    </td>
+                                    <!-- Qty -->
+                                    <td class="text-center fw-black text-success" style="font-size:1.1rem;">@item.QtyOK</td>
+                                    <td class="text-center fw-black @(item.QtyNGDimensi > 0 || item.QtyNGVisual > 0 ? "text-danger" : "text-white-50")" style="font-size:1.1rem;">
+                                        @((item.QtyNGDimensi ?? 0) + (item.QtyNGVisual ?? 0))
+                                    </td>
+                                    <!-- Actions -->
+                                    <td class="text-center pe-3">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn dim-btn-action btn-blue" title="Detail">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn dim-btn-action btn-orange" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Hapus data dimensi ini?')" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn dim-btn-action btn-red" title="Hapus">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-rulers text-white-50 opacity-25" style="font-size: 4rem;"></i>
+                            <p class="text-white-50 fw-bold mt-3 tracking-widest">BELUM ADA DATA PENGUKURAN</p>
+                            <a asp-action="Create" class="btn dim-btn-glow rounded-0 px-5 mt-2">
+                                <i class="bi bi-plus-circle-fill me-2"></i> INPUT PERTAMA
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .dim-dashboard {
+        min-height: 100vh;
+        padding: 2rem;
+        background-color: #020617;
+        background-image:
+            radial-gradient(at 0% 0%, rgba(6, 78, 78, 0.12) 0, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.06) 0, transparent 50%);
+    }
+
+    .dim-header-glass {
+        background: rgba(6, 78, 78, 0.15);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        border-radius: 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .hud-icon-box {
+        width: 50px; height: 50px; border-radius: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(6, 182, 212, 0.1);
+        border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .dim-search-input {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        border-radius: 0;
+        color: white;
+        padding: 6px 14px;
+        font-size: 12px;
+        width: 260px;
+        outline: none;
+    }
+    .dim-search-input:focus { border-color: #06b6d4; }
+
+    .dim-btn-primary { background: #0891b2; border: none; border-radius: 0; color: white; font-weight: 900; font-size: 11px; letter-spacing: 1px; }
+    .dim-btn-outline { background: transparent; border: 1px solid rgba(6,182,212,0.4); border-radius: 0; color: #06b6d4; font-weight: 900; font-size: 11px; }
+    .dim-btn-glow { background: #0891b2; border: 1px solid #06b6d4; color: white; border-radius: 0; font-weight: 900; font-size: 11px; letter-spacing: 1px; box-shadow: 0 0 15px rgba(6,182,212,0.3); transition: all 0.2s; }
+    .dim-btn-glow:hover { box-shadow: 0 0 25px rgba(6,182,212,0.6); color: white; }
+
+    /* Sharp Table */
+    .dim-table-wrapper {
+        background: rgba(6, 14, 28, 0.95);
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        border-radius: 0;
+        box-shadow: 0 0 40px rgba(0,0,0,0.7);
+        overflow: hidden;
+    }
+    .dim-scroll-container {
+        overflow-x: auto; overflow-y: auto; max-height: 72vh;
+    }
+    .dim-scroll-container::-webkit-scrollbar { width: 6px; height: 6px; }
+    .dim-scroll-container::-webkit-scrollbar-track { background: rgba(6,14,28,0.8); }
+    .dim-scroll-container::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.5); border-radius: 0; }
+    .dim-scroll-container::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+    .dim-scroll-container::-webkit-scrollbar-corner { background: rgba(6,14,28,0.8); }
+
+    .dim-table {
+        color: rgba(255,255,255,0.85);
+        border-collapse: collapse;
+        min-width: 1100px;
+    }
+    .dim-header-row {
+        background: linear-gradient(90deg, rgba(6,78,78,0.6), rgba(6,182,212,0.2));
+        border-bottom: 2px solid rgba(6, 182, 212, 0.5);
+        position: sticky; top: 0; z-index: 5;
+    }
+    .dim-table th {
+        font-size: 10px; font-weight: 900; letter-spacing: 1.5px; color: #22d3ee;
+        padding: 13px 12px; text-transform: uppercase; white-space: nowrap;
+        border-right: 1px solid rgba(6,182,212,0.2) !important;
+        border-bottom: 2px solid rgba(6,182,212,0.4) !important;
+        text-shadow: 0 0 10px rgba(6,182,212,0.4);
+    }
+    .dim-table th:last-child { border-right: none !important; }
+    .dim-table td {
+        padding: 12px 12px;
+        border-bottom: 1px solid rgba(6,182,212,0.1) !important;
+        border-right: 1px solid rgba(6,182,212,0.08) !important;
+        vertical-align: middle;
+    }
+    .dim-table td:last-child { border-right: none !important; }
+    .dim-row { transition: background 0.15s; }
+    .dim-row:hover td { background: rgba(6, 182, 212, 0.05); }
+    .dim-table tbody tr:nth-child(even) td { background: rgba(6, 20, 40, 0.4); }
+
+    .dim-hose-tag {
+        display: inline-block;
+        background: rgba(6, 182, 212, 0.15);
+        border: 1px solid rgba(6,182,212,0.4);
+        border-left: 3px solid #06b6d4;
+        color: white; font-weight: 800;
+        padding: 2px 8px; border-radius: 0; font-size: 11px;
+    }
+
+    .dim-std-label { font-size: 9px; color: #64748b; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .dim-readings-wrap { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+    .dim-val {
+        background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2);
+        color: #e2e8f0; font-size: 11px; font-weight: 700; padding: 1px 5px; border-radius: 0;
+        min-width: 40px; text-align: center;
+    }
+    .dim-val-lg { font-size: 14px; font-weight: 900; color: #22d3ee; }
+
+    .dim-status-ok {
+        display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 0;
+        background: rgba(16,185,129,0.1); color: #10b981;
+        border: 1px solid rgba(16,185,129,0.4); border-left: 3px solid #10b981;
+        font-size: 10px; font-weight: 900; letter-spacing: 1px;
+    }
+    .dim-status-ng {
+        display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 0;
+        background: rgba(239,68,68,0.1); color: #f87171;
+        border: 1px solid rgba(239,68,68,0.4); border-left: 3px solid #ef4444;
+        font-size: 10px; font-weight: 900; letter-spacing: 1px;
+    }
+
+    .dim-btn-action {
+        width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+        border-radius: 0; font-size: 13px; transition: all 0.2s;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .dim-btn-action.btn-blue { color: #22d3ee; background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.3); }
+    .dim-btn-action.btn-orange { color: #fbbf24; background: rgba(245,158,11,0.1); border-color: rgba(251,191,36,0.3); }
+    .dim-btn-action.btn-red { color: #f87171; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+    .dim-btn-action:hover { transform: scale(1.1); color: white; background: rgba(255,255,255,0.15); }
+
+    .fw-black { font-weight: 900; }
+    .tracking-tighter { letter-spacing: -0.5px; }
+    .super-small { font-size: 9px; }
+    .letter-spacing-2 { letter-spacing: 2px; }
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+</style>

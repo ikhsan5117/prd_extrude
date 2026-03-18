@@ -72,7 +72,7 @@
                 
                 <!-- TOP HEADER: TITLE & COMPACT DOC INFO -->
                 <div class="row g-0 border-bottom border-primary border-opacity-25">
-                    <div class="col-lg-9 p-4 d-flex align-items-center justify-content-center bg-hud-navy">
+                    <div class="col-md-9 p-4 d-flex align-items-center justify-content-center bg-hud-navy">
                         <div class="text-center">
                             <h2 class="fw-900 text-white mb-1 text-glow" style="font-size: 2rem;">NOW I'M PRODUCE :</h2>
                             <div class="d-flex align-items-center justify-content-center gap-2">
@@ -80,14 +80,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 p-0 border-start border-primary border-opacity-25 bg-hud-navy">
+                    <div class="col-md-3 p-0 border-start border-primary border-opacity-25 bg-hud-navy">
                         <table class="table table-dark table-sm m-0 extra-small doc-header-table border-0 h-100">
                             <tr>
                                 <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label" style="width: 130px;">No. Dokumen</td>
                                 <td class="pe-2 py-0 border-0 align-middle">
                                     <div class="d-flex align-items-center">
                                         <span class="text-primary fw-bold me-1">:</span>
-                                        <input asp-for="DocumentNumber" id="DocumentNumber" class="header-input" value="" placeholder="VI-SOP-PROD-131" />
+                                        <input asp-for="DocumentNumber" id="DocumentNumber" class="header-input" placeholder="VI-SOP-PROD-131" />
                                     </div>
                                 </td>
                             </tr>
@@ -96,7 +96,7 @@
                                 <td class="pe-2 py-0 border-0 align-middle">
                                     <div class="d-flex align-items-center">
                                         <span class="text-primary fw-bold me-1">:</span>
-                                        <input asp-for="RevisionNumber" id="RevisionNumber" type="text" class="header-input" value="" placeholder="0" />
+                                        <input asp-for="RevisionNumber" id="RevisionNumber" type="text" class="header-input" placeholder="0" />
                                     </div>
                                 </td>
                             </tr>
@@ -108,7 +108,7 @@
                 <div class="row g-0 border border-primary border-opacity-20">
                     
                     <!-- LEFT COLUMN: PRODUCT SPECS -->
-                    <div class="col-lg-4 col-md-12 p-4 border-end border-primary border-opacity-20 bg-hud-navy">
+                    <div class="col-md-4 p-4 border-end border-primary border-opacity-20 bg-hud-navy">
                         <div class="d-flex flex-column h-100 gap-4">
                             <div class="spec-group">
                                 <div class="spec-label mb-2"><i class="bi bi-upc-scan me-2"></i>1. HOSE TYPE</div>
@@ -140,7 +140,7 @@
                             <div class="spec-group">
                                 <div class="spec-label mb-2"><i class="bi bi-puzzle me-2"></i>4. YARN</div>
                                 <div class="spec-card">
-                                    <input asp-for="Yarn" id="Yarn" class="spec-input" value="---" />
+                                    <input asp-for="Yarn" id="Yarn" class="spec-input highlight" value="---" />
                                 </div>
                             </div>
                             <div class="flex-grow-1"></div>
@@ -148,7 +148,7 @@
                     </div>
 
                     <!-- CENTER COLUMN: TIME & SCHEDULING -->
-                    <div class="col-lg-5 col-md-12 p-4 border-end border-primary border-opacity-20 bg-hud-navy">
+                    <div class="col-md-5 p-4 border-end border-primary border-opacity-20 bg-hud-navy">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="section-tag">TIME CONTROL</div>
                             <div class="hud-date-box">
@@ -214,7 +214,7 @@
                     </div>
 
                     <!-- RIGHT COLUMN: TARGETS -->
-                    <div class="col-lg-3 col-md-12 p-2 border-start border-primary border-opacity-20 bg-hud-navy overflow-hidden">
+                    <div class="col-md-3 p-2 border-start border-primary border-opacity-20 bg-hud-navy overflow-hidden">
                         <div class="target-card mb-3">
                             <div class="target-header">CHS 2 L DANDORI TARGET</div>
                             <table class="table table-dark table-xs m-0 text-center border-white border-opacity-10">
@@ -438,10 +438,44 @@
     .pulse-blue { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
     @@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
+    .main-glass-card { 
+        width: 100%; 
+        border-radius: 0;
+        overflow: hidden;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
     /* Tablet Responsive Sharp */
     @@media (max-width: 992px) {
-        .main-content { padding: 5px !important; }
-        .border-end { border-right: none !important; border-bottom: 1px solid #30363d !important; }
+        .production-dashboard-sapphire { 
+            padding: 0 !important; 
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .main-content { 
+            padding: 0 !important; 
+            margin-left: 0 !important; 
+            margin-top: 55px !important; /* Keep navbar height */
+        }
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .main-glass-card { 
+            border-left: none; 
+            border-right: none; 
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: calc(100vh - 120px);
+        }
+        .header-sapphire-glass { border-radius: 0; margin: 0 !important; width: 100% !important; }
+        .row { margin-left: 0 !important; margin-right: 0 !important; }
+        .col-md-9, .col-md-3, .col-md-4, .col-md-5 { width: 100% !important; }
+        .border-end, .border-start { border: none !important; border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important; }
     }
 
     /* Scanner Enhanced HUD Style in Popup */

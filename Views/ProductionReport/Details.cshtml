@@ -183,27 +183,74 @@
                     <!-- MATERIAL & DIES -->
                     <div class="col-6 border-end-form">
                          <table class="w-100 grid-form border-0">
-                            <tr><th colspan="2" width="130">MATERIAL</th><th width="100">STANDARD</th><th width="100">ACTUAL</th></tr>
-                            <tr><td colspan="2" class="ps-1">INNER(MATERIAL)</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td></tr>
-                            <tr><td colspan="2" class="ps-1">OUTER(MATERIAL)</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td></tr>
-                            <tr><td colspan="2" class="ps-1">YARN</td><td class="text-center">ARAMID</td><td class="text-center">ARAMID</td></tr>
+                            <tr>
+                                <th width="125" style="background:#f0f0f0;">MATERIAL</th>
+                                <th width="90" style="background:#f0f0f0;">STANDARD</th>
+                                <th width="90" style="background:#f0f0f0;">ACTUAL</th>
+                            </tr>
+                            <tr><td class="ps-1">INNER(MATERIAL)</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td><td class="text-center">@(Model.InnerMaterial ?? "-")</td></tr>
+                            <tr><td class="ps-1">OUTER(MATERIAL)</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td><td class="text-center">@(Model.OuterMaterial ?? "-")</td></tr>
+                            <tr><td class="ps-1">YARN</td><td class="text-center">ARAMID</td><td class="text-center">ARAMID</td></tr>
                             
-                            <tr class="border-top-form"><th width="110">DIES</th><th width="60">CEK VISUAL</th><th>STANDARD</th><th>BEFORE / AFTER</th></tr>
-                            <tr><td class="ps-1">Ø Nipple Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.InnerDie == 0 ? "-" : std.InnerDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">Ø Tube Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.TubeDie == 0 ? "-" : std.TubeDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">Ø Middle Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.MiddleDie == 0 ? "-" : std.MiddleDie.ToString())</td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">Ø Cover Die</td><td class="text-center small">OK | NG</td><td class="text-center">@(std.CoverDie == 0 ? "-" : std.CoverDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr class="border-top-form">
+                                <th style="background:#f0f0f0;">DIES</th>
+                                <th style="background:#f0f0f0;">STANDARD</th>
+                                <th style="background:#f0f0f0;">BEFORE / AFTER</th>
+                            </tr>
+                            <tr><td class="ps-1">Ø Nipple Die</td><td class="text-center">@(std.InnerDie == 0 ? "8.8±0.1" : std.InnerDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">Ø Tube Die</td><td class="text-center">@(std.TubeDie == 0 ? "11.1±0.1" : std.TubeDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">Ø Middle Die</td><td class="text-center">@(std.MiddleDie == 0 ? "14.2±0.1" : std.MiddleDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">Ø Cover Die</td><td class="text-center">@(std.CoverDie == 0 ? "15.1±0.1" : std.CoverDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">Ø Spacer Die</td><td class="text-center">@(std.SpacerDie == 0 ? "7.3±0.1" : std.SpacerDie.ToString())</td><td class="text-center"></td></tr>
+                            <tr><td class="ps-1">A Distance</td><td class="text-center">0.4±0.1</td><td class="text-center"></td></tr>
                         </table>
                     </div>
                     <!-- MESH & EMBOSS -->
                     <div class="col-6">
                         <table class="w-100 grid-form border-0">
-                            <tr><th width="120">TIPE MESH</th><th width="100">CONTENT</th><th width="100">Ø96 #10</th><th width="100">Ø96 #40</th></tr>
-                            <tr><td class="ps-1">SEBELUM PROSES</td><td class="text-center">INNER / OUTER</td><td class="text-center"></td><td class="text-center"></td></tr>
-                            <tr><td class="ps-1">SESUDAH PROSES</td><td class="text-center">INNER / OUTER</td><td class="text-center"></td><td class="text-center"></td></tr>
-                            <tr class="border-top-form"><th colspan="2">EMBOSS MARKING CHECK</th><th>STATUS</th><th>RESULT</th></tr>
-                            <tr><td colspan="2" class="ps-1">TEXT / DATE</td><td class="text-center">CLEAN/KOTOR</td><td class="text-center"></td></tr>
-                            <tr><td colspan="2" class="ps-1">SURFACE</td><td class="text-center">OK / SCRATCH</td><td class="text-center"></td></tr>
+                            <tr>
+                                <th style="background:#f0f0f0;" width="140">BEFORE / AFTER</th>
+                                <th style="background:#f0f0f0;">CONTENT</th>
+                                <th width="70" style="background:#f0f0f0;">Ø96 #10</th>
+                                <th width="70" style="background:#f0f0f0;">Ø96 #40</th>
+                            </tr>
+                            <tr>
+                                <td rowspan="2" class="align-middle fw-bold ps-2 text-center" style="background-color: #f8f9fa;">MESH CHECKING<br/><span class="fw-normal small">(Sebelum Proses)</span></td>
+                                <td class="text-center">INNER</td>
+                                <td class="text-center">✔</td>
+                                <td class="text-center">✔</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">OUTER</td>
+                                <td class="text-center">✔</td>
+                                <td class="text-center">✔</td>
+                            </tr>
+                            <tr class="border-top-form">
+                                <td rowspan="2" class="align-middle fw-bold ps-2 text-center" style="background-color: #f8f9fa;">MESH CONDITION<br/><span class="fw-normal small">(Sesudah Proses)</span></td>
+                                <td style="background:#f0f0f0;" class="text-center fw-bold">INNER / OUTER</td>
+                                <td style="background:#f0f0f0;" class="text-center fw-bold">✔ / OK</td>
+                                <td style="background:#f0f0f0;" class="text-center fw-bold">BOLONG / ASING</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">INNER</td>
+                                <td class="text-center">✔</td>
+                                <td class="text-center">-</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center bg-light border-0"></td>
+                                <td class="text-center border-top-0">OUTER</td>
+                                <td class="text-center border-top-0">✔</td>
+                                <td class="text-center border-top-0">-</td>
+                            </tr>
+                            
+                            <tr class="border-top-form">
+                                <th colspan="2" style="background:#f0f0f0;">EMBOSS MARKING CHECK</th>
+                                <th style="background:#f0f0f0;">STATUS</th>
+                                <th style="background:#f0f0f0;">RESULT</th>
+                            </tr>
+                            <tr><td colspan="2" class="ps-1">TEXT / DATE</td><td class="text-center">CLEAN</td><td class="text-center">✔</td></tr>
+                            <tr><td colspan="2" class="ps-1">SURFACE (OK/SCRATCH)</td><td class="text-center">OK</td><td class="text-center">✔</td></tr>
+                            <tr><td colspan="2" class="ps-1">CONDITION (TERBACA)</td><td class="text-center">TERBACA</td><td class="text-center">✔</td></tr>
                         </table>
                     </div>
                 </div>
@@ -296,12 +343,12 @@
                                     new { L="Preset Value (Ø mm)", K="PresetValue", S="18.5±0.2" },
                                     new { L="Control Value (Ø mm)", K="ControlValue", S="18.5±0.2" },
                                     new { L="Hose Speed (m/min)", K="HoseSpeed", S="3.4±2" },
-                                    new { L="Take up Speed (m/min)", K="TakeupConveyorSpeed", S="3.4±3" },
-                                    new { L="Cool Conveyor Speed", K="CoolConveyorSpeed", S="3.4±4" },
-                                    new { L="Conveyor Ratio", K="ConveyorRatio", S="100%±10" },
+                                    new { L="Take up Conveyor Speed (m/min)", K="TakeupConveyorSpeed", S="3.4±3" },
+                                    new { L="Cool Conveyor Speed (m/min)", K="CoolConveyorSpeed", S="3.4±4" },
+                                    new { L="Conveyor Ratio (Take up : Cool)", K="ConveyorRatio", S="100%±10" },
                                     new { L="Un smooth surface", K="UnsmoothSurface", S="0.5" },
-                                    new { L="Chiller Water Temp", K="ChillerWaterTemp", S="MAX. 15" },
-                                    new { L="Caterpillar Gap (mm)", K="CaterpillarGap", S="18.2±1" }
+                                    new { L="Chiller water temperature (°C)", K="ChillerWaterTemp", S="Max. 15" },
+                                    new { L="Caterpillar gap (mm)", K="CaterpillarGap", S="18.2±1" }
                                 })) {
                                     <tr class="row-hover">
                                         <td class="ps-2 sticky-col label-col bg-white">@row.L</td>
@@ -318,40 +365,88 @@
 
                 <!-- 5. WASTE SECTION (Modernized) -->
                 <div class="row g-0 border-form-bold mt-2 bg-light">
-                    <div class="col-8 border-end-form">
+                    <div class="col-9 border-end-form">
                         <table class="grid-form w-100 border-0 m-0">
-                            <tr class="bg-secondary text-white"><th colspan="2">WASTE (KG)</th><th class="text-center">AWAL</th><th class="text-center">AKHIR</th></tr>
-                            <tr class="bg-white">
-                                <td rowspan="2" class="text-center align-middle fw-bold" width="100">DANDORY (CLEANING)</td>
-                                <td class="ps-2">INNER</td><td class="text-center">@(Model.WasteInnerAwal)</td><td class="text-center">@(Model.WasteInnerAkhir)</td>
+                            <tr class="bg-secondary text-white">
+                                <th width="120">WASTE (KG)</th>
+                                <th class="text-center" width="80">CONTENT</th>
+                                <th class="text-center">AWAL</th>
+                                <th class="text-center">AKHIR</th>
                             </tr>
                             <tr class="bg-white">
-                                <td class="ps-2">COVER</td><td class="text-center">@(Model.WasteCoverAwal)</td><td class="text-center">@(Model.WasteCoverAkhir)</td>
+                                <td rowspan="2" class="text-center align-middle fw-bold">DANDORY AWAL (CLEANING)</td>
+                                <td class="ps-2">INNER</td>
+                                <td class="text-center">@(Model.WasteInnerAwal)</td>
+                                <td class="text-center">@(Model.WasteInnerAkhir)</td>
+                            </tr>
+                            <tr class="bg-white">
+                                <td class="ps-2">COVER</td>
+                                <td class="text-center">@(Model.WasteCoverAwal)</td>
+                                <td class="text-center">@(Model.WasteCoverAkhir)</td>
                             </tr>
                         </table>
                     </div>
-                    <div class="col-4 p-2 d-flex align-items-center justify-content-center text-center">
-                        <div class="small fw-bold text-danger">
+                    <div class="col-3 p-2 d-flex align-items-center justify-content-center text-center">
+                        <div class="small fw-bold text-danger" style="line-height: 1.2;">
                             <i class="bi bi-info-circle-fill me-1"></i> NOTE: <br/>LAKUKAN PENGECEKAN PARAMETER PADA SAAT AWAL, TENGAH & AKHIR PROSES.
                         </div>
                     </div>
                 </div>
 
                 <!-- INPUT TRIGGER PARAMETER -->
-                <div class="mt-4 no-print d-flex justify-content-center">
-                    <button type="button" class="btn btn-velasto-glow px-5 rounded-pill" data-bs-toggle="modal" data-bs-target="#addReadingModal">
-                        <i class="bi bi-plus-circle-fill me-2"></i> INPUT DATA PARAMETER (JAM KE-@(readings.Count))
+                <div class="mt-4 no-print d-flex justify-content-center gap-3">
+                    <button type="button" id="btnVerify" class="btn btn-outline-info px-4 rounded-pill fw-bold border-2" onclick="startVerifyScanner()">
+                        <i class="bi bi-qr-code-scan me-2"></i> VERIFY ITEM (SCAN)
+                    </button>
+                    <!-- Locked By Default -->
+                    <button type="button" id="btnInput" class="btn btn-velasto-glow px-4 rounded-pill opacity-50 pe-none" data-bs-toggle="modal" data-bs-target="#addReadingModal">
+                        <i class="bi bi-lock-fill me-2" id="iconLock"></i> <span id="textInput">INPUT TERKUNCI</span> (JAM KE-@(readings.Count))
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
     }
 </div>
 
 <!-- ============================================= -->
-<!-- MODALS FOR INPUT                              -->
+<!-- MODALS FOR INPUT & SCANNER                    -->
 <!-- ============================================= -->
+
+<!-- SCANNER MODAL FOR VERIFICATION -->
+<div class="modal fade no-print" id="scannerVerifyModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content scanner-modal-glass border-0">
+            <div class="modal-header border-bottom border-info border-opacity-25 pb-2">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-shield-check text-info me-2 fs-4"></i>
+                    <h5 class="modal-title text-white fw-bold tracking-widest">SPS ITEM VERIFICATION</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopScanner()"></button>
+            </div>
+            <div class="modal-body p-0 position-relative border-0 bg-black">
+                <div class="hud-scanner-overlay" style="aspect-ratio:4/3; overflow:hidden; position:relative;">
+                    <div id="reader-verify" style="width:100%;"></div>
+                    <div style="position: absolute; top:50%; left:0; width:100%; height:2px; background:linear-gradient(to right, transparent, #0dcaf0, transparent); box-shadow: 0 0 15px #0dcaf0; z-index:10; transform: translateY(-50%);"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-info border-opacity-25 py-2 bg-hud-navy">
+                <div class="d-flex w-100 justify-content-between align-items-center px-2">
+                    <span class="text-info extra-small tracking-widest"><i class="bi bi-broadcast pulse-info me-1"></i> AWAITING ITEM BARCODE...</span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-info btn-sm px-4" onclick="switchCamera()">
+                            <i class="bi bi-camera-rotate me-1"></i> SWITCH
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm px-4" data-bs-dismiss="modal" onclick="stopScanner()">
+                            CLOSE
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- MODAL OPERATOR 1 (FULL PARAMETER HUD) -->
 <div class="modal fade no-print" id="addReadingModal" tabindex="-1">
@@ -768,8 +863,127 @@
 </style>
 
 @section Scripts {
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // ==========================================
+        // SCANNER ITEM VERIFICATION LOGIC
+        // ==========================================
+        let html5QrCode;
+        let cameraDevices = [];
+        let currentCamIdx = 0;
+
+        async function startVerifyScanner() {
+            const mEl = document.getElementById('scannerVerifyModal');
+            const modal = new bootstrap.Modal(mEl);
+            modal.show();
+            
+            try {
+                cameraDevices = await Html5Qrcode.getCameras();
+                if (cameraDevices && cameraDevices.length > 0) {
+                    currentCamIdx = cameraDevices.findIndex(c => 
+                        c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment')
+                    );
+                    if (currentCamIdx === -1) currentCamIdx = 0;
+                }
+                if (html5QrCode && html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
+                initScanner();
+            } catch (err) {
+                initScanner(); 
+            }
+        }
+
+        function initScanner() {
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader-verify");
+            
+            let target = { facingMode: "environment" };
+            if (cameraDevices && cameraDevices.length > 0 && cameraDevices[currentCamIdx]) {
+                target = cameraDevices[currentCamIdx].id;
+            }
+            
+            html5QrCode.start(target, { fps: 20, aspectRatio: 1.0 }, onScanSuccess)
+                .catch(e => {
+                    if (!cameraDevices || cameraDevices.length === 0) {
+                        html5QrCode.start({ facingMode: "user" }, { fps: 20, aspectRatio: 1.0 }, onScanSuccess);
+                    }
+                });
+        }
+
+        async function switchCamera() {
+            if (!html5QrCode) return;
+            if (cameraDevices.length > 1) {
+                currentCamIdx = (currentCamIdx + 1) % cameraDevices.length;
+                if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                    initScanner();
+                }
+            } else {
+                const isEnv = html5QrCode.isScanning ? true : false; 
+                await html5QrCode.stop();
+                html5QrCode.start({ facingMode: isEnv ? "user" : "environment" }, { fps: 20, aspectRatio: 1.0 }, onScanSuccess);
+            }
+        }
+
+        async function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                try { await html5QrCode.stop(); } catch (e) {}
+            }
+        }
+
+        async function onScanSuccess(decodedText) {
+            stopScanner();
+            const modalEl = document.getElementById('scannerVerifyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            Swal.fire({
+                title: 'VERIFYING DATA...',
+                text: 'Memeriksa kecocokan Part List dengan Standard...',
+                allowOutsideClick: false,
+                background: '#0d1117',
+                color: '#fff',
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                const res = await fetch(`/ProductionReport/GetMasterByItem?itemCode=${encodeURIComponent(decodedText)}`);
+                const data = await res.json();
+                
+                const currentHoseType = '@Model.HoseType';
+                
+                if (data && data.hoseType === currentHoseType) {
+                    // Match! Kunci dibuka
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'VERIFIED MATCH!',
+                        html: `Hose Type: <b class="text-success">${data.hoseType}</b>.<br/>Akses Input Parameter Dibuka!`,
+                        background: '#0d1117', color: '#fff'
+                    });
+                    
+                    document.getElementById('btnInput').classList.remove('opacity-50', 'pe-none');
+                    document.getElementById('iconLock').classList.replace('bi-lock-fill', 'bi-unlock-fill');
+                    document.getElementById('textInput').innerText = 'INPUT DATA PARAMETER';
+                    
+                    var btnVerify = document.getElementById('btnVerify');
+                    btnVerify.classList.replace('btn-outline-info', 'btn-success');
+                    btnVerify.innerHTML = '<i class="bi bi-shield-check me-2"></i> VERIFIED';
+                    btnVerify.classList.add('pe-none');
+                } else {
+                    // Reject
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'SPEC MISMATCH / REJECTED',
+                        html: `Part List <b class="text-warning">${decodedText}</b> memiliki Hose Type: <b>${data ? data.hoseType : 'Tidak Ditemukan'}</b>.<br/>Sangat tidak sesuai dengan produksi saat ini (<b>${currentHoseType}</b>).`,
+                        background: '#3f1115', color: '#fff'
+                    });
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'SERVER ERROR', background: '#0d1117', color: '#fff' });
+            }
+        }
+
         async function saveRecap() {
             const data = {
                 reportId: @Model.Id,

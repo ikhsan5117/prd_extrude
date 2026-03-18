@@ -1,0 +1,220 @@
+@model VelastoProductionSystem.Models.DimensionReading
+
+@{
+    ViewData["Title"] = "Input Dimension Reading";
+}
+
+<div class="dim-dashboard fade-in">
+    <div class="container-fluid">
+        <form asp-action="Create" id="dimForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3 bg-danger bg-opacity-10 border-danger text-danger extra-small py-2 px-3 rounded-0 no-print"></div>
+
+            <!-- HEADER ACTIONS -->
+            <div class="d-flex justify-content-between align-items-center mb-4 dim-header-glass p-3 px-4">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box me-3">
+                        <i class="bi bi-plus-lg text-info fs-3"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-white fw-black mb-0 tracking-tighter">NEW MEASUREMENT</h2>
+                        <div class="text-info super-small fw-bold letter-spacing-2">SYSTEM LOG ENTRY</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a asp-action="Index" class="btn dim-btn-outline px-4">BATAL</a>
+                    <button type="submit" class="btn dim-btn-glow px-5">SIMPAN DATA</button>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <!-- LEFT: GENERAL INFO -->
+                <div class="col-md-4">
+                    <div class="dim-card h-100">
+                        <div class="dim-card-header">INFO PRODUKSI</div>
+                        <div class="dim-card-body p-4">
+                            <div class="mb-4">
+                                <label class="dim-label">PILIH LAPORAN PRODUKSI (DARI MENU SEBELUMNYA)</label>
+                                <select asp-for="ProductionReportId" class="dim-select" asp-items="ViewBag.ProductionReports"></select>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="dim-label">WAKTU PENGUKURAN</label>
+                                    <input asp-for="ReadingTime" class="dim-input" type="datetime-local" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="dim-label">RECORDED BY</label>
+                                    <input asp-for="RecordedBy" class="dim-input" value="QC OPERATOR" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="dim-label">PART NUMBER</label>
+                                    <input asp-for="PartNumber" class="dim-input highlight" placeholder="Contoh: 12345-BT12" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="dim-label">VIN CODE</label>
+                                    <input asp-for="VinCode" class="dim-input highlight" placeholder="Barcode VIN..." />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CENTER: DIMENSIONS 1 (ID & THICKNESS) -->
+                <div class="col-md-8">
+                    <div class="dim-card">
+                        <div class="dim-card-header">PENGUKURAN DIMENSI (MM)</div>
+                        <div class="dim-card-body p-0">
+                            <table class="table table-dark mb-0 dim-input-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">BAGIAN</th>
+                                        <th style="width: 15%;">STANDAR</th>
+                                        <th>1</th>
+                                        <th>2</th>
+                                        <th>3</th>
+                                        <th>4</th>
+                                        <th>5</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="ps-3"><div class="fw-900">INNER DIAMETER</div><div class="super-small text-white-50">Ø Lubang Dalam</div></td>
+                                        <td><input asp-for="InnerDiameterStandard" class="dim-td-input std" placeholder="Std..." /></td>
+                                        <td><input asp-for="InnerDiameter1" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerDiameter2" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerDiameter3" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerDiameter4" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerDiameter5" class="dim-td-input val" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-3"><div class="fw-900 text-info">THK INNER</div><div class="super-small text-white-50">Tebal Lapisan Dalam</div></td>
+                                        <td><input asp-for="InnerThicknessStandard" class="dim-td-input std" placeholder="Std..." /></td>
+                                        <td><input asp-for="InnerThickness1" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerThickness2" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerThickness3" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerThickness4" class="dim-td-input val" /></td>
+                                        <td><input asp-for="InnerThickness5" class="dim-td-input val" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-3"><div class="fw-900 text-warning">THK TOTAL</div><div class="super-small text-white-50">Total Tebal Hose</div></td>
+                                        <td><input asp-for="TotalThicknessStandard" class="dim-td-input std" placeholder="Std..." /></td>
+                                        <td><input asp-for="TotalThickness1" class="dim-td-input val" /></td>
+                                        <td><input asp-for="TotalThickness2" class="dim-td-input val" /></td>
+                                        <td><input asp-for="TotalThickness3" class="dim-td-input val" /></td>
+                                        <td><input asp-for="TotalThickness4" class="dim-td-input val" /></td>
+                                        <td><input asp-for="TotalThickness5" class="dim-td-input val" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                         <!-- Middle Left: Extra Specs -->
+                        <div class="col-md-6">
+                            <div class="dim-card">
+                                <div class="dim-card-header">SPIRAL & VISUAL</div>
+                                <div class="dim-card-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="dim-label">SPIRAL PITCH STD</label>
+                                            <input asp-for="SpiralPitchStandard" class="dim-input" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="dim-label">ACTUAL PITCH</label>
+                                            <input asp-for="SpiralPitchActual" class="dim-input highlight" />
+                                        </div>
+                                        <div class="col-12 mt-4">
+                                            <label class="dim-label mb-2">VISUAL CHECK</label>
+                                            <div class="d-flex align-items-center gap-4">
+                                                <div class="form-check custom-check">
+                                                    <input class="form-check-input" type="checkbox" asp-for="VisualCheckOK" id="visualOk">
+                                                    <label class="form-check-label text-white fw-bold" for="visualOk">VISUAL OK</label>
+                                                </div>
+                                            </div>
+                                            <textarea asp-for="VisualCheckNotes" class="dim-input mt-3" rows="2" placeholder="Catatan visual jika ada..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Middle Right: Quantity Evaluation -->
+                        <div class="col-md-6">
+                            <div class="dim-card">
+                                <div class="dim-card-header">HASIL EVALUASI (PCS)</div>
+                                <div class="dim-card-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="dim-label text-success">QTY OK</label>
+                                            <input asp-for="QtyOK" class="dim-input text-success fs-3 fw-black" value="0" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="dim-label text-danger">QTY NG DIMENSI</label>
+                                            <input asp-for="QtyNGDimensi" class="dim-input text-danger fs-3 fw-black" value="0" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="dim-label text-warning">QTY NG VISUAL</label>
+                                            <input asp-for="QtyNGVisual" class="dim-input text-warning fs-3 fw-black" value="0" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="dim-label">QTY TARGET</label>
+                                            <input asp-for="QtyTarget" class="dim-input fw-black" value="0" />
+                                        </div>
+                                        <div class="col-12 mt-2">
+                                            <label class="dim-label">REMARKS / ALASAN NG</label>
+                                            <input asp-for="Remarks" class="dim-input" placeholder="..." />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .dim-dashboard { min-height: 100vh; padding: 2rem; background-color: #020617; }
+    .dim-header-glass { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(6, 182, 212, 0.2); }
+    .hud-icon-box { width: 50px; height: 50px; background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); display: flex; align-items: center; justify-content: center; }
+
+    /* Card Styling */
+    .dim-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(6, 182, 212, 0.2); height: 100%; border-radius: 0; }
+    .dim-card-header { background: rgba(6, 182, 212, 0.15); color: #22d3ee; font-size: 11px; font-weight: 900; padding: 8px 15px; border-bottom: 1px solid rgba(6, 182, 212, 0.3); letter-spacing: 2px; }
+
+    /* Form Elements */
+    .dim-label { color: #94a3b8; font-size: 9px; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+    .dim-select, .dim-input { 
+        width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(6, 182, 212, 0.2); 
+        color: white; font-weight: 700; font-size: 14px; padding: 10px; border-radius: 0; outline: none; transition: 0.2s;
+    }
+    .dim-input:focus { border-color: #06b6d4; background: rgba(6, 182, 212, 0.05); }
+    .dim-input.highlight { color: #22d3ee; border-bottom: 2px solid #0891b2; }
+
+    /* Table Input */
+    .dim-input-table th { background: rgba(15, 23, 42, 0.5); font-size: 10px; color: #64748b; text-align: center; border-bottom: 1px solid rgba(6, 182, 212, 0.3); padding: 10px; }
+    .dim-input-table td { border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; padding: 0 !important; }
+    .dim-td-input { width: 100%; height: 50px; background: transparent; border: none; color: white; text-align: center; font-weight: 800; font-size: 16px; outline: none; }
+    .dim-td-input:focus { background: rgba(6, 182, 212, 0.1); }
+    .dim-td-input.std { color: #64748b; font-size: 12px; border-right: 1px solid rgba(6, 182, 212, 0.2); }
+    .dim-td-input.val { border-right: 1px dashed rgba(255,255,255,0.05); }
+
+    /* Buttons */
+    .dim-btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; border-radius: 0; font-weight: 900; font-size: 11px; letter-spacing: 1px; transition: 0.2s; }
+    .dim-btn-outline:hover { border-color: white; color: white; background: rgba(255,255,255,0.05); }
+    .dim-btn-glow { background: #0891b2; border: 1px solid #06b6d4; color: white; border-radius: 0; font-weight: 900; font-size: 11px; letter-spacing: 1px; box-shadow: 0 0 15px rgba(6,182,212,0.3); }
+
+    .fw-black { font-weight: 900; }
+    .tracking-tighter { letter-spacing: -0.5px; }
+    .super-small { font-size: 9px; }
+    .letter-spacing-2 { letter-spacing: 2px; }
+    .extra-small { font-size: 10px; }
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    /* Custom Checkbox */
+    .custom-check .form-check-input { width: 25px; height: 25px; border-radius: 0; background-color: rgba(0,0,0,0.4); border: 2px solid #0891b2; cursor: pointer; }
+    .custom-check .form-check-input:checked { background-color: #06b6d4; border-color: #22d3ee; }
+</style>

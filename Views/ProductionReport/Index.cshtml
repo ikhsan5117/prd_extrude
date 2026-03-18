@@ -22,16 +22,17 @@
                 </a>
             </div>
 
-            <div class="hud-container p-0 overflow-hidden">
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover mb-0 sapphire-table">
+            <div class="hud-table-wrapper">
+                <div class="table-scroll-container">
+                    <table class="table table-dark mb-0 sapphire-table">
                         <thead>
                             <tr class="header-row">
                                 <th class="ps-4">PRODUCTION DATE</th>
                                 <th>DOC NUMBER</th>
                                 <th>SHIFT</th>
-                                <th>CUSTOMER</th>
-                                <th>HOSE SPECIFICATION</th>
+                                <th>SPECIFICATION</th>
+                                <th>MATERIAL (IN/OUT)</th>
+                                <th class="text-center">PROGRESS</th>
                                 <th class="text-center">STATUS</th>
                                 <th class="text-center pe-4">COMMAND</th>
                             </tr>
@@ -40,13 +41,30 @@
                             @foreach (var item in Model)
                             {
                                 <tr class="align-middle">
-                                    <td class="ps-4 fw-bold">@item.ProductionDate.ToString("dd MMM yyyy")</td>
+                                    <td class="ps-4 fw-bold text-nowrap">@item.ProductionDate.ToString("dd MMM yyyy")</td>
                                     <td><code class="text-primary-50">@item.DocumentNumber</code></td>
                                     <td><span class="badge shift-badge @(item.Shift == "Shift 1" ? "bg-info" : "bg-warning")">@item.Shift</span></td>
-                                    <td class="small fw-bold">@item.CustomerName</td>
                                     <td>
                                         <div class="hose-type-tag">@item.HoseType</div>
-                                        <div class="super-small text-white-50 mt-1">DIM: @item.Dimension</div>
+                                        <div class="super-small text-white-50 mt-1">
+                                            <span class="text-info fw-bold">DIM:</span> @item.Dimension<br/>
+                                            <span class="text-info fw-bold">YARN:</span> @item.Yarn
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="extra-small text-white-50">
+                                            <i class="bi bi-circle-fill text-info me-1" style="font-size: 6px;"></i>IN: <span class="text-white">@item.InnerMaterial</span><br/>
+                                            <i class="bi bi-circle-fill text-warning me-1" style="font-size: 6px;"></i>OUT: <span class="text-white">@item.OuterMaterial</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="fw-black text-primary" style="font-size: 1.1rem;">@item.QtyOk <span class="text-white-50 small fw-normal">/ @item.QtyTarget</span></div>
+                                        <div class="progress mt-1" style="height: 4px; background: rgba(255,255,255,0.05);">
+                                            @if (item.QtyTarget > 0)
+                                            {
+                                                <div class="progress-bar bg-primary" style="width: @(Math.Min(100, (item.QtyOk * 100) / item.QtyTarget))%"></div>
+                                            }
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <span class="status-pill @(item.Status == "COMPLETED" ? "completed" : "active")">
@@ -132,65 +150,112 @@
         background: rgba(15, 23, 42, 0.7);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(59, 130, 246, 0.15);
-        border-radius: 20px;
+        border-radius: 0px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     }
 
-    .sapphire-table { color: rgba(255,255,255,0.8); }
+    /* Sharp HUD Table Wrapper */
+    .hud-table-wrapper {
+        background: rgba(8, 14, 30, 0.95);
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        border-radius: 0;
+        box-shadow: 0 0 40px rgba(0,0,0,0.7), inset 0 0 60px rgba(30,58,138,0.05);
+        overflow: hidden;
+    }
+
+    /* Dual scroll container */
+    .table-scroll-container {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+    .table-scroll-container::-webkit-scrollbar { width: 6px; height: 6px; }
+    .table-scroll-container::-webkit-scrollbar-track { background: rgba(15,23,42,0.8); }
+    .table-scroll-container::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.5); border-radius: 0; }
+    .table-scroll-container::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+    .table-scroll-container::-webkit-scrollbar-corner { background: rgba(15,23,42,0.8); }
+
+    /* Sharp Grid Table */
+    .sapphire-table { 
+        color: rgba(255,255,255,0.85);
+        border-collapse: collapse;
+        min-width: 900px;
+    }
     .sapphire-table thead tr.header-row {
-        background: rgba(30, 58, 138, 0.3);
-        border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        background: linear-gradient(90deg, rgba(30, 58, 138, 0.5), rgba(37, 99, 235, 0.3));
+        border-bottom: 2px solid rgba(59, 130, 246, 0.5);
+        position: sticky;
+        top: 0;
+        z-index: 5;
     }
     .sapphire-table th { 
-        font-size: 11px; 
+        font-size: 10px; 
         font-weight: 900; 
-        letter-spacing: 1.5px; 
+        letter-spacing: 2px; 
         color: #60a5fa; 
-        padding: 15px 10px;
+        padding: 14px 14px;
         text-transform: uppercase;
+        white-space: nowrap;
+        border-right: 1px solid rgba(59, 130, 246, 0.25) !important;
+        border-bottom: 2px solid rgba(59, 130, 246, 0.4) !important;
+        text-shadow: 0 0 10px rgba(96,165,250,0.4);
     }
-    .sapphire-table td { padding: 18px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-    .sapphire-table tbody tr:hover { background: rgba(59, 130, 246, 0.05); }
+    .sapphire-table th:last-child { border-right: none !important; }
+    .sapphire-table td { 
+        padding: 14px 14px; 
+        border-bottom: 1px solid rgba(59, 130, 246, 0.12) !important;
+        border-right: 1px solid rgba(59, 130, 246, 0.1) !important;
+        vertical-align: middle;
+    }
+    .sapphire-table td:last-child { border-right: none !important; }
+    .sapphire-table tbody tr { transition: background 0.15s; }
+    .sapphire-table tbody tr:hover td { background: rgba(59, 130, 246, 0.08); }
+    .sapphire-table tbody tr:nth-child(even) td { background: rgba(15, 23, 42, 0.3); }
+    .sapphire-table tbody tr:nth-child(even):hover td { background: rgba(59, 130, 246, 0.08); }
 
+    /* Sharp Hose Type Tag */
     .hose-type-tag {
         display: inline-block;
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.2);
+        background: rgba(37, 99, 235, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.45);
+        border-left: 3px solid #3b82f6;
         color: white;
         font-weight: 800;
-        padding: 4px 12px;
-        border-radius: 6px;
-        font-size: 13px;
+        padding: 3px 10px;
+        border-radius: 0;
+        font-size: 12px;
+        letter-spacing: 0.5px;
     }
 
-    .shift-badge { padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 10px; letter-spacing: 0.5px; }
+    .shift-badge { padding: 4px 10px; border-radius: 0; font-weight: 900; font-size: 10px; letter-spacing: 1px; }
 
     .status-pill {
         display: inline-flex;
         align-items: center;
-        padding: 5px 14px;
-        border-radius: 30px;
+        padding: 4px 12px;
+        border-radius: 0;
         font-size: 10px;
         font-weight: 900;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        white-space: nowrap;
     }
-    .status-pill.active { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .status-pill.completed { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-pill.active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); border-left: 3px solid #3b82f6; }
+    .status-pill.completed { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); border-left: 3px solid #10b981; }
 
     .btn-action-glass {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 10px;
-        transition: all 0.3s;
+        border-radius: 0;
+        transition: all 0.2s;
         border: 1px solid rgba(255,255,255,0.1);
     }
-    .btn-action-glass.btn-blue { color: #60a5fa; background: rgba(37, 99, 235, 0.1); }
-    .btn-action-glass.btn-orange { color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
-    .btn-action-glass.btn-red { color: #ef4444; background: rgba(220, 38, 38, 0.1); }
-    .btn-action-glass:hover { transform: scale(1.1); color: white; background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
+    .btn-action-glass.btn-blue { color: #60a5fa; background: rgba(37, 99, 235, 0.1); border-color: rgba(59,130,246,0.3); }
+    .btn-action-glass.btn-orange { color: #fbbf24; background: rgba(245, 158, 11, 0.1); border-color: rgba(251,191,36,0.3); }
+    .btn-action-glass.btn-red { color: #ef4444; background: rgba(220, 38, 38, 0.1); border-color: rgba(239,68,68,0.3); }
+    .btn-action-glass:hover { transform: scale(1.1); color: white; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
 
     .btn-outline-glass {
         background: rgba(255, 255, 255, 0.05);
