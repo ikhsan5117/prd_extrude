@@ -50,13 +50,15 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 15px;
         }
 
         .header-logo {
+            flex: 1;
             display: flex;
             align-items: center;
+            justify-content: flex-start;
         }
 
         .header-logo-v {
@@ -93,8 +95,11 @@
         }
 
         .header-title {
+            flex: 2;
             text-align: center;
-            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .header-title h1 {
@@ -114,12 +119,14 @@
         }
 
         .signature-section {
+            flex: 1;
             display: flex;
-            gap: 10px;
+            justify-content: flex-end;
+            align-items: center;
         }
 
         .signature-table {
-            width: 200px;
+            width: 220px;
             border: 1px solid var(--accent-blue);
             border-collapse: collapse;
             font-size: 10px;
@@ -137,7 +144,7 @@
 
         .signature-table td {
             border: 1px solid var(--accent-blue);
-            height: 45px;
+            height: 30px;
             text-align: center;
             color: var(--accent-light);
             font-weight: bold;
@@ -183,7 +190,7 @@
         }
 
         /* Content Sections */
-        .main-content {
+        .app-main-body {
             display: flex;
             flex-direction: column;
             gap: 25px;
@@ -501,6 +508,24 @@
 }
 
 <div class="app-container">
+    <!-- BARCODE SCANNER FORM -->
+    <div class="barcode-scanner-box no-print" style="margin-bottom: 20px;">
+        <div class="input-group" style="box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); border-radius: 8px; overflow: hidden;">
+            <span class="input-group-text bg-dark border-primary" style="color: var(--accent-light); border-right: none;">
+                <i class="bi bi-upc-scan fs-4"></i>
+            </span>
+            <input type="text" id="barcodeScanner" class="form-control bg-dark border-primary text-white" 
+                   style="border-left: none; font-size: 16px; padding: 12px;" 
+                   placeholder="Arahkan Barcode Scanner kesini atau ketik Part Number..." autocomplete="off" autofocus />
+            <button class="btn btn-primary" type="button" onclick="handleScan()" style="padding: 0 25px; font-weight: bold;">
+                <i class="bi bi-search"></i> LOAD DATA
+            </button>
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 5px; margin-left: 5px;">
+            <i class="bi bi-info-circle"></i> Scan Item List / Part Number pada Masterlist untuk memuat Form ini secara instan.
+        </div>
+    </div>
+
     <div class="app-header fade-in">
         <!-- Header Top -->
         <div class="header-top">
@@ -554,7 +579,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="app-main-body">
         <!-- Dimension Data Card -->
         <div class="content-card fade-in">
             <div class="card-header">
@@ -592,16 +617,26 @@
                             var stdVal = Model.StandardParameterSetting;
                             var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
 
-                            // Helper to parse string to decimal
-                            decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                            // Helper to parse string to decimal (mendukung koma versi Indonesia dan titik Internasional)
+                            decimal D(string s, decimal def) {
+                                if (string.IsNullOrWhiteSpace(s)) return def;
+                                string cleanString = s.Replace(",", "."); 
+                                var match = System.Text.RegularExpressions.Regex.Match(cleanString, @"-?\d+(\.\d+)?");
+                                if (match.Success) {
+                                    return decimal.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                                }
+                                return def;
+                            }
+                            
+                            bool hasStandard = (master != null || stdVal != null);
                             
                             // Override standards if masterlist is present and std is null/zero
-                            decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 11.0m) : 11.0m);
-                            decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0.2m) : 0.2m);
-                            decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 1.8m) : 1.8m);
-                            decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0.2m;
-                            decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 3.3m) : 3.3m);
-                            decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m);
+                            decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 0m) : 0m);
+                            decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0m) : 0m);
+                            decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 0m) : 0m);
+                            decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0m;
+                            decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 0m) : 0m);
+                            decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0m) : 0m);
 
                             var sections = new[] {
                                 new { Label = "Inner Diameter", Nom = idNom, Tol = idTol },
@@ -614,14 +649,22 @@
 
                         @foreach(var sec in sections) {
                             for(int rIdx=0; rIdx<5; rIdx++) {
-                                decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
+                                string scaleStr = "-";
+                                string stdStr = "-";
+                                
+                                if (hasStandard && sec.Nom > 0) {
+                                    decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
+                                    scaleStr = scaleValue.ToString("0.00");
+                                    stdStr = $"{sec.Nom.ToString("0.0")} ± {sec.Tol.ToString("0.0")}";
+                                }
+
                                 <tr style="height: 22px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
                                     @if(rIdx == 0) {
                                         <td rowspan="5" class="point-name align-middle p-1" style="font-size: 10px;">@sec.Label</td>
                                         <td rowspan="5" class="align-middle border-end border-primary border-opacity-25" style="font-size: 8px;">30m Sekali</td>
-                                        <td rowspan="5" class="std-dimension align-middle border-end border-primary border-opacity-25" style="font-size: 10px;">@sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")</td>
+                                        <td rowspan="5" class="std-dimension align-middle border-end border-primary border-opacity-25" style="font-size: 10px;">@stdStr</td>
                                     }
-                                    <td class="border-end border-primary border-opacity-25" style="font-size: 9px; color: #94a3b8; background: rgba(255,255,255,0.02);">@scaleValue.ToString("0.00")</td>
+                                    <td class="border-end border-primary border-opacity-25" style="font-size: 9px; color: #94a3b8; background: rgba(255,255,255,0.02);">@scaleStr</td>
                                     @for(int h=0; h<6; h++) {
                                         <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 11px;" placeholder="-" /></td>
                                     }
@@ -633,7 +676,10 @@
                         <tr style="height: 40px;">
                             <td class="point-name align-middle">Spiral Pitch</td>
                             <td class="align-middle">30m Sekali</td>
-                            <td class="std-dimension align-middle">@(stdVal?.SpiralPitch ?? 38) ± @(stdVal?.Tol_SpiralPitch ?? 5)</td>
+                            @{
+                                string spiralStr = hasStandard ? $"{(stdVal?.SpiralPitch ?? 38)} ± {(stdVal?.Tol_SpiralPitch ?? 5)}" : "-";
+                            }
+                            <td class="std-dimension align-middle">@spiralStr</td>
                             <td style="background: rgba(255,255,255,0.05); font-size: 10px;">NOM</td>
                             @for(int h=0; h<6; h++) {
                                 <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
@@ -642,7 +688,9 @@
                         <tr style="height: 45px;">
                             <td class="point-name align-middle">Visual Check</td>
                             <td class="align-middle">30m Sekali</td>
-                            <td colspan="2" class="align-middle" style="font-size: 9px; color: #94a3b8; text-align: left; padding-left: 10px;">No Burry, No Line, No Bubble, No Scratch</td>
+                            <td colspan="2" class="align-middle" style="font-size: 9px; color: #94a3b8; text-align: left; padding-left: 10px;">
+                                @(hasStandard ? "No Burry, No Line, No Bubble, No Scratch" : "-")
+                            </td>
                             @for(int h=0; h<6; h++) {
                                 <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
                             }
@@ -737,6 +785,9 @@
             <button class="btn-app btn-success" onclick="submitReport()">
                 <i class="bi bi-check-circle"></i> Submit Report
             </button>
+            <button class="btn-app btn-info" onclick="window.location.href='/ProductionReport/Index'">
+                <i class="bi bi-folder2-open"></i> Buka Histori Data
+            </button>
             <button class="btn-app btn-warning" onclick="exportData()">
                 <i class="bi bi-download"></i> Export
             </button>
@@ -772,12 +823,68 @@
             document.querySelectorAll('input').forEach(input => {
                 input.addEventListener('input', () => isDirty = true);
             });
+            
+            // Barcode Scanner Listener
+            const barcodeInput = document.getElementById('barcodeScanner');
+            if(barcodeInput){
+                barcodeInput.focus();
+                barcodeInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleScan();
+                    }
+                });
+            }
         });
 
+        function handleScan() {
+            const val = document.getElementById('barcodeScanner').value.trim();
+            if(val) {
+                showNotification('Memuat data dari Masterlist SPS...', 'success');
+                window.location.href = '/ProductionReport/AppByItem?itemCode=' + encodeURIComponent(val);
+            }
+        }
+
         async function saveData() {
-            showNotification('Saving data...', 'success');
-            // Mock backend call (Implement actual logic here)
-            isDirty = false;
+            showNotification('Menyimpan data...', 'success');
+            const payload = {
+                ReportId: reportId,
+                DocumentNumber: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DocumentNumber ?? "")),
+                HoseType: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HoseType ?? "")),
+                DimensionDisplay: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Dimension ?? "")),
+                CustomerName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName ?? "")),
+                Yarn: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Yarn ?? "")),
+                VinCode: document.querySelector('input[placeholder="Enter VIN Code"]')?.value || '',
+                ActualLength: document.querySelector('input[placeholder="Enter Actual Length"]')?.value || '',
+                QtyOk: parseInt(document.querySelector('.qty-main-input')?.value) || 0,
+                NgDimension: parseInt(document.querySelector('input[data-field="NgDimension"]')?.value) || 0,
+                NgVisual: parseInt(document.querySelector('input[data-field="NgVisual"]')?.value) || 0,
+                Remark: document.querySelector('input[placeholder="Enter remarks or notes..."]')?.value || ''
+            };
+
+            try {
+                const response = await fetch('/ProductionReport/SaveAppData', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if(result.success) {
+                    showNotification('Berhasil! Data telah aman di Database.', 'success');
+                    isDirty = false;
+                    if(reportId === 0 && result.reportId) {
+                        setTimeout(() => {
+                            window.location.href = '/ProductionReport/App/' + result.reportId;
+                        }, 1200);
+                    }
+                } else {
+                    showNotification('Gagal menyimpan: ' + result.message, 'error');
+                }
+            } catch(e) {
+                console.error(e);
+                showNotification('Error jaringan saat menghubungi server!', 'error');
+            }
         }
 
         async function submitReport() {

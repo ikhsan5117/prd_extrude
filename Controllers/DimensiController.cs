@@ -68,6 +68,7 @@ namespace VelastoProductionSystem.Controllers
                         customer = standard.Customer,
                         docNo = standard.DocumentNumber,
                         excelId = standard.ExcelId,
+                        itemList = standard.ItemList,
                         bypass = "2.0 mm" 
                     }
                 });

@@ -1,766 +1,336 @@
 @model VelastoProductionSystem.Models.ProductionReport
 
 @{
-    ViewData["Title"] = "NOW I'M PRODUCE";
+    ViewData["Title"] = "EXTRUDER PRODUCTION REPORT";
 }
 
-<div class="production-dashboard-sapphire fade-in">
-    <div class="container-fluid py-3 px-0">
+<div class="production-blueprint no-print-bg pb-5">
+    <div class="container-fluid p-4">
         
-        <!-- COMPACT HEADER ACTION BAR -->
-        <div class="d-flex justify-content-between align-items-center mb-3 no-print header-sapphire-glass p-2 px-3">
-            <div class="d-flex align-items-center">
-                <div class="brand-hexagon me-2">
-                    <i class="bi bi-hexagon-fill text-primary shadow-glow"></i>
-                </div>
+        <!-- HEADER HUD -->
+        <div class="d-flex justify-content-between align-items-center mb-4 hud-header px-4 py-3 shadow-lg">
+            <div class="d-flex align-items-center gap-3">
+                <div class="hud-logo-v">V</div>
                 <div>
-                    <h5 class="text-white fw-900 mb-0 tracking-tighter">LINE CONTROL <span class="text-primary">F1</span></h5>
-                    <div class="d-flex align-items-center" style="margin-top: -4px;">
-                        <span class="status-indicator-min pulse-blue me-2"></span>
-                        <span class="text-white-50 super-small fw-bold letter-spacing-1">SYSTEM ONLINE</span>
-                    </div>
+                   <h2 class="m-0 fw-900 text-white tracking-tighter" style="font-size: 1.6rem;">VELASTO <span class="text-primary-glow">INDONESIA</span></h2>
+                   <div class="super-small text-white-50 opacity-50 tracking-widest fw-bold">EXTRUDER PRODUCTION SYSTEM v2.0</div>
                 </div>
             </div>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-primary-glass btn-sm px-3" onclick="startScanner()">
-                    <i class="bi bi-qr-code-scan me-1"></i> SCAN ITEM
-                </button>
-                <a asp-action="Index" class="btn btn-outline-glass btn-sm px-3">BACK</a>
+            <div class="text-center flex-grow-1 pe-md-5 me-md-5">
+                <h1 class="m-0 fw-black text-white letter-spacing-2" style="font-size: 1.4rem;">EXTRUDER PRODUCTION REPORT</h1>
+                <div class="text-primary-glow fw-bold tracking-widest" style="font-size: 0.8rem;">(PARAMETER SETTING)</div>
             </div>
         </div>
 
-        <!-- SCANNER MODAL -->
-        <div class="modal fade no-print" id="scannerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content scanner-modal-glass">
-                    <div class="modal-header border-bottom border-primary border-opacity-25 pb-2">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-qr-code-scan text-primary me-2 fs-4"></i>
-                            <h5 class="modal-title text-white fw-bold">HUD SCANNER SYSTEM</h5>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopScanner()"></button>
-                    </div>
-                    <div class="modal-body p-0 position-relative overflow-hidden bg-black">
-                        <div class="hud-scanner-overlay">
-                            <div id="reader"></div>
-                            <div class="scan-laser"></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-top border-primary border-opacity-25 py-2">
-                        <div class="d-flex w-100 justify-content-between align-items-center px-2">
-                            <span class="text-white-50 extra-small tracking-widest"><i class="bi bi-broadcast pulse-blue me-1"></i> SCANNING FOR DATA...</span>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-primary-glass btn-sm px-4" onclick="switchCamera()">
-                                    <i class="bi bi-camera-rotate me-1"></i> SWITCH
-                                </button>
-                                <button type="button" class="btn btn-danger-glass btn-sm px-4" data-bs-dismiss="modal" onclick="stopScanner()">
-                                    CLOSE
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <form asp-action="Create" id="mainReportForm">
+            <!-- TOP INFO GRID -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4"><div class="hud-pill"><label>NO. DOC.</label><input asp-for="DocumentNumber" class="hud-input fw-bold" required /></div></div>
+                <div class="col-md-3"><div class="hud-pill"><label>DATE</label><input asp-for="ProductionDate" type="date" class="hud-input" value="@DateTime.Now.ToString("yyyy-MM-dd")" required /></div></div>
+                <div class="col-md-3"><div class="hud-pill"><label>SHIFT</label><select asp-for="Shift" class="hud-input bg-transparent border-0"><option value="I">SHIFT I</option><option value="II" selected>SHIFT II</option><option value="III">SHIFT III</option></select></div></div>
+                <div class="col-md-2"><div class="hud-pill"><label>NO. REV</label><input asp-for="RevisionNumber" class="hud-input text-center" value="0" /></div></div>
+                <div class="col-md-6"><div class="hud-pill"><label>CUSTOMER</label><input asp-for="CustomerName" class="hud-input" placeholder="PT. ADM" /></div></div>
+                <div class="col-md-6"><div class="hud-pill"><label>TYPE</label><input asp-for="HoseType" id="HoseType" class="hud-input" placeholder="Hose, Ventilation, Ø 11 mm x 18 mm" /></div></div>
             </div>
-        </div>
 
-        <form asp-action="Create" id="mainForm">
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div asp-validation-summary="All" class="alert alert-danger mb-4 bg-danger bg-opacity-10 border-danger text-danger extra-small py-2 px-3 rounded-0 no-print"></div>
-            }
-            <div class="main-glass-card shadow-2xl">
-                
-                <!-- TOP HEADER: TITLE & COMPACT DOC INFO -->
-                <div class="row g-0 border-bottom border-primary border-opacity-25">
-                    <div class="col-md-9 p-4 d-flex align-items-center justify-content-center bg-hud-navy">
-                        <div class="text-center">
-                            <h2 class="fw-900 text-white mb-1 text-glow" style="font-size: 2rem;">NOW I'M PRODUCE :</h2>
-                            <div class="d-flex align-items-center justify-content-center gap-2">
-                                <span class="text-white-50 fw-bold extra-small tracking-widest">PT. VELASTO INDONESIA</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 p-0 border-start border-primary border-opacity-25 bg-hud-navy">
-                        <table class="table table-dark table-sm m-0 extra-small doc-header-table border-0 h-100">
-                            <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label" style="width: 130px;">No. Dokumen</td>
-                                <td class="pe-2 py-0 border-0 align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-primary fw-bold me-1">:</span>
-                                        <input asp-for="DocumentNumber" id="DocumentNumber" class="header-input" placeholder="VI-SOP-PROD-131" />
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label">No. Revisi</td>
-                                <td class="pe-2 py-0 border-0 align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-primary fw-bold me-1">:</span>
-                                        <input asp-for="RevisionNumber" id="RevisionNumber" type="text" class="header-input" placeholder="0" />
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- MAIN WORKSPACE -->
-                <div class="row g-0 border border-primary border-opacity-20">
-                    
-                    <!-- LEFT COLUMN: PRODUCT SPECS -->
-                    <div class="col-md-4 p-4 border-end border-primary border-opacity-20 bg-hud-navy">
-                        <div class="d-flex flex-column h-100 gap-4">
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-upc-scan me-2"></i>1. HOSE TYPE</div>
-                                <div class="spec-card">
-                                    <input asp-for="HoseType" id="HoseType" class="spec-input fw-bold" placeholder="---" list="hoseList" autocomplete="off" />
-                                    <datalist id="hoseList">
-                                        @if (ViewBag.HoseTypes != null)
-                                        {
-                                            @foreach (var item in (SelectList)ViewBag.HoseTypes)
-                                            {
-                                                <option value="@item.Value"></option>
-                                            }
-                                        }
-                                    </datalist>
-                                </div>
-                            </div>
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-diagram-3 me-2"></i>2. CLASS</div>
-                                <div class="spec-card">
-                                    <input name="Class" class="spec-input" value="-" />
-                                </div>
-                            </div>
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-rulers me-2"></i>3. DIMENSION</div>
-                                <div class="spec-card">
-                                    <input asp-for="Dimension" class="spec-input highlight" placeholder="---" />
-                                </div>
-                            </div>
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-puzzle me-2"></i>4. YARN</div>
-                                <div class="spec-card">
-                                    <input asp-for="Yarn" id="Yarn" class="spec-input highlight" value="---" />
-                                </div>
-                            </div>
-                            <div class="flex-grow-1"></div>
-                        </div>
-                    </div>
-
-                    <!-- CENTER COLUMN: TIME & SCHEDULING -->
-                    <div class="col-md-5 p-4 border-end border-primary border-opacity-20 bg-hud-navy">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="section-tag">TIME CONTROL</div>
-                            <div class="hud-date-box">
-                                <i class="bi bi-calendar3 me-2 text-primary"></i>
-                                <input asp-for="ProductionDate" type="date" class="bg-transparent border-0 text-white extra-small fw-bold" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                            </div>
-                        </div>
-
-                        <!-- TIME GRIDS -->
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="glass-table-container">
-                                    <div class="table-header-min">DANDORI PHASE <span class="ms-1 text-white-50 opacity-50">| MONITORING</span></div>
-                                    <table class="table table-dark table-borderless m-0 text-center extra-small align-middle">
-                                        <thead class="text-white-50 border-bottom border-primary border-opacity-20">
-                                            <tr>
-                                                <th rowspan="2" width="40%" class="align-middle border-end border-white border-opacity-10">PHASE</th>
-                                                <th colspan="2" class="py-1 border-bottom border-white border-opacity-10">WAKTU</th>
-                                            </tr>
-                                            <tr>
-                                                <th class="py-1">AWAL</th>
-                                                <th class="py-1">AKHIR</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="border-bottom border-white border-opacity-5">
-                                                <td class="text-start ps-3 py-2 fw-bold text-white-50 border-end border-white border-opacity-10">START PROD.</td>
-                                                <td class="py-2"><input asp-for="DandoriStartTime" type="time" class="time-hud-input" /></td>
-                                                <td class="py-2"><input asp-for="DandoriEndTime" type="time" class="time-hud-input" /></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="text-start ps-3 py-2 fw-bold text-white-50 border-end border-white border-opacity-10">AKHIR PROD.</td>
-                                                <td class="py-2"><input type="time" class="time-hud-input" /></td>
-                                                <td class="py-2"><input type="time" class="time-hud-input" /></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="glass-table-container">
-                                    <div class="table-header-min secondary">PRODUCTION PHASE <span class="ms-1 text-white-50 opacity-50">| ACTUAL RUN</span></div>
-                                    <table class="table table-dark table-borderless m-0 text-center extra-small align-middle">
-                                        <thead class="text-white-50 border-bottom border-primary border-opacity-20">
-                                            <tr>
-                                                <th colspan="2" class="py-1 border-bottom border-white border-opacity-10">WAKTU</th>
-                                            </tr>
-                                            <tr>
-                                                <th class="py-1">AWAL</th>
-                                                <th class="py-1">AKHIR</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="p-2 border-end border-white border-opacity-5"><input asp-for="ProductionStartTime" type="time" class="time-hud-input highlight fs-6 p-2" /></td>
-                                                <td class="p-2"><input asp-for="ProductionEndTime" type="time" class="time-hud-input highlight fs-6 p-2" /></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT COLUMN: TARGETS -->
-                    <div class="col-md-3 p-2 border-start border-primary border-opacity-20 bg-hud-navy overflow-hidden">
-                        <div class="target-card mb-3">
-                            <div class="target-header">CHS 2 L DANDORI TARGET</div>
-                            <table class="table table-dark table-xs m-0 text-center border-white border-opacity-10">
-                                <thead class="text-white-50">
-                                    <tr class="super-small">
-                                        <th width="30%">TARGET TIME</th>
-                                        <th>DIES</th>
-                                        <th>MATERIAL</th>
-                                        <th>BENANG</th>
-                                    </tr>
+            <!-- ROW 2: MATERIAL & MESH CHECKING -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="hud-card d-flex h-100 shadow-glow-blue">
+                        <div class="hud-vertical-label">MATERIAL</div>
+                        <div class="flex-grow-1 p-0">
+                            <table class="table table-dark table-hud m-0 text-center table-bordered-ghost">
+                                <thead>
+                                    <tr><th class="text-start ps-3">CONTENT</th><th width="35%">STANDARD</th><th width="35%">ACTUAL</th></tr>
                                 </thead>
-                                <tbody class="extra-small">
-                                    <tr><td>20 Min</td><td>O</td><td>-</td><td>-</td></tr>
-                                    <tr><td>40 Min</td><td>O</td><td>O</td><td>-</td></tr>
-                                    <tr><td>55 Min</td><td>O</td><td>O</td><td>O</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="target-card">
-                            <div class="target-header secondary">CHS 3 L DANDORI TARGET</div>
-                            <table class="table table-dark table-xs m-0 text-center border-white border-opacity-10">
-                                <thead class="text-white-50">
-                                    <tr class="super-small">
-                                        <th width="30%">TARGET TIME</th>
-                                        <th>DIES</th>
-                                        <th>MATERIAL</th>
-                                        <th>BENANG</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="extra-small">
-                                    <tr><td>30 Min</td><td>O</td><td>-</td><td>-</td></tr>
-                                    <tr><td>45 Min</td><td>O</td><td>O</td><td>-</td></tr>
-                                    <tr><td>60 Min</td><td>O</td><td>O</td><td>O</td></tr>
+                                <tbody>
+                                    <tr><td class="text-start ps-3 fw-bold">Inner (Material)</td><td><input asp-for="InnerMaterial" class="hud-table-input text-primary-glow" readonly /></td><td><input asp-for="InnerMaterialActual" class="hud-table-input" /></td></tr>
+                                    <tr><td class="text-start ps-3 fw-bold">Outer (Material)</td><td><input asp-for="OuterMaterial" class="hud-table-input text-primary-glow" readonly /></td><td><input asp-for="OuterMaterialActual" class="hud-table-input" /></td></tr>
+                                    <tr><td class="text-start ps-3 fw-bold">Yarn</td><td><input asp-for="Yarn" class="hud-table-input text-primary-glow" readonly /></td><td><input asp-for="YarnActual" class="hud-table-input" /></td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
-                <!-- BOTTOM ROW: MATERIALS & SPV -->
-                <div class="row g-0 border border-top-0 border-primary border-opacity-20 bg-hud-navy">
-                    <div class="col-lg-10 p-4">
-                        <div class="section-tag mb-4">MATERIAL VERIFICATION</div>
-                        
-                        <div class="material-grid">
-                            <!-- INNER -->
-                            <div class="material-row-hud mb-1">
-                                <div class="mat-item-label">1) Inner :</div>
-                                <div class="mat-inputs-group">
-                                    <div class="mat-field-wrap">
-                                        <input asp-for="InnerMaterial" class="mat-line-input highlight" placeholder=".........." />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">No.Lot :</span>
-                                        <input asp-for="InnerMaterialLotNo" class="mat-line-input" placeholder=".........." />
-                                    </div>
-                                    <div class="mat-field-wrap mini">
-                                        <span class="mat-inline-label">SG :</span>
-                                        <input asp-for="InnerMaterialSG" class="mat-line-input text-center" type="text" value="" placeholder=".........." />
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- MIDDLE -->
-                            <div class="material-row-hud mb-1">
-                                <div class="mat-item-label">2) Middle :</div>
-                                <div class="mat-inputs-group">
-                                    <div class="mat-field-wrap">
-                                        <input name="MaterialMiddleCode" class="mat-line-input" placeholder=".........." />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">No.Lot :</span>
-                                        <input name="MaterialMiddleLot" class="mat-line-input" placeholder=".........." />
-                                    </div>
-                                    <div class="mat-field-wrap mini">
-                                        <span class="mat-inline-label">SG :</span>
-                                        <input name="MaterialMiddleSG" class="mat-line-input text-center" type="text" value="" placeholder=".........." />
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- OUTER -->
-                            <div class="material-row-hud">
-                                <div class="mat-item-label">3) Outer :</div>
-                                <div class="mat-inputs-group">
-                                    <div class="mat-field-wrap">
-                                        <input asp-for="OuterMaterial" class="mat-line-input highlight" placeholder=".........." />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">No.Lot :</span>
-                                        <input asp-for="OuterMaterialLotNo" class="mat-line-input" placeholder=".........." />
-                                    </div>
-                                    <div class="mat-field-wrap mini">
-                                        <span class="mat-inline-label">SG :</span>
-                                        <input asp-for="OuterMaterialSG" class="mat-line-input text-center" type="text" value="" placeholder=".........." />
-                                    </div>
-                                </div>
-                            </div>
+                <div class="col-lg-6">
+                    <div class="hud-card d-flex h-100 shadow-glow-blue">
+                        <div class="hud-vertical-label">MESH & CHECKS</div>
+                        <div class="flex-grow-1 p-0">
+                            <table class="table table-dark table-hud m-0 text-center super-small table-bordered-ghost">
+                                <thead>
+                                    <tr><th width="25%">CATEGORY</th><th width="20%">CONTENT</th><th>Ø96 #10</th><th>Ø96 #40</th><th>OTHER</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-black bg-opacity-20"><td rowspan="2" class="fw-bold align-middle">Tipe Mesh<br>(Sebelum)</td><td class="text-start ps-2">Inner</td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td></tr>
+                                    <tr class="bg-black bg-opacity-20"><td class="text-start ps-2">Outer</td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td></tr>
+                                    <tr><td rowspan="2" class="fw-bold align-middle">Mesh Check<br>(Setelah)</td><td class="text-start ps-2">Inner</td><td colspan="3"><div class="d-flex justify-content-center gap-2"><label class="super-small"><input type="radio" name="MI" value="OK"> OK</label><label class="super-small"><input type="radio" name="MI" value="B"> Bolong</label><label class="super-small"><input type="radio" name="MI" value="A"> Asing</label></div></td></tr>
+                                    <tr><td class="text-start ps-2">Outer</td><td colspan="3"><div class="d-flex justify-content-center gap-2"><label class="super-small"><input type="radio" name="MO" value="OK"> OK</label><label class="super-small"><input type="radio" name="MO" value="B"> Bolong</label><label class="super-small"><input type="radio" name="MO" value="A"> Asing</label></div></td></tr>
+                                    <tr class="border-top border-white border-opacity-10 bg-black bg-opacity-20">
+                                        <td class="fw-bold align-middle py-1">Emboss<br>Marking</td>
+                                        <td colspan="4" class="p-1">
+                                            <div class="row g-1 m-0">
+                                                <div class="col-6"><input class="hud-table-input-min" placeholder="Text Content" /></div>
+                                                <div class="col-6">
+                                                     <div class="d-flex gap-2 justify-content-center align-items-center h-100">
+                                                         <label><input type="radio" name="emb" value="T"> Terbaca</label>
+                                                         <label><input type="radio" name="emb" value="X"> Tdk Terbaca</label>
+                                                     </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                    
-                    <!-- SPV SIGNATURE -->
-                    <div class="col-lg-2 border-start border-primary border-opacity-20 d-flex flex-column align-items-center justify-content-center p-3 bg-hud-navy">
-                        <div class="section-tag mb-3 text-center w-100">SPV CHECK</div>
-                        <div class="d-flex flex-column gap-2">
-                            <!-- Hidden Fields for Verification -->
-                            <input type="hidden" id="VerifyInner" name="VerifyInner" value="false" />
-                            <input type="hidden" id="VerifyMiddle" name="VerifyMiddle" value="false" />
-                            <input type="hidden" id="VerifyOuter" name="VerifyOuter" value="false" />
-
-                            <div class="glass-sig-box cursor-pointer" id="spv-1" onclick="verifySPV(this, 'Inner')">
-                                <i class="bi bi-shield-slash text-white-50 opacity-20"></i>
-                            </div>
-                            <div class="glass-sig-box cursor-pointer" id="spv-2" onclick="verifySPV(this, 'Middle')">
-                                <i class="bi bi-shield-slash text-white-50 opacity-20"></i>
-                            </div>
-                            <div class="glass-sig-box cursor-pointer" id="spv-3" onclick="verifySPV(this, 'Outer')">
-                                <i class="bi bi-shield-slash text-white-50 opacity-20"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- HUD ALERT -->
-                <div class="p-2 bg-danger bg-opacity-10 border-top border-danger border-opacity-20">
-                    <div class="container-fluid text-start">
-                        <span class="text-white-50 hud-note-text fw-bold tracking-widest">NOTE:</span>
-                        <span class="text-danger hud-note-text fw-bold tracking-widest ms-2">JANGAN MENJALANKAN PRODUKSI SEBELUM CHECKSHEET INI DI CHECK OLEH SUPERVISOR.</span>
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end gap-2 mt-3 pb-4 no-print">
-                <button type="submit" class="btn btn-success-start btn-md px-5 rounded-0 fw-bold shadow-glow-blue">
-                    <i class="bi bi-play-fill me-1"></i> START PRODUCTION
-                </button>
+            <!-- SECTION: DIES DIMENSION -->
+            <div class="hud-card mb-4 d-flex shadow-glow-blue">
+                <div class="hud-vertical-label">DIES DIMENSION</div>
+                <div class="flex-grow-1 p-0 overflow-auto">
+                    <table class="table table-dark table-hud m-0 text-center w-100 table-bordered-ghost">
+                        <thead>
+                            <tr class="bg-black bg-opacity-40">
+                                <th class="text-start ps-4">DIES DESCRIPTION</th>
+                                <th width="12%">CEK VISUAL</th>
+                                <th width="20%">STANDARD</th>
+                                <th width="20%">BEFORE</th>
+                                <th width="20%">AFTER</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var diesList = new[] { 
+                                    new { Name = "Nipple Die", Std = "8.8 ± 0.1", Field = "NippleDieOK" },
+                                    new { Name = "Tube Die", Std = "11.1 ± 0.1", Field = "TubeDieOK" },
+                                    new { Name = "Middle Die", Std = "14.2 ± 0.1", Field = "MiddleDieOK" },
+                                    new { Name = "Cover Die", Std = "15.1 ± 0.1", Field = "CoverDieOK" },
+                                    new { Name = "Spacer Die", Std = "7.3 ± 0.1", Field = "SpacerDieOK" },
+                                    new { Name = "A Distance", Std = "0.4 ± 0.1", Field = "ToleranceDieOK" }
+                                };
+                            }
+                            @foreach(var die in diesList) {
+                                <tr>
+                                    <td class="text-start ps-4 fw-bold">@die.Name</td>
+                                    <td><input type="checkbox" name="@die.Field" value="true" class="hud-check"></td>
+                                    <td class="text-primary-glow font-monospace">@die.Std</td>
+                                    <td><input class="hud-table-input text-center" placeholder="---" /></td>
+                                    <td><input class="hud-table-input text-center" placeholder="---" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- SECTION: PARAMETERS TABLE (The Massive Grid) -->
+            <div class="hud-card mb-4 d-flex shadow-glow-blue">
+                <div class="hud-vertical-label">PARAMETER SETTING</div>
+                <div class="flex-grow-1 p-0 overflow-auto">
+                    <table class="table table-dark table-hud m-0 text-center super-small table-bordered-ghost">
+                        <thead class="sticky-top bg-black">
+                            <tr class="text-info border-bottom border-primary border-opacity-30">
+                                <th class="text-start ps-4 py-3">DESCRIPTION / ITEM</th>
+                                <th width="10%">STANDARD</th>
+                                <th width="10%" class="bg-primary bg-opacity-20 text-white fw-900 border-x border-primary border-opacity-30">INITIAL</th>
+                                @for(int i=1; i<=7; i++){ <th width="8.5%">@i</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- INNER (TUBE 1) -->
+                            <tr class="group-header"><td colspan="10" class="text-start ps-4 bg-primary bg-opacity-10 text-primary fw-bold letter-spacing-2">INNER (TUBE 1)</td></tr>
+                            @{
+                                string[,] innerRows = { 
+                                    { "Head Temp. (°C)", "90 ± 5", "HeadTempInner" }, 
+                                    { "Cylinder 1 (°C)", "90 ± 5", "Cylinder1TempInner" },
+                                    { "Cylinder 2 (°C)", "90 ± 5", "Cylinder2TempInner" },
+                                    { "Cylinder 3 (°C)", "90 ± 5", "Cylinder3TempInner" },
+                                    { "Screw Temp. (°C)", "90 ± 5", "ScrewTempInner" },
+                                    { "Screw Speed (rpm)", "6.1 ± 2.5", "ScrewSpeedInner" },
+                                    { "Feed Roll Ratio (%)", "Max 120", "FeedRollRatioInner" },
+                                    { "Pressure (MPa)", "Max 50", "PressureInner" }
+                                };
+                                for(int r=0; r<innerRows.GetLength(0); r++){
+                                    <tr>
+                                        <td class="text-start ps-4">@innerRows[r,0]</td>
+                                        <td class="text-white-50">@innerRows[r,1]</td>
+                                        <td class="bg-primary bg-opacity-5"><input name="Init_@innerRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    </tr>
+                                }
+                            }
+
+                            <!-- OUTER (COVER) -->
+                            <tr class="group-header"><td colspan="10" class="text-start ps-4 bg-warning bg-opacity-10 text-warning fw-bold letter-spacing-2">OUTER (COVER)</td></tr>
+                            @{
+                                string[,] outerRows = { 
+                                    { "Head Temp. (°C)", "90 ± 5", "HeadTempOuter" }, 
+                                    { "Cylinder 1 (°C)", "90 ± 5", "Cylinder1TempOuter" },
+                                    { "Cylinder 2 (°C)", "90 ± 5", "Cylinder2TempOuter" },
+                                    { "Cylinder 3 (°C)", "-", "Cylinder3TempOuter" },
+                                    { "Screw Temp. (°C)", "90 ± 5", "ScrewTempOuter" },
+                                    { "Screw Speed (rpm)", "8.2 ± 2.5", "ScrewSpeedOuter" },
+                                    { "Feed Roll Ratio (%)", "Max 120", "FeedRollRatioOuter" },
+                                    { "Pressure (MPa)", "Max 50", "PressureOuter" }
+                                };
+                                for(int r=0; r<outerRows.GetLength(0); r++){
+                                    <tr>
+                                        <td class="text-start ps-4">@outerRows[r,0]</td>
+                                        <td class="text-white-50">@outerRows[r,1]</td>
+                                        <td class="bg-primary bg-opacity-5"><input name="Init_@outerRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    </tr>
+                                }
+                            }
+
+                            <!-- SPIRAL -->
+                            <tr class="group-header"><td colspan="10" class="text-start ps-4 bg-success bg-opacity-10 text-success fw-bold letter-spacing-2">SPIRAL</td></tr>
+                            @{
+                                string[,] spiralRows = { 
+                                    { "Spiral Speed (rpm)", "98 ± 20", "SpiralSpeed" }, 
+                                    { "Spiral Pitch (Setting)", "35 ± 5", "SpiralPitchSetting" },
+                                    { "Spiral Pitch (Display)", "35 ± 5", "SpiralPitchDisplay" }
+                                };
+                                for(int r=0; r<spiralRows.GetLength(0); r++){
+                                    <tr>
+                                        <td class="text-start ps-4">@spiralRows[r,0]</td>
+                                        <td class="text-white-50">@spiralRows[r,1]</td>
+                                        <td class="bg-primary bg-opacity-5"><input name="Init_@spiralRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    </tr>
+                                }
+                            }
+
+                            <!-- OTHER -->
+                            <tr class="group-header"><td colspan="10" class="text-info-glow fw-bold text-start ps-4 bg-info bg-opacity-10 letter-spacing-2" style="color: #0dcaf0;">OTHER</td></tr>
+                            @{
+                                string[,] otherRows = { 
+                                    { "Preset Value (Ø mm)", "18.5 ± 0.2", "PresetValue" }, 
+                                    { "Control Value (Ø mm)", "18.5 ± 0.2", "ControlValue" },
+                                    { "Hose Speed (m/min)", "3.4 ± 2", "HoseSpeed" },
+                                    { "Take-up Conveyor Speed (m/min)", "3.4 ± 3", "TakeupConveyorSpeed" },
+                                    { "Cool Conveyor Speed (m/min)", "3.4 ± 4", "CoolConveyorSpeed" },
+                                    { "Conveyor Ratio (Take up : Cool)", "100% ± 10", "ConveyorRatio" },
+                                    { "Un-smooth Surface", "0.5", "UnsmoothSurface" },
+                                    { "Chiller Water Temperature (°C)", "Max 15", "ChillerWaterTemp" },
+                                    { "Caterpillar Gap (mm)", "18.2 ± 1", "CaterpillarGap" }
+                                };
+                                for(int r=0; r<otherRows.GetLength(0); r++){
+                                    <tr>
+                                        <td class="text-start ps-4">@otherRows[r,0]</td>
+                                        <td class="text-white-50">@otherRows[r,1]</td>
+                                        <td class="bg-primary bg-opacity-5"><input name="Init_@otherRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION: WASTE & FOOTER HUD -->
+            <div class="row g-3">
+                <div class="col-lg-7">
+                    <div class="hud-card d-flex h-100 shadow-glow-blue">
+                        <div class="hud-vertical-label">WASTE (KG)</div>
+                        <div class="flex-grow-1 p-0">
+                            <table class="table table-dark table-hud m-0 text-center super-small table-bordered-ghost">
+                                <thead>
+                                    <tr><th>TYPE</th><th>POINT</th><th width="35%">AWAL</th><th width="35%">AKHIR</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td rowspan="2" class="fw-bold bg-black bg-opacity-20 align-middle">Dandori Awal<br>(Cleaning)</td><td class="text-start ps-3">Inner</td><td><input asp-for="WasteWeightAwal" class="hud-table-input-min" /></td><td><input asp-for="WasteWeightAkhir" class="hud-table-input-min" /></td></tr>
+                                    <tr><td class="text-start ps-3">Cover</td><td><input name="WCAwal" class="hud-table-input-min" /></td><td><input name="WCAkhir" class="hud-table-input-min" /></td></tr>
+                                    <tr><td rowspan="2" class="fw-bold bg-black bg-opacity-20 align-middle">Dandori Akhir<br>(Remain Mat.)</td><td class="text-start ps-3">Inner</td><td><input name="WAI_A" class="hud-table-input-min" /></td><td><input name="WAI_B" class="hud-table-input-min" /></td></tr>
+                                    <tr><td class="text-start ps-3">Cover</td><td><input name="WAC_A" class="hud-table-input-min" /></td><td><input name="WAC_B" class="hud-table-input-min" /></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="d-flex flex-column gap-3 h-100">
+                        <div class="p-3 border border-danger border-opacity-30 bg-danger bg-opacity-5 rounded-1">
+                             <div class="text-danger fw-900 super-small mb-1 tracking-widest"><i class="bi bi-exclamation-triangle-fill me-2"></i>OPERATIONAL NOTE</div>
+                             <p class="text-white-50 m-0 super-small line-height-1-5">LAKUKAN PENGECEKAN PARAMETER PADA SAAT AWAL, TENGAH & AKHIR PROSES.</p>
+                        </div>
+                        <div class="mt-auto d-flex gap-2">
+                             <button type="button" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold" onclick="location.reload()">RESET DATA</button>
+                             <button type="submit" class="btn btn-hud-primary flex-grow-1 py-3 fw-900 tracking-widest shadow-glow">
+                                 <i class="bi bi-play-circle-fill me-2"></i>SAVE & INITIALIZE
+                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </form>
     </div>
 </div>
 
 <style>
-    .production-dashboard-sapphire {
-        min-height: 100vh;
-        padding: 1.5rem;
-        background-color: #020617;
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0, transparent 50%), 
-            radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.1) 0, transparent 50%);
-        position: relative;
+    :root {
+        --hud-primary: #0ea5e9;
+        --hud-glow: #38bdf8;
+        --hud-dark: #020617;
+        --hud-card: rgba(15, 23, 42, 0.85);
+        --hud-border: rgba(14, 165, 233, 0.3);
     }
 
-    .header-sapphire-glass {
-        background: rgba(30, 58, 138, 0.15);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
+    .production-blueprint { min-height: 100vh; background: var(--hud-dark); color: #f1f5f9; font-family: 'Inter', sans-serif; }
+    .hud-header { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--hud-border); border-radius: 12px; backdrop-filter: blur(15px); }
+    .hud-logo-v { width: 48px; height: 48px; background: var(--hud-primary); color: white; font-weight: 900; font-size: 26px; display: flex; align-items: center; justify-content: center; border-radius: 10px; box-shadow: 0 0 20px rgba(14, 165, 233, 0.4); }
     
-    .section-tag { background: rgba(59, 130, 246, 0.15); border-left: 3px solid #3b82f6; color: #60a5fa; font-size: 10px; font-weight: 900; padding: 4px 10px; letter-spacing: 2px; text-transform: uppercase; display: inline-block; }
-    
-    .bg-hud-navy { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); }
-    .spec-card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; padding: 12px 20px; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
-    .spec-card:focus-within { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
-    .spec-label { color: #60a5fa; font-size: 11px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-    .spec-input { background: transparent; border: none; color: white; font-size: 18px; font-weight: 700; width: 100%; outline: none; }
-    .spec-input.highlight { color: #60a5fa; text-shadow: var(--neon-glow); }
-    .super-small { font-size: 8px !important; }
-    .hud-note-text { font-size: 15px !important; }
+    .hud-pill { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--hud-border); border-radius: 8px; padding: 6px 16px; display: flex; flex-direction: column; transition: all 0.3s; }
+    .hud-pill:focus-within { border-color: var(--hud-glow); box-shadow: 0 0 15px rgba(14, 165, 233, 0.3); }
+    .hud-pill label { font-size: 0.65rem; font-weight: 800; color: var(--hud-primary); letter-spacing: 1px; margin-bottom: 2px; }
+    .hud-input { background: transparent; border: none; color: white; font-size: 0.95rem; padding: 0; outline: none; width: 100%; }
 
-    .hud-date-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(59, 130, 246, 0.2); padding: 2px 10px; display: flex; align-items: center; border-bottom: 2px dotted rgba(59, 130, 246, 0.5); }
+    .hud-card { background: var(--hud-card); border: 1px solid var(--hud-border); border-radius: 10px; overflow: hidden; backdrop-filter: blur(15px); }
+    .hud-vertical-label { width: 45px; background: rgba(14, 165, 233, 0.15); border-right: 1px solid var(--hud-border); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.75rem; color: var(--hud-primary); writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 2px; white-space: nowrap; }
 
-    .material-row-hud { display: flex; align-items: center; background: transparent; padding: 12px 0; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-    .mat-item-label { color: #e2e8f0; font-size: 15px; font-weight: 700; width: 130px; white-space: nowrap; }
-    .mat-inputs-group { display: flex; flex-grow: 1; gap: 20px; }
-    .mat-field-wrap { display: flex; align-items: center; flex-grow: 1; gap: 10px; }
-    .mat-field-wrap.mini { flex-grow: 0; width: 140px; }
-    .mat-inline-label { color: #94a3b8; font-size: 15px; font-weight: 800; white-space: nowrap; }
-    .mat-line-input { background: transparent; border: none; border-bottom: 2px dotted rgba(59, 130, 246, 0.4); color: white; font-size: 15px; font-weight: 700; width: 100%; outline: none; padding-bottom: 2px; }
-    .mat-line-input:focus { border-bottom-style: solid; border-bottom-color: var(--neon-blue); }
-    .mat-line-input.highlight { color: #60a5fa; }
+    .table-hud { border-collapse: separate; border-spacing: 0; }
+    .table-hud th { background: rgba(0,0,0,0.3); color: var(--hud-primary); font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; border-bottom: 1px solid var(--hud-border) !important; padding: 12px !important; }
+    .table-hud td { padding: 10px !important; border-color: rgba(255,255,255,0.05) !important; vertical-align: middle; }
+    .table-bordered-ghost td, .table-bordered-ghost th { border: 1px solid rgba(255,255,255,0.05); }
 
-    .glass-sig-box { width: 100px; height: 50px; border: 1px solid rgba(59, 130, 246, 0.2); background: rgba(30, 41, 59, 0.4); display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
-    .glass-sig-box.active { border-color: var(--neon-blue); background: rgba(59, 130, 246, 0.15); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
-    .glass-sig-box:hover { border-color: #60a5fa; background: rgba(59, 130, 246, 0.05); }
-    .cursor-pointer { cursor: pointer; }
+    .hud-table-input { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; text-align: center; width: 100%; padding: 5px; outline: none; font-size: 0.85rem; }
+    .hud-table-input:focus { border-color: var(--hud-primary); background: rgba(14, 165, 233, 0.1); }
+    .hud-table-input-min { background: transparent; border: none; border-bottom: 1px dotted rgba(255,255,255,0.3); color: white; text-align: center; width: 100%; outline: none; padding: 2px; font-size: 0.8rem; }
 
-    /* Legacy Support */
-    .cyber-line-input { width: 100%; background: transparent; border: none; border-bottom: 1px dotted rgba(59, 130, 246, 0.3); color: white !important; font-size: 13px; font-weight: 600; padding: 4px 0; outline: none !important; }
-    .cyber-line-input[readonly] { color: #94a3b8 !important; }
-    
-    .time-hud-input { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; font-size: 13px; font-weight: bold; width: 100%; border-radius: 0; padding: 4px; outline: none; }
-    .time-hud-input.highlight { color: #fbbf24; border-color: rgba(251, 191, 36, 0.5); background: rgba(251, 191, 36, 0.05); }
+    .reading-input-min { background: transparent; border: none; color: white; text-align: center; width: 100%; outline: none; }
+    .hud-check { width: 22px; height: 22px; cursor: pointer; accent-color: var(--hud-primary); }
+    .hud-check-min { width: 16px; height: 16px; cursor: pointer; }
 
-    /* Sharp Grid HUD */
-    .glass-table-container { border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 0px; background: rgba(15, 23, 42, 0.4); }
-    .table-header-min { background: rgba(37, 99, 235, 0.3); color: #fff; font-size: 10px; font-weight: 900; text-align: center; padding: 5px; letter-spacing: 1px; border-bottom: 1px solid rgba(59, 130, 246, 0.3); }
-    .table-header-min.secondary { background: rgba(71, 85, 105, 0.3); }
+    .btn-hud-primary { background: var(--hud-primary); color: white; border: none; border-radius: 6px; }
+    .btn-hud-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(14, 165, 233, 0.5); color: white; }
+    .btn-hud-outline { background: transparent; border: 2px solid var(--hud-border); color: #94a3b8; border-radius: 6px; }
 
-    /* Material Rows Sharp */
-    .material-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .mat-label { width: 220px; color: #e2e8f0; }
-    .mat-code-input { background: transparent; border: none; color: #60a5fa; width: 80px; font-weight: 800; font-size: 11px; outline: none; }
-    .mat-inputs { display: flex; flex-grow: 1; gap: 15px; }
-    .mat-input-wrap { display: flex; align-items: center; flex-grow: 1; }
-    .mat-line-input { width: 100%; background: transparent; border: none; border-bottom: 1px dotted #484f58; color: white; font-size: 12px; font-weight: 600; padding: 2px 5px; outline: none; }
-    .mat-line-input.mini { width: 60px; flex-grow: 0; }
-    .header-input { background: transparent; border: none; color: #60a5fa; font-weight: 800; font-size: 15px; width: 100%; outline: none; }
-    .header-input:focus { background: rgba(59, 130, 246, 0.1); }
-    .header-label { font-size: 15px; font-weight: 600; white-space: nowrap; }
+    .text-primary-glow { color: var(--hud-glow); text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+    .shadow-glow-blue { box-shadow: 0 0 30px rgba(14, 165, 233, 0.15); }
+    .super-small { font-size: 0.7rem; }
+    .letter-spacing-2 { letter-spacing: 2.5px; }
 
-    /* Signature Sharp */
-    .glass-sig-box { width: 60px; height: 40px; border: 1px solid #30363d; background: #0d1117; display: flex; align-items: center; justify-content: center; }
-    .glass-sig-box.active { border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+    /* Sticky Headers for tables */
+    .sticky-top { position: sticky; top: 0; z-index: 10; }
 
-    /* Buttons Sharp */
-    .btn-primary-glass { background: #2563eb; border: none; border-radius: 0; color: white; transition: all 0.2s; }
-    .btn-success-start { background: #059669; border: none; color: white; transition: all 0.2s; }
-    .btn-success-start:hover { background: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-    .rounded-0 { border-radius: 0px !important; }
-
-    .pulse-blue { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-    @@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-    .main-glass-card { 
-        width: 100%; 
-        border-radius: 0;
-        overflow: hidden;
-        border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
-    /* Tablet Responsive Sharp */
-    @@media (max-width: 992px) {
-        .production-dashboard-sapphire { 
-            padding: 0 !important; 
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        .main-content { 
-            padding: 0 !important; 
-            margin-left: 0 !important; 
-            margin-top: 55px !important; /* Keep navbar height */
-        }
-        .container-fluid { 
-            padding: 0 !important; 
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        .main-glass-card { 
-            border-left: none; 
-            border-right: none; 
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-height: calc(100vh - 120px);
-        }
-        .header-sapphire-glass { border-radius: 0; margin: 0 !important; width: 100% !important; }
-        .row { margin-left: 0 !important; margin-right: 0 !important; }
-        .col-md-9, .col-md-3, .col-md-4, .col-md-5 { width: 100% !important; }
-        .border-end, .border-start { border: none !important; border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important; }
-    }
-
-    /* Scanner Enhanced HUD Style in Popup */
-    .scanner-modal-glass { 
-        background: rgba(10, 14, 23, 0.9) !important; 
-        backdrop-filter: blur(25px); 
-        border: 1px solid rgba(0, 102, 255, 0.3); 
-        border-radius: 0;
-        box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    }
-    
-    .hud-scanner-overlay { 
-        position: relative; 
-        background: #000; 
-        width: 100%; 
-        aspect-ratio: 4/3;
-        overflow: hidden; 
-        margin: 0 auto; 
-    }
-    
-    #reader { width: 100% !important; border: none !important; }
-    #reader video { object-fit: cover !important; width: 100% !important; height: auto !important; }
-    
-    /* Static Scanning Center Line */
-    .scan-laser {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: linear-gradient(to right, transparent, var(--velasto-blue), #00d2ff, var(--velasto-blue), transparent);
-        box-shadow: 0 0 15px #00d2ff, 0 0 30px var(--velasto-blue);
-        z-index: 10;
-        transform: translateY(-50%);
-    }
-
-    .hud-scanner-overlay::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: 
-            linear-gradient(rgba(0, 102, 255, 0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 102, 255, 0.08) 1px, transparent 1px);
-        background-size: 40px 40px;
-        z-index: 5;
-        pointer-events: none;
+    @@media print {
+        .production-blueprint { background: white !important; color: black !important; }
+        .hud-header, .hud-pill, .hud-card { border: 1px solid black !important; background: white !important; color: black !important; }
+        .text-white, .text-primary-glow { color: black !important; }
+        .no-print { display: none !important; }
     }
 </style>
 
 @section Scripts {
-    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        let html5QrCode;
-        let cameraDevices = [];
-        let currentCamIdx = 0;
-
-        async function startScanner() {
-            const mEl = document.getElementById('scannerModal');
-            const modal = new bootstrap.Modal(mEl);
-            modal.show();
-            
-            // Re-detect cameras every time to ensure fresh list
-            try {
-                cameraDevices = await Html5Qrcode.getCameras();
-                if (cameraDevices && cameraDevices.length > 0) {
-                    // Try to find the back camera as default
-                    currentCamIdx = cameraDevices.findIndex(c => 
-                        c.label.toLowerCase().includes('back') || 
-                        c.label.toLowerCase().includes('rear') ||
-                        c.label.toLowerCase().includes('environment')
-                    );
-                    if (currentCamIdx === -1) currentCamIdx = 0;
-                }
-                
-                if (html5QrCode && html5QrCode.isScanning) {
-                    await html5QrCode.stop();
-                }
-                initScanner();
-            } catch (err) {
-                console.error("Camera detection error:", err);
-                initScanner(); // Fallback to basic init
-            }
-        }
-
-        function initScanner() {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-            
-            const config = { 
-                fps: 20, 
-                aspectRatio: 1.0
-            };
-
-            // Determine target: specific device or facingMode
-            let target;
-            if (cameraDevices && cameraDevices.length > 0 && cameraDevices[currentCamIdx]) {
-                target = cameraDevices[currentCamIdx].id; // FIXED: property is .id, not .deviceId
-            } else {
-                target = { facingMode: "environment" };
-            }
-
-            if (!target) {
-                target = { facingMode: "environment" };
-            }
-            
-            html5QrCode.start(target, config, onScanSuccess)
-                .catch(err => {
-                    console.error("Scanner start error:", err);
-                    // Final fallback to user-facing if environment fails
-                    if (!cameraDevices || cameraDevices.length === 0) {
-                        html5QrCode.start({ facingMode: "user" }, config, onScanSuccess).catch(e => {
-                             console.error("Ultimate fallback failed", e);
-                        });
-                    }
-                });
-        }
-
-        async function switchCamera() {
-            if (!html5QrCode) return;
-            
-            if (cameraDevices.length > 1) {
-                currentCamIdx = (currentCamIdx + 1) % cameraDevices.length;
-                if (html5QrCode.isScanning) {
-                    await html5QrCode.stop();
-                    initScanner();
-                }
-            } else {
-                // Legacy toggle for devices that don't list multiple but have them
-                const currentMode = html5QrCode.isScanning ? "environment" : "user";
-                const nextMode = (currentMode === "environment") ? "user" : "environment";
-                await html5QrCode.stop();
-                html5QrCode.start({ facingMode: nextMode }, { fps: 20, aspectRatio: 1.0 }, onScanSuccess);
-            }
-        }
-
-        async function stopScanner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                try {
-                    await html5QrCode.stop();
-                } catch (e) {
-                    console.error("Stop error:", e);
-                }
-            }
-            const modalEl = document.getElementById('scannerModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-        }
-        // Auto-fill when HoseType dropdown changes
-        document.getElementById('HoseType').addEventListener('change', async function() {
-            const hoseType = this.value;
-            if (!hoseType) return;
-
-            Swal.fire({
-                title: 'SYNCING SPECIFICATIONS...',
-                allowOutsideClick: false,
-                background: '#0d1117',
-                color: '#fff',
-                didOpen: () => Swal.showLoading()
-            });
-
-            try {
-                const res = await fetch(`/ProductionReport/GetMasterByHoseType?hoseType=${encodeURIComponent(hoseType)}`);
-                const data = await res.json();
-                if (data) {
-                    populateFormData(data);
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'SPECIFICATIONS SYNCED',
-                        text: `Auto-populated data for ${hoseType}`,
-                        background: '#0d1117',
-                        color: '#fff',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                }
-            } catch (e) {
-                Swal.fire({ icon: 'error', title: 'SYNC ERROR', background: '#0d1117', color: '#fff' });
-            }
+        // Auto-fill standards based on Hose Type logic can be added here
+        document.getElementById('HoseType').addEventListener('change', function() {
+           // Fetch and populate standards
         });
-
-        function populateFormData(data) {
-            if (!data) return;
-
-            // Get values regardless of casing
-            const docNum = data.documentNumber || data.DocumentNumber;
-            const revNum = data.revisionNumber || data.RevisionNumber;
-            const dim = data.dimensi || data.Dimensi;
-            const yarn = data.yarn || data.Yarn;
-            const hose = data.hoseType || data.HoseType;
-            const inner = data.innerTube || data.InnerTube;
-            const outer = data.outerCover || data.OuterCover;
-
-            // Update Header Documents
-            if (docNum) document.getElementById('DocumentNumber').value = docNum;
-            if (revNum) document.getElementById('RevisionNumber').value = revNum;
-
-            // Update main fields
-            if (dim) document.getElementById('Dimension').value = dim;
-            document.getElementById('Yarn').value = yarn || 'ARAMID';
-            
-            // Update HoseType (Input or Datalist)
-            if (hose) {
-                const el = document.getElementById('HoseType');
-                if (el) el.value = hose;
-            }
-            
-            // Update material codes
-            if (inner) document.getElementById('InnerMaterial').value = inner;
-            if (outer) document.getElementById('OuterMaterial').value = outer;
-        }
-
-        async function onScanSuccess(decodedText) {
-            stopScanner();
-            
-            Swal.fire({
-                title: 'CONNECTING MASTER...',
-                allowOutsideClick: false,
-                background: '#0d1117',
-                color: '#fff',
-                didOpen: () => Swal.showLoading()
-            });
-            
-            try {
-                const res = await fetch(`/ProductionReport/GetMasterByItem?itemCode=${encodeURIComponent(decodedText)}`);
-                const data = await res.json();
-                if (data) {
-                    populateFormData(data);
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'MASTER DATA CONNECTED',
-                        background: '#0d1117',
-                        color: '#fff',
-                        timer: 1000,
-                        showConfirmButton: false
-                    });
-                }
-            } catch (e) { 
-                Swal.fire({ icon: 'error', title: 'LINK ERROR', background: '#0d1117', color: '#fff' }); 
-            }
-        }
-
-        async function verifySPV(el, layer) {
-            if (el.classList.contains('active')) return;
-
-            const { value: pin } = await Swal.fire({
-                title: `VERIFY ${layer.toUpperCase()} LAYER`,
-                input: 'password',
-                inputPlaceholder: 'Masukan PIN Supervisor',
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autocorrect: 'off'
-                },
-                background: '#0f172a',
-                color: '#fff',
-                confirmButtonColor: '#2563eb',
-                showCancelButton: true
-            });
-
-            if (pin === '1234') { // Mock PIN for demo
-                el.classList.add('active');
-                el.innerHTML = '<i class="bi bi-shield-check text-info fs-3 pulse-blue"></i>';
-                document.getElementById(`Verify${layer}`).value = "true";
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'APPROVED',
-                    text: `${layer} Layer Verified!`,
-                    background: '#0f172a',
-                    color: '#fff',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            } else if (pin) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ACCESS DENIED',
-                    text: 'PIN Supervisor Salah!',
-                    background: '#0f172a',
-                    color: '#fff'
-                });
-            }
-        }
     </script>
 }

@@ -29,28 +29,20 @@ namespace VelastoProductionSystem.Controllers
         {
             if (id == null)
             {
-                // If no ID is specified, redirect to the latest active report
-                var latestReport = await _context.ProductionReports
-                    .Where(pr => pr.Status == "NOW PRODUCING")
-                    .OrderByDescending(pr => pr.CreatedDate)
-                    .FirstOrDefaultAsync();
-
-                if (latestReport != null)
-                {
-                    return RedirectToAction(nameof(App), new { id = latestReport.Id });
-                }
-
-                // If no active report, find any latest report
-                latestReport = await _context.ProductionReports
-                    .OrderByDescending(pr => pr.CreatedDate)
-                    .FirstOrDefaultAsync();
-
-                if (latestReport != null)
-                {
-                    return RedirectToAction(nameof(App), new { id = latestReport.Id });
-                }
-
-                return NotFound("Belum ada laporan produksi yang tersedia.");
+                // Empty report for Scanner Mode
+                var emptyReport = new ProductionReport 
+                { 
+                    Id = 0,
+                    DocumentNumber = "---",
+                    RevisionNumber = 0,
+                    ProductionDate = DateTime.Today,
+                    CustomerName = "---",
+                    HoseType = "---",
+                    Dimension = "---",
+                    Yarn = "---",
+                    Shift = "---"
+                };
+                return View(emptyReport);
             }
 
             var report = await _context.ProductionReports
@@ -64,6 +56,36 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(m => m.HoseType == report.HoseType);
 
             return View(report);
+        }
+
+        // GET: ProductionReport/AppByItem (For Barcode Scanner)
+        public async Task<IActionResult> AppByItem(string itemCode)
+        {
+            var master = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.ItemList == itemCode);
+            
+            if (master == null) 
+            {
+                TempData["ErrorMessage"] = $"Item Code '{itemCode}' tidak ditemukan di Database SPS Masterlist!";
+                return RedirectToAction(nameof(App));
+            }
+            
+            var report = new ProductionReport {
+                Id = 0,
+                DocumentNumber = master.DocumentNumber ?? "-",
+                RevisionNumber = int.TryParse(master.RevisionNumber, out int rev) ? rev : 0,
+                ProductionDate = DateTime.Today,
+                CustomerName = master.Customer ?? "-",
+                HoseType = master.HoseType ?? "-",
+                Dimension = master.Dimensi ?? "-",
+                Yarn = master.InnerTube ?? "-",
+                Shift = "Shift 1"
+            };
+            
+            ViewBag.Masterlist = master;
+            TempData["SuccessMessage"] = $"Berhasil memuat spesifikasi untuk '{itemCode}'!";
+            
+            return View("App", report);
         }
 
         // GET: ProductionReport/Details/5 (The Monitoring Dashboard - Gambar 2 & 5)
@@ -278,10 +300,36 @@ namespace VelastoProductionSystem.Controllers
         {
             try
             {
-                var report = await _context.ProductionReports.FindAsync(data.ReportId);
-                if (report == null) return Json(new { success = false, message = "Report not found" });
+                ProductionReport report;
+                if (data.ReportId == 0)
+                {
+                    // Create new report from Scanned App
+                    report = new ProductionReport
+                    {
+                        DocumentNumber = data.DocumentNumber ?? "-",
+                        HoseType = data.HoseType ?? "-",
+                        Dimension = data.DimensionDisplay ?? "-",
+                        CustomerName = data.CustomerName ?? "-",
+                        Yarn = data.Yarn ?? "-",
+                        ProductionDate = DateTime.Today,
+                        CreatedDate = DateTime.Now,
+                        Status = "NOW PRODUCING",
+                        InnerMaterialActual = "-",
+                        OuterMaterialActual = "-",
+                        YarnActual = "-",
+                        CreatedBy = "Operator 1",
+                        Shift = "Shift 1"
+                    };
+                    _context.ProductionReports.Add(report);
+                }
+                else
+                {
+                    report = await _context.ProductionReports.FindAsync(data.ReportId);
+                    if (report == null) return Json(new { success = false, message = "Report not found" });
+                }
 
-                // Update dimension readings
+                // Update common dimension readings & production info
+                report.VinCode = data.VinCode;
                 report.ActualLength = data.ActualLength;
                 report.QtyOk = data.QtyOk;
                 report.NgDimension = data.NgDimension;
@@ -289,7 +337,7 @@ namespace VelastoProductionSystem.Controllers
                 report.Remark = data.Remark ?? "";
 
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Data saved successfully" });
+                return Json(new { success = true, reportId = report.Id, message = "Data saved successfully" });
             }
             catch (Exception ex)
             {

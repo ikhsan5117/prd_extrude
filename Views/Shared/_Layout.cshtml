@@ -101,13 +101,18 @@
                     <i class="bi bi-gear-wide-connected"></i>
                     <span>EXTRUDER</span>
                 </div>
-                <a href="/ProductionReport/App" class="nav-item">
-                    <i class="bi bi-clipboard-data"></i>
+                <a href="/NowProducing/ExtruderApp" class="nav-item sub">
+                    <i class="bi bi-play-circle-fill" style="color:#10b981;"></i>
+                    <span>NOW I'M PRODUCE</span>
+                </a>
+                <a href="/ProductionReport/App" class="nav-item sub">
+                    <i class="bi bi-clipboard2-data"></i>
                     <span>Production Report</span>
                 </a>
-                <a href="/Dimensi/Index" class="nav-item">
-                    <i class="bi bi-rulers"></i>
-                    <span>Dimensi</span>
+
+                <a href="/NowProducing/ParameterSettings" class="nav-item sub">
+                    <i class="bi bi-sliders"></i>
+                    <span>Parameter Settings</span>
                 </a>
             </div>
         </nav>
@@ -158,9 +163,32 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Sidebar toggle
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+
+        // Check if backdrop exists, create if not
+        let backdrop = document.querySelector('.sidebar-backdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'sidebar-backdrop';
+            document.body.appendChild(backdrop);
+        }
+
+        sidebarToggle.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('show');
+                backdrop.classList.toggle('show');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            }
+        });
+
+        // Close when backdrop clicked
+        backdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            backdrop.classList.remove('show');
         });
 
         // Update datetime every minute

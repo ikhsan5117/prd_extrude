@@ -112,5 +112,11 @@ namespace VelastoProductionSystem.Data
             //     new PackingStandard { Id = 1, NACode = "NA-1420", ... }
             // );
         }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+            configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
+        }
     }
 }
