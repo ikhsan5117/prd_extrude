@@ -231,10 +231,12 @@
                     color: white;
                     font-weight: 900;
                     width: 100%;
-                    padding: 8px 4px;
+                    padding: 8px 0; /* REMOVED TO PREVENT CLIPPING */
                     text-align: center;
                     transition: all 0.3s;
-                    font-size: 0.85rem;
+                    font-size: 1.1rem; /* HIGHER LEGIBILITY */
+                    min-height: 46px; /* MATCHES CELL HEIGHT */
+                    font-family: 'JetBrains Mono', monospace;
                 }
                 .hud-input-underlined:focus {
                     outline: none;
