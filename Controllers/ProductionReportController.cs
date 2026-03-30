@@ -146,9 +146,32 @@ namespace VelastoProductionSystem.Controllers
                     RevisionNumber = master.RevisionNumber,
                     InnerMaterial = master.InnerTube,
                     OuterMaterial = master.OuterCover,
-                    // Try to map some basics
-                    HeadTemp = 0, // Master has strings like "90+/-5" which need parsing
-                    Cylinder1Temp = 0
+                    YarnType = master.Material,
+                    
+                    // Map Masterlist values (These are strings in the DB)
+                    HeadTempInner = master.HeadTemp1,
+                    Cylinder1TempInner = master.Cylinder1_1,
+                    Cylinder2TempInner = master.Cylinder2_1,
+                    ScrewTempInner = master.ScrewTemp1,
+                    ScrewSpeedInner = master.ScrewSpeed1,
+                    PressureInner = master.Pressure1,
+                    FeedRollRatioInner = master.Feed1,
+                    
+                    HeadTempOuter = master.HeadTemp2,
+                    Cylinder1TempOuter = master.Cylinder1_2,
+                    Cylinder2TempOuter = master.Cylinder2_2,
+                    ScrewTempOuter = master.ScrewTemp2,
+                    ScrewSpeedOuter = master.ScrewSpeed2,
+                    PressureOuter = master.Pressure2,
+                    FeedRollRatioOuter = master.Feed2,
+                    
+                    InnerDie = master.Nipple,
+                    TubeDie = master.TubeDie,
+                    CoverDie = master.CoverDie,
+                    ToleranceDie = master.ToleranceInner,
+                    
+                    ChillerWaterTemp = master.ChillerWaterTemp,
+                    TakeupConveyorSpeed = master.TakeUpConveyorSpeed
                 });
             }
 
@@ -194,7 +217,6 @@ namespace VelastoProductionSystem.Controllers
             return View(new ProductionReport 
             { 
                 ProductionDate = DateTime.Today,
-                DocumentNumber = "VI-SOP-PROD-131",
                 Status = "NOW PRODUCING",
                 Yarn = "---"
             });

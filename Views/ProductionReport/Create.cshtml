@@ -32,16 +32,19 @@
                 <!-- NEW: SPS PROTOCOL SYNC -->
                 <div class="p-3 bg-primary bg-opacity-5 border-bottom border-white border-opacity-5 no-print">
                     <div class="row g-3 align-items-center">
-                        <div class="col-md-9">
-                            <div class="hud-pill border-info border-opacity-40">
-                                <label><i class="bi bi-keyboard me-2 text-info"></i>TYPE ITEM CODE (MANUAL)</label>
-                                <input id="manualItemSearch" type="text" class="hud-input bg-dark border-0 py-1 font-monospace" placeholder="EX: VHFUNC-..." onchange="fetchSpsByItem(this.value)" />
+                        <div class="col-12">
+                            <div class="hud-pill p-0 d-flex flex-row overflow-hidden shadow-glow-blue border-info border-opacity-40" style="min-height: 70px;">
+                                <div class="flex-grow-1 p-2 px-3 bg-dark d-flex flex-column justify-content-center">
+                                    <label class="mb-1 text-info font-black" style="font-size: 0.70rem;"><i class="bi bi-keyboard me-2 text-info"></i>TYPE ITEM CODE (MANUAL)</label>
+                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1.1rem; outline: none;" placeholder="EX: VHFUNC-..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
+                                </div>
+                                <button type="button" onclick="let v = document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-4 d-flex align-items-center justify-content-center border-start border-info border-opacity-25" style="min-width: 80px; background-color: #0c4a6e; color: #38bdf8; transition: all 0.2s;" title="Manual Search">
+                                    <i class="bi bi-search fs-3"></i>
+                                </button>
+                                <button type="button" onclick="startSpsScanner()" class="btn btn-hud-primary border-0 rounded-0 px-4 d-flex align-items-center justify-content-center border-start border-white border-opacity-25" style="min-width: 100px; transition: all 0.2s;" title="Scan Barcode">
+                                    <i class="bi bi-qr-code-scan fs-2"></i>
+                                </button>
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="button" onclick="startSpsScanner()" class="btn btn-hud-primary h-100 w-100 py-3 shadow-glow-blue border border-white border-opacity-25" style="min-height: 58px;">
-                                <i class="bi bi-qr-code-scan me-2"></i> SPS SYNC SCANNER
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -834,18 +837,6 @@
             }
         }
 
-        document.getElementById('spsSelector').addEventListener('change', async function() {
-            const id = this.value;
-            if (!id) return;
-            try {
-                const res = await fetch(`/ProductionReport/GetSpsById/${id}`);
-                const data = await res.json();
-                applySpsToForm(data);
-            } catch (e) {
-                console.error(e);
-            }
-        });
-
         function applySpsToForm(sps) {
             // Header Info
             document.getElementById('DocNo').value = sps.documentNumber || '---';
@@ -858,47 +849,56 @@
             document.getElementById('OuterMaterial').value = sps.outerMaterial || '';
             document.getElementById('Yarn').value = sps.yarnType || '';
 
+            const formatVal = (val, prefix = '', suffix = '') => {
+                if (val === undefined || val === null || val === '') return '---';
+                if (typeof val === 'string' && (val.includes('±') || val.includes('+') || val.includes('-'))) {
+                    // Prevent duplicate suffixes if Masterlist already contains formatting like '90+/-5' or '1.0±0.1'
+                    return `${prefix}${val}`;
+                }
+                return `${prefix}${val}${suffix}`;
+            };
+
             // Update Table Specs
             const specMappings = {
-                'HeadTempInner': sps.headTemp + ' ± 5',
-                'Cylinder1TempInner': sps.cylinder1Temp + ' ± 5',
-                'Cylinder2TempInner': sps.cylinder2Temp + ' ± 5',
-                'Cylinder3TempInner': sps.cylinder3Temp + ' ± 5',
-                'ScrewTempInner': sps.screwTemp + ' ± 5',
-                'ScrewSpeedInner': sps.screwSpeed + ' ± 2',
-                'FeedRollRatioInner': 'Max ' + sps.feedRollRatio,
-                'PressureInner': 'Max ' + sps.pressure,
+                'HeadTempInner': formatVal(sps.headTempInner ?? sps.headTemp, '', ' ± 5'),
+                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner ?? sps.cylinder1Temp, '', ' ± 5'),
+                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner ?? sps.cylinder2Temp, '', ' ± 5'),
+                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner ?? sps.cylinder3Temp, '', ' ± 5'),
+                'ScrewTempInner': formatVal(sps.screwTempInner ?? sps.screwTemp, '', ' ± 5'),
+                'ScrewSpeedInner': formatVal(sps.screwSpeedInner ?? sps.screwSpeed, '', ' ± 2'),
+                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner ?? sps.feedRollRatio, 'Max '),
+                'PressureInner': formatVal(sps.pressureInner ?? sps.pressure, 'Max '),
                 
-                'HeadTempOuter': sps.headTemp + ' ± 5',
-                'Cylinder1TempOuter': sps.cylinder1Temp + ' ± 5',
-                'Cylinder2TempOuter': sps.cylinder2Temp + ' ± 5',
-                'Cylinder3TempOuter': sps.cylinder3Temp + ' ± 5',
-                'ScrewTempOuter': sps.screwTemp + ' ± 5',
-                'ScrewSpeedOuter': sps.screwSpeed + ' ± 2',
-                'FeedRollRatioOuter': 'Max ' + sps.feedRollRatio,
-                'PressureOuter': 'Max ' + sps.pressure,
+                'HeadTempOuter': formatVal(sps.headTempOuter ?? sps.headTemp, '', ' ± 5'),
+                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter ?? sps.cylinder1Temp, '', ' ± 5'),
+                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter ?? sps.cylinder2Temp, '', ' ± 5'),
+                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter ?? sps.cylinder3Temp, '', ' ± 5'),
+                'ScrewTempOuter': formatVal(sps.screwTempOuter ?? sps.screwTemp, '', ' ± 5'),
+                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter ?? sps.screwSpeed, '', ' ± 2'),
+                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter ?? sps.feedRollRatio, 'Max '),
+                'PressureOuter': formatVal(sps.pressureOuter ?? sps.pressure, 'Max '),
                 
-                'SpiralSpeed': sps.spiralSpeed + ' ± 20',
-                'SpiralPitchSetting': sps.spiralPitch + ' ± 5',
-                'SpiralPitchDisplay': sps.spiralPitchDisplay + ' ± 5',
+                'SpiralSpeed': formatVal(sps.spiralSpeed, '', ' ± 20'),
+                'SpiralPitchSetting': formatVal(sps.spiralPitch, '', ' ± 5'),
+                'SpiralPitchDisplay': formatVal(sps.spiralPitchDisplay, '', ' ± 5'),
                 
-                'PresetValue': sps.presetValve + ' ± 0.5',
-                'ControlValue': sps.controlValue,
-                'HoseSpeed': sps.hoseSpeed,
-                'TakeupConveyorSpeed': sps.takeupConveyorSpeed,
-                'CoolConveyorSpeed': sps.coolConveyorSpeed,
-                'ConveyorRatio': sps.conveyorRatio,
-                'UnsmoothSurface': sps.unsmoothSurface,
-                'ChillerWaterTemp': sps.chillerWaterTemp,
-                'CaterpillarGap': sps.caterpillarGap,
+                'PresetValue': formatVal(sps.presetValve, '', ' ± 0.5'),
+                'ControlValue': formatVal(sps.controlValue),
+                'HoseSpeed': formatVal(sps.hoseSpeed),
+                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed),
+                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed),
+                'ConveyorRatio': formatVal(sps.conveyorRatio),
+                'UnsmoothSurface': formatVal(sps.unsmoothSurface),
+                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp),
+                'CaterpillarGap': formatVal(sps.caterpillarGap),
 
                 // Dies Measurements
-                'NippleDie': sps.innerDie + ' ± 0.1',
-                'TubeDie': sps.tubeDie + ' ± 0.1',
-                'MiddleDie': sps.middleDie + ' ± 0.1',
-                'CoverDie': sps.coverDie + ' ± 0.1',
-                'SpacerDie': sps.spacerDie + ' ± 0.1',
-                'ToleranceDie': sps.toleranceDie + ' ± 0.1'
+                'NippleDie': formatVal(sps.innerDie, '', ' ± 0.1'),
+                'TubeDie': formatVal(sps.tubeDie, '', ' ± 0.1'),
+                'MiddleDie': formatVal(sps.middleDie, '', ' ± 0.1'),
+                'CoverDie': formatVal(sps.coverDie, '', ' ± 0.1'),
+                'SpacerDie': formatVal(sps.spacerDie, '', ' ± 0.1'),
+                'ToleranceDie': formatVal(sps.toleranceDie, '', ' ± 0.1')
             };
 
             for (const [key, val] of Object.entries(specMappings)) {
@@ -909,9 +909,6 @@
                 }
             }
 
-            document.getElementById('syncStatus').innerHTML = `<i class="bi bi-shield-fill-check text-success me-1"></i>SYNCED: [${sps.itemList}] ${sps.hoseType}`;
-            document.getElementById('syncStatus').parentElement.classList.add('border-success');
-            
             Swal.fire({
                 title: 'SPS SYNC SUCCESS',
                 text: 'Protokol ' + sps.hoseType + ' berhasil dimuat!',
