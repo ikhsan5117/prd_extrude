@@ -215,8 +215,8 @@
         <!-- ============================================= -->
         <!-- PORTAL 1: PARAMETER SETTING (Modern HUD)      -->
         <!-- ============================================= -->
-        <div class="hud-container fade-in">
-            <div class="paper-replica shadow-2xl mx-auto mb-5">
+        <div class="bg-white p-4">
+            <div class="paper-replica shadow-2xl mx-auto mb-5 p-4">
             <div class="paper-padding text-uppercase" style="font-size: 10px;">
                 
                 <!-- 1. HEADER & INFO SECTION -->
@@ -332,24 +332,28 @@
                             <tr>
                                 <th width="30" rowspan="4" class="align-middle text-center p-0 border-bottom-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#f0f0f0; letter-spacing: 2px;">MATERIAL</th>
                                 <th colspan="2" style="background:#f0f0f0; border-bottom: 0;"></th>
-                                <th width="90" style="background:#f0f0f0;" class="text-center">STANDARD</th>
-                                <th width="120" style="background:#f0f0f0;" class="text-center border-end-0">ACTUAL</th>
-                                <th rowspan="4" width="60" style="background:#f4f4f4;" class="border-start-form"></th>
+                                <th width="80" style="background:#f0f0f0;" class="text-center">STANDARD</th>
+                                <th width="100" style="background:#f0f0f0;" class="text-center">ACTUAL</th>
+                                <th width="120" style="background:#f0f0f0;" class="text-center border-end-0">NO. LOT</th>
+                                <th rowspan="4" width="2" style="background:#f4f4f4;" class="border-start-form"></th>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
                                 <td class="text-center">@(Model.InnerMaterial ?? "-")</td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
+                                <td class="p-0 border-end-0 bg-info bg-opacity-5"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-info" value="@Model.InnerMaterialLotNo" placeholder="LOT INNER" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">OUTER(MATERIAL)</td>
                                 <td class="text-center">@(Model.OuterMaterial ?? "-")</td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
+                                <td class="p-0 border-end-0 bg-info bg-opacity-5"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-info" value="@Model.OuterMaterialLotNo" placeholder="LOT OUTER" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">YARN</td>
                                 <td class="text-center">ARAMID</td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
+                                <td class="p-0 border-end-0 bg-warning bg-opacity-10"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@Model.YarnLotNo" placeholder="INPUT YARN LOT" /></td>
                             </tr>
                             
                             <!-- DIES DIMENSION SECTION -->
@@ -527,189 +531,141 @@
                     </div>
                 </div>
 
-                <!-- 4. MAIN MONITORING TABLE (Tablet-Friendly Sticky Labels) -->
-                <div class="table-container-modern shadow-inner mt-2">
-                    <div class="table-responsive-modern border border-dark">
-                        <table class="grid-form w-100 m-0">
-                            <thead class="sticky-top bg-light">
+                <!-- 4. TOTAL MONITORING MATRIX (Paper Theme) -->
+                <div class="table-responsive border border-dark mb-2">
+                    <table class="grid-form w-100 text-center m-0">
+                        <thead>
+                            <tr class="bg-light">
+                                <th colspan="2" width="220" class="text-start ps-2 py-2">INSTRUMENT PARAMETER</th>
+                                <th width="100">STANDARD</th>
+                                <th width="100" class="bg-info bg-opacity-10 text-primary">INITIAL</th>
+                                @for(int i=1; i<=7; i++) { <th width="9%">#@i</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- INNER SECTION -->
+                            @{
+                                var innerRows = new[] {
+                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = (std.HeadTemp == 0 ? "90" : std.HeadTemp.ToString()) + "±5" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = (std.Cylinder1Temp == 0 ? "90" : std.Cylinder1Temp.ToString()) + "±5" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = (std.Cylinder2Temp == 0 ? "90" : std.Cylinder2Temp.ToString()) + "±5" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = (std.Cylinder3Temp == 0 ? "90" : std.Cylinder3Temp.ToString()) + "±5" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = (std.ScrewTemp == 0 ? "90" : std.ScrewTemp.ToString()) + "±5" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = (std.ScrewSpeed == 0 ? "6.1" : std.ScrewSpeed.ToString()) + "±2.5" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = "MAX 120" },
+                                    new { L = "PRESSURE", K = "PressureInner", S = "MAX 50" }
+                                };
+                            }
+                            @for(int r = 0; r < innerRows.Length; r++) {
                                 <tr>
-                                    <th colspan="2" class="sticky-col label-col text-center align-middle" width="220" style="background:#f0f0f0; font-size: 13px;">TIME</th>
-                                    <th class="sticky-col std-col text-center" width="100" style="background:#f0f0f0; font-size: 13px;">INITIAL<br/>:</th>
-                                    @for(int i=1; i<=7; i++) { <th class="text-center" style="background:#f0f0f0; font-size: 13px;">@i<br/>:</th> }
+                                    @if(r == 0) { <td rowspan="@innerRows.Length" class="hud-vertical-label">INNER TUBE</td> }
+                                    <td class="text-end pe-2 py-1 fw-bold">@innerRows[r].L</td>
+                                    <td class="small opacity-50 fw-bold">@innerRows[r].S</td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    @for(int i=1; i<=7; i++) {
+                                        <td class="p-0">
+                                            <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
+                                        </td>
+                                    }
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <!-- INNER SECTION -->
-                                 @{
-                                    var innerRows = new[] {
-                                        new { Label = "HEAD TEMP. (°C)", Key = "HeadTempInner", Std = (std.HeadTemp == 0 ? "90" : std.HeadTemp.ToString()) + "±5" },
-                                        new { Label = "CYLINDER 1 (°C)", Key = "Cylinder1TempInner", Std = (std.Cylinder1Temp == 0 ? "90" : std.Cylinder1Temp.ToString()) + "±5" },
-                                        new { Label = "CYLINDER 2 (°C)", Key = "Cylinder2TempInner", Std = (std.Cylinder2Temp == 0 ? "90" : std.Cylinder2Temp.ToString()) + "±5" },
-                                        new { Label = "CYLINDER 3 (°C)", Key = "Cylinder3TempInner", Std = (std.Cylinder3Temp == 0 ? "90" : std.Cylinder3Temp.ToString()) + "±5" },
-                                        new { Label = "SCREW TEMP. (°C)", Key = "ScrewTempInner", Std = (std.ScrewTemp == 0 ? "90" : std.ScrewTemp.ToString()) + "±5" },
-                                        new { Label = "SCREW SPEED (RPM)", Key = "ScrewSpeedInner", Std = (std.ScrewSpeed == 0 ? "6.1" : std.ScrewSpeed.ToString()) + "±2.5" },
-                                        new { Label = "FEED ROLL RATIO (%)", Key = "FeedRollRatioInner", Std = "MAX. 120" },
-                                        new { Label = "PRESSURE(MPa)", Key = "PressureInner", Std = "MAX. " + (std.Pressure == 0 ? "50" : std.Pressure.ToString()) }
-                                    };
-                                }
-                                @for(int r = 0; r < innerRows.Length; r++) {
-                                    var row = innerRows[r];
-                                    <tr class="row-hover">
-                                        @if(r == 0) {
-                                            <td rowspan="@innerRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">INNER (TUBE 1)</td>
-                                        }
-                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
-                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
-                                        @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
-                                        }
-                                    </tr>
-                                }
+                            }
 
-                                <!-- OUTER SECTION -->
-                                 @{
-                                    var outerRows = new[] {
-                                        new { Label = "HEAD TEMP. (°C)", Key = "HeadTempOuter", Std = "90±5" },
-                                        new { Label = "CYLINDER 1 (°C)", Key = "Cylinder1TempOuter", Std = "90±5" },
-                                        new { Label = "CYLINDER 2 (°C)", Key = "Cylinder2TempOuter", Std = "90±5" },
-                                        new { Label = "CYLINDER 3 (°C)", Key = "Cylinder3TempOuter", Std = "-" },
-                                        new { Label = "SCREW TEMP. (°C)", Key = "ScrewTempOuter", Std = "90±5" },
-                                        new { Label = "SCREW SPEED (RPM)", Key = "ScrewSpeedOuter", Std = "8.2±2.5" },
-                                        new { Label = "FEED ROLL RATIO (%)", Key = "FeedRollRatioOuter", Std = "MAX. 120" },
-                                        new { Label = "PRESSURE(MPa)", Key = "PressureOuter", Std = "MAX. 50" }
-                                    };
-                                }
-                                <tr class="border-top-form"></tr>
-                                @for(int r = 0; r < outerRows.Length; r++) {
-                                    var row = outerRows[r];
-                                    <tr class="row-hover">
-                                        @if(r == 0) {
-                                            <td rowspan="@outerRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">OUTER (COVER)</td>
-                                        }
-                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
-                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
-                                        @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
-                                        }
-                                    </tr>
-                                }
+                            <!-- OUTER SECTION -->
+                            <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
+                            @{
+                                var outerRows = new[] {
+                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = "90±5" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = "90±5" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = "90±5" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = "-" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = "90±5" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = "8.2±2.5" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = "MAX 120" },
+                                    new { L = "PRESSURE", K = "PressureOuter", S = "MAX 50" }
+                                };
+                            }
+                            @for(int r = 0; r < outerRows.Length; r++) {
+                                <tr>
+                                    @if(r == 0) { <td rowspan="@outerRows.Length" class="hud-vertical-label">OUTER COVER</td> }
+                                    <td class="text-end pe-2 py-1 fw-bold">@outerRows[r].L</td>
+                                    <td class="small opacity-50 fw-bold">@outerRows[r].S</td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    @for(int i=1; i<=7; i++) {
+                                        <td class="p-0">
+                                            <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
 
-                                <!-- SPIRAL SECTION -->
-                                 @{
-                                    var spiralRows = new[] {
-                                        new { Label = "SPIRAL SPEED (RPM)", Key = "SpiralSpeed", Std = "98±20" },
-                                        new { Label = "SPIRAL PITCH (SETTING)", Key = "SpiralPitchSetting", Std = "35±5" },
-                                        new { Label = "SPIRAL PITCH (DISPLAY)", Key = "SpiralPitchDisplay", Std = "35±5" }
-                                    };
-                                }
-                                <tr class="border-top-form"></tr>
-                                @for(int r = 0; r < spiralRows.Length; r++) {
-                                    var row = spiralRows[r];
-                                    <tr class="row-hover">
-                                        @if(r == 0) {
-                                            <td rowspan="@spiralRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">SPIRAL</td>
-                                        }
-                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
-                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
-                                        @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
-                                        }
-                                    </tr>
-                                }
-
-                                <!-- OTHER SECTION -->
-                                 @{
-                                    var otherRows = new[] {
-                                        new { Label = "PRESET VALUE (Ø mm)", Key = "PresetValue", Std = "18.5±0.2" },
-                                        new { Label = "CONTROL VALUE (Ø mm)", Key = "ControlValue", Std = "18.5±0.2" },
-                                        new { Label = "HOSE SPEED (m/min)", Key = "HoseSpeed", Std = "3.4±2" },
-                                        new { Label = "TAKE UP CONVEYOR SPEED (m/min)", Key = "TakeupConveyorSpeed", Std = "3.4±3" },
-                                        new { Label = "COOL CONVEYOR SPEED (m/min)", Key = "CoolConveyorSpeed", Std = "3.4±4" },
-                                        new { Label = "CONVEYOR RATIO (TAKE UP : COOL)", Key = "ConveyorRatio", Std = "100%±10" },
-                                        new { Label = "UN SMOOTH SURFACE", Key = "UnsmoothSurface", Std = "0.5" },
-                                        new { Label = "CHILLER WATER TEMPERATURE (°C)", Key = "ChillerWaterTemp", Std = "MAX. 15" },
-                                        new { Label = "CATERPILLAR GAP (mm)", Key = "CaterpillarGap", Std = "18.2±1" }
-                                    };
-                                }
-                                <tr class="border-top-form"></tr>
-                                @for(int r = 0; r < otherRows.Length; r++) {
-                                    var row = otherRows[r];
-                                    <tr class="row-hover">
-                                        @if(r == 0) {
-                                            <td rowspan="@otherRows.Length" width="30" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">OTHER</td>
-                                        }
-                                        <td class="text-end pe-2 sticky-col label-col bg-white border-start-0" width="190" style="font-size: 11px;">@row.Label</td>
-                                        <td class="text-center fw-bold sticky-col std-col bg-light" style="font-size: 11px;">@row.Std</td>
-                                        <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
-                                        @for(int i=1; i<=7; i++) {
-                                            <td class="text-center p-0 cell-input border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(row.Key)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" /></td>
-                                        }
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 5. WASTE SECTION -->
-                <div class="table-container-modern shadow-inner mt-2 border-form">
-                    <table class="grid-form w-100 border-0 m-0 bg-white" style="table-layout: fixed;">
-                        <tr>
-                            <td rowspan="6" width="30" class="align-middle text-center p-0 border-bottom-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#e9ecef; letter-spacing: 2px; border-right: 1px solid #dee2e6;">WASTE</td>
-                            <td colspan="2" class="text-center align-middle p-1" style="background:#f4f4f4; color:#333; font-size: 13px;">Initial Setting</td>
-                            <td width="90" class="text-center p-1" style="background:#f4f4f4;"></td>
-                            <td width="100" class="text-center p-1" style="background:#f4f4f4;"></td>
-                            <td width="100" class="text-center p-1 border-end-form" style="background:#f4f4f4;"></td>
-                            <td rowspan="6" class="align-top p-2 bg-light border-bottom-0" style="color:#212529; font-size: 13px; line-height: 1.5;">
-                                <div class="fw-bold text-decoration-underline mb-1">NOTE :</div>
-                                Lakukan pengecekan parameter pada saat<br/>awal, tengah & akhir proses.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" class="text-center align-middle p-1" style="background:#f4f4f4; color:#333; font-size: 13px;">Berat (kg)</td>
-                            <td class="text-center p-1" style="background:#f4f4f4;"></td>
-                            <td class="text-center align-middle p-1" style="background:#f4f4f4; color:#333; font-size: 13px;">Awal</td>
-                            <td class="text-center align-middle p-1 border-end-form" style="background:#f4f4f4; color:#333; font-size: 13px;">Akhir</td>
-                        </tr>
-                        <tr>
-                            <td rowspan="2" class="text-center align-middle" style="background:#f4f4f4; color:#555; width: 140px; font-size: 12px;">Dandory Awal<br/>(Cleaning)</td>
-                            <td class="text-center align-middle" style="background:#f4f4f4; color:#555; width: 60px; font-size: 12px;">Inner</td>
-                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteInnerAwal)" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteInnerAkhir)" placeholder="" /></td>
-                        </tr>
-                        <tr>
-                            <td class="text-center align-middle" style="background:#f4f4f4; color:#555; font-size: 12px;">Cover</td>
-                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteCoverAwal)" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="@(Model.WasteCoverAkhir)" placeholder="" /></td>
-                        </tr>
-                        <tr>
-                            <td rowspan="2" class="text-center align-middle border-bottom-0" style="background:#f4f4f4; color:#555; font-size: 12px;">Dandory Akhir<br/>(Remain Material)</td>
-                            <td class="text-center align-middle" style="background:#f4f4f4; color:#555; font-size: 12px;">Inner</td>
-                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active border-end-form"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
-                        </tr>
-                        <tr>
-                            <td class="text-center align-middle border-bottom-0" style="background:#f4f4f4; color:#555; font-size: 12px;">Cover</td>
-                            <td class="text-center p-0 cell-active border-bottom-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active border-bottom-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
-                            <td class="text-center p-0 cell-active border-end-form border-bottom-0"><input type="text" class="input-transparent w-100 text-center text-dark fw-bold" value="" placeholder="" /></td>
-                        </tr>
+                            <!-- SPIRAL & OTHERS -->
+                            <tr class="bg-secondary text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
+                            @{
+                                var otherRows = new[] {
+                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = "98±20" },
+                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = "35±5" },
+                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = "3.4±2" },
+                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = "100±10" }
+                                };
+                            }
+                            @for(int r = 0; r < otherRows.Length; r++) {
+                                <tr>
+                                    @if(r == 0) { <td rowspan="@otherRows.Length" class="hud-vertical-label">MISC</td> }
+                                    <td class="text-end pe-2 py-1 fw-bold">@otherRows[r].L</td>
+                                    <td class="small opacity-50 fw-bold">@otherRows[r].S</td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    @for(int i=1; i<=7; i++) {
+                                        <td class="p-0">
+                                            <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
                     </table>
                 </div>
 
-                <!-- INPUT TRIGGER PARAMETER -->
+                <!-- 5. WASTE PERFORMANCE (Paper Theme) -->
+                <div class="row g-2 mb-4">
+                    <div class="col-8">
+                        <table class="grid-form w-100 text-center">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-2 text-start">WASTE CATEGORY / ZONE</th>
+                                    <th width="120">INITIAL (AWAL)</th>
+                                    <th width="120">FINAL (AKHIR)</th>
+                                    <th class="text-info border-start border-dark">REMARK</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-start ps-2 py-2 fw-bold">INNER TUBE WASTE (CLEANING)</td>
+                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteInnerAwal" /></td>
+                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteInnerAkhir" /></td>
+                                    <td rowspan="2" class="border-start border-dark bg-light small align-middle">MONITOR WASTE DURANTE PROCESSO.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-start ps-2 py-2 fw-bold">COVER WASTE (CLEANING)</td>
+                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteCoverAwal" /></td>
+                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteCoverAkhir" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-4">
+                        <div class="border border-dark p-2 h-100 bg-light">
+                            <div class="small fw-bold border-bottom border-dark pb-1 mb-1 text-primary">LINE REMARK / NOTES</div>
+                            <div class="small text-muted font-monospace">@(string.IsNullOrEmpty(Model.Remark) ? "-" : Model.Remark)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCANNER TRIGGER -->
                 <div class="mt-4 no-print d-flex justify-content-center gap-3">
-                    <button type="button" id="btnVerify" class="btn btn-outline-info px-4 rounded-pill fw-bold border-2" onclick="startVerifyScanner()">
+                    <button type="button" id="btnVerify" class="btn btn-outline-primary px-4 rounded-pill fw-bold border-2" onclick="startVerifyScanner()">
                         <i class="bi bi-qr-code-scan me-2"></i> VERIFY ITEM (SCAN)
                     </button>
-                    <!-- Locked By Default -->
-                    <button type="button" id="btnInput" class="btn btn-velasto-glow px-4 rounded-pill opacity-50 pe-none" data-bs-toggle="modal" data-bs-target="#addReadingModal">
+                    <button type="button" id="btnInput" class="btn btn-primary px-4 rounded-pill opacity-50 pe-none" data-bs-toggle="modal" data-bs-target="#addReadingModal">
                         <i class="bi bi-lock-fill me-2" id="iconLock"></i> <span id="textInput">INPUT TERKUNCI</span> (JAM KE-@(readings.Count))
                     </button>
                 </div>
@@ -1028,34 +984,65 @@
     .grid-form th, .grid-form td { border: 1px solid #000 !important; padding: 6px 4px; font-size: 11px; }
     .grid-form th { background: #e9ecef; color: #333; font-weight: 800; text-transform: uppercase; }
     
-    /* Modern Industrial HUD refinements */
-    .table-container-modern { overflow: hidden; border-radius: 4px; }
-    .table-responsive-modern { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .sticky-col { position: sticky; left: 0; z-index: 5; border-right: 2px solid #000 !important; }
-    .label-col { left: 0; background: #fff !important; min-width: 180px; }
-    .std-col { left: 180px; background: #f8f9fa !important; min-width: 100px; border-right: 3px double #000 !important; }
-    .bg-light-blue { background-color: #e3f2fd !important; }
-    
-    .section-divider { background: #343a40 !important; color: #fff !important; }
-    .row-hover:hover td { background-color: rgba(59, 130, 246, 0.05) !important; }
-    .cell-active { background-color: #fffde7; font-weight: bold; border: 1px solid #fbc02d !important; }
-    .cell-input { font-family: 'Courier New', Courier, monospace; font-weight: 600; color: #1a237e; }
+    /* PAPER REPLICA HUD SYSTEM (WHITE THEME) */
+    .paper-replica {
+        background: #fff;
+        color: #000;
+        border: 2px solid #000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        font-family: 'Arial', sans-serif;
+    }
+    .grid-form th, .grid-form td { 
+        border: 1px solid #333 !important; 
+        padding: 0; 
+        font-size: 11px; 
+        vertical-align: middle;
+    }
+    .grid-form th { 
+        background: #f4f4f4; 
+        color: #000; 
+        font-weight: 800; 
+        text-transform: uppercase; 
+        padding: 5px 2px;
+    }
     
     .input-transparent {
         background: transparent;
         border: none;
         outline: none;
-        color: #1a237e;
+        color: #000;
         width: 100%;
+        height: 100%;
         text-align: center;
-        padding: 4px 2px;
+        padding: 0;
+        margin: 0;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 800;
+        font-size: 13px;
+        transition: all 0.2s;
+        display: block;
     }
     .input-transparent:focus {
-        background: #fff9c4;
+        background: #fffde7;
+        color: #1a237e;
+    }
+    
+    .hud-vertical-label {
+        background: #e9ecef;
+        color: #333;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-align: center;
+        width: 30px !important;
+        border-bottom: 0 !important;
     }
 
     .super-small { font-size: 9px; }
-    .h-33 { height: 33.33%; }
+    .text-info-glow { color: #0d6efd; font-weight: 900; }
+    .bg-info-soft { background: rgba(13, 110, 253, 0.05); }
     
     .hud-container {
         padding: 25px;

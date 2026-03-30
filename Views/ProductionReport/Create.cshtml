@@ -5,7 +5,7 @@
 }
 
 <div class="production-blueprint no-print-bg pb-5">
-    <div class="container-fluid p-4">
+    <div class="container-fluid p-1 p-md-2">
         
         <!-- HEADER HUD (NO BACKGROUND) -->
         <div class="mb-5 py-2">
@@ -16,14 +16,50 @@
         </div>
 
         <form asp-action="Create" id="mainReportForm">
-            <!-- TOP INFO GRID -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4"><div class="hud-pill"><label>NO. DOC.</label><input asp-for="DocumentNumber" class="hud-input fw-bold" required /></div></div>
-                <div class="col-md-3"><div class="hud-pill"><label>DATE</label><input asp-for="ProductionDate" type="date" class="hud-input" value="@DateTime.Now.ToString("yyyy-MM-dd")" required /></div></div>
-                <div class="col-md-3"><div class="hud-pill"><label>SHIFT</label><select asp-for="Shift" class="hud-input bg-transparent border-0"><option value="I">SHIFT I</option><option value="II" selected>SHIFT II</option><option value="III">SHIFT III</option></select></div></div>
-                <div class="col-md-2"><div class="hud-pill"><label>NO. REV</label><input asp-for="RevisionNumber" class="hud-input text-center" value="0" /></div></div>
-                <div class="col-md-6"><div class="hud-pill"><label>CUSTOMER</label><input asp-for="CustomerName" class="hud-input" placeholder="PT. ADM" /></div></div>
-                <div class="col-md-6"><div class="hud-pill"><label>TYPE</label><input asp-for="HoseType" id="HoseType" class="hud-input" placeholder="Hose, Ventilation, Ø 11 mm x 18 mm" /></div></div>
+            <!-- SECTION: PRODUCTION COMMAND CONSOLE (TOP HEADER) -->
+            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                <div class="hud-card-header d-flex justify-content-between align-items-center py-2 px-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-terminal-fill hud-card-icon fs-6"></i>
+                        <span class="hud-card-title small tracking-widest font-monospace">PRODUCTION COMMAND CONSOLE</span>
+                    </div>
+                    <div class="d-flex gap-3 super-small font-black opacity-40 text-uppercase letter-spacing-2">
+                        <span><i class="bi bi-file-text me-1"></i>DOC: @Model.DocumentNumber</span>
+                        <span><i class="bi bi-activity me-1"></i>REV: @Model.RevisionNumber</span>
+                    </div>
+                </div>
+                <div class="p-3 bg-black bg-opacity-30 border-bottom border-white border-opacity-5">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
+                                <label><i class="bi bi-calendar-check me-2 text-primary"></i>SYSTEM DATE</label>
+                                <input type="date" asp-for="ProductionDate" class="hud-input font-monospace text-primary-glow" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
+                                <label><i class="bi bi-clock-history me-2 text-primary"></i>SHIFT</label>
+                                <select asp-for="Shift" class="hud-input font-black bg-transparent border-0" style="-webkit-appearance: none;">
+                                    <option value="I" class="bg-dark">SHIFT I</option>
+                                    <option value="II" class="bg-dark" selected>SHIFT II</option>
+                                    <option value="III" class="bg-dark">SHIFT III</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
+                                <label><i class="bi bi-building me-2 text-primary"></i>CUSTOMER ENTITY</label>
+                                <input asp-for="CustomerName" class="hud-input small text-white-50 font-black" placeholder="PT. ADM" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
+                                <label><i class="bi bi-cpu me-2 text-primary"></i>HOSE SPECIFICATION TYPE</label>
+                                <input asp-for="HoseType" class="hud-input small font-monospace text-white-50" placeholder="Extrusion Spec Name..." />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- ROW 2: MATERIAL & MESH CHECKING -->
@@ -63,6 +99,39 @@
                 .compact-hud td { padding: 4px 12px !important; }
                 .compact-hud th { padding: 6px 12px !important; }
                 .instrument-style { font-family: 'JetBrains Mono', 'Roboto Mono', monospace; }
+
+                /* INTEGRATED DASHBOARD PILLS */
+                .hud-pill-integrated { 
+                    background: rgba(30, 41, 59, 0.4); 
+                    border: 1px solid rgba(14, 165, 233, 0.2); 
+                    border-radius: 6px; 
+                    padding: 8px 12px; 
+                    display: flex; 
+                    flex-direction: column; 
+                    transition: all 0.3s;
+                }
+                .hud-pill-integrated:focus-within { 
+                    border-color: #0ea5e9; 
+                    background: rgba(14, 165, 233, 0.1); 
+                    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2); 
+                }
+                .hud-pill-integrated label { 
+                    font-size: 0.6rem; 
+                    font-weight: 800; 
+                    color: #38bdf8; 
+                    letter-spacing: 1px; 
+                    margin-bottom: 4px; 
+                    text-transform: uppercase;
+                }
+                .hud-pill-integrated .hud-input { 
+                    font-size: 0.85rem; 
+                    background: transparent; 
+                    border: none; 
+                    color: white; 
+                    padding: 0; 
+                    width: 100%;
+                    outline: none;
+                }
                 .group-lane { background: rgba(14, 165, 233, 0.03); }
                 .font-black { font-weight: 900 !important; font-size: 0.6rem !important; }
 
@@ -304,17 +373,20 @@
             </div>
 
             <!-- SECTION: DIES DIMENSION -->
-            <div class="hud-card mb-4 d-flex shadow-glow-blue">
-                <div class="hud-vertical-label">DIES DIMENSION</div>
-                <div class="flex-grow-1 p-0 overflow-auto">
-                    <table class="table table-dark table-hud m-0 text-center w-100 table-bordered-ghost">
+            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                <div class="hud-card-header">
+                    <i class="bi bi-rulers hud-card-icon"></i>
+                    <span class="hud-card-title">DIES DIMENSION MEASUREMENTS</span>
+                </div>
+                <div class="p-0 overflow-auto">
+                    <table class="table-hud-unified compact-hud instrument-style">
                         <thead>
-                            <tr class="bg-black bg-opacity-40">
-                                <th class="text-start ps-4">DIES DESCRIPTION</th>
-                                <th width="12%">CEK VISUAL</th>
-                                <th width="20%">STANDARD</th>
-                                <th width="20%">BEFORE</th>
-                                <th width="20%">AFTER</th>
+                            <tr class="bg-black bg-opacity-40 text-center">
+                                <th class="ps-4 text-start py-2 font-monospace tracking-widest text-primary-glow">DIES DESCRIPTION</th>
+                                <th width="15%" class="py-2 border-start border-white border-opacity-5">CEK VISUAL</th>
+                                <th width="18%" class="py-2 border-start border-white border-opacity-5">STANDARD</th>
+                                <th width="20%" class="py-2 border-start border-white border-opacity-5">INITIAL (BEFORE)</th>
+                                <th width="20%" class="py-2 border-start border-white border-opacity-5">FINAL (AFTER)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -329,12 +401,14 @@
                                 };
                             }
                             @foreach(var die in diesList) {
-                                <tr>
-                                    <td class="text-start ps-4 fw-bold">@die.Name</td>
-                                    <td><input type="checkbox" name="@die.Field" value="true" class="hud-check"></td>
-                                    <td class="text-primary-glow font-monospace">@die.Std</td>
-                                    <td><input class="hud-table-input text-center" placeholder="---" /></td>
-                                    <td><input class="hud-table-input text-center" placeholder="---" /></td>
+                                <tr class="group-lane">
+                                    <td class="ps-4 py-2 fw-bold text-white-50">@die.Name</td>
+                                    <td class="border-start border-white border-opacity-5">
+                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" name="@die.Field" value="true"></label><label class="hud-pill-item red">NG<input type="radio" name="@die.Field" value="false"></label></div>
+                                    </td>
+                                    <td class="text-info-glow font-monospace text-center border-start border-white border-opacity-5">@die.Std</td>
+                                    <td class="border-start border-white border-opacity-5"><input class="hud-input-underlined py-1 text-center font-monospace text-warning" placeholder="---" /></td>
+                                    <td class="border-start border-white border-opacity-5"><input class="hud-input-underlined py-1 text-center font-monospace text-warning" placeholder="---" /></td>
                                 </tr>
                             }
                         </tbody>
@@ -343,22 +417,28 @@
             </div>
 
             <!-- SECTION: PARAMETERS TABLE (The Massive Grid) -->
-            <div class="hud-card mb-4 d-flex shadow-glow-blue">
-                <div class="hud-vertical-label">PARAMETER SETTING</div>
-                <div class="flex-grow-1 p-0 overflow-auto">
-                    <table class="table table-dark table-hud m-0 text-center super-small table-bordered-ghost">
+            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                <div class="hud-card-header">
+                    <i class="bi bi-cpu hud-card-icon"></i>
+                    <span class="hud-card-title">PARAMETER SETTING MONITORING</span>
+                </div>
+                <div class="p-0 overflow-auto">
+                    <table class="table-hud-unified compact-hud instrument-style text-center">
                         <thead class="sticky-top bg-black">
-                            <tr class="text-info border-bottom border-primary border-opacity-30">
-                                <th class="text-start ps-4 py-3">DESCRIPTION / ITEM</th>
-                                <th width="10%">STANDARD</th>
-                                <th width="10%" class="bg-primary bg-opacity-20 text-white fw-900 border-x border-primary border-opacity-30">INITIAL</th>
-                                @for(int i=1; i<=7; i++){ <th width="8.5%">@i</th> }
+                            <tr class="bg-black bg-opacity-80 text-info-glow border-bottom border-white border-opacity-10">
+                                <th class="text-start ps-4 py-3 font-monospace tracking-widest small">INSTRUMENT / ITEM</th>
+                                <th width="12%" class="small">SPECIFICATION</th>
+                                <th width="12%" class="hud-th-scan text-white fw-900 border-x border-white border-opacity-10">INITIAL</th>
+                                @for(int i=1; i<=7; i++){ <th width="8%" class="border-start border-white border-opacity-5 small text-white-50">@i</th> }
                             </tr>
                         </thead>
                         <tbody>
                             <!-- INNER (TUBE 1) -->
-                            <tr class="group-header"><td colspan="10" class="text-start ps-4 bg-primary bg-opacity-10 text-primary fw-bold letter-spacing-2">INNER (TUBE 1)</td></tr>
-                            @{
+                            <tr class="bg-primary border-bottom border-white border-opacity-10">
+                                <td colspan="10" class="text-start ps-4 py-2 text-white font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
+                                    <i class="bi bi-gear-fill me-2 text-warning"></i>SECTION 01: INNER (TUBE 1)
+                                </td>
+                                                     @{
                                 string[,] innerRows = { 
                                     { "Head Temp. (°C)", "90 ± 5", "HeadTempInner" }, 
                                     { "Cylinder 1 (°C)", "90 ± 5", "Cylinder1TempInner" },
@@ -370,17 +450,21 @@
                                     { "Pressure (MPa)", "Max 50", "PressureInner" }
                                 };
                                 for(int r=0; r<innerRows.GetLength(0); r++){
-                                    <tr>
-                                        <td class="text-start ps-4">@innerRows[r,0]</td>
-                                        <td class="text-white-50">@innerRows[r,1]</td>
-                                        <td class="bg-primary bg-opacity-5"><input name="Init_@innerRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@innerRows[r,0]</td>
+                                        <td class="text-primary font-monospace small opacity-100 fw-bold">@innerRows[r,1]</td>
+                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@innerRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@innerRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
                                 }
                             }
 
                             <!-- OUTER (COVER) -->
-                            <tr class="group-header"><td colspan="10" class="text-start ps-4 bg-warning bg-opacity-10 text-warning fw-bold letter-spacing-2">OUTER (COVER)</td></tr>
+                            <tr class="bg-warning border-bottom border-white border-opacity-10">
+                                <td colspan="10" class="text-start ps-4 py-2 text-black font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
+                                    <i class="bi bi-gear-fill me-2 text-white"></i>SECTION 02: OUTER (COVER)
+                                </td>
+                            </tr>
                             @{
                                 string[,] outerRows = { 
                                     { "Head Temp. (°C)", "90 ± 5", "HeadTempOuter" }, 
@@ -393,17 +477,21 @@
                                     { "Pressure (MPa)", "Max 50", "PressureOuter" }
                                 };
                                 for(int r=0; r<outerRows.GetLength(0); r++){
-                                    <tr>
-                                        <td class="text-start ps-4">@outerRows[r,0]</td>
-                                        <td class="text-white-50">@outerRows[r,1]</td>
-                                        <td class="bg-primary bg-opacity-5"><input name="Init_@outerRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@outerRows[r,0]</td>
+                                        <td class="text-warning font-monospace small opacity-100 fw-bold">@outerRows[r,1]</td>
+                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@outerRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@outerRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
                                 }
                             }
 
                             <!-- SPIRAL -->
-                            <tr class="group-header"><td colspan="10" class="text-start ps-4 bg-success bg-opacity-10 text-success fw-bold letter-spacing-2">SPIRAL</td></tr>
+                            <tr class="bg-success border-bottom border-white border-opacity-10">
+                                <td colspan="10" class="text-start ps-4 py-2 text-white font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
+                                    <i class="bi bi-gear-fill me-2 text-warning"></i>SECTION 03: SPIRAL MECHANISM
+                                </td>
+                            </tr>
                             @{
                                 string[,] spiralRows = { 
                                     { "Spiral Speed (rpm)", "98 ± 20", "SpiralSpeed" }, 
@@ -411,17 +499,21 @@
                                     { "Spiral Pitch (Display)", "35 ± 5", "SpiralPitchDisplay" }
                                 };
                                 for(int r=0; r<spiralRows.GetLength(0); r++){
-                                    <tr>
-                                        <td class="text-start ps-4">@spiralRows[r,0]</td>
-                                        <td class="text-white-50">@spiralRows[r,1]</td>
-                                        <td class="bg-primary bg-opacity-5"><input name="Init_@spiralRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@spiralRows[r,0]</td>
+                                        <td class="text-success font-monospace small opacity-100 fw-bold">@spiralRows[r,1]</td>
+                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@spiralRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@spiralRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
                                 }
                             }
 
                             <!-- OTHER -->
-                            <tr class="group-header"><td colspan="10" class="text-info-glow fw-bold text-start ps-4 bg-info bg-opacity-10 letter-spacing-2" style="color: #0dcaf0;">OTHER</td></tr>
+                            <tr class="bg-info border-bottom border-white border-opacity-10">
+                                <td colspan="10" class="text-start ps-4 py-2 text-white font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
+                                    <i class="bi bi-gear-fill me-2 text-warning"></i>SECTION 04: INFRASTRUCTURE & OTHER
+                                </td>
+                            </tr>
                             @{
                                 string[,] otherRows = { 
                                     { "Preset Value (Ø mm)", "18.5 ± 0.2", "PresetValue" }, 
@@ -435,11 +527,11 @@
                                     { "Caterpillar Gap (mm)", "18.2 ± 1", "CaterpillarGap" }
                                 };
                                 for(int r=0; r<otherRows.GetLength(0); r++){
-                                    <tr>
-                                        <td class="text-start ps-4">@otherRows[r,0]</td>
-                                        <td class="text-white-50">@otherRows[r,1]</td>
-                                        <td class="bg-primary bg-opacity-5"><input name="Init_@otherRows[r,2]" class="reading-input-min fw-bold text-warning" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td><input disabled class="reading-input-min opacity-10" /></td> }
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@otherRows[r,0]</td>
+                                        <td class="text-info font-monospace small opacity-100 fw-bold">@otherRows[r,1]</td>
+                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@otherRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
+                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@otherRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
                                 }
                             }
@@ -451,34 +543,102 @@
             <!-- SECTION: WASTE & FOOTER HUD -->
             <div class="row g-3">
                 <div class="col-lg-7">
-                    <div class="hud-card d-flex h-100 shadow-glow-blue">
-                        <div class="hud-vertical-label">WASTE (KG)</div>
-                        <div class="flex-grow-1 p-0">
-                            <table class="table table-dark table-hud m-0 text-center super-small table-bordered-ghost">
+                    <div class="hud-card d-flex h-100 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                        <div class="hud-vertical-label bg-black bg-opacity-40 fw-black text-info font-monospace tracking-widest pt-2">WASTE PERFORMANCE</div>
+                        <div class="flex-grow-1 p-0 overflow-hidden">
+                            <table class="table-hud-unified instrument-style m-0 text-center super-small font-monospace">
                                 <thead>
-                                    <tr><th>TYPE</th><th>POINT</th><th width="35%">AWAL</th><th width="35%">AKHIR</th></tr>
+                                    <tr class="bg-black bg-opacity-60 text-info">
+                                        <th width="30%" class="ps-3 text-start small border border-white border-opacity-20">PHASE / POINT</th>
+                                        <th width="35%" class="bg-primary bg-opacity-10 text-white small border border-white border-opacity-20">AWAL (kg)</th>
+                                        <th width="35%" class="bg-success bg-opacity-10 text-white small border border-white border-opacity-20">AKHIR (kg)</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td rowspan="2" class="fw-bold bg-black bg-opacity-20 align-middle">Dandori Awal<br>(Cleaning)</td><td class="text-start ps-3">Inner</td><td><input asp-for="WasteWeightAwal" class="hud-table-input-min" /></td><td><input asp-for="WasteWeightAkhir" class="hud-table-input-min" /></td></tr>
-                                    <tr><td class="text-start ps-3">Cover</td><td><input name="WCAwal" class="hud-table-input-min" /></td><td><input name="WCAkhir" class="hud-table-input-min" /></td></tr>
-                                    <tr><td rowspan="2" class="fw-bold bg-black bg-opacity-20 align-middle">Dandori Akhir<br>(Remain Mat.)</td><td class="text-start ps-3">Inner</td><td><input name="WAI_A" class="hud-table-input-min" /></td><td><input name="WAI_B" class="hud-table-input-min" /></td></tr>
-                                    <tr><td class="text-start ps-3">Cover</td><td><input name="WAC_A" class="hud-table-input-min" /></td><td><input name="WAC_B" class="hud-table-input-min" /></td></tr>
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
+                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AWAL</div>
+                                            <div class="text-info super-small fw-bold">INNER TUBE</div>
+                                        </td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAI_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAI_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                    </tr>
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
+                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AWAL</div>
+                                            <div class="text-warning super-small fw-bold">COVER</div>
+                                        </td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAC_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAC_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                    </tr>
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
+                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AKHIR</div>
+                                            <div class="text-info super-small fw-bold">INNER TUBE</div>
+                                        </td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAI_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAI_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                    </tr>
+                                    <tr class="group-lane">
+                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
+                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AKHIR</div>
+                                            <div class="text-warning super-small fw-bold">COVER</div>
+                                        </td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAC_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAC_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-5">
-                    <div class="d-flex flex-column gap-3 h-100">
-                        <div class="p-3 border border-danger border-opacity-30 bg-danger bg-opacity-5 rounded-1">
-                             <div class="text-danger fw-900 super-small mb-1 tracking-widest"><i class="bi bi-exclamation-triangle-fill me-2"></i>OPERATIONAL NOTE</div>
-                             <p class="text-white-50 m-0 super-small line-height-1-5">LAKUKAN PENGECEKAN PARAMETER PADA SAAT AWAL, TENGAH & AKHIR PROSES.</p>
+                    <div class="d-flex flex-column h-100 gap-3">
+                        <!-- PREMIUM PROTOCOL ALERT -->
+                        <div class="hud-card border-danger border-opacity-40 bg-danger bg-opacity-10 shadow-hud-red p-3 d-flex align-items-center gap-3">
+                             <div class="hud-status-led led-red blink"></div>
+                             <div>
+                                <div class="text-danger-glow fw-900 super-small tracking-widest mb-1"><i class="bi bi-shield-lock-fill me-1"></i>SYSTEM PROTOCOL</div>
+                                <p class="text-white font-monospace super-small m-0 opacity-90 fw-bold">VERIFIKASI PARAMETER: AWAL / TENGAH / AKHIR PROSES.</p>
+                             </div>
                         </div>
-                        <div class="mt-auto d-flex gap-2">
-                             <button type="button" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold" onclick="location.reload()">RESET DATA</button>
-                             <button type="submit" class="btn btn-hud-primary flex-grow-1 py-3 fw-900 tracking-widest shadow-glow">
-                                 <i class="bi bi-play-circle-fill me-2"></i>SAVE & INITIALIZE
-                             </button>
+
+                        <!-- DIGITAL SIGN-OFF PANEL -->
+                        <div class="hud-card p-3 bg-black bg-opacity-40 border-white border-opacity-10 shadow-hud-blue">
+                            <div class="text-info-glow super-small fw-black mb-3 tracking-widest ps-1"><i class="bi bi-vector-pen me-2"></i>OPERATIONAL SIGN-OFF</div>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="hud-pill-integrated border-white border-opacity-5">
+                                    <label>DIBUAT (OPERATOR)</label>
+                                    <input asp-for="CreatedBy" class="hud-input text-primary-glow font-black h-auto py-1" placeholder="ENTER NAME..." />
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="hud-pill-integrated border-white border-opacity-5 opacity-50">
+                                            <label>CHECKED (LEADER)</label>
+                                            <input asp-for="CheckedBy" class="hud-input small" readonly placeholder="---" />
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="hud-pill-integrated border-white border-opacity-5 opacity-50">
+                                            <label>APPROVED (FOREMAN)</label>
+                                            <input asp-for="ApprovedBy" class="hud-input small" readonly placeholder="---" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- FINAL CONTROL TERMINAL -->
+                        <div class="hud-card p-3 flex-grow-1 d-flex flex-column bg-black bg-opacity-40 border-white border-opacity-10 shadow-hud-blue">
+                             <div class="text-info-glow super-small fw-black mb-3 tracking-widest ps-1"><i class="bi bi-terminal-fill me-2"></i>FINAL COMMANDS</div>
+                             <div class="mt-auto d-flex gap-2">
+                                <button type="button" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold small d-flex align-items-center justify-content-center gap-2" style="border-width: 1px;" onclick="location.reload()">
+                                    <i class="bi bi-trash3-fill"></i> RESET
+                                </button>
+                                <button type="submit" class="btn btn-hud-primary flex-grow-3 py-3 fw-900 tracking-widest shadow-glow-primary border-0 rounded-1 d-flex align-items-center justify-content-center gap-2" style="font-size: 1.1rem;">
+                                    <i class="bi bi-cloud-arrow-up-fill fs-5"></i> SAVE REPORT
+                                </button>
+                             </div>
                         </div>
                     </div>
                 </div>
@@ -530,6 +690,18 @@
     .shadow-glow-blue { box-shadow: 0 0 30px rgba(14, 165, 233, 0.15); }
     .super-small { font-size: 0.7rem; }
     .letter-spacing-2 { letter-spacing: 2.5px; }
+
+    /* STATUS LED & ANIMATIONS */
+    .hud-status-led { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+    .led-red { background: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+    .blink { animation: hud-blink 1.5s infinite; }
+    @@keyframes hud-blink { 
+        0%, 100% { opacity: 1; transform: scale(1); } 
+        50% { opacity: 0.4; transform: scale(0.85); } 
+    }
+
+    .flex-grow-2 { flex-grow: 2; }
+    .flex-grow-3 { flex-grow: 3; }
 
     /* Sticky Headers for tables */
     .sticky-top { position: sticky; top: 0; z-index: 10; }
