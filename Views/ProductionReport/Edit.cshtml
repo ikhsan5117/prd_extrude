@@ -1,439 +1,209 @@
 @model VelastoProductionSystem.Models.ProductionReport
 
 @{
-    ViewData["Title"] = "EDIT PRODUCTION REPORT";
+    ViewData["Title"] = "EDIT PRODUCTION COMMAND CENTER";
 }
 
-<div class="production-dashboard-sapphire fade-in">
-    <div class="container-fluid py-3 px-0">
+<div class="production-blueprint pb-5">
+    <div class="container-fluid p-3">
         
-        <!-- COMPACT HEADER ACTION BAR -->
-        <div class="d-flex justify-content-between align-items-center mb-3 no-print header-sapphire-glass p-2 px-3">
-            <div class="d-flex align-items-center">
-                <div class="brand-hexagon me-2">
-                    <i class="bi bi-hexagon-fill text-warning shadow-glow"></i>
-                </div>
+        <!-- TOP HUD: CONTROL STATUS -->
+        <div class="hud-header glass-morphism p-3 mb-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="hud-logo-v">V</div>
                 <div>
-                    <h5 class="text-white fw-900 mb-0 tracking-tighter">DATA CORRECTION <span class="text-warning">MODE</span></h5>
-                    <div class="d-flex align-items-center" style="margin-top: -4px;">
-                        <span class="status-indicator-min pulse-warning me-2"></span>
-                        <span class="text-white-50 super-small fw-bold letter-spacing-1">SYSTEM ONLINE</span>
+                    <h5 class="m-0 fw-900 tracking-widest text-white">RECORDS MONITORING & CORRECTION</h5>
+                    <div class="hud-status-bar d-flex gap-2 align-items-center">
+                        <div class="hud-status-led led-yellow blink"></div>
+                        <span class="hud-status-text">MAINTENANCE MODE</span>
+                        <span class="hud-separator">|</span>
+                        <span class="hud-status-text opacity-50">RECORD ID: @Model.Id</span>
                     </div>
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-glass btn-sm px-3">BACK</a>
+                <div class="hud-pill px-3 py-1">
+                    <label>STATUS</label>
+                    <span class="text-warning-glow fw-bold">UNDER CORRECTION</span>
+                </div>
             </div>
         </div>
 
-        <form asp-action="Edit" id="mainForm">
+        <form asp-action="Edit" id="mainReportForm">
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="CreatedBy" />
             <input type="hidden" asp-for="CreatedDate" />
             <input type="hidden" asp-for="Status" />
-            
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div asp-validation-summary="All" class="alert alert-danger mb-4 bg-danger bg-opacity-10 border-danger text-danger extra-small py-2 px-3 rounded-0 no-print"></div>
-            }
-            
-            <div class="main-glass-card shadow-2xl">
-                
-                <!-- TOP HEADER -->
-                <div class="row g-0 border-bottom border-warning border-opacity-25">
-                    <div class="col-md-9 p-4 d-flex align-items-center justify-content-center bg-hud-navy">
-                        <div class="text-center">
-                            <h2 class="fw-900 text-warning mb-1 text-glow" style="font-size: 2rem;">EDIT PRODUCTION REPORT :</h2>
-                            <div class="d-flex align-items-center justify-content-center gap-2">
-                                <span class="text-white-50 fw-bold extra-small tracking-widest">PT. VELASTO INDONESIA</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 p-0 border-start border-warning border-opacity-25 bg-hud-navy">
-                        <table class="table table-dark table-sm m-0 extra-small doc-header-table border-0 h-100">
-                            <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label" style="width: 130px;">No. Dokumen</td>
-                                <td class="pe-2 py-0 border-0 align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-warning fw-bold me-1">:</span>
-                                        <input asp-for="DocumentNumber" class="header-input text-warning" />
+
+            <div class="row g-3">
+                <!-- LEFT PANEL -->
+                <div class="col-lg-8">
+                    <div class="hud-card glass-morphism h-100 overflow-hidden d-flex">
+                        <div class="hud-vertical-label bg-warning bg-opacity-10 text-warning">CORE DATA OVERRIDE</div>
+                        <div class="p-4 flex-grow-1">
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <div class="hud-pill-integrated">
+                                        <label>DOCUMENT NUMBER</label>
+                                        <input asp-for="DocumentNumber" class="hud-input text-info-glow" />
                                     </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-white-50 ps-2 py-0 border-0 align-middle header-label">No. Revisi</td>
-                                <td class="pe-2 py-0 border-0 align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-warning fw-bold me-1">:</span>
-                                        <input asp-for="RevisionNumber" type="text" class="header-input text-warning" />
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="hud-pill-integrated">
+                                        <label>REVISION</label>
+                                        <input asp-for="RevisionNumber" class="hud-input" />
                                     </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="hud-pill-integrated">
+                                        <label>PRODUCTION DATE</label>
+                                        <input type="date" asp-for="ProductionDate" class="hud-input" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="hud-pill-integrated focus-warning">
+                                        <label>SHIFT CONTROL</label>
+                                        <select asp-for="Shift" class="hud-input bg-transparent border-0 text-white">
+                                            <option value="I">SHIFT I</option>
+                                            <option value="II">SHIFT II</option>
+                                            <option value="III">SHIFT III</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="hud-pill-integrated">
+                                        <label>CLIENT / CUSTOMER</label>
+                                        <input asp-for="CustomerName" class="hud-input" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="hud-pill-integrated">
+                                        <label>HOSE DESCRIPTION</label>
+                                        <input asp-for="HoseType" class="hud-input" />
+                                    </div>
+                                </div>
+                            </div>
 
-                <!-- MAIN WORKSPACE -->
-                <div class="row g-0 border border-warning border-opacity-20">
-                    
-                    <!-- LEFT COLUMN: PRODUCT SPECS -->
-                    <div class="col-md-4 p-4 border-end border-warning border-opacity-20 bg-hud-navy">
-                        <div class="d-flex flex-column h-100 gap-4">
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-upc-scan me-2"></i>1. HOSE TYPE</div>
-                                <div class="spec-card warning-theme">
-                                    <input asp-for="HoseType" class="spec-input fw-bold" />
-                                </div>
+                            <div class="hud-section-label mb-3"><i class="bi bi-layers me-2"></i>MATERIAL CONFIGURATION OVERRIDE</div>
+                            <div class="table-responsive">
+                                <table class="table-hud w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>ITEM</th>
+                                            <th>PROPERTY SPEC</th>
+                                            <th>LOT TRACKING</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="fw-bold">INNER LAYER</td>
+                                            <td class="p-0"><input asp-for="InnerMaterialActual" class="hud-table-input" /></td>
+                                            <td class="p-0"><input asp-for="InnerMaterialLotNo" class="hud-table-input text-info-glow" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">OUTER LAYER</td>
+                                            <td class="p-0"><input asp-for="OuterMaterialActual" class="hud-table-input" /></td>
+                                            <td class="p-0"><input asp-for="OuterMaterialLotNo" class="hud-table-input text-info-glow" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">YARN CORE</td>
+                                            <td class="p-0"><input asp-for="YarnActual" class="hud-table-input" /></td>
+                                            <td class="p-0"><input asp-for="YarnLotNo" class="hud-table-input text-info-glow" /></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-diagram-3 me-2"></i>2. STD PARAMETER REF</div>
-                                <div class="spec-card warning-theme p-1">
-                                    <select asp-for="StandardParameterSettingId" class="spec-input text-white fs-6 mt-2 pb-2" asp-items="ViewBag.StandardParameterSettings" style="background:transparent; border:none; padding-left: 15px;">
-                                        <option value="">-- NO REFERENCE --</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-rulers me-2"></i>3. DIMENSION</div>
-                                <div class="spec-card warning-theme">
-                                    <input asp-for="Dimension" class="spec-input highlight-warning" />
-                                </div>
-                            </div>
-                            <div class="spec-group">
-                                <div class="spec-label mb-2"><i class="bi bi-person me-2"></i>4. CUSTOMER</div>
-                                <div class="spec-card warning-theme">
-                                    <input asp-for="CustomerName" class="spec-input highlight-warning" />
-                                </div>
-                            </div>
-                            <!-- DIE VERIFICATION -->
-                            <div class="spec-group mt-3">
-                                <div class="spec-label mb-2"><i class="bi bi-tools me-2"></i>5. DIE VERIFICATION</div>
-                                <div class="row g-2">
-                                    @foreach(var die in new[] { 
-                                        new { K="NippleDieOK", L="Nipple" }, 
-                                        new { K="TubeDieOK", L="Tube" }, 
-                                        new { K="MiddleDieOK", L="Middle" }, 
-                                        new { K="CoverDieOK", L="Cover" }, 
-                                        new { K="SpacerDieOK", L="Spacer" } 
-                                    })
-                                    {
-                                        var isChecked = typeof(VelastoProductionSystem.Models.ProductionReport).GetProperty(die.K)?.GetValue(Model) as bool? == true;
-                                        <div class="col-4">
-                                            <div class="die-toggle-hud @(isChecked ? "active" : "")" onclick="toggleDieCheckbox(this, '@die.K')">
-                                                <input class="die-checkbox d-none" type="checkbox" name="@die.K" value="true" @(isChecked ? "checked" : "") id="@die.K">
-                                                <label class="die-label cursor-pointer" style="font-size:11px;">@die.L</label>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CENTER COLUMN: TIME & SCHEDULING -->
-                    <div class="col-md-4 p-4 border-end border-warning border-opacity-20 bg-hud-navy">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="section-tag warning">TIME CONTROL & SHIFT</div>
-                            <div class="hud-date-box warning">
-                                <i class="bi bi-calendar3 me-2 text-warning"></i>
-                                <input asp-for="ProductionDate" type="date" class="bg-transparent border-0 text-white extra-small fw-bold" />
-                            </div>
-                        </div>
-
-                        <!-- SHIFT -->
-                        <div class="mb-4">
-                            <select asp-for="Shift" class="form-select bg-dark border-warning text-warning fw-bold rounded-0">
-                                <option value="Shift 1">Shift 1</option>
-                                <option value="Shift 2">Shift 2</option>
-                                <option value="Shift 3">Shift 3</option>
-                            </select>
-                        </div>
-
-                        <!-- TIME GRIDS -->
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="glass-table-container warning">
-                                    <div class="table-header-min bg-warning text-dark text-center fw-bold border-bottom border-warning border-opacity-20 py-1">DANDORI PHASE</div>
-                                    <table class="table table-dark table-borderless m-0 text-center extra-small align-middle" style="background:transparent;">
-                                        <thead>
-                                            <tr class="text-white-50 border-bottom border-warning border-opacity-20">
-                                                <th class="py-1">AWAL</th>
-                                                <th class="py-1">AKHIR</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="border-bottom border-warning border-opacity-5">
-                                                <td class="py-2"><input asp-for="DandoriStartTime" type="time" class="time-hud-input" /></td>
-                                                <td class="py-2"><input asp-for="DandoriEndTime" type="time" class="time-hud-input" /></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="glass-table-container warning">
-                                    <div class="table-header-min bg-warning text-dark text-center fw-bold border-bottom border-warning border-opacity-20 py-1">PRODUCTION PHASE</div>
-                                    <table class="table table-dark table-borderless m-0 text-center extra-small align-middle" style="background:transparent;">
-                                        <thead>
-                                            <tr class="text-white-50 border-bottom border-warning border-opacity-20">
-                                                <th class="py-1">START</th>
-                                                <th class="py-1">FINISH</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="p-2 border-end border-warning border-opacity-20"><input asp-for="ProductionStartTime" type="time" class="time-hud-input fs-6 p-2 text-warning fw-bold highlight-warning" /></td>
-                                                <td class="p-2"><input asp-for="ProductionEndTime" type="time" class="time-hud-input fs-6 p-2 text-warning fw-bold highlight-warning" /></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT COLUMN: FINAL OUTPUT -->
-                    <div class="col-md-4 p-4 border-start border-warning border-opacity-20 bg-hud-navy">
-                        <div class="section-tag warning mb-3">FINAL OUTPUT DATA</div>
-                        
-                        <div class="hud-input-group border border-warning border-opacity-25 p-2 mb-3 bg-warning bg-opacity-10 text-center">
-                            <label class="hud-label text-warning mb-1 d-block w-100 text-center">VIN CODE</label>
-                            <input asp-for="VinCode" class="hud-input-lg w-100 fw-black fs-4 text-warning text-center" style="letter-spacing:2px;" />
-                        </div>
-                        
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="hud-label text-white-50">Qty Target (Pcs)</label>
-                                <input asp-for="QtyTarget" class="hud-input-sm w-100 text-center text-white p-2" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2);" />
-                            </div>
-                            <div class="col-6">
-                                <label class="hud-label text-success">Qty OK (Pcs)</label>
-                                <input asp-for="QtyOk" class="hud-input-sm w-100 text-center text-success fw-bold p-2" style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3);" />
-                            </div>
-                            <div class="col-6 mt-3">
-                                <label class="hud-label text-danger">NG DIMENSION</label>
-                                <input asp-for="NgDimension" class="hud-input-sm w-100 text-center text-danger p-2" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3);" />
-                            </div>
-                            <div class="col-6 mt-3">
-                                <label class="hud-label text-danger">NG VISUAL</label>
-                                <input asp-for="NgVisual" class="hud-input-sm w-100 text-center text-danger p-2" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3);" />
-                            </div>
-                        </div>
-
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="hud-label text-white-50">Std Length (mm)</label>
-                                <input asp-for="StandardLength" class="hud-input-sm w-100 p-2" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2);" />
-                            </div>
-                            <div class="col-6">
-                                <label class="hud-label text-white-50">Act Length (mm)</label>
-                                <input asp-for="ActualLength" class="hud-input-sm w-100 p-2" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2);" />
-                            </div>
-                        </div>
-                        
-                        <div class="mt-3">
-                            <label class="hud-label text-white-50">REMARK / NOTE</label>
-                            <textarea asp-for="Remark" class="form-control bg-dark text-white border-warning border-opacity-25 mt-1 rounded-0" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- BOTTOM ROW: MATERIALS -->
-                <div class="row g-0 border border-top-0 border-warning border-opacity-20 bg-hud-navy">
-                    <div class="col-12 p-4">
-                        <div class="section-tag warning mb-4">MATERIAL ACTUAL VERIFICATION</div>
-                        
-                        <div class="material-grid">
-                            <!-- INNER -->
-                            <div class="material-row-hud mb-1">
-                                <div class="mat-item-label text-warning">1) Inner :</div>
-                                <div class="mat-inputs-group">
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">Plan:</span>
-                                        <input asp-for="InnerMaterial" class="mat-line-input text-white-50 border-0" readonly tabindex="-1" />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label text-warning">Actual:</span>
-                                        <input asp-for="InnerMaterialActual" class="mat-line-input highlight-warning border-warning" />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">No.Lot :</span>
-                                        <input asp-for="InnerMaterialLotNo" class="mat-line-input" />
-                                    </div>
-                                    <div class="mat-field-wrap mini">
-                                        <span class="mat-inline-label">SG :</span>
-                                        <input asp-for="InnerMaterialSG" class="mat-line-input text-center" type="text" />
-                                    </div>
-                                </div>
+                <!-- RIGHT PANEL -->
+                <div class="col-lg-4">
+                    <div class="d-flex flex-column h-100 gap-3">
+                        <div class="hud-card glass-morphism p-3">
+                            <div class="hud-section-label mb-3 text-info"><i class="bi bi-clock-history me-2"></i>PROCESS TIMELINE</div>
+                            <div class="row g-2">
+                                <div class="col-6"><div class="hud-pill-integrated border-info border-opacity-30"><label>DANDORI START</label><input asp-for="DandoriStartTime" type="time" class="hud-input" /></div></div>
+                                <div class="col-6"><div class="hud-pill-integrated border-info border-opacity-30"><label>DANDORI END</label><input asp-for="DandoriEndTime" type="time" class="hud-input" /></div></div>
+                                <div class="col-6"><div class="hud-pill-integrated border-primary border-opacity-30"><label>PROD START</label><input asp-for="ProductionStartTime" type="time" class="hud-input" /></div></div>
+                                <div class="col-6"><div class="hud-pill-integrated border-primary border-opacity-30"><label>PROD END</label><input asp-for="ProductionEndTime" type="time" class="hud-input" /></div></div>
                             </div>
-                            <!-- YARN -->
-                            <div class="material-row-hud mb-1">
-                                <div class="mat-item-label text-warning">2) Yarn :</div>
-                                <div class="mat-inputs-group">
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">Plan:</span>
-                                        <input asp-for="Yarn" class="mat-line-input text-white-50 border-0" value="ARAMID" readonly tabindex="-1" />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label text-warning">Actual:</span>
-                                        <input asp-for="YarnActual" class="mat-line-input highlight-warning border-warning" />
-                                    </div>
-                                    <div class="mat-field-wrap" style="opacity: 0; pointer-events:none;">
-                                        <!-- Spacer -->
-                                        <span class="mat-inline-label">No.Lot :</span>
-                                        <input class="mat-line-input" />
-                                    </div>
-                                    <div class="mat-field-wrap mini" style="opacity: 0; pointer-events:none;">
-                                        <!-- Spacer -->
-                                        <span class="mat-inline-label">SG :</span>
-                                        <input class="mat-line-input text-center" type="text" />
-                                    </div>
-                                </div>
+                        </div>
+
+                        <div class="hud-card glass-morphism p-3">
+                            <div class="hud-section-label mb-3 text-success"><i class="bi bi-box-seam me-2"></i>OUTPUT SUMMARY</div>
+                            <div class="hud-pill-integrated border-success border-opacity-30">
+                                <label>QUANTITY OK</label>
+                                <input asp-for="QtyOk" class="hud-input fw-black fs-4 text-success" />
                             </div>
-                            <!-- OUTER -->
-                            <div class="material-row-hud">
-                                <div class="mat-item-label text-warning">3) Outer :</div>
-                                <div class="mat-inputs-group">
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">Plan:</span>
-                                        <input asp-for="OuterMaterial" class="mat-line-input text-white-50 border-0" readonly tabindex="-1" />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label text-warning">Actual:</span>
-                                        <input asp-for="OuterMaterialActual" class="mat-line-input highlight-warning border-warning" />
-                                    </div>
-                                    <div class="mat-field-wrap">
-                                        <span class="mat-inline-label">No.Lot :</span>
-                                        <input asp-for="OuterMaterialLotNo" class="mat-line-input" />
-                                    </div>
-                                    <div class="mat-field-wrap mini">
-                                        <span class="mat-inline-label">SG :</span>
-                                        <input asp-for="OuterMaterialSG" class="mat-line-input text-center" type="text" />
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
+
+                        <div class="hud-card glass-morphism p-3 flex-grow-1">
+                            <div class="hud-section-label mb-2"><i class="bi bi-chat-dots me-2"></i>REASON FOR CORRECTION</div>
+                            <textarea asp-for="Remark" class="hud-textarea flex-grow-1 w-100" placeholder="Type reason for edit..."></textarea>
+                        </div>
+
+                        <div class="hud-card glass-morphism p-3 shadow-glow-primary border-primary border-opacity-30">
+                            <button type="submit" class="btn btn-hud-primary w-100 py-3 fw-900 tracking-widest text-uppercase">UPDATE MISSION DATA</button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-hud-outline w-100 py-2 mt-2 fw-bold small">ABORT & RETURN</a>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="d-flex justify-content-end gap-2 mt-3 pb-4 no-print">
-                <button type="submit" class="btn btn-warning btn-lg px-5 rounded-0 fw-bold shadow-glow-warning">
-                    <i class="bi bi-save me-1"></i> SAVE RECORD
-                </button>
             </div>
         </form>
     </div>
 </div>
 
 <style>
-    /* WARNING SETTINGS */
-    .production-dashboard-sapphire {
-        min-height: 100vh;
-        padding: 1.5rem;
-        background-color: #020617;
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(217, 119, 6, 0.15) 0, transparent 50%), 
-            radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.1) 0, transparent 50%);
-        position: relative;
+    :root {
+        --hud-bg: #020617;
+        --hud-card: rgba(15, 23, 42, 0.7);
+        --hud-primary: #0ea5e9;
+        --hud-accent: #38bdf8;
+        --hud-warning: #f59e0b;
+        --hud-border: rgba(14, 165, 233, 0.2);
     }
 
-    .header-sapphire-glass {
-        background: rgba(245, 158, 11, 0.05);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(245, 158, 11, 0.2);
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
+    .production-blueprint { min-height: 100vh; background: var(--hud-bg); color: #f1f5f9; font-family: 'Inter', sans-serif; }
+    .glass-morphism { background: var(--hud-card); backdrop-filter: blur(15px); border: 1px solid var(--hud-border); border-radius: 12px; }
     
-    .section-tag { background: rgba(59, 130, 246, 0.15); border-left: 3px solid #3b82f6; color: #60a5fa; font-size: 10px; font-weight: 900; padding: 4px 10px; letter-spacing: 2px; text-transform: uppercase; display: inline-block; }
-    .section-tag.warning { background: rgba(245, 158, 11, 0.15); border-left-color: #f59e0b; color: #fcd34d; }
+    .hud-header { border-left: 4px solid var(--hud-warning); }
+    .hud-logo-v { width: 44px; height: 44px; background: var(--hud-primary); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 24px; }
     
-    .bg-hud-navy { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); }
-    .spec-card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; padding: 12px 20px; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
-    .spec-card.warning-theme { border-color: rgba(245, 158, 11, 0.2); border-left-color: #f59e0b; }
-    .spec-card.warning-theme:focus-within { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+    .hud-status-led { width: 8px; height: 8px; border-radius: 50%; }
+    .led-yellow { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+    .hud-status-text { font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; }
+    .blink { animation: hud-blink 2s infinite; }
+    @@keyframes hud-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .hud-pill { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--hud-border); border-radius: 8px; display: flex; flex-direction: column; }
+    .hud-pill label { font-size: 0.55rem; font-weight: 900; color: var(--hud-primary); opacity: 0.7; }
     
-    .spec-label { color: #fcd34d; font-size: 11px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-    .spec-input { background: transparent; border: none; color: white; font-size: 18px; font-weight: 700; width: 100%; outline: none; }
-    .spec-input.highlight-warning { color: #fcd34d; text-shadow: 0 0 10px rgba(252, 211, 77, 0.5); }
+    .hud-vertical-label { width: 35px; writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.7rem; border-right: 1px solid var(--hud-border); }
     
-    .super-small { font-size: 8px !important; }
-    .hud-label { font-size: 11px; font-weight: 800; letter-spacing: 1px; display: block; }
-    .hud-input-sm { background: transparent; border: 1px dotted rgba(255,255,255,0.3); color: white; outline: none; padding: 4px 8px; font-size: 13px; font-weight: bold; }
+    .hud-pill-integrated { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--hud-border); padding: 8px 12px; border-radius: 8px; transition: all 0.3s; }
+    .hud-pill-integrated:focus-within { border-color: var(--hud-accent); background: rgba(14, 165, 233, 0.1); }
+    .hud-pill-integrated label { font-size: 0.6rem; font-weight: 900; color: var(--hud-primary); display: block; margin-bottom: 2px; }
+    .hud-input { background: transparent; border: none; outline: none; color: white; width: 100%; font-size: 0.9rem; font-weight: 600; padding: 0; }
     
-    .hud-date-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(59, 130, 246, 0.2); padding: 2px 10px; display: flex; align-items: center; border-bottom: 2px dotted rgba(59, 130, 246, 0.5); }
-    .hud-date-box.warning { border-color: rgba(245, 158, 11, 0.2); border-bottom-color: rgba(245, 158, 11, 0.5); }
-
-    .material-row-hud { display: flex; align-items: center; background: transparent; padding: 12px 0; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-    .mat-item-label { color: #e2e8f0; font-size: 15px; font-weight: 700; width: 130px; white-space: nowrap; }
-    .mat-inputs-group { display: flex; flex-grow: 1; gap: 20px; }
-    .mat-field-wrap { display: flex; align-items: center; flex-grow: 1; gap: 10px; }
-    .mat-field-wrap.mini { flex-grow: 0; width: 140px; }
-    .mat-inline-label { color: #94a3b8; font-size: 15px; font-weight: 800; white-space: nowrap; }
-    .mat-line-input { background: transparent; border: none; border-bottom: 2px dotted rgba(255, 255, 255, 0.3); color: white; font-size: 15px; font-weight: 700; width: 100%; outline: none; padding-bottom: 2px; }
-    .mat-line-input:focus { border-bottom-style: solid; border-bottom-color: #f59e0b; }
-    .mat-line-input.highlight-warning { color: #fcd34d; border-bottom-color: rgba(245, 158, 11, 0.5); }
-
-    .time-hud-input { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(245, 158, 11, 0.3); color: rgba(255,255,255,0.8); font-size: 13px; font-weight: bold; width: 100%; border-radius: 0; padding: 4px; outline: none; }
-    .time-hud-input.highlight-warning { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.5); }
-
-    /* Sharp Grid HUD */
-    .glass-table-container { border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 0px; background: rgba(15, 23, 42, 0.4); }
-    .glass-table-container.warning { border-color: rgba(245, 158, 11, 0.2); }
-    .table-header-min { font-size: 10px; font-weight: 900; text-align: center; padding: 5px; letter-spacing: 1px; }
-
-    .header-input { background: transparent; border: none; font-weight: 800; font-size: 15px; width: 100%; outline: none; }
-    .header-input:focus { background: rgba(245, 158, 11, 0.1); }
-    .header-label { font-size: 15px; font-weight: 600; white-space: nowrap; }
-
-    /* Buttons & Glow */
-    .btn-outline-glass { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.8); transition: all 0.3s; }
-    .btn-outline-glass:hover { background: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
-    .shadow-glow-warning { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
-
-    .pulse-warning { width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-    @@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-    .main-glass-card { width: 100%; border-radius: 0; overflow: hidden; border: 1px solid rgba(245, 158, 11, 0.2); }
-
-    /* Dies Checkbox Styling */
-    .die-toggle-hud {
-        border: 1px solid rgba(255,255,255,0.2);
-        padding: 5px;
-        text-align: center;
-        background: rgba(0,0,0,0.2);
-        transition: all 0.2s;
-        user-select: none;
-    }
-    .die-toggle-hud.active {
-        background: rgba(245, 158, 11, 0.2);
-        border-color: #f59e0b;
-        color: #fcd34d;
-        box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-    }
-    .cursor-pointer { cursor: pointer; }
-
-    /* Tablet Responsive Sharp */
-    @@media (max-width: 992px) {
-        .production-dashboard-sapphire { padding: 0 !important; }
-        .main-glass-card { border-left: none; border-right: none; }
-        .col-md-9, .col-md-3, .col-md-4 { width: 100% !important; }
-        .border-end, .border-start { border: none !important; border-bottom: 1px solid rgba(245, 158, 11, 0.1) !important; }
-    }
+    .hud-section-label { font-size: 0.75rem; font-weight: 900; letter-spacing: 1.5px; color: var(--hud-primary); text-transform: uppercase; border-bottom: 1px solid var(--hud-border); padding-bottom: 5px; }
+    
+    .table-hud { font-size: 0.85rem; border-collapse: separate; border-spacing: 0 4px; }
+    .table-hud th { font-size: 0.65rem; font-weight: 900; color: var(--hud-primary); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--hud-border); }
+    .table-hud td { padding: 12px; background: rgba(30, 41, 59, 0.3); vertical-align: middle; }
+    
+    .hud-table-input { background: rgba(30, 41, 59, 0.5); border: 1px solid transparent; color: white; width: 100%; padding: 8px; text-align: center; border-radius: 4px; outline: none; font-weight: 700; font-size: 0.95rem; }
+    .hud-table-input:focus { border-color: var(--hud-primary); }
+    
+    .hud-textarea { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--hud-border); border-radius: 8px; color: white; padding: 10px; outline: none; font-size: 0.85rem; min-height: 100px; resize: none; }
+    
+    .btn-hud-primary { background: var(--hud-primary); color: white; border: none; border-radius: 8px; }
+    .btn-hud-outline { background: transparent; border: 1px solid var(--hud-border); color: #94a3b8; border-radius: 8px; }
+    
+    .text-info-glow { color: #60a5fa; text-shadow: 0 0 8px rgba(96, 165, 250, 0.4); }
+    .text-warning-glow { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
+    .shadow-glow-primary { box-shadow: 0 0 20px rgba(14, 165, 233, 0.3); }
+    .fw-900 { font-weight: 900; }
+    .tracking-widest { letter-spacing: 3px; }
 </style>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script>
-        function toggleDieCheckbox(element, checkboxId) {
-            const cb = document.getElementById(checkboxId);
-            cb.checked = !cb.checked;
-            if(cb.checked) {
-                element.classList.add('active');
-            } else {
-                element.classList.remove('active');
-            }
-        }
-    </script>
-}
