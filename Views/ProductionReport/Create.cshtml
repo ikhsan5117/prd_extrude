@@ -96,8 +96,8 @@
                 .hud-pill-group.sm { border-radius: 4px; padding: 2px; }
                 .hud-pill-group.sm .hud-pill-item { padding: 3px 2px; font-size: 0.65rem; border-radius: 3px; }
                 
-                .compact-hud td { padding: 4px 12px !important; }
-                .compact-hud th { padding: 6px 12px !important; }
+                .compact-hud td { padding: 4px 1px !important; } /* REDUCED PADDING TO PREVENT INPUT SQUEEZING */
+                .compact-hud th { padding: 6px 1px !important; }
                 .instrument-style { font-family: 'JetBrains Mono', 'Roboto Mono', monospace; }
 
                 /* INTEGRATED DASHBOARD PILLS */
@@ -429,9 +429,9 @@
                         <thead class="sticky-top bg-black">
                             <tr class="bg-black bg-opacity-80 text-info-glow border-bottom border-white border-opacity-10">
                                 <th class="text-start ps-4 py-3 font-monospace tracking-widest small">INSTRUMENT / ITEM</th>
-                                <th width="12%" class="small">SPECIFICATION</th>
-                                <th width="12%" class="hud-th-scan text-white fw-900 border-x border-white border-opacity-10">INITIAL</th>
-                                @for(int i=1; i<=7; i++){ <th width="8%" class="border-start border-white border-opacity-5 small text-white-50">@i</th> }
+                                <th width="10%" class="small">SPECIFICATION</th>
+                                <th width="10%" class="hud-th-scan text-white fw-900 border-x border-white border-opacity-10">INITIAL</th>
+                                @for(int i=1; i<=7; i++){ <th width="9.5%" class="border-start border-white border-opacity-5 small text-white-50">@i</th> }
                             </tr>
                         </thead>
                         <tbody>
