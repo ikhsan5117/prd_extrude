@@ -55,6 +55,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Yarn")]
         public string? Yarn { get; set; }
 
+        [Display(Name = "No. Lot Yarn")]
+        public string? YarnLotNo { get; set; }
+
         // Times for Image 1
         public DateTime? DandoriStartTime { get; set; }
         public DateTime? DandoriEndTime { get; set; }

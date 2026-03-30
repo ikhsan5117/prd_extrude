@@ -27,48 +27,161 @@
             </div>
 
             <!-- ROW 2: MATERIAL & MESH CHECKING -->
-            <div class="row g-3 mb-4">
-                <div class="col-lg-6">
-                    <div class="hud-card d-flex h-100 shadow-glow-blue">
-                        <div class="hud-vertical-label">MATERIAL</div>
+            <!-- ROW 2: MATERIAL & MESH CHECKING -->
+            <style>
+                .hud-pill-group {
+                    display: inline-flex;
+                    background: rgba(0, 0, 0, 0.4);
+                    padding: 3px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    width: 100%;
+                    justify-content: center;
+                }
+                .hud-pill-item {
+                    flex: 1;
+                    padding: 5px 10px;
+                    font-size: 0.7rem;
+                    font-weight: 900;
+                    color: rgba(255, 255, 255, 0.4);
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                    text-align: center;
+                }
+                .hud-pill-item input { display: none; }
+                .hud-pill-item:has(input:checked) {
+                    background: #10b981;
+                    color: white;
+                    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+                }
+                .hud-pill-item.red:has(input:checked) { background: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+                .hud-pill-item.orange:has(input:checked) { background: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+                .hud-pill-item:hover:not(:has(input:checked)) {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                }
+                .hud-cell-label { font-size: 0.6rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 2px; }
+                .hud-cell-value { font-size: 0.85rem; font-weight: 900; color: white; display: block; line-height: 1.2; }
+                .hud-input-underlined {
+                    background: transparent;
+                    border: none;
+                    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+                    color: white;
+                    font-weight: 900;
+                    width: 100%;
+                    padding: 8px 4px;
+                    text-align: center;
+                    transition: all 0.3s;
+                    font-size: 0.85rem;
+                }
+                .hud-input-underlined:focus {
+                    outline: none;
+                    border-bottom-color: #3b82f6;
+                    background: rgba(59, 130, 246, 0.05);
+                }
+                .hud-input-underlined.lot { color: #0ea5e9; border-bottom-color: rgba(14, 165, 233, 0.2); background: rgba(14, 165, 233, 0.03); }
+                .hud-input-underlined.lot:focus { border-bottom-color: #0ea5e9; background: rgba(14, 165, 233, 0.1); }
+            </style>
+
+            <div class="row g-4 mb-5">
+                <!-- MATERIAL & LOT SECTION -->
+                <div class="col-lg-7">
+                    <div class="hud-card h-100 shadow-hud-blue border-white border-opacity-10 overflow-hidden d-flex">
+                        <div class="hud-tag-sidebar blue"><span>MATERIAL & LOT</span></div>
                         <div class="flex-grow-1 p-0">
-                            <table class="table table-dark table-hud m-0 text-center table-bordered-ghost">
-                                <thead>
-                                    <tr><th class="text-start ps-3">CONTENT</th><th width="35%">STANDARD</th><th width="35%">ACTUAL</th></tr>
+                            <table class="table table-dark table-borderless m-0 align-middle">
+                                <thead class="bg-black bg-opacity-40 border-bottom border-white border-opacity-10">
+                                    <tr>
+                                        <th class="ps-4 py-3 sub-title opacity-75">CONTENT</th>
+                                        <th width="24%" class="py-3 sub-title opacity-75 text-center">STANDARD</th>
+                                        <th width="22%" class="py-3 sub-title opacity-75 text-center">ACTUAL</th>
+                                        <th width="30%" class="py-3 sub-title text-info border-start border-white border-opacity-10 text-center">NO. LOT</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td class="text-start ps-3 fw-bold">Inner (Material)</td><td><input asp-for="InnerMaterial" class="hud-table-input text-primary-glow" readonly /></td><td><input asp-for="InnerMaterialActual" class="hud-table-input" /></td></tr>
-                                    <tr><td class="text-start ps-3 fw-bold">Outer (Material)</td><td><input asp-for="OuterMaterial" class="hud-table-input text-primary-glow" readonly /></td><td><input asp-for="OuterMaterialActual" class="hud-table-input" /></td></tr>
-                                    <tr><td class="text-start ps-3 fw-bold">Yarn</td><td><input asp-for="Yarn" class="hud-table-input text-primary-glow" readonly /></td><td><input asp-for="YarnActual" class="hud-table-input" /></td></tr>
+                                    <tr class="border-bottom border-white border-opacity-5">
+                                        <td class="ps-4 py-4">
+                                            <span class="hud-cell-label small">INNER (MATERIAL)</span>
+                                            <span class="hud-cell-value">Compound Type A</span>
+                                        </td>
+                                        <td><input asp-for="InnerMaterial" class="hud-input-underlined opacity-50" readonly /></td>
+                                        <td><input asp-for="InnerMaterialActual" class="hud-input-underlined" placeholder="---" /></td>
+                                        <td class="bg-black bg-opacity-20 border-start border-white border-opacity-10 p-3"><input asp-for="InnerMaterialLotNo" class="hud-input-underlined lot" placeholder="SCAN / TYPE LOT" /></td>
+                                    </tr>
+                                    <tr class="border-bottom border-white border-opacity-5">
+                                        <td class="ps-4 py-4">
+                                            <span class="hud-cell-label small">OUTER (MATERIAL)</span>
+                                            <span class="hud-cell-value">Compound Type B</span>
+                                        </td>
+                                        <td><input asp-for="OuterMaterial" class="hud-input-underlined opacity-50" readonly /></td>
+                                        <td><input asp-for="OuterMaterialActual" class="hud-input-underlined" placeholder="---" /></td>
+                                        <td class="bg-black bg-opacity-20 border-start border-white border-opacity-10 p-3"><input asp-for="OuterMaterialLotNo" class="hud-input-underlined lot" placeholder="SCAN / TYPE LOT" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 py-4">
+                                            <span class="hud-cell-label small">YARN (SUPPORT)</span>
+                                            <span class="hud-cell-value">Polyester Braiding</span>
+                                        </td>
+                                        <td><input asp-for="Yarn" class="hud-input-underlined opacity-50" readonly /></td>
+                                        <td><input asp-for="YarnActual" class="hud-input-underlined" placeholder="---" /></td>
+                                        <td class="bg-black bg-opacity-20 border-start border-white border-opacity-10 p-3"><input asp-for="YarnLotNo" class="hud-input-underlined lot" placeholder="SCAN / TYPE LOT" /></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="hud-card d-flex h-100 shadow-glow-blue">
-                        <div class="hud-vertical-label">MESH & CHECKS</div>
+
+                <!-- MESH & EMBOSS SECTION -->
+                <div class="col-lg-5">
+                    <div class="hud-card h-100 shadow-hud-blue border-white border-opacity-10 overflow-hidden d-flex">
+                        <div class="hud-tag-sidebar blue-dim"><span>MESH & EMBOSS</span></div>
                         <div class="flex-grow-1 p-0">
-                            <table class="table table-dark table-hud m-0 text-center super-small table-bordered-ghost">
-                                <thead>
-                                    <tr><th width="25%">CATEGORY</th><th width="20%">CONTENT</th><th>Ø96 #10</th><th>Ø96 #40</th><th>OTHER</th></tr>
+                            <table class="table table-dark table-borderless m-0 align-middle">
+                                <thead class="bg-black bg-opacity-40 border-bottom border-white border-opacity-10">
+                                    <tr>
+                                        <th class="ps-3 py-3 sub-title opacity-75">CHECKLISTS</th>
+                                        <th width="30%" class="py-3 sub-title opacity-75 text-center">Ø96 #10</th>
+                                        <th width="30%" class="py-3 sub-title opacity-75 text-center">Ø96 #40</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="bg-black bg-opacity-20"><td rowspan="2" class="fw-bold align-middle">Tipe Mesh<br>(Sebelum)</td><td class="text-start ps-2">Inner</td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td></tr>
-                                    <tr class="bg-black bg-opacity-20"><td class="text-start ps-2">Outer</td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td><td><input type="checkbox" class="hud-check-min"></td></tr>
-                                    <tr><td rowspan="2" class="fw-bold align-middle">Mesh Check<br>(Setelah)</td><td class="text-start ps-2">Inner</td><td colspan="3"><div class="d-flex justify-content-center gap-2"><label class="super-small"><input type="radio" name="MI" value="OK"> OK</label><label class="super-small"><input type="radio" name="MI" value="B"> Bolong</label><label class="super-small"><input type="radio" name="MI" value="A"> Asing</label></div></td></tr>
-                                    <tr><td class="text-start ps-2">Outer</td><td colspan="3"><div class="d-flex justify-content-center gap-2"><label class="super-small"><input type="radio" name="MO" value="OK"> OK</label><label class="super-small"><input type="radio" name="MO" value="B"> Bolong</label><label class="super-small"><input type="radio" name="MO" value="A"> Asing</label></div></td></tr>
-                                    <tr class="border-top border-white border-opacity-10 bg-black bg-opacity-20">
-                                        <td class="fw-bold align-middle py-1">Emboss<br>Marking</td>
-                                        <td colspan="4" class="p-1">
-                                            <div class="row g-1 m-0">
-                                                <div class="col-6"><input class="hud-table-input-min" placeholder="Text Content" /></div>
-                                                <div class="col-6">
-                                                     <div class="d-flex gap-2 justify-content-center align-items-center h-100">
-                                                         <label><input type="radio" name="emb" value="T"> Terbaca</label>
-                                                         <label><input type="radio" name="emb" value="X"> Tdk Terbaca</label>
-                                                     </div>
-                                                </div>
+                                    <tr class="bg-black bg-opacity-20 border-bottom border-white border-opacity-5">
+                                        <td class="ps-3 py-2"><span class="hud-cell-label">TIPE MESH</span><span class="hud-cell-value small">Inner (Sebelum)</span></td>
+                                        <td class="text-center"><div class="hud-checkbox-pill"><input type="checkbox"><span></span></div></td>
+                                        <td class="text-center"><div class="hud-checkbox-pill"><input type="checkbox"><span></span></div></td>
+                                    </tr>
+                                    <tr class="bg-black bg-opacity-20 border-bottom border-white border-opacity-10">
+                                        <td class="ps-3 py-2"><span class="hud-cell-label opacity-0">.</span><span class="hud-cell-value small">Outer (Sebelum)</span></td>
+                                        <td class="text-center"><div class="hud-checkbox-pill"><input type="checkbox"><span></span></div></td>
+                                        <td class="text-center"><div class="hud-checkbox-pill"><input type="checkbox"><span></span></div></td>
+                                    </tr>
+                                    <tr class="border-bottom border-white border-opacity-5">
+                                        <td class="ps-3 py-3"><span class="hud-cell-label">MESH CHECK</span><span class="hud-cell-value small">Inner (Setelah)</span></td>
+                                        <td colspan="2" class="pe-4 py-3"><div class="hud-pill-group"><label class="hud-pill-item">OK<input type="radio" name="MI" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" name="MI" value="B"></label><label class="hud-pill-item orange">ASING<input type="radio" name="MI" value="A"></label></div></td>
+                                    </tr>
+                                    <tr class="border-bottom border-white border-opacity-10">
+                                        <td class="ps-3 py-3"><span class="hud-cell-label opacity-0">.</span><span class="hud-cell-value small">Outer (Setelah)</span></td>
+                                        <td colspan="2" class="pe-4 py-3"><div class="hud-pill-group"><label class="hud-pill-item">OK<input type="radio" name="MO" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" name="MO" value="B"></label><label class="hud-pill-item orange">ASING<input type="radio" name="MO" value="A"></label></div></td>
+                                    </tr>
+                                    <tr class="bg-black bg-opacity-20 border-bottom border-white border-opacity-5">
+                                        <td class="ps-3 py-2"><span class="hud-cell-label">EMBOSSING</span><span class="hud-cell-value small">Text Marking</span></td>
+                                        <td colspan="2" class="pe-3"><input class="hud-input-underlined py-1 text-start ps-2" placeholder="Input Text..." /></td>
+                                    </tr>
+                                    <tr class="bg-black bg-opacity-20 border-bottom border-white border-opacity-5">
+                                        <td class="ps-3 py-2"><span class="hud-cell-label opacity-0">.</span><span class="hud-cell-value small">Prod. Date</span></td>
+                                        <td colspan="2" class="pe-3"><input class="hud-input-underlined py-1 text-start ps-2" placeholder="Input Date..." /></td>
+                                    </tr>
+                                    <tr class="bg-black bg-opacity-20">
+                                        <td class="ps-3 py-2"><span class="hud-cell-label opacity-0">.</span><span class="hud-cell-value small">Details Check</span></td>
+                                        <td colspan="2" class="pe-2 py-2">
+                                            <div class="d-flex flex-column gap-2 pe-3">
+                                                <div class="d-flex align-items-center gap-2"><span class="super-tiny opacity-50 fw-black" style="min-width:45px">COND.</span><div class="hud-pill-group"><label class="hud-pill-item">BERSIH<input type="radio" name="cond" value="B"></label><label class="hud-pill-item red">KOTOR<input type="radio" name="cond" value="K"></label></div></div>
+                                                <div class="d-flex align-items-center gap-2"><span class="super-tiny opacity-50 fw-black" style="min-width:45px">SURF.</span><div class="hud-pill-group"><label class="hud-pill-item">OK<input type="radio" name="surf" value="OK"></label><label class="hud-pill-item red">SCRATCH<input type="radio" name="surf" value="S"></label></div></div>
+                                                <div class="d-flex align-items-center gap-2"><span class="super-tiny opacity-50 fw-black" style="min-width:45px">RESULT</span><div class="hud-pill-group"><label class="hud-pill-item">READABLE<input type="radio" name="emb" value="T"></label><label class="hud-pill-item red">UNREAD<input type="radio" name="emb" value="X"></label></div></div>
                                             </div>
                                         </td>
                                     </tr>
