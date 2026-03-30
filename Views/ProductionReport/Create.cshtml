@@ -24,8 +24,25 @@
                         <span class="hud-card-title small tracking-widest font-monospace">PRODUCTION COMMAND CONSOLE</span>
                     </div>
                     <div class="d-flex gap-3 super-small font-black opacity-40 text-uppercase letter-spacing-2">
-                        <span><i class="bi bi-file-text me-1"></i>DOC: @Model.DocumentNumber</span>
-                        <span><i class="bi bi-activity me-1"></i>REV: @Model.RevisionNumber</span>
+                        <span><i class="bi bi-file-text me-1"></i>DOC: <input asp-for="DocumentNumber" id="DocNo" class="bg-transparent border-0 text-white-50 w-auto" placeholder="AUTO" /></span>
+                        <span><i class="bi bi-activity me-1"></i>REV: <input asp-for="RevisionNumber" id="RevNo" class="bg-transparent border-0 text-white-50 w-auto" placeholder="0" /></span>
+                    </div>
+                </div>
+
+                <!-- NEW: SPS PROTOCOL SYNC -->
+                <div class="p-3 bg-primary bg-opacity-5 border-bottom border-white border-opacity-5 no-print">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-9">
+                            <div class="hud-pill border-info border-opacity-40">
+                                <label><i class="bi bi-keyboard me-2 text-info"></i>TYPE ITEM CODE (MANUAL)</label>
+                                <input id="manualItemSearch" type="text" class="hud-input bg-dark border-0 py-1 font-monospace" placeholder="EX: VHFUNC-..." onchange="fetchSpsByItem(this.value)" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" onclick="startSpsScanner()" class="btn btn-hud-primary h-100 w-100 py-3 shadow-glow-blue border border-white border-opacity-25" style="min-height: 58px;">
+                                <i class="bi bi-qr-code-scan me-2"></i> SPS SYNC SCANNER
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="p-3 bg-black bg-opacity-30 border-bottom border-white border-opacity-5">
@@ -49,13 +66,13 @@
                         <div class="col-md-3">
                             <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
                                 <label><i class="bi bi-building me-2 text-primary"></i>CUSTOMER ENTITY</label>
-                                <input asp-for="CustomerName" class="hud-input small text-white-50 font-black" placeholder="PT. ADM" />
+                                <input asp-for="CustomerName" id="CustomerName" class="hud-input small text-white-50 font-black" placeholder="PT. ADM" />
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
                                 <label><i class="bi bi-cpu me-2 text-primary"></i>HOSE SPECIFICATION TYPE</label>
-                                <input asp-for="HoseType" class="hud-input small font-monospace text-white-50" placeholder="Extrusion Spec Name..." />
+                                <input asp-for="HoseType" id="HoseType" class="hud-input small font-monospace text-white-50" placeholder="Extrusion Spec Name..." />
                             </div>
                         </div>
                     </div>
@@ -394,12 +411,12 @@
                         <tbody>
                             @{
                                 var diesList = new[] { 
-                                    new { Name = "Nipple Die", Std = "8.8 ± 0.1", Field = "NippleDieOK" },
-                                    new { Name = "Tube Die", Std = "11.1 ± 0.1", Field = "TubeDieOK" },
-                                    new { Name = "Middle Die", Std = "14.2 ± 0.1", Field = "MiddleDieOK" },
-                                    new { Name = "Cover Die", Std = "15.1 ± 0.1", Field = "CoverDieOK" },
-                                    new { Name = "Spacer Die", Std = "7.3 ± 0.1", Field = "SpacerDieOK" },
-                                    new { Name = "A Distance", Std = "0.4 ± 0.1", Field = "ToleranceDieOK" }
+                                    new { Name = "Nipple Die", Std = "--", Field = "NippleDieOK", SpecKey = "NippleDie" },
+                                    new { Name = "Tube Die", Std = "--", Field = "TubeDieOK", SpecKey = "TubeDie" },
+                                    new { Name = "Middle Die", Std = "--", Field = "MiddleDieOK", SpecKey = "MiddleDie" },
+                                    new { Name = "Cover Die", Std = "--", Field = "CoverDieOK", SpecKey = "CoverDie" },
+                                    new { Name = "Spacer Die", Std = "--", Field = "SpacerDieOK", SpecKey = "SpacerDie" },
+                                    new { Name = "A Distance", Std = "--", Field = "ToleranceDieOK", SpecKey = "ToleranceDie" }
                                 };
                             }
                             @foreach(var die in diesList) {
@@ -408,7 +425,7 @@
                                     <td class="border-start border-white border-opacity-5">
                                         <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" name="@die.Field" value="true"></label><label class="hud-pill-item red">NG<input type="radio" name="@die.Field" value="false"></label></div>
                                     </td>
-                                    <td class="text-info-glow font-monospace text-center border-start border-white border-opacity-5">@die.Std</td>
+                                    <td class="text-info-glow font-monospace text-center border-start border-white border-opacity-5" id="spec_@die.SpecKey">@die.Std</td>
                                     <td class="border-start border-white border-opacity-5"><input class="hud-input-underlined py-1 text-center font-monospace text-warning" placeholder="---" /></td>
                                     <td class="border-start border-white border-opacity-5"><input class="hud-input-underlined py-1 text-center font-monospace text-warning" placeholder="---" /></td>
                                 </tr>
@@ -442,19 +459,19 @@
                                 </td>
                                                      @{
                                 string[,] innerRows = { 
-                                    { "Head Temp. (°C)", "90 ± 5", "HeadTempInner" }, 
-                                    { "Cylinder 1 (°C)", "90 ± 5", "Cylinder1TempInner" },
-                                    { "Cylinder 2 (°C)", "90 ± 5", "Cylinder2TempInner" },
-                                    { "Cylinder 3 (°C)", "90 ± 5", "Cylinder3TempInner" },
-                                    { "Screw Temp. (°C)", "90 ± 5", "ScrewTempInner" },
-                                    { "Screw Speed (rpm)", "6.1 ± 2.5", "ScrewSpeedInner" },
-                                    { "Feed Roll Ratio (%)", "Max 120", "FeedRollRatioInner" },
-                                    { "Pressure (MPa)", "Max 50", "PressureInner" }
+                                    { "Head Temp. (°C)", "--", "HeadTempInner" }, 
+                                    { "Cylinder 1 (°C)", "--", "Cylinder1TempInner" },
+                                    { "Cylinder 2 (°C)", "--", "Cylinder2TempInner" },
+                                    { "Cylinder 3 (°C)", "--", "Cylinder3TempInner" },
+                                    { "Screw Temp. (°C)", "--", "ScrewTempInner" },
+                                    { "Screw Speed (rpm)", "--", "ScrewSpeedInner" },
+                                    { "Feed Roll Ratio (%)", "--", "FeedRollRatioInner" },
+                                    { "Pressure (MPa)", "--", "PressureInner" }
                                 };
                                 for(int r=0; r<innerRows.GetLength(0); r++){
                                     <tr class="group-lane">
                                         <td class="text-start ps-4 text-white font-black opacity-100 small">@innerRows[r,0]</td>
-                                        <td class="text-primary font-monospace small opacity-100 fw-bold">@innerRows[r,1]</td>
+                                        <td class="text-primary font-monospace small opacity-100 fw-bold" id="spec_@innerRows[r,2]">@innerRows[r,1]</td>
                                         <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@innerRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
                                         @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@innerRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
@@ -469,19 +486,19 @@
                             </tr>
                             @{
                                 string[,] outerRows = { 
-                                    { "Head Temp. (°C)", "90 ± 5", "HeadTempOuter" }, 
-                                    { "Cylinder 1 (°C)", "90 ± 5", "Cylinder1TempOuter" },
-                                    { "Cylinder 2 (°C)", "90 ± 5", "Cylinder2TempOuter" },
-                                    { "Cylinder 3 (°C)", "-", "Cylinder3TempOuter" },
-                                    { "Screw Temp. (°C)", "90 ± 5", "ScrewTempOuter" },
-                                    { "Screw Speed (rpm)", "8.2 ± 2.5", "ScrewSpeedOuter" },
-                                    { "Feed Roll Ratio (%)", "Max 120", "FeedRollRatioOuter" },
-                                    { "Pressure (MPa)", "Max 50", "PressureOuter" }
+                                    { "Head Temp. (°C)", "--", "HeadTempOuter" }, 
+                                    { "Cylinder 1 (°C)", "--", "Cylinder1TempOuter" },
+                                    { "Cylinder 2 (°C)", "--", "Cylinder2TempOuter" },
+                                    { "Cylinder 3 (°C)", "--", "Cylinder3TempOuter" },
+                                    { "Screw Temp. (°C)", "--", "ScrewTempOuter" },
+                                    { "Screw Speed (rpm)", "--", "ScrewSpeedOuter" },
+                                    { "Feed Roll Ratio (%)", "--", "FeedRollRatioOuter" },
+                                    { "Pressure (MPa)", "--", "PressureOuter" }
                                 };
                                 for(int r=0; r<outerRows.GetLength(0); r++){
                                     <tr class="group-lane">
                                         <td class="text-start ps-4 text-white font-black opacity-100 small">@outerRows[r,0]</td>
-                                        <td class="text-warning font-monospace small opacity-100 fw-bold">@outerRows[r,1]</td>
+                                        <td class="text-warning font-monospace small opacity-100 fw-bold" id="spec_@outerRows[r,2]">@outerRows[r,1]</td>
                                         <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@outerRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
                                         @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@outerRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
@@ -496,14 +513,14 @@
                             </tr>
                             @{
                                 string[,] spiralRows = { 
-                                    { "Spiral Speed (rpm)", "98 ± 20", "SpiralSpeed" }, 
-                                    { "Spiral Pitch (Setting)", "35 ± 5", "SpiralPitchSetting" },
-                                    { "Spiral Pitch (Display)", "35 ± 5", "SpiralPitchDisplay" }
+                                    { "Spiral Speed (rpm)", "--", "SpiralSpeed" }, 
+                                    { "Spiral Pitch (Setting)", "--", "SpiralPitchSetting" },
+                                    { "Spiral Pitch (Display)", "--", "SpiralPitchDisplay" }
                                 };
                                 for(int r=0; r<spiralRows.GetLength(0); r++){
                                     <tr class="group-lane">
                                         <td class="text-start ps-4 text-white font-black opacity-100 small">@spiralRows[r,0]</td>
-                                        <td class="text-success font-monospace small opacity-100 fw-bold">@spiralRows[r,1]</td>
+                                        <td class="text-success font-monospace small opacity-100 fw-bold" id="spec_@spiralRows[r,2]">@spiralRows[r,1]</td>
                                         <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@spiralRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
                                         @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@spiralRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
@@ -518,20 +535,20 @@
                             </tr>
                             @{
                                 string[,] otherRows = { 
-                                    { "Preset Value (Ø mm)", "18.5 ± 0.2", "PresetValue" }, 
-                                    { "Control Value (Ø mm)", "18.5 ± 0.2", "ControlValue" },
-                                    { "Hose Speed (m/min)", "3.4 ± 2", "HoseSpeed" },
-                                    { "Take-up Conveyor Speed (m/min)", "3.4 ± 3", "TakeupConveyorSpeed" },
-                                    { "Cool Conveyor Speed (m/min)", "3.4 ± 4", "CoolConveyorSpeed" },
-                                    { "Conveyor Ratio (Take up : Cool)", "100% ± 10", "ConveyorRatio" },
-                                    { "Un-smooth Surface", "0.5", "UnsmoothSurface" },
-                                    { "Chiller Water Temperature (°C)", "Max 15", "ChillerWaterTemp" },
-                                    { "Caterpillar Gap (mm)", "18.2 ± 1", "CaterpillarGap" }
+                                    { "Preset Value (Ø mm)", "--", "PresetValue" }, 
+                                    { "Control Value (Ø mm)", "--", "ControlValue" },
+                                    { "Hose Speed (m/min)", "--", "HoseSpeed" },
+                                    { "Take-up Conveyor Speed (m/min)", "--", "TakeupConveyorSpeed" },
+                                    { "Cool Conveyor Speed (m/min)", "--", "CoolConveyorSpeed" },
+                                    { "Conveyor Ratio (Take up : Cool)", "--", "ConveyorRatio" },
+                                    { "Un-smooth Surface", "--", "UnsmoothSurface" },
+                                    { "Chiller Water Temperature (°C)", "--", "ChillerWaterTemp" },
+                                    { "Caterpillar Gap (mm)", "--", "CaterpillarGap" }
                                 };
                                 for(int r=0; r<otherRows.GetLength(0); r++){
                                     <tr class="group-lane">
                                         <td class="text-start ps-4 text-white font-black opacity-100 small">@otherRows[r,0]</td>
-                                        <td class="text-info font-monospace small opacity-100 fw-bold">@otherRows[r,1]</td>
+                                        <td class="text-info font-monospace small opacity-100 fw-bold" id="spec_@otherRows[r,2]">@otherRows[r,1]</td>
                                         <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@otherRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
                                         @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@otherRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
                                     </tr>
@@ -769,10 +786,142 @@
             });
         }
 
-        // Auto-fill standards based on Hose Type logic can be added here
-        document.getElementById('HoseType').addEventListener('change', function() {
-           // Fetch and populate standards
+        // --- SPS SYNC LOGIC ---
+        async function startSpsScanner() {
+            Swal.fire({
+                title: '<div class="text-primary-glow font-monospace small">SPS OPTICAL SCANNER</div>',
+                html: `
+                    <div id="sps-reader-container" style="width: 100%; min-height: 250px; background: #000; border-radius: 8px; overflow: hidden; border: 2px solid #0ea5e9;">
+                        <div id="sps-reader"></div>
+                    </div>
+                `,
+                background: '#020617',
+                showConfirmButton: false,
+                showCloseButton: true,
+                didOpen: () => {
+                    const scanQrCode = new Html5Qrcode("sps-reader");
+                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                    scanQrCode.start({ facingMode: "environment" }, config, async (decodedText) => {
+                        await scanQrCode.stop();
+                        Swal.close();
+                        fetchSpsByItem(decodedText);
+                    });
+                }
+            });
+        }
+
+        async function fetchSpsByItem(code) {
+            Swal.fire({
+                title: 'SEARCHING PROTOCOL...',
+                text: `VALIDATING: ${code.trim().toUpperCase()}`,
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
+                if (!res.ok) throw new Error('PROTOCOL NOT FOUND');
+                const data = await res.json();
+                Swal.close();
+                applySpsToForm(data);
+            } catch (e) {
+                Swal.fire({
+                    title: 'SYNC ERROR',
+                    text: `Kode '${code}' tidak ditemukan di Database SPS Masterlist!`,
+                    icon: 'warning',
+                    confirmButtonColor: '#0ea5e9'
+                });
+            }
+        }
+
+        document.getElementById('spsSelector').addEventListener('change', async function() {
+            const id = this.value;
+            if (!id) return;
+            try {
+                const res = await fetch(`/ProductionReport/GetSpsById/${id}`);
+                const data = await res.json();
+                applySpsToForm(data);
+            } catch (e) {
+                console.error(e);
+            }
         });
+
+        function applySpsToForm(sps) {
+            // Header Info
+            document.getElementById('DocNo').value = sps.documentNumber || '---';
+            document.getElementById('RevNo').value = sps.revisionNumber || '0';
+            document.getElementById('HoseType').value = sps.hoseType || '';
+            document.getElementById('CustomerName').value = sps.customerName || '';
+            
+            // Materials
+            document.getElementById('InnerMaterial').value = sps.innerMaterial || '';
+            document.getElementById('OuterMaterial').value = sps.outerMaterial || '';
+            document.getElementById('Yarn').value = sps.yarnType || '';
+
+            // Update Table Specs
+            const specMappings = {
+                'HeadTempInner': sps.headTemp + ' ± 5',
+                'Cylinder1TempInner': sps.cylinder1Temp + ' ± 5',
+                'Cylinder2TempInner': sps.cylinder2Temp + ' ± 5',
+                'Cylinder3TempInner': sps.cylinder3Temp + ' ± 5',
+                'ScrewTempInner': sps.screwTemp + ' ± 5',
+                'ScrewSpeedInner': sps.screwSpeed + ' ± 2',
+                'FeedRollRatioInner': 'Max ' + sps.feedRollRatio,
+                'PressureInner': 'Max ' + sps.pressure,
+                
+                'HeadTempOuter': sps.headTemp + ' ± 5',
+                'Cylinder1TempOuter': sps.cylinder1Temp + ' ± 5',
+                'Cylinder2TempOuter': sps.cylinder2Temp + ' ± 5',
+                'Cylinder3TempOuter': sps.cylinder3Temp + ' ± 5',
+                'ScrewTempOuter': sps.screwTemp + ' ± 5',
+                'ScrewSpeedOuter': sps.screwSpeed + ' ± 2',
+                'FeedRollRatioOuter': 'Max ' + sps.feedRollRatio,
+                'PressureOuter': 'Max ' + sps.pressure,
+                
+                'SpiralSpeed': sps.spiralSpeed + ' ± 20',
+                'SpiralPitchSetting': sps.spiralPitch + ' ± 5',
+                'SpiralPitchDisplay': sps.spiralPitchDisplay + ' ± 5',
+                
+                'PresetValue': sps.presetValve + ' ± 0.5',
+                'ControlValue': sps.controlValue,
+                'HoseSpeed': sps.hoseSpeed,
+                'TakeupConveyorSpeed': sps.takeupConveyorSpeed,
+                'CoolConveyorSpeed': sps.coolConveyorSpeed,
+                'ConveyorRatio': sps.conveyorRatio,
+                'UnsmoothSurface': sps.unsmoothSurface,
+                'ChillerWaterTemp': sps.chillerWaterTemp,
+                'CaterpillarGap': sps.caterpillarGap,
+
+                // Dies Measurements
+                'NippleDie': sps.innerDie + ' ± 0.1',
+                'TubeDie': sps.tubeDie + ' ± 0.1',
+                'MiddleDie': sps.middleDie + ' ± 0.1',
+                'CoverDie': sps.coverDie + ' ± 0.1',
+                'SpacerDie': sps.spacerDie + ' ± 0.1',
+                'ToleranceDie': sps.toleranceDie + ' ± 0.1'
+            };
+
+            for (const [key, val] of Object.entries(specMappings)) {
+                const el = document.getElementById('spec_' + key);
+                if (el) {
+                    el.innerText = val;
+                    el.classList.add('blink-once');
+                }
+            }
+
+            document.getElementById('syncStatus').innerHTML = `<i class="bi bi-shield-fill-check text-success me-1"></i>SYNCED: [${sps.itemList}] ${sps.hoseType}`;
+            document.getElementById('syncStatus').parentElement.classList.add('border-success');
+            
+            Swal.fire({
+                title: 'SPS SYNC SUCCESS',
+                text: 'Protokol ' + sps.hoseType + ' berhasil dimuat!',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
     </script>
     <style>
         .glow-success { border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important; }

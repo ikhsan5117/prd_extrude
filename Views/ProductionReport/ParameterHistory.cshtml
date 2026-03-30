@@ -1,0 +1,128 @@
+@model IEnumerable<VelastoProductionSystem.Models.ProductionReport>
+
+@{
+    ViewData["Title"] = "Parameter History";
+}
+
+<div class="production-dashboard-sapphire fade-in">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4 header-sapphire-glass p-3 px-4">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box bg-warning bg-opacity-10 me-3">
+                        <i class="bi bi-sliders text-warning fs-3"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-white fw-black mb-0 tracking-tighter">PARAMETER HISTORY</h2>
+                        <div class="text-warning super-small fw-bold letter-spacing-2 opacity-50">ARCHIVED PARAMETER SETTINGS</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-glass btn-sm rounded-pill px-3">
+                        <i class="bi bi-download me-1"></i> EXPORT ALL
+                    </button>
+                    <a asp-action="Create" class="btn btn-velasto-glow-blue btn-lg rounded-pill px-4">
+                        <i class="bi bi-plus-circle-fill me-2"></i> NEW PARAMETER
+                    </a>
+                </div>
+            </div>
+
+            <div class="hud-table-wrapper">
+                <div class="table-scroll-container">
+                    <table class="table table-dark mb-0 sapphire-table">
+                        <thead>
+                            <tr class="header-row">
+                                <th class="ps-4">DATE</th>
+                                <th>DOC NUMBER</th>
+                                <th>SHIFT</th>
+                                <th>HOSE TYPE</th>
+                                <th>MATERIAL (IN/OUT)</th>
+                                <th class="text-center">SPS REF</th>
+                                <th class="text-center">OPERATOR</th>
+                                <th class="text-center">STATUS</th>
+                                <th class="text-center pe-4">COMMAND</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="align-middle">
+                                    <td class="ps-4 fw-bold text-nowrap">@item.ProductionDate.ToString("dd/MM/yy")</td>
+                                    <td><code class="text-primary-50">@item.DocumentNumber</code></td>
+                                    <td><span class="badge shift-badge @(item.Shift.Contains("1") ? "bg-info" : "bg-warning")">@item.Shift</span></td>
+                                    <td>
+                                        <div class="hose-type-tag">@item.HoseType</div>
+                                        <div class="super-small text-white-50 mt-1">@item.Dimension</div>
+                                    </td>
+                                    <td>
+                                        <div class="extra-small text-white-50 lh-sm">
+                                            IN: <span class="text-white fw-bold">@item.InnerMaterial</span><br/>
+                                            OUT: <span class="text-white fw-bold">@item.OuterMaterial</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.StandardParameterSettingId != null)
+                                        {
+                                            <span class="text-success small fw-bold"><i class="bi bi-link-45deg"></i> Linked</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-white-50 extra-small">Manual</span>
+                                        }
+                                    </td>
+                                    <td class="text-center small">@item.CreatedBy</td>
+                                    <td class="text-center">
+                                        <span class="status-pill @(item.Status == "COMPLETED" ? "completed" : "active")">
+                                            @item.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-action-glass btn-blue" title="Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-action-glass btn-orange" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-action-glass btn-red" title="Delete">
+                                                <i class="bi bi-trash3"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .header-sapphire-glass { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(59, 130, 246, 0.2); }
+    .hud-icon-box { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
+    .btn-velasto-glow-blue { background: #2563eb; color: white; transition: all 0.3s; border: none; }
+    .btn-velasto-glow-blue:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(37, 99, 235, 0.6); color: white; }
+    .hud-table-wrapper { background: rgba(8, 14, 30, 0.95); border: 1px solid rgba(59, 130, 246, 0.35); }
+    .table-scroll-container { overflow-x: auto; max-height: 70vh; }
+    .sapphire-table { color: rgba(255,255,255,0.85); border-collapse: collapse; min-width: 900px; width: 100%; }
+    .sapphire-table thead tr.header-row { background: linear-gradient(90deg, rgba(30, 58, 138, 0.5), rgba(37, 99, 235, 0.3)); border-bottom: 2px solid rgba(59, 130, 246, 0.5); }
+    .sapphire-table th { font-size: 10px; font-weight: 900; letter-spacing: 2px; color: #60a5fa; padding: 14px; text-transform: uppercase; white-space: nowrap; border-right: 1px solid rgba(59, 130, 246, 0.25); }
+    .sapphire-table td { padding: 14px; border-bottom: 1px solid rgba(59, 130, 246, 0.12); border-right: 1px solid rgba(59, 130, 246, 0.1); vertical-align: middle; }
+    .hose-type-tag { display: inline-block; background: rgba(37, 99, 235, 0.2); border: 1px solid rgba(59, 130, 246, 0.45); border-left: 3px solid #3b82f6; color: white; font-weight: 800; padding: 2px 8px; font-size: 11px; }
+    .status-pill { padding: 4px 12px; font-size: 10px; font-weight: 900; letter-spacing: 1.5px; }
+    .status-pill.active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left: 3px solid #3b82f6; }
+    .status-pill.completed { background: rgba(16, 185, 129, 0.1); color: #10b981; border-left: 3px solid #10b981; }
+    .btn-action-glass { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-action-glass.btn-blue { color: #60a5fa; background: rgba(37, 99, 235, 0.1); }
+    .btn-action-glass.btn-orange { color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
+    .btn-action-glass.btn-red { color: #ef4444; background: rgba(220, 38, 38, 0.1); }
+    .btn-action-glass:hover { transform: scale(1.1); color: white; background: rgba(255,255,255,0.15); }
+    .btn-outline-glass { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
+    .super-small { font-size: 9px; }
+    .extra-small { font-size: 10px; }
+    .fw-black { font-weight: 900; }
+    .tracking-tighter { letter-spacing: -0.5px; }
+    .letter-spacing-2 { letter-spacing: 2px; }
+</style>

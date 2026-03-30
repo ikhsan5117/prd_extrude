@@ -1,0 +1,127 @@
+@model IEnumerable<VelastoProductionSystem.Models.ProductionReport>
+
+@{
+    ViewData["Title"] = "Dimension History";
+}
+
+<div class="production-dashboard-sapphire fade-in">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4 header-sapphire-glass p-3 px-4" style="border-left: 4px solid #10b981;">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box bg-success bg-opacity-10 me-3">
+                        <i class="bi bi-rulers text-success fs-3"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-white fw-black mb-0 tracking-tighter">DIMENSION REPORT HISTORY</h2>
+                        <div class="text-success super-small fw-bold letter-spacing-2 opacity-50">PRODUCTION QUALITY RECORDS</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-glass btn-sm rounded-pill px-3">
+                        <i class="bi bi-printer me-1"></i> PRINT LOG
+                    </button>
+                    <a asp-action="App" class="btn btn-success-glow btn-lg rounded-pill px-4">
+                        <i class="bi bi-rulers me-2"></i> NEW DIMENSION CHECK
+                    </a>
+                </div>
+            </div>
+
+            <div class="hud-table-wrapper">
+                <div class="table-scroll-container">
+                    <table class="table table-dark mb-0 sapphire-table">
+                        <thead>
+                            <tr class="header-row">
+                                <th class="ps-4">DATE</th>
+                                <th>DOC NUMBER</th>
+                                <th>SPECIFICATION</th>
+                                <th class="text-center">PROG (OK/TGT)</th>
+                                <th class="text-center">NG (D/V)</th>
+                                <th class="text-center">VIN CODE</th>
+                                <th class="text-center">REMARK</th>
+                                <th class="text-center">STATUS</th>
+                                <th class="text-center pe-4">COMMAND</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="align-middle">
+                                    <td class="ps-4 fw-bold text-nowrap">@item.ProductionDate.ToString("dd/MM/yy")</td>
+                                    <td><code class="text-primary-50">@item.DocumentNumber</code></td>
+                                    <td>
+                                        <div class="hose-type-tag success">@item.HoseType</div>
+                                        <div class="super-small text-white-50 mt-1">@item.Dimension</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="fw-black text-success" style="font-size: 1.1rem;">@item.QtyOk <span class="text-white-50 small fw-normal">/ @item.QtyTarget</span></div>
+                                        <div class="progress mt-1 mx-auto" style="height: 4px; background: rgba(255,255,255,0.05); width: 60px;">
+                                            @if (item.QtyTarget > 0)
+                                            {
+                                                <div class="progress-bar bg-success" style="width: @(Math.Min(100, (item.QtyOk * 100) / item.QtyTarget))%"></div>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1 extra-small">
+                                            <span class="text-danger fw-bold bg-danger bg-opacity-10 px-1">D:@item.NgDimension</span>
+                                            <span class="text-warning fw-bold bg-warning bg-opacity-10 px-1">V:@item.NgVisual</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center font-monospace small text-primary-50">@item.VinCode</td>
+                                    <td class="text-center extra-small text-white-50" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@item.Remark</td>
+                                    <td class="text-center">
+                                        <span class="status-pill @(item.Status == "COMPLETED" ? "completed" : "active")">
+                                            @item.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Details" asp-route-id="@item.Id" asp-route-portal="dimension" class="btn btn-action-glass btn-blue" title="Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-action-glass btn-orange" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-action-glass btn-red" title="Delete">
+                                                <i class="bi bi-trash3"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .header-sapphire-glass { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(16, 185, 129, 0.2); }
+    .hud-icon-box { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
+    .btn-success-glow { background: #10b981; color: white; transition: all 0.3s; border: none; }
+    .btn-success-glow:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); color: white; }
+    .hud-table-wrapper { background: rgba(8, 14, 30, 0.95); border: 1px solid rgba(16, 185, 129, 0.35); }
+    .table-scroll-container { overflow-x: auto; max-height: 70vh; }
+    .sapphire-table { color: rgba(255,255,255,0.85); border-collapse: collapse; min-width: 900px; width: 100%; }
+    .sapphire-table thead tr.header-row { background: linear-gradient(90deg, rgba(6, 78, 59, 0.5), rgba(16, 185, 129, 0.3)); border-bottom: 2px solid rgba(16, 185, 129, 0.5); }
+    .sapphire-table th { font-size: 10px; font-weight: 900; letter-spacing: 2px; color: #6ee7b7; padding: 14px; text-transform: uppercase; white-space: nowrap; border-right: 1px solid rgba(16, 185, 129, 0.25); }
+    .sapphire-table td { padding: 14px; border-bottom: 1px solid rgba(16, 185, 129, 0.12); border-right: 1px solid rgba(16, 185, 129, 0.1); vertical-align: middle; }
+    .hose-type-tag { display: inline-block; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.45); border-left: 3px solid #10b981; color: white; font-weight: 800; padding: 2px 8px; font-size: 11px; }
+    .status-pill { padding: 4px 12px; font-size: 10px; font-weight: 900; letter-spacing: 1.5px; }
+    .status-pill.active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left: 3px solid #3b82f6; }
+    .status-pill.completed { background: rgba(16, 185, 129, 0.1); color: #10b981; border-left: 3px solid #10b981; }
+    .btn-action-glass { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-action-glass.btn-blue { color: #60a5fa; background: rgba(37, 99, 235, 0.1); }
+    .btn-action-glass.btn-orange { color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
+    .btn-action-glass.btn-red { color: #ef4444; background: rgba(220, 38, 38, 0.1); }
+    .btn-action-glass:hover { transform: scale(1.1); color: white; background: rgba(255,255,255,0.15); }
+    .btn-outline-glass { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
+    .super-small { font-size: 9px; }
+    .extra-small { font-size: 10px; }
+    .fw-black { font-weight: 900; }
+    .tracking-tighter { letter-spacing: -0.5px; }
+    .letter-spacing-2 { letter-spacing: 2px; }
+</style>

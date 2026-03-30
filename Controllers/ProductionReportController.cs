@@ -24,6 +24,24 @@ namespace VelastoProductionSystem.Controllers
             return View(reports);
         }
 
+        // GET: ProductionReport/ParameterHistory
+        public async Task<IActionResult> ParameterHistory()
+        {
+            var reports = await _context.ProductionReports
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+            return View(reports);
+        }
+
+        // GET: ProductionReport/DimensionHistory
+        public async Task<IActionResult> DimensionHistory()
+        {
+            var reports = await _context.ProductionReports
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+            return View(reports);
+        }
+
         // GET: ProductionReport/App (New Tablet App Interface)
         public async Task<IActionResult> App(int? id)
         {
@@ -88,6 +106,55 @@ namespace VelastoProductionSystem.Controllers
             return View("App", report);
         }
 
+        // AJAX API: Get SPS by ID
+        [HttpGet]
+        public async Task<IActionResult> GetSpsById(int id)
+        {
+            var sps = await _context.StandardParameterSettings.FindAsync(id);
+            if (sps == null) return NotFound();
+            return Json(sps);
+        }
+
+        // AJAX API: Get SPS by Item Code (Scanner)
+        [HttpGet]
+        public async Task<IActionResult> GetSpsByItem(string itemCode)
+        {
+            if (string.IsNullOrWhiteSpace(itemCode)) return BadRequest();
+            
+            var sanitizedCode = itemCode.Trim().ToUpper();
+            
+            // Try StandardParameterSettings first (Detailed)
+            var sps = await _context.StandardParameterSettings
+                .FirstOrDefaultAsync(s => 
+                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedCode)) || 
+                    (s.ProductCode != null && s.ProductCode.ToUpper().Contains(sanitizedCode)));
+            
+            if (sps != null) return Json(sps);
+
+            // Fallback to MasterlistSpsDoubleLayers (Brief)
+            var master = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedCode));
+
+            if (master != null)
+            {
+                // Map Master to a temporary SPS-like object for the form
+                return Json(new {
+                    ItemList = master.ItemList,
+                    HoseType = master.HoseType,
+                    CustomerName = master.Customer,
+                    DocumentNumber = master.DocumentNumber,
+                    RevisionNumber = master.RevisionNumber,
+                    InnerMaterial = master.InnerTube,
+                    OuterMaterial = master.OuterCover,
+                    // Try to map some basics
+                    HeadTemp = 0, // Master has strings like "90+/-5" which need parsing
+                    Cylinder1Temp = 0
+                });
+            }
+
+            return NotFound();
+        }
+
         // GET: ProductionReport/Details/5 (The Monitoring Dashboard - Gambar 2 & 5)
         public async Task<IActionResult> Details(int? id)
         {
@@ -118,6 +185,11 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             ViewBag.HoseTypes = new SelectList(hoseTypes);
+            ViewBag.StandardParameterSettings = new SelectList(
+                await _context.StandardParameterSettings.Where(s => s.IsActive).Select(s => new { Id = s.Id, Display = "[" + s.ItemList + "] - " + s.HoseType }).ToListAsync(), 
+                "Id", 
+                "Display"
+            );
 
             return View(new ProductionReport 
             { 
