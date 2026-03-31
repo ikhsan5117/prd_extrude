@@ -263,6 +263,49 @@
                     border-bottom-color: #3b82f6;
                     background: rgba(59, 130, 246, 0.05);
                 }
+                .param-row-hud { 
+                    transition: all 0.3s; 
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+                .param-row-hud:hover { 
+                    background: rgba(56, 189, 248, 0.08); 
+                    border-color: rgba(56, 189, 248, 0.2);
+                    transform: translateY(-2px);
+                }
+                
+                .text-info-glow {
+                    color: #38bdf8;
+                    text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+                }
+
+                .valid-success { 
+                    background: rgba(16, 185, 129, 0.15) !important; 
+                    border-bottom-color: #10b981 !important; 
+                    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+                    color: #10b981 !important;
+                }
+                .valid-error { 
+                    background: rgba(239, 68, 68, 0.15) !important; 
+                    border-bottom-color: #ef4444 !important; 
+                    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+                    color: #ef4444 !important;
+                    animation: shake-hud 0.4s ease-in-out;
+                }
+                
+                @@keyframes shake-hud { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-5px); } 40%,80% { transform:translateX(5px); } }
+                
+                .btn-detail-toggle { background: transparent; border: none; color: #38bdf8; transition: all 0.3s; }
+                .btn-detail-toggle.active i { transform: rotate(180deg); color: #f59e0b; opacity: 1 !important; }
+
+                .valid-success { border-bottom-color: #10b981 !important; color: #10b981 !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+                .valid-error { border-bottom-color: #ef4444 !important; color: #ef4444 !important; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+                
+                .custom-scrollbar::-webkit-scrollbar { height: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.2); border-radius: 10px; }
+                
+                .blink-once { animation: blink-blue 0.5s ease-in-out; }
+                @@keyframes blink-blue { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; color: #38bdf8; } }
             </style>
 
             <div class="row g-4 mb-5">
@@ -483,128 +526,95 @@
                 </style>
             </div>
 
-            <!-- SECTION: PARAMETERS TABLE (The Massive Grid) -->
-            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
-                <div class="hud-card-header">
-                    <i class="bi bi-cpu hud-card-icon"></i>
-                    <span class="hud-card-title">PARAMETER SETTING MONITORING</span>
-                </div>
-                <div class="p-0 overflow-auto">
-                    <table class="table-hud-unified compact-hud instrument-style text-center">
-                        <thead class="sticky-top bg-black">
-                            <tr class="bg-black bg-opacity-80 text-info-glow border-bottom border-white border-opacity-10">
-                                <th class="text-start ps-4 py-3 font-monospace tracking-widest small">INSTRUMENT / ITEM</th>
-                                <th width="10%" class="small">SPECIFICATION</th>
-                                <th width="10%" class="hud-th-scan text-white fw-900 border-x border-white border-opacity-10">INITIAL</th>
-                                @for(int i=1; i<=7; i++){ <th width="9.5%" class="border-start border-white border-opacity-5 small text-white-50">@i</th> }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- INNER (TUBE 1) -->
-                            <tr class="bg-primary border-bottom border-white border-opacity-10">
-                                <td colspan="10" class="text-start ps-4 py-2 text-white font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
-                                    <i class="bi bi-gear-fill me-2 text-warning"></i>SECTION 01: INNER (TUBE 1)
-                                </td>
-                                                     @{
-                                string[,] innerRows = { 
-                                    { "Head Temp. (°C)", "--", "HeadTempInner" }, 
-                                    { "Cylinder 1 (°C)", "--", "Cylinder1TempInner" },
-                                    { "Cylinder 2 (°C)", "--", "Cylinder2TempInner" },
-                                    { "Cylinder 3 (°C)", "--", "Cylinder3TempInner" },
-                                    { "Screw Temp. (°C)", "--", "ScrewTempInner" },
-                                    { "Screw Speed (rpm)", "--", "ScrewSpeedInner" },
-                                    { "Feed Roll Ratio (%)", "--", "FeedRollRatioInner" },
-                                    { "Pressure (MPa)", "--", "PressureInner" }
-                                };
-                                for(int r=0; r<innerRows.GetLength(0); r++){
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@innerRows[r,0]</td>
-                                        <td class="text-primary font-monospace small opacity-100 fw-bold" id="spec_@innerRows[r,2]">@innerRows[r,1]</td>
-                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@innerRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@innerRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
-                                    </tr>
-                                }
-                            }
+            <!-- SECTION: SMART PARAMETER CARDS (ULTRA-CLEAR HUD TILED MODE) -->
+            <div class="row g-4 mb-5">
+                @{
+                    var monSections = new[] {
+                        new { 
+                            Title = "SECTION 01: INNER (TUBE 1)", Icon="bi-gear-fill", Color = "#3b82f6", ID="inner",
+                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempInner" }, { "Cylinder 1", "°C", "Cylinder1TempInner" }, { "Cylinder 2", "°C", "Cylinder2TempInner" }, { "Cylinder 3", "°C", "Cylinder3TempInner" }, { "Screw Temp.", "°C", "ScrewTempInner" }, { "Screw Speed", "rpm", "ScrewSpeedInner" }, { "Feed Roll Ratio", "%", "FeedRollRatioInner" }, { "Pressure", "MPa", "PressureInner" } }
+                        },
+                        new { 
+                            Title = "SECTION 02: OUTER (COVER)", Icon="bi-shield-shaded", Color = "#f59e0b", ID="outer",
+                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempOuter" }, { "Cylinder 1", "°C", "Cylinder1TempOuter" }, { "Cylinder 2", "°C", "Cylinder2TempOuter" }, { "Cylinder 3", "°C", "Cylinder3TempOuter" }, { "Screw Temp.", "°C", "ScrewTempOuter" }, { "Screw Speed", "rpm", "ScrewSpeedOuter" }, { "Feed Roll Ratio", "%", "FeedRollRatioOuter" }, { "Pressure", "MPa", "PressureOuter" } }
+                        },
+                        new { 
+                            Title = "SECTION 03: SPIRAL MECHANISM", Icon="bi-sync", Color = "#10b981", ID="spiral",
+                            Rows = new[,] { { "Spiral Speed", "rpm", "SpiralSpeed" }, { "Spiral Pitch (Set)", "mm", "SpiralPitchSetting" }, { "Spiral Pitch (Disp)", "mm", "SpiralPitchDisplay" } } 
+                        },
+                        new { 
+                            Title = "SECTION 04: INFRA & UTILITY", Icon="bi-water", Color = "#0ea5e9", ID="other",
+                            Rows = new[,] { { "Preset Value", "Ø mm", "PresetValue" }, { "Control Value", "Ø mm", "ControlValue" }, { "Hose Speed", "m/min", "HoseSpeed" }, { "Take-up Speed", "", "TakeupConveyorSpeed" }, { "Cool Speed", "", "CoolConveyorSpeed" }, { "Conveyor Ratio", "", "ConveyorRatio" }, { "Surface Condition", "", "UnsmoothSurface" }, { "Chiller Temp", "°C", "ChillerWaterTemp" }, { "Caterpillar Gap", "mm", "CaterpillarGap" } } 
+                        }
+                    };
+                }
 
-                            <!-- OUTER (COVER) -->
-                            <tr class="bg-warning border-bottom border-white border-opacity-10">
-                                <td colspan="10" class="text-start ps-4 py-2 text-black font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
-                                    <i class="bi bi-gear-fill me-2 text-white"></i>SECTION 02: OUTER (COVER)
-                                </td>
-                            </tr>
-                            @{
-                                string[,] outerRows = { 
-                                    { "Head Temp. (°C)", "--", "HeadTempOuter" }, 
-                                    { "Cylinder 1 (°C)", "--", "Cylinder1TempOuter" },
-                                    { "Cylinder 2 (°C)", "--", "Cylinder2TempOuter" },
-                                    { "Cylinder 3 (°C)", "--", "Cylinder3TempOuter" },
-                                    { "Screw Temp. (°C)", "--", "ScrewTempOuter" },
-                                    { "Screw Speed (rpm)", "--", "ScrewSpeedOuter" },
-                                    { "Feed Roll Ratio (%)", "--", "FeedRollRatioOuter" },
-                                    { "Pressure (MPa)", "--", "PressureOuter" }
-                                };
-                                for(int r=0; r<outerRows.GetLength(0); r++){
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@outerRows[r,0]</td>
-                                        <td class="text-warning font-monospace small opacity-100 fw-bold" id="spec_@outerRows[r,2]">@outerRows[r,1]</td>
-                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@outerRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@outerRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
-                                    </tr>
-                                }
-                            }
+                @foreach (var monSection in monSections) {
+                    <div class="col-12 col-xxl-6">
+                        <div class="hud-card h-100 shadow-hud mb-1 overflow-hidden" style="border: 1px solid rgba(255,255,255,0.08); background: rgba(10,15,25,0.4);">
+                            <div class="hud-card-header d-flex justify-content-between align-items-center py-3 px-4" style="cursor: pointer; background: rgba(255,255,255,0.03)" data-bs-toggle="collapse" data-bs-target="#body_@monSection.ID">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi @monSection.Icon fs-4" style="color: @monSection.Color"></i>
+                                    <span class="hud-card-title tracking-widest text-white fw-900" style="font-size: 1rem">@monSection.Title</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3 no-print">
+                                    <button type="button" class="btn btn-sm btn-outline-info p-1 px-4 super-small fw-bold" style="border-radius: 20px" onclick="event.stopPropagation(); toggleAllDetails('@monSection.ID')">TRIAL MODE</button>
+                                    <i class="bi bi-chevron-down opacity-50"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="p-3 collapse show" id="body_@monSection.ID">
+                                <div class="row g-3">
+                                    @for (int r = 0; r < monSection.Rows.GetLength(0); r++) {
+                                        var label = monSection.Rows[r, 0];
+                                        var unit = monSection.Rows[r, 1];
+                                        var key = monSection.Rows[r, 2];
+                                        
+                                        <div class="col-6">
+                                            <div class="param-row-hud rounded-3 p-3 text-center h-100 d-flex flex-column justify-content-between shadow-sm">
+                                                <!-- TOP: LABEL & ICON -->
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <span class="text-white opacity-40 super-small fw-bold tracking-widest">@label.ToUpper()</span>
+                                                    <button type="button" class="btn-detail-toggle p-0" onclick="toggleSingleDetail('@key')">
+                                                        <i class="bi bi-info-circle opacity-25" id="icon_@key"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- MID: STANDARD (CENTER & LARGE) -->
+                                                <div class="std-zone py-2">
+                                                    <div class="super-small text-info opacity-40 mb-0">STANDARD (@unit)</div>
+                                                    <div class="font-monospace fw-black text-info-glow" id="spec_@key" style="font-size: 1.25rem; letter-spacing: 1px;">--</div>
+                                                </div>
+                                                
+                                                <!-- BTM: INPUT (LARGE) -->
+                                                <div class="input-zone mt-2">
+                                                    <input name="Init_@key" 
+                                                           class="hud-input-underlined text-center fw-black font-monospace w-100" 
+                                                           placeholder="0.00" 
+                                                           style="font-size: 1.6rem; height: 60px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2)"
+                                                           oninput="validateParam(this, 'spec_@key')"
+                                                           onchange="validateParam(this, 'spec_@key')" />
+                                                </div>
 
-                            <!-- SPIRAL -->
-                            <tr class="bg-success border-bottom border-white border-opacity-10">
-                                <td colspan="10" class="text-start ps-4 py-2 text-white font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
-                                    <i class="bi bi-gear-fill me-2 text-warning"></i>SECTION 03: SPIRAL MECHANISM
-                                </td>
-                            </tr>
-                            @{
-                                string[,] spiralRows = { 
-                                    { "Spiral Speed (rpm)", "--", "SpiralSpeed" }, 
-                                    { "Spiral Pitch (Setting)", "--", "SpiralPitchSetting" },
-                                    { "Spiral Pitch (Display)", "--", "SpiralPitchDisplay" }
-                                };
-                                for(int r=0; r<spiralRows.GetLength(0); r++){
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@spiralRows[r,0]</td>
-                                        <td class="text-success font-monospace small opacity-100 fw-bold" id="spec_@spiralRows[r,2]">@spiralRows[r,1]</td>
-                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@spiralRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@spiralRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
-                                    </tr>
-                                }
-                            }
-
-                            <!-- OTHER -->
-                            <tr class="bg-info border-bottom border-white border-opacity-10">
-                                <td colspan="10" class="text-start ps-4 py-2 text-white font-monospace tracking-widest fw-black" style="font-size: 0.9rem; letter-spacing: 2px;">
-                                    <i class="bi bi-gear-fill me-2 text-warning"></i>SECTION 04: INFRASTRUCTURE & OTHER
-                                </td>
-                            </tr>
-                            @{
-                                string[,] otherRows = { 
-                                    { "Preset Value (Ø mm)", "--", "PresetValue" }, 
-                                    { "Control Value (Ø mm)", "--", "ControlValue" },
-                                    { "Hose Speed (m/min)", "--", "HoseSpeed" },
-                                    { "Take-up Conveyor Speed (m/min)", "--", "TakeupConveyorSpeed" },
-                                    { "Cool Conveyor Speed (m/min)", "--", "CoolConveyorSpeed" },
-                                    { "Conveyor Ratio (Take up : Cool)", "--", "ConveyorRatio" },
-                                    { "Un-smooth Surface", "--", "UnsmoothSurface" },
-                                    { "Chiller Water Temperature (°C)", "--", "ChillerWaterTemp" },
-                                    { "Caterpillar Gap (mm)", "--", "CaterpillarGap" }
-                                };
-                                for(int r=0; r<otherRows.GetLength(0); r++){
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-4 text-white font-black opacity-100 small">@otherRows[r,0]</td>
-                                        <td class="text-info font-monospace small opacity-100 fw-bold" id="spec_@otherRows[r,2]">@otherRows[r,1]</td>
-                                        <td class="bg-black bg-opacity-40 border-x border-white border-opacity-10"><input name="Init_@otherRows[r,2]" class="hud-input-underlined text-warning fw-bold py-1" placeholder="..." /></td>
-                                        @for(int i=1; i<=7; i++){ <td class="border-start border-white border-opacity-5"><input name="C@(i)_@otherRows[r,2]" class="hud-input-underlined py-1" placeholder="-" /></td> }
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                                                <!-- TRIAL DETAILS (IN TILE) -->
+                                                <div class="detail-drawer d-none bg-black bg-opacity-80 p-2 mt-3 rounded-3 border border-white border-opacity-10" id="detail_@key">
+                                                    <div class="row g-2">
+                                                        @for(int h=1; h<=7; h++) {
+                                                            <div class="col-4">
+                                                                <div class="super-small opacity-50 font-monospace" style="font-size: 0.6rem">HR @h</div>
+                                                                <input name="C@(h)_@key" class="hud-input-underlined text-center super-small py-1 w-100" placeholder="-" oninput="validateParam(this, 'spec_@key')" />
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
 
             <!-- SECTION: WASTE & FOOTER HUD -->
@@ -951,6 +961,10 @@
                 if (el) {
                     el.innerText = val;
                     el.classList.add('blink-once');
+                    
+                    // Auto-validate current inputs if they have values
+                    const inputs = document.querySelectorAll(`[name$="_${key}"]`);
+                    inputs.forEach(inp => { if(inp.value) validateParam(inp, 'spec_' + key); });
                 }
             }
 
@@ -964,11 +978,89 @@
                 showConfirmButton: false
             });
         }
+
+        // --- PARAMETER VALIDATION LOGIC ---
+        function validateParam(input, specId) {
+            const valStr = input.value.trim();
+            const val = parseFloat(valStr);
+            const specEl = document.getElementById(specId);
+            if(!specEl) return;
+            const specText = specEl.innerText.trim();
+            
+            console.log(`Validating [${valStr}] against [${specText}]`);
+
+            if (valStr === "" || isNaN(val) || !specText || specText === '--') {
+                input.classList.remove('valid-success', 'valid-error');
+                return;
+            }
+
+            let isValid = true;
+            try {
+                // Remove units or extra chars for parsing
+                const cleanText = specText.replace(/[A-Za-z°%]/g, '').trim();
+
+                if (specText.includes('±')) {
+                    const parts = specText.split('±');
+                    const target = parseFloat(parts[0].replace(/[^-0-9.]/g, ''));
+                    const tolerance = parseFloat(parts[1].replace(/[^-0-9.]/g, ''));
+                    if (!isNaN(target) && !isNaN(tolerance)) {
+                        isValid = (val >= (target - tolerance) && val <= (target + tolerance));
+                    }
+                } else if (specText.toLowerCase().includes('max')) {
+                    const limit = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    if (!isNaN(limit)) isValid = (val <= limit);
+                } else if (specText.toLowerCase().includes('min')) {
+                    const limit = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    if (!isNaN(limit)) isValid = (val >= limit);
+                } else if (specText.includes('-')) {
+                    const range = specText.replace(/[^-0-9.]+/g, ' ').trim().split(/\s+/).map(s => parseFloat(s));
+                    if (range.length >= 2) isValid = (val >= range[0] && val <= range[1]);
+                } else {
+                    // Exact match attempt for pure numbers
+                    const target = parseFloat(cleanText);
+                    if(!isNaN(target)) isValid = (val === target);
+                }
+            } catch (e) { 
+                console.error("Validation Logic Error:", e); 
+                isValid = false;
+            }
+
+            if (isValid) {
+                input.classList.add('valid-success');
+                input.classList.remove('valid-error');
+            } else {
+                input.classList.add('valid-error');
+                input.classList.remove('valid-success');
+            }
+        }
+
+        function toggleSingleDetail(key) {
+            const drawer = document.getElementById('detail_' + key);
+            const icon = document.getElementById('icon_' + key);
+            drawer.classList.toggle('d-none');
+            icon.parentElement.classList.toggle('active');
+        }
+
+        function toggleAllDetails(sectionId) {
+            const container = document.getElementById('body_' + sectionId);
+            if(!container) return;
+            const drawers = container.querySelectorAll('.detail-drawer');
+            const buttons = container.querySelectorAll('.btn-detail-toggle');
+            
+            let isOpening = false;
+            for(let d of drawers) { if(d.classList.contains('d-none')) { isOpening = true; break; } }
+
+            drawers.forEach(d => isOpening ? d.classList.remove('d-none') : d.classList.add('d-none'));
+            buttons.forEach(b => isOpening ? b.classList.add('active') : b.classList.remove('active'));
+        }
     </script>
     <style>
         .glow-success { border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important; }
         #reader__scan_region video { width: 100% !important; object-fit: cover !important; }
         #reader__dashboard_section_csr button { background: #0ea5e9; color: white; border: none; padding: 5px 15px; border-radius: 4px; margin: 5px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
         .swal2-close { color: #ef4444 !important; }
+        .valid-success { box-shadow: inset 0 -3px 0 #10b981 !important; }
+        .valid-error { box-shadow: inset 0 -3px 0 #ef4444 !important; animation: shake 0.3s; }
+        @@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
     </style>
 }
