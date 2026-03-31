@@ -1,278 +1,291 @@
 @model VelastoProductionSystem.Models.DailyPlanExecution
 
 @{
-    ViewData["Title"] = "Tablet Execution App";
+    ViewData["Title"] = "Tablet Laporan Aktual Produksi";
 }
 
 <style>
-    .app-header {
-        background: linear-gradient(135deg, #1e293b, #0f172a);
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        border: 1px solid rgba(255,255,255,0.05);
-        margin-bottom: 25px;
+    :root {
+        --glass-bg: rgba(17, 24, 39, 0.8);
+        --accent: #3b82f6;
+        --accent-orange: #f59e0b;
+        --success: #10b981;
     }
-    .app-header h3 { font-size: 1.2rem; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; }
-    
-    .task-card {
-        background: #1e2229;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.05);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        margin-bottom: 20px;
-        transition: transform 0.2s, box-shadow 0.2s;
-        overflow: hidden;
+    body { background: #0b0f1a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+
+    .header-info {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
-    .task-card:focus-within {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-    }
-    
-    .card-header-dandori { background: rgba(245, 158, 11, 0.15); border-bottom: 1px solid rgba(245, 158, 11, 0.2); border-left: 4px solid #f59e0b; padding: 15px 20px; }
-    .card-header-prod { background: rgba(59, 130, 246, 0.15); border-bottom: 1px solid rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; padding: 15px 20px; }
-    
-    .plan-badge {
-        font-size: 0.8rem;
-        background: rgba(255,255,255,0.1);
-        padding: 6px 12px;
-        border-radius: 8px;
-        color: #cbd5e1;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .tablet-input {
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
-        border-radius: 10px;
-        padding: 12px 15px;
-        font-size: 1.1rem;
-        width: 100%;
-        transition: all 0.3s;
-    }
-    .tablet-input:focus {
-        background: rgba(0, 0, 0, 0.5);
-        border-color: #3b82f6;
-        outline: none;
-    }
-    .input-label {
+
+    .table-exec { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+    .table-exec thead th {
+        background: #0f172a;
+        color: #94a3b8;
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #94a3b8;
-        font-weight: bold;
-        margin-bottom: 8px;
-        display: block;
+        padding: 15px 12px;
+        border-bottom: 2px solid #1e293b;
     }
+    .tr-exec { background: rgba(30, 41, 59, 0.4); border-radius: 12px; transition: all 0.2s; }
+    .tr-exec:hover { background: rgba(30, 41, 59, 0.6); }
+    .tr-exec-dandori { border-left: 5px solid var(--accent-orange); }
+    .tr-exec-prod { border-left: 5px solid var(--accent); }
+
+    .table-exec td { padding: 15px 12px; vertical-align: middle; }
     
-    .app-footer {
-        background: #111827;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.05);
-        padding: 24px;
-        margin-top: 30px;
-    }
-    
-    .stat-box {
-        background: rgba(255,255,255,0.03);
-        border-radius: 12px;
-        padding: 15px;
-        text-align: center;
-        border: 1px solid rgba(255,255,255,0.05);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    .stat-value { font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1.2; }
-    .stat-label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-top: 5px; }
-    
-    .fab-save {
-        border-radius: 12px;
-        padding: 15px 0;
-        font-size: 1.2rem;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+    .tablet-input {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 1.1rem;
         width: 100%;
+        text-align: center;
+        transition: all 0.3s;
     }
+    .tablet-input:focus { border-color: var(--accent); outline: none; background: #000; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+    
+    .lbl-small { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 600; }
+    
+    .summary-box {
+        background: #0f172a;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        overflow: hidden;
+        height: 100%;
+    }
+    .summary-header {
+        background: rgba(31, 41, 55, 0.8);
+        padding: 10px 15px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+        text-align: center;
+    }
+    .summary-body { padding: 20px; text-align: center; }
+    .summary-val { font-size: 2.2rem; font-weight: 900; color: #fff; line-height: 1; }
+    .summary-unit { font-size: 0.85rem; color: #64748b; margin-top: 5px; font-weight: bold; }
+
+    .btn-save {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        color: white;
+        padding: 20px;
+        font-weight: 800;
+        border-radius: 16px;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        transition: transform 0.2s;
+    }
+    .btn-save:active { transform: scale(0.98); }
+
+    .badge-info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; }
 </style>
 
-<form asp-action="SaveExecution" method="post" id="executionForm" class="fade-in">
+<form asp-action="SaveExecution" method="post" id="executionForm" class="fade-in px-3 pb-5">
     <input type="hidden" asp-for="Id" />
     
-    <!-- App Header -->
-    <div class="app-header">
-        <h3 class="fw-bold mb-3"><i class="bi bi-tablet-landscape text-primary me-2"></i> Extrude Daily Planning</h3>
-        <div class="row g-3">
-            <div class="col-6 col-md-3">
-                <div class="text-white-50 small text-uppercase">Line Mesin</div>
-                <div class="fs-5 fw-bold text-info">@Model.MachineName</div>
+    <!-- Header Infographic -->
+    <div class="header-info d-flex justify-content-between align-items-center flex-wrap gap-4 mt-3">
+        <div class="d-flex align-items-center gap-5">
+            <div>
+                <span class="lbl-small">Production Line</span>
+                <div class="fw-bold text-info fs-3">@Model.MachineName</div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="text-white-50 small text-uppercase">Tanggal</div>
-                <div class="fs-5 fw-bold text-white">@Model.ExecutionDate.ToString("dd MMM yyyy")</div>
+            <div>
+                <span class="lbl-small">Current Date</span>
+                <div class="fw-bold fs-4">@Model.ExecutionDate.ToString("dd MMMM yyyy")</div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="text-white-50 small text-uppercase">Group / Shift</div>
-                <div class="fs-5 fw-bold text-white">@Model.GroupName <span class="badge bg-secondary ms-2">S-@Model.Shift</span></div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="text-white-50 small text-uppercase">Operator PIC</div>
-                <div class="d-flex gap-2 mt-1">
-                    <input type="text" asp-for="Pic1" class="tablet-input py-1 px-2" style="font-size: 0.9rem" placeholder="PIC 1" />
-                    <input type="text" asp-for="Pic2" class="tablet-input py-1 px-2" style="font-size: 0.9rem" placeholder="PIC 2" />
+            <div>
+                <span class="lbl-small">Shift / Regu</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-info">SHIFT @Model.Shift</span>
+                    <span class="fw-bold fs-4 ms-2">@Model.GroupName</span>
                 </div>
+            </div>
+        </div>
+        <div class="d-flex gap-4">
+            <div style="width: 220px;">
+                <span class="lbl-small">Operator PIC 1 (Manual)</span>
+                <input type="text" asp-for="Pic1" class="tablet-input text-start" placeholder="Nama Lengkap" />
+            </div>
+            <div style="width: 220px;">
+                <span class="lbl-small">Operator PIC 2 (Manual)</span>
+                <input type="text" asp-for="Pic2" class="tablet-input text-start" placeholder="Nama Lengkap" />
             </div>
         </div>
     </div>
 
-    <!-- Main Task Cards (Tablet Optimized) -->
-    <div class="row">
-        @for(int i=0; i<Model.Activities.Count; i++)
-        {
-            var act = Model.Activities[i];
-            var isDandori = act.PartName1 != null && act.PartName1.ToUpper().Contains("DANDORI");
-            var title = isDandori ? "DANDORI (SETUP MESIN)" : $"PRODUKSI: {act.PartName2} {act.PartName1}";
-            var headerClass = isDandori ? "card-header-dandori" : "card-header-prod";
-            var iconClass = isDandori ? "bi-tools text-warning" : "bi-box-seam text-primary";
-            
-            <div class="col-12">
-                <div class="task-card">
-                    <div class="@headerClass d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="fs-4 fw-bold text-white opacity-50">#@(i+1)</div>
-                            <div>
-                                <h5 class="fw-bold text-white mb-0"><i class="bi @iconClass me-2"></i>@title</h5>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            @if(act.PlanQty > 0) {
-                                <div class="plan-badge q-plan"><i class="bi bi-bullseye"></i> Target Qty: <strong class="text-white p-q">@act.PlanQty</strong> pcs</div>
-                            }
-                            <div class="plan-badge"><i class="bi bi-stopwatch"></i> Durasi Plan: <strong class="text-white d-dand">@act.PlanDurationMinutes</strong> m</div>
-                            <div class="plan-badge"><i class="bi bi-clock"></i> Waktu Plan: <strong class="text-white">@act.PlanStart - @act.PlanEnd</strong></div>
-                        </div>
-                    </div>
+    <!-- Main Entry Table -->
+    <div class="table-responsive">
+        <table class="table-exec">
+            <thead>
+                <tr>
+                    <th style="width: 60px;" class="text-center">No</th>
+                    <th style="width: 150px;">VIN Code (Auto)</th>
+                    <th style="width: 200px;">Part Nomor (Auto)</th>
+                    <th style="width: 120px;">Qty Plan (Man)</th>
+                    <th style="width: 140px;" class="text-primary">Act Prod (Man)</th>
+                    <th style="width: 110px;">Duration</th>
+                    <th style="width: 280px;">Actual Time (Input Jam)</th>
+                    <th>Remarks / Catatan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(int i=0; i<Model.Activities.Count; i++)
+                {
+                    var act = Model.Activities[i];
+                    var isDandori = act.PartName1?.ToUpper().Contains("DANDORI") == true;
                     
-                    <div class="p-3 p-md-4">
-                        <input type="hidden" name="activities[@i].Id" value="@act.Id" />
-                        <div class="row g-3">
-                            <!-- Data Aktual Kiri -->
-                            <div class="col-md-5 border-end-md border-secondary border-opacity-25 pe-md-4">
-                                <div class="row g-3">
-                                    <div class="col-6">
-                                        <label class="input-label"><i class="bi bi-play-circle text-success me-1"></i> Jam Mulai Act</label>
-                                        <input type="text" name="activities[@i].ActualStart" value="@act.ActualStart" class="tablet-input" placeholder="00:00" />
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="input-label"><i class="bi bi-stop-circle text-danger me-1"></i> Jam Selesai Act</label>
-                                        <input type="text" name="activities[@i].ActualEnd" value="@act.ActualEnd" class="tablet-input" placeholder="00:00" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="input-label"><i class="bi bi-hourglass-split text-info me-1"></i> Durasi Aktual (Menit)</label>
-                                        <input type="number" name="activities[@i].ActualDurationMinutes" value="@act.ActualDurationMinutes" class="tablet-input act-dur @(isDandori?"act-dand":"")" placeholder="Cth: 15" />
-                                    </div>
-                                </div>
+                    <tr class="tr-exec @(isDandori ? "tr-exec-dandori" : "tr-exec-prod")">
+                        <td class="text-center fw-bold text-white-50">@(i + 1)</td>
+                        <td class="fw-bold">
+                            <span class="text-white">@(isDandori ? "DANDORI" : act.PartName1)</span>
+                        </td>
+                        <td class="small">
+                            <span class="text-white-50">@(isDandori ? "SETUP MESIN" : act.PartName2)</span>
+                        </td>
+                        <td>
+                            @if(!isDandori) {
+                                <input type="number" name="activities[@i].PlanQty" value="@act.PlanQty" class="tablet-input plan-qty-input fw-bold" style="background: rgba(255,255,255,0.03);" />
+                            } else {
+                                <input type="hidden" name="activities[@i].PlanQty" value="0" class="plan-qty-input" />
+                                <div class="text-center text-white-50 small opacity-50">-</div>
+                            }
+                        </td>
+                        <td>
+                            @if(!isDandori) {
+                                <input type="number" name="activities[@i].ActualQty" value="@act.ActualQty" class="tablet-input act-qty fw-bold" style="border-color: var(--accent); background: rgba(59, 130, 246, 0.1);" />
+                            } else {
+                                <input type="hidden" name="activities[@i].ActualQty" value="0" class="act-qty" />
+                                <div class="text-center text-white-50 small opacity-50">-</div>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="lbl-small mb-1">Plan: @act.PlanDurationMinutes m</div>
+                            <input type="number" name="activities[@i].ActualDurationMinutes" value="@act.ActualDurationMinutes" class="tablet-input act-dur @(isDandori?"act-dand":"") px-1" style="height: 38px; font-size:1rem; border-color: @(isDandori ? "var(--accent-orange)" : "rgba(255,255,255,0.1)");" />
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="text" name="activities[@i].ActualStart" value="@act.ActualStart" class="tablet-input" placeholder="07:30" />
+                                <span class="text-white-50 small">~</span>
+                                <input type="text" name="activities[@i].ActualEnd" value="@act.ActualEnd" class="tablet-input" placeholder="08:30" />
                             </div>
-                            
-                            <!-- Data Aktual Kanan -->
-                            <div class="col-md-7 ps-md-4">
-                                <div class="row g-3">
-                                    <div class="col-12 col-md-6">
-                                        @if(!isDandori) {
-                                            <label class="input-label text-primary"><i class="bi bi-check2-circle me-1"></i> QTY HASIL PRODUKSI ACTUAL</label>
-                                            <input type="number" name="activities[@i].ActualQty" value="@act.ActualQty" class="tablet-input act-qty border-primary fw-bold" style="font-size: 1.5rem; height: 60px;" placeholder="0" />
-                                        } else {
-                                            <div class="d-flex align-items-center justify-content-center h-100 bg-dark rounded-3 border border-secondary border-opacity-25">
-                                                <div class="text-white-50 small py-3"><i class="bi bi-info-circle me-1"></i> Tidak ada target Qty untuk Dandori</div>
-                                            </div>
-                                        }
-                                    </div>
-                                    <div class="col-12 col-md-6">
-                                        <label class="input-label"><i class="bi bi-chat-left-text me-1"></i> Remarks / Kendala</label>
-                                        <textarea name="activities[@i].Remarks" class="tablet-input" rows="2" style="height: 60px; resize: none;" placeholder="Catatan jik ada...">@act.Remarks</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
+                            <div class="text-center text-white-50 mt-1" style="font-size: 0.7rem;">Rencana: @act.PlanStart - @act.PlanEnd</div>
+                        </td>
+                        <td>
+                            <input type="text" name="activities[@i].Remarks" value="@act.Remarks" class="tablet-input text-start" placeholder="Ketik kendala..." />
+                            <input type="hidden" name="activities[@i].Id" value="@act.Id" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 
-    <!-- Footer App (Line Stop & Kalkulasi) -->
-    <div class="app-footer shadow">
-        <h5 class="text-white fw-bold mb-4"><i class="bi bi-calculator text-warning me-2"></i> Kalkulasi Pencapaian & Kesimpulan</h5>
-        <div class="row g-4">
-            <!-- Line Stop Form -->
-            <div class="col-md-4 border-end-md border-secondary border-opacity-25">
-                <div class="mb-3">
-                    <label class="input-label text-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> Total Line Stop (Menit)</label>
-                    <input type="number" asp-for="LineStopMinutes" class="tablet-input border-danger" placeholder="0" />
-                </div>
-                <div class="mb-3">
-                    <label class="input-label text-warning"><i class="bi bi-journal-text me-1"></i> Catatan Line Stop / Kendala Mesin</label>
-                    <textarea asp-for="LineStopNote" class="tablet-input" rows="3" placeholder="Deskripsikan alasan line stop di sini..."></textarea>
-                </div>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <label class="input-label">Jam Start</label>
-                        <input type="text" asp-for="StartMesin" class="tablet-input" placeholder="14:30" />
+    <!-- Smart Footer Summary -->
+    <div class="row g-4 mt-2">
+        <div class="col-md-9">
+            <div class="header-info" style="margin-bottom:0; padding: 30px;">
+                <div class="row g-4 text-center">
+                    <div class="col-6 col-md-3">
+                        <div class="summary-box">
+                            <div class="summary-header">PLAN PRODUKSI</div>
+                            <div class="summary-body">
+                                <div class="summary-val text-white" id="lblPlanProd">0</div>
+                                <div class="summary-unit">TOTAL PCS</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-6">
-                        <label class="input-label">Jam Finish</label>
-                        <input type="text" asp-for="FinishMesin" class="tablet-input" placeholder="22:30" />
+                    <div class="col-6 col-md-3">
+                        <div class="summary-box" style="border-color: var(--accent);">
+                            <div class="summary-header text-primary">ACTUAL PRODUKSI</div>
+                            <div class="summary-body">
+                                <div class="summary-val text-primary" id="lblActProd">0</div>
+                                <div class="summary-unit">TOTAL PCS</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="summary-box">
+                            <div class="summary-header">PLAN DANDORI</div>
+                            <div class="summary-body">
+                                <div class="summary-val text-white" id="lblPlanDandori">0</div>
+                                <div class="summary-unit">TOTAL MENIT</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="summary-box" style="border-color: var(--accent-orange);">
+                            <div class="summary-header text-warning">ACTUAL DANDORI</div>
+                            <div class="summary-body">
+                                <div class="summary-val text-warning" id="lblActDandori">0</div>
+                                <div class="summary-unit">TOTAL MENIT</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-5 mt-3 align-items-center">
+                    <div class="col-md-6 border-end border-secondary border-opacity-10">
+                         <div class="row g-3">
+                             <div class="col-6">
+                                 <label class="lbl-small">Start Mesin (Manual)</label>
+                                 <input type="text" asp-for="StartMesin" class="tablet-input" placeholder="16:30" />
+                             </div>
+                             <div class="col-6">
+                                 <label class="lbl-small">Finish Mesin (Manual)</label>
+                                 <input type="text" asp-for="FinishMesin" class="tablet-input" placeholder="01:30" />
+                             </div>
+                         </div>
+                         <div class="mt-4">
+                             <label class="lbl-small text-danger">Line Stop Note / Alasan Mesin Berhenti (Manual)</label>
+                             <textarea asp-for="LineStopNote" class="tablet-input text-start" rows="2" style="font-size: 1rem;" placeholder="Jelaskan kendala mesin di sini..."></textarea>
+                         </div>
+                    </div>
+                    <div class="col-md-6 px-lg-5 text-center">
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <span class="fs-5 fw-bold text-white-50">Production Achievement</span>
+                            <div class="display-6 fw-bold text-success mb-0" id="lblAchieve">0%</div>
+                        </div>
+                        <div class="progress mb-4" style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                            <div id="progressAchieve" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="p-3 rounded-4 bg-black bg-opacity-30 border border-secondary border-opacity-10 shadow-sm">
+                                    <span class="lbl-small text-danger mb-2">Total Line Stop</span>
+                                    <input type="number" asp-for="LineStopMinutes" class="tablet-input border-0 bg-transparent text-danger fw-bold fs-3 p-0 m-0" placeholder="0" />
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded-4 bg-black bg-opacity-30 border border-secondary border-opacity-10 shadow-sm">
+                                    <span class="lbl-small mb-2">Frekuensi Dandori</span>
+                                    <div class="fs-3 text-white fw-bold mb-0" id="lblFreq">0 / 0</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Kalkulasi Boxes -->
-            <div class="col-md-5">
-                <div class="row g-3 h-100">
-                    <div class="col-6">
-                        <div class="stat-box">
-                            <div class="stat-value text-white" id="lblPlanProd">0</div>
-                            <div class="stat-label">Plan Qty Prod</div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="stat-box" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
-                            <div class="stat-value text-primary" id="lblActProd">0</div>
-                            <div class="stat-label text-primary">Actual Qty Prod</div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="stat-box">
-                            <div class="stat-value text-white" id="lblPlanDandori">0<span class="fs-6">m</span></div>
-                            <div class="stat-label">Plan Dandori</div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="stat-box" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);">
-                            <div class="stat-value text-warning" id="lblActDandori">0<span class="fs-6">m</span></div>
-                            <div class="stat-label text-warning">Actual Dandori</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Achievement -->
-            <div class="col-md-3 d-flex flex-column">
-                <div class="stat-box flex-grow-1 mb-3" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
-                    <div class="stat-value text-success" id="lblAchieve" style="font-size: 3rem;">0%</div>
-                    <div class="stat-label text-success fw-bold fs-6">ACHIEVEMENT QTY</div>
-                </div>
-                <button type="submit" class="btn btn-success fab-save">
-                    <i class="bi bi-floppy-fill me-2"></i> SIMPAN DATA
-                </button>
-            </div>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn-save h-100 d-flex flex-column align-items-center justify-content-center gap-3">
+                <i class="bi bi-check-all" style="font-size: 4rem;"></i>
+                <div class="fs-4">SIMPAN LAPORAN</div>
+                <div class="small fw-normal opacity-75 text-center">Data akan disimpan ke riwayat produksi</div>
+            </button>
         </div>
     </div>
 </form>
@@ -285,54 +298,58 @@
                 let actProd = 0;
                 let planDandori = 0;
                 let actDandori = 0;
+                let freq = 0;
 
-                // Hitung Plan Prod
-                $('.p-q').each(function() {
-                    let val = parseFloat($(this).text().trim());
+                // Sum Plan Production Qty
+                $('.plan-qty-input').each(function() {
+                    let val = parseFloat($(this).val());
                     if(!isNaN(val)) planProd += val;
                 });
                 
-                // Hitung Act Prod
+                // Sum Actual Production Qty
                 $('.act-qty').each(function() {
                     let val = parseFloat($(this).val());
                     if(!isNaN(val)) actProd += val;
                 });
 
-                // Hitung Plan Dandori
-                $('.d-dand').each(function() {
-                    let val = parseFloat($(this).text().trim());
-                    if(!isNaN(val)) planDandori += val;
-                });
-
-                // Hitung Act Dandori
-                $('.act-dand').each(function() {
-                    let val = parseFloat($(this).val());
-                    if(!isNaN(val)) actDandori += val;
+                // Sum Plan/Act Dandori and Frequency
+                freq = $('tr.tr-exec-dandori').length;
+                $('tr.tr-exec-dandori').each(function() {
+                    let planText = $(this).find('.lbl-small').text().replace('Plan:','').replace('m','').trim();
+                    let planVal = parseFloat(planText);
+                    if(!isNaN(planVal)) planDandori += planVal;
+                    
+                    let actVal = parseFloat($(this).find('.act-dur').val());
+                    if(!isNaN(actVal)) actDandori += actVal;
                 });
 
                 $('#lblPlanProd').text(planProd);
                 $('#lblActProd').text(actProd);
-                $('#lblPlanDandori').html(planDandori + '<span class="fs-6">m</span>');
-                $('#lblActDandori').html(actDandori + '<span class="fs-6">m</span>');
+                $('#lblPlanDandori').text(planDandori);
+                $('#lblActDandori').text(actDandori);
+                $('#lblFreq').text(freq + ' / ' + freq);
 
                 let achieve = 0;
                 if(planProd > 0) achieve = (actProd / planProd) * 100;
                 
                 let achieveElem = $('#lblAchieve');
                 achieveElem.text(achieve.toFixed(1) + "%");
+                $('#progressAchieve').css('width', Math.min(achieve, 100) + '%');
                 
-                // Ganti warna otomatis berdasarkan pencapaian
                 if(achieve >= 100) {
-                    achieveElem.removeClass('text-danger text-warning').addClass('text-success');
+                    achieveElem.attr('class', 'display-6 fw-bold text-success mb-0');
+                    $('#progressAchieve').attr('class', 'progress-bar bg-success');
                 } else if(achieve >= 80) {
-                    achieveElem.removeClass('text-danger text-success').addClass('text-warning');
+                    achieveElem.attr('class', 'display-6 fw-bold text-warning mb-0');
+                    $('#progressAchieve').attr('class', 'progress-bar bg-warning');
                 } else {
-                    achieveElem.removeClass('text-warning text-success').addClass('text-danger');
+                    achieveElem.attr('class', 'display-6 fw-bold text-danger mb-0');
+                    $('#progressAchieve').attr('class', 'progress-bar bg-danger');
                 }
             }
 
-            $('.act-qty, .act-dur').on('input', hitungTotal);
-            hitungTotal();
+            $('.act-qty, .act-dur, .plan-qty-input').on('input', hitungTotal);
+            hitungTotal(); // Initial run
         });
     </script>
 }
