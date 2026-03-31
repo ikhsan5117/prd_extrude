@@ -243,41 +243,54 @@
                     <table class="table table-dark table-hover mb-0 hist-table">
                         <thead>
                             <tr>
-                                <th>Machine</th>
-                                <th>Tanggal &amp; Shift</th>
-                                <th>Part Code / Desc</th>
+                                <th>Part Name</th>
+                                <th>PART NAME 2</th>
                                 <th>Len</th>
-                                <th>In/Out/Comp</th>
+                                <th>Compound</th>
                                 <th>Target</th>
-                                <th>INNER</th>
-                                <th>OUTER</th>
-                                <th>CT AWAL</th>
-                                <th>CT-20%</th>
+                                <th>Inner</th>
+                                <th>Outer</th>
+                                <th>CT</th>
                                 <th>Mnt</th>
                                 <th>Start</th>
                                 <th>End</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var item in Model.OrderBy(x => x.Id))
+                            @{
+                                var groupedData = Model.OrderBy(x => x.Id)
+                                                      .GroupBy(x => new { x.MachineName, x.DateShiftString });
+                            }
+                            @foreach (var group in groupedData)
                             {
-                                var isDandori   = item.PartName1?.ToUpper().Contains("DANDORI") == true;
-                                var isIstirahat = item.PartName1?.ToUpper().Contains("ISTIRAHAT") == true;
-                                <tr style="@(isDandori ? "border-left:3px solid #f59e0b;" : isIstirahat ? "opacity:0.45;" : "border-left:2px solid rgba(59,130,246,0.5);")">
-                                    <td class="text-info fw-bold">@item.MachineName</td>
-                                    <td class="text-warning small" style="white-space:nowrap;">@item.DateShiftString</td>
-                                    <td class="fw-bold">@item.PartName1 <br> <span class="text-white-50 fw-normal small">@item.PartName2</span></td>
-                                    <td class="text-center small">@item.Length</td>
-                                    <td class="text-center small" style="font-size:0.7rem;">@item.Compound</td>
-                                    <td class="text-center fw-bold">@(item.PlanTargetPcs.HasValue ? item.PlanTargetPcs.ToString() : "-")</td>
-                                    <td class="text-center text-info small">@item.NeedKgInner</td>
-                                    <td class="text-center text-warning small">@item.NeedKgOuter</td>
-                                    <td class="text-center small">@item.CtAwal</td>
-                                    <td class="text-center small text-warning">@item.CtMinus20</td>
-                                    <td class="text-center fw-bold" style="color:#c4b5fd;">@item.Menit</td>
-                                    <td class="text-center small">@item.WaktuMulai</td>
-                                    <td class="text-center small">@item.WaktuSelesai</td>
+                                <tr style="background: rgba(30, 41, 59, 1); border-top: 3px solid #1e293b;">
+                                    <td colspan="11" class="p-2">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="badge bg-info text-dark fw-bold px-3 py-2" style="font-size:0.75rem;">@group.Key.MachineName</span>
+                                            <span class="text-white fw-bold" style="font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">
+                                                <i class="bi bi-calendar3 me-1 text-warning"></i> @group.Key.DateShiftString
+                                            </span>
+                                        </div>
+                                    </td>
                                 </tr>
+                                @foreach (var item in group)
+                                {
+                                    var isDandori   = item.PartName1?.ToUpper().Contains("DANDORI") == true;
+                                    var isIstirahat = item.PartName1?.ToUpper().Contains("ISTIRAHAT") == true;
+                                    <tr style="@(isDandori ? "border-left:4px solid #f59e0b;" : isIstirahat ? "opacity:0.45;" : "border-left:3px solid #3b82f6;")">
+                                        <td class="fw-bold text-info">@item.Kode</td>
+                                        <td class="fw-bold">@item.PartName1</td>
+                                        <td class="text-center small">@item.Length</td>
+                                        <td class="text-center small" style="font-size:0.7rem;">@item.Compound</td>
+                                        <td class="text-center fw-bold">@(item.PlanTargetPcs.HasValue ? item.PlanTargetPcs.ToString() : "-")</td>
+                                        <td class="text-center text-info small">@item.NeedKgInner</td>
+                                        <td class="text-center text-warning small">@item.NeedKgOuter</td>
+                                        <td class="text-center small">@item.CtAwal</td>
+                                        <td class="text-center fw-bold" style="color:#fbbf24;">@item.Menit</td>
+                                        <td class="text-center small">@item.WaktuMulai</td>
+                                        <td class="text-center fw-bold text-success">@item.WaktuSelesai</td>
+                                    </tr>
+                                }
                             }
                         </tbody>
                     </table>
@@ -599,8 +612,9 @@ function savePlan() {
         const type = row.dataset.type;
         const partInput = document.getElementById('partInput_' + id);
         
-        let pCode = partInput?.dataset?.partCode || partInput?.value || type || '';
-        let pDesc = partInput?.dataset?.desc || '';
+        let pCode   = partInput?.dataset?.partCode   || partInput?.value || type || '';
+        let pNum    = partInput?.dataset?.partNumber || '';
+        let pDesc   = partInput?.dataset?.desc       || '';
 
         const pNo     = document.getElementById('partNo_'    + id)?.value || '';
         const tNo     = document.getElementById('taNo_'      + id)?.value || '';
@@ -619,6 +633,7 @@ function savePlan() {
         rows.push({
             MachineName:     machine,
             DateShiftString: dateShiftString,
+            Kode:            pNum,
             PartName1:       pCode,
             PartName2:       pDesc,
             Compound:        (cIn || cOut) ? `${cIn} / ${cOut}` : '',

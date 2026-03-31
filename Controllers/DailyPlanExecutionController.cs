@@ -14,8 +14,10 @@ namespace VelastoProductionSystem.Controllers
             _context = context;
         }
 
-        public IActionResult Start()
+        public async Task<IActionResult> Start()
         {
+            ViewBag.Machines = await _context.Machines.Select(m => m.MachineName).Distinct().ToListAsync();
+            ViewBag.Shifts = await _context.ShiftMasters.OrderBy(x => x.ShiftName).ToListAsync();
             return View();
         }
 
@@ -89,20 +91,24 @@ namespace VelastoProductionSystem.Controllers
             }
 
             // 2. Jika belum, tarik dari PlanningMasters
-            var dateStrPart = executionDate.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("id-ID")).ToUpper(); // SENIN 2 SEPTEMBER 2024
-            
-            // Because Master Planning has complex string "SENIN 2 SEPTEMBER 2024 SHIFT 1", we try to just fetch whatever is available today
-            // For simplicity in this demo, we will fetch all PlanningMasters for this machine and simulate loading.
+            // Format pencarian: "SELASA, 31 MARET 2026 SHIFT 1"
+            var culture = new System.Globalization.CultureInfo("id-ID");
+            var datePart = executionDate.ToString("dd MMMM yyyy", culture).ToUpper(); // "31 MARET 2026"
             
             var plans = await _context.PlanningMasters
                 .Where(x => x.MachineName == machineName)
                 .OrderBy(x => x.Id)
                 .ToListAsync();
                 
-            var matchedPlans = plans.Where(x => !string.IsNullOrEmpty(x.DateShiftString) && x.DateShiftString.Contains(shift) && x.DateShiftString.Contains(executionDate.Year.ToString())).ToList();
+            // Pencarian fleksibel: harus ada tanggal (misal "31 MARET 2026") DAN harus ada Shift (misal "SHIFT 1")
+            var matchedPlans = plans.Where(x => 
+                !string.IsNullOrEmpty(x.DateShiftString) && 
+                x.DateShiftString.ToUpper().Contains(datePart) && 
+                x.DateShiftString.ToUpper().Contains(shift.ToUpper())
+            ).ToList();
             
-            // If empty, just load all plans strictly to test if search failed
-            if (!matchedPlans.Any()) matchedPlans = plans.Take(10).ToList();
+            // Fallback: Jika hari ini kosong, jangan load sembarang data (agar operator tidak bingung)
+            // Namun untuk pertama kali, jika user memaksa buat tanpa plan, izinkan tapi list activities kosong
 
             var newExec = new DailyPlanExecution
             {
@@ -127,8 +133,8 @@ namespace VelastoProductionSystem.Controllers
                 var act = new DailyPlanActivity
                 {
                     DailyPlanExecutionId = newExec.Id,
-                    PartName1 = p.PartName1,
-                    PartName2 = p.PartName2,
+                    PartName1 = p.PartName1, // Misal "NA2140"
+                    PartName2 = p.Kode,      // Kita simpan Kode (77259-BZ120) di PartName2 agar muncul di form tablet
                     PlanQty = p.PlanTargetPcs,
                     PlanDurationMinutes = pMenit,
                     PlanStart = p.WaktuMulai,
@@ -186,6 +192,19 @@ namespace VelastoProductionSystem.Controllers
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Laporan Aktual berhasil disimpan!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var item = await _context.DailyPlanExecutions.FindAsync(id);
+            if (item != null)
+            {
+                _context.DailyPlanExecutions.Remove(item);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Data Laporan berhasil dihapus.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }

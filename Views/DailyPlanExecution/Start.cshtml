@@ -34,22 +34,26 @@
                     <div class="col-6">
                         <label class="form-label text-info small fw-bold">SHIFT</label>
                         <select name="shift" class="form-select form-select-lg bg-black text-white border-secondary" required>
-                            <option value="1">SHIFT 1</option>
-                            <option value="2">SHIFT 2</option>
-                            <option value="3">SHIFT 3</option>
+                            @if (ViewBag.Shifts != null) {
+                                foreach (var s in (List<VelastoProductionSystem.Models.ShiftMaster>)ViewBag.Shifts) {
+                                    <option value="@s.ShiftName">@s.ShiftName</option>
+                                }
+                            }
                         </select>
                     </div>
                     <div class="col-6">
-                        <label class="form-label text-info small fw-bold">GROUP</label>
+                        <label class="form-label text-info small fw-bold">GROUP / REGU</label>
                         <input type="text" name="groupName" class="form-control form-control-lg bg-black text-white border-secondary" placeholder="Cth: BIRU" required />
                     </div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label text-info small fw-bold">MESIN / LINE</label>
                     <select name="machineName" class="form-select form-select-lg bg-black text-white border-secondary" required>
-                        <option value="DL01 engine">DL 1 (DL01 engine)</option>
-                        <option value="DL02 engine">DL 2 (DL02 engine)</option>
-                        <option value="DL03 engine">DL 3 (DL03 engine)</option>
+                        @if (ViewBag.Machines != null) {
+                            foreach (var m in (List<string>)ViewBag.Machines) {
+                                <option value="@m">@m</option>
+                            }
+                        }
                     </select>
                 </div>
                 
