@@ -67,7 +67,11 @@ namespace VelastoProductionSystem.Controllers
                 ALTER TABLE [dbo].[PlanningMasters] ADD [Length] [nvarchar](max) NULL;
             ");
 
-            var data = await _context.PlanningMasters.OrderByDescending(x => x.CreatedAt).ToListAsync();
+            // Load Dynamic Config from DB
+            ViewBag.Machines = await _context.Machines.Select(m => m.MachineName).Distinct().ToListAsync();
+            ViewBag.Shifts   = await _context.ShiftMasters.OrderBy(x => x.ShiftName).ToListAsync();
+
+            var data = await _context.PlanningMasters.OrderByDescending(x => x.Id).ToListAsync();
             return View(data);
         }
 

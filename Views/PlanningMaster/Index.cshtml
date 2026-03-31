@@ -143,9 +143,11 @@
                 <div class="col-auto">
                     <label class="col-lbl d-block mb-1">Machine / Line</label>
                     <select id="hdrMachine" class="form-select-dark">
-                        <option value="DL01 engine">DL01 engine</option>
-                        <option value="DL02 engine">DL02 engine</option>
-                        <option value="DL03 engine">DL03 engine</option>
+                        @if (ViewBag.Machines != null) {
+                            foreach (var m in (List<string>)ViewBag.Machines) {
+                                <option value="@m">@m</option>
+                            }
+                        }
                     </select>
                 </div>
                 <div class="col-auto">
@@ -155,12 +157,21 @@
                 <div class="col-auto">
                     <label class="col-lbl d-block mb-1">Shift</label>
                     <select id="hdrShift" class="form-select-dark">
-                        <option value="SHIFT 1">SHIFT 1</option>
-                        <option value="SHIFT 2">SHIFT 2</option>
-                        <option value="SHIFT 3">SHIFT 3</option>
+                        @if (ViewBag.Shifts != null) {
+                            foreach (var s in (List<VelastoProductionSystem.Models.ShiftMaster>)ViewBag.Shifts) {
+                                <option value="@s.ShiftName">@s.ShiftName</option>
+                            }
+                        }
                     </select>
                 </div>
-                <div class="col-auto ms-auto">
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <form id="uploadExcelForm" asp-action="ImportExcel" method="post" enctype="multipart/form-data" class="m-0">
+                        <input type="file" id="excelFileInput" name="file" accept=".xlsx, .xls" style="display:none;" onchange="submitExcelForm()" />
+                        <button type="button" onclick="document.getElementById('excelFileInput').click()" class="btn btn-outline-success fw-bold rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-file-earmark-excel-fill me-1"></i> Import Excel
+                        </button>
+                    </form>
+
                     <button onclick="savePlan()" class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm text-dark">
                         <i class="bi bi-floppy-fill me-1"></i> Simpan Planning
                     </button>
@@ -278,15 +289,17 @@
 
 @section Scripts {
 <script>
+// Konversi data history dari server ke JS untuk Tracking Waktu yang Akurat
+const savedPlans = @Html.Raw(Json.Serialize(Model));
 let rowCounter = 0;
-// Tabel referensi data per row: { ctAwal, ct20, needKgInner, needKgOuter }
 const rowData = {};
 
-const shiftStarts = {
-    'SHIFT 1': '07:00',
-    'SHIFT 2': '15:30',
-    'SHIFT 3': '22:30'
-};
+const shiftStarts = {};
+@if (ViewBag.Shifts != null) {
+    foreach (var s in (List<VelastoProductionSystem.Models.ShiftMaster>)ViewBag.Shifts) {
+        @:shiftStarts["@s.ShiftName"] = "@s.StartTime";
+    }
+}
 
 function addRow(type) {
     rowCounter++;
@@ -435,6 +448,9 @@ function onTargetChange(id) {
 }
 
 function onMulaiChange(id) {
+    // Tandai bahwa ini diisi manual (jangan dipaksa ikut history lagi)
+    const el = document.getElementById('mulai_' + id);
+    if (el) el.dataset.isManual = "true";
     syncAllRows();
 }
 
@@ -459,32 +475,43 @@ function syncAllRows() {
     const firstId = rows[0].dataset.rowid;
     const firstMulaiEl = document.getElementById('mulai_' + firstId);
     
-    if (!firstMulaiEl.value || firstMulaiEl.value === '07:00') {
-        // Cek apakah ada history yang tersimpan di tabel bawah
-        const histRows = document.querySelectorAll('#savedPlanBody tr');
+    // Ambil Nama Mesin & Shift yang sedang dipilih di atas (Header)
+    let selectedMachine = (document.getElementById('hdrMachine').value || '').trim().toUpperCase();
+    let selectedShift   = document.getElementById('hdrShift').value || '';
+    
+    // Jika masih kosong (belum diisi manual), coba sambungkan dari history (data tersimpan)
+    if (!firstMulaiEl.value || (firstMulaiEl.dataset.isManual !== "true")) {
         let lastHistEnd = '';
-        if (histRows.length > 0) {
-            const cells = histRows[histRows.length - 1].querySelectorAll('td');
-            lastHistEnd = cells[cells.length - 1]?.textContent?.trim() || '';
+        
+        // Cari baris terakhir di 'savedPlans' yang mesinnya sama
+        if (savedPlans && savedPlans.length > 0) {
+            const machinePlans = savedPlans
+                .filter(p => (p.machineName || '').trim().toUpperCase() === selectedMachine)
+                .sort((a, b) => a.id - b.id);
+            
+            if (machinePlans.length > 0) {
+                lastHistEnd = machinePlans[machinePlans.length - 1].waktuSelesai;
+            }
         }
 
         if (lastHistEnd && lastHistEnd.includes(':')) {
-            firstMulaiEl.value = lastHistEnd;
-        } else {
-            const shift = document.getElementById('hdrShift').value;
-            firstMulaiEl.value = shiftStarts[shift] || '07:00';
+            // HANYA overwrite jika ini memang baris baru yang belum disentuh manual
+            if (firstMulaiEl.dataset.isManual !== "true") {
+                firstMulaiEl.value = lastHistEnd;
+            }
+        } else if (!firstMulaiEl.value) {
+            firstMulaiEl.value = shiftStarts[selectedShift] || '07:00';
         }
     }
 
     let runningEnd = '';
 
-    // 2. Loop berurutan dari atas ke bawah
+    // 2. Loop berurutan untuk sinkronisasi waktu & material
     rows.forEach((row, i) => {
         const id   = row.dataset.rowid;
         const type = row.dataset.type;
         const inputMulai = document.getElementById('mulai_' + id);
         
-        // PENTING: Jika bukan baris pertama, PAKSA mulai mengikuti baris sebelumnya
         if (i > 0 && runningEnd) {
             inputMulai.value = runningEnd;
         }
@@ -492,19 +519,18 @@ function syncAllRows() {
         const start = inputMulai.value;
         if (!start) return;
 
-        // Hitung Menit (Durasi)
         let mnt = 0;
         if (type === 'PRODUKSI') {
             const target = parseFloat(document.getElementById('target_' + id).value) || 0;
             const d = rowData[id] || {};
             const ctVal = d.ctAwal || 0;
-            mnt = Math.ceil((target * ctVal) / 60) || 0;
             
-            // Update UI Menit
+            // PAKAI Math.round() agar 100% IDENTIK dengan Excel
+            mnt = Math.round((target * ctVal) / 60) || 0;
+            
             const mntEl = document.getElementById('menit_' + id);
             if (mntEl) mntEl.textContent = mnt > 0 ? mnt : '-';
             
-            // Update Material Calculations
             const kgIn  = d.needKgInner || 0;
             const kgOut = d.needKgOuter || 0;
             const nIn   = (target * kgIn).toFixed(1);
@@ -512,17 +538,15 @@ function syncAllRows() {
             document.getElementById('needIn_' + id).textContent  = parseFloat(nIn)  > 0 ? nIn  : '-';
             document.getElementById('needOut_' + id).textContent = parseFloat(nOut) > 0 ? nOut : '-';
         } else {
-            mnt = (type === 'DANDORI') ? 50 : 60; // ISTIRAHAT 60 mnt
+            mnt = (type === 'DANDORI') ? 50 : 60;
             document.getElementById('menit_' + id).textContent = mnt;
         }
 
-        // Tentukan Selesai = Mulai + Menit
         const [h, m] = start.split(':').map(Number);
-        const date = new Date(2020, 0, 1, h, m + mnt, 0);
-        const end = pad(date.getHours()) + ':' + pad(date.getMinutes());
+        const date   = new Date(2020, 0, 1, h, m + mnt, 0);
+        const end    = pad(date.getHours()) + ':' + pad(date.getMinutes());
         document.getElementById('selesai_' + id).value = end;
 
-        // Simpan end untuk baris berikutnya
         runningEnd = end;
     });
 }
@@ -645,8 +669,20 @@ document.addEventListener('click', function(e) {
         document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display='none');
 });
 
-// Start with empty rows so user can add manually
-// addRow('DANDORI');
-// addRow('PRODUKSI');
+// ─── Excel Upload ───
+function submitExcelForm() {
+    const form = document.getElementById('uploadExcelForm');
+    const input = document.getElementById('excelFileInput');
+    if (!form || !input || !input.files.length) return;
+    
+    // Tampilkan loading sederhana
+    const btn = document.querySelector('button[onclick*="excelFileInput"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengunggah...';
+    }
+    
+    form.submit();
+}
 </script>
 }
