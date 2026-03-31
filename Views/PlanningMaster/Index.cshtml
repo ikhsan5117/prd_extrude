@@ -248,7 +248,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var item in Model)
+                            @foreach (var item in Model.OrderBy(x => x.Id))
                             {
                                 var isDandori   = item.PartName1?.ToUpper().Contains("DANDORI") == true;
                                 var isIstirahat = item.PartName1?.ToUpper().Contains("ISTIRAHAT") == true;
@@ -456,19 +456,40 @@ function syncAllRows() {
     if (!rows.length) return;
 
     // 1. Tentukan Waktu Mulai baris pertama
-    const shift = document.getElementById('hdrShift').value;
-    const firstMulaiEl = document.getElementById('mulai_' + rows[0].dataset.rowid);
-    if (!firstMulaiEl.value) {
-        firstMulaiEl.value = shiftStarts[shift] || '07:00';
+    const firstId = rows[0].dataset.rowid;
+    const firstMulaiEl = document.getElementById('mulai_' + firstId);
+    
+    if (!firstMulaiEl.value || firstMulaiEl.value === '07:00') {
+        // Cek apakah ada history yang tersimpan di tabel bawah
+        const histRows = document.querySelectorAll('#savedPlanBody tr');
+        let lastHistEnd = '';
+        if (histRows.length > 0) {
+            const cells = histRows[histRows.length - 1].querySelectorAll('td');
+            lastHistEnd = cells[cells.length - 1]?.textContent?.trim() || '';
+        }
+
+        if (lastHistEnd && lastHistEnd.includes(':')) {
+            firstMulaiEl.value = lastHistEnd;
+        } else {
+            const shift = document.getElementById('hdrShift').value;
+            firstMulaiEl.value = shiftStarts[shift] || '07:00';
+        }
     }
+
+    let runningEnd = '';
 
     // 2. Loop berurutan dari atas ke bawah
     rows.forEach((row, i) => {
         const id   = row.dataset.rowid;
         const type = row.dataset.type;
+        const inputMulai = document.getElementById('mulai_' + id);
         
-        // Ambil Mulai (sudah diset oleh baris sebelumnya atau manual di baris 1)
-        const start = document.getElementById('mulai_' + id).value;
+        // PENTING: Jika bukan baris pertama, PAKSA mulai mengikuti baris sebelumnya
+        if (i > 0 && runningEnd) {
+            inputMulai.value = runningEnd;
+        }
+
+        const start = inputMulai.value;
         if (!start) return;
 
         // Hitung Menit (Durasi)
@@ -476,8 +497,8 @@ function syncAllRows() {
         if (type === 'PRODUKSI') {
             const target = parseFloat(document.getElementById('target_' + id).value) || 0;
             const d = rowData[id] || {};
-            const ct = d.ct20 || d.ctAwal || 0;
-            mnt = Math.ceil((target * ct) / 60) || 0;
+            const ctVal = d.ctAwal || 0;
+            mnt = Math.ceil((target * ctVal) / 60) || 0;
             
             // Update UI Menit
             const mntEl = document.getElementById('menit_' + id);
@@ -491,7 +512,7 @@ function syncAllRows() {
             document.getElementById('needIn_' + id).textContent  = parseFloat(nIn)  > 0 ? nIn  : '-';
             document.getElementById('needOut_' + id).textContent = parseFloat(nOut) > 0 ? nOut : '-';
         } else {
-            mnt = (type === 'DANDORI') ? 50 : 30;
+            mnt = (type === 'DANDORI') ? 50 : 60; // ISTIRAHAT 60 mnt
             document.getElementById('menit_' + id).textContent = mnt;
         }
 
@@ -501,11 +522,8 @@ function syncAllRows() {
         const end = pad(date.getHours()) + ':' + pad(date.getMinutes());
         document.getElementById('selesai_' + id).value = end;
 
-        // Set Mulai baris berikutnya jika ada
-        if (i < rows.length - 1) {
-            const nextId = rows[i+1].dataset.rowid;
-            document.getElementById('mulai_' + nextId).value = end;
-        }
+        // Simpan end untuk baris berikutnya
+        runningEnd = end;
     });
 }
 
