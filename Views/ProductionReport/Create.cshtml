@@ -394,48 +394,93 @@
                 </div>
             </div>
 
-            <!-- SECTION: DIES DIMENSION -->
+            <!-- SECTION: DIES DIMENSION - REDESIGNED AS CARDS -->
             <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
-                <div class="hud-card-header">
-                    <i class="bi bi-rulers hud-card-icon"></i>
-                    <span class="hud-card-title">DIES DIMENSION MEASUREMENTS</span>
+                <div class="hud-card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-rulers hud-card-icon"></i>
+                        <span class="hud-card-title">DIES DIMENSION MEASUREMENTS</span>
+                    </div>
+                    <div class="super-small text-info-glow opacity-50 font-monospace">INTERACTIVE INSTRUMENT PANEL</div>
                 </div>
-                <div class="p-0 overflow-auto">
-                    <table class="table-hud-unified compact-hud instrument-style">
-                        <thead>
-                            <tr class="bg-black bg-opacity-40 text-center">
-                                <th class="ps-4 text-start py-2 font-monospace tracking-widest text-primary-glow">DIES DESCRIPTION</th>
-                                <th width="15%" class="py-2 border-start border-white border-opacity-5">CEK VISUAL</th>
-                                <th width="18%" class="py-2 border-start border-white border-opacity-5">STANDARD</th>
-                                <th width="20%" class="py-2 border-start border-white border-opacity-5">INITIAL (BEFORE)</th>
-                                <th width="20%" class="py-2 border-start border-white border-opacity-5">FINAL (AFTER)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                var diesList = new[] { 
-                                    new { Name = "Nipple Die", Std = "--", Field = "NippleDieOK", SpecKey = "NippleDie" },
-                                    new { Name = "Tube Die", Std = "--", Field = "TubeDieOK", SpecKey = "TubeDie" },
-                                    new { Name = "Middle Die", Std = "--", Field = "MiddleDieOK", SpecKey = "MiddleDie" },
-                                    new { Name = "Cover Die", Std = "--", Field = "CoverDieOK", SpecKey = "CoverDie" },
-                                    new { Name = "Spacer Die", Std = "--", Field = "SpacerDieOK", SpecKey = "SpacerDie" },
-                                    new { Name = "A Distance", Std = "--", Field = "ToleranceDieOK", SpecKey = "ToleranceDie" }
-                                };
-                            }
-                            @foreach(var die in diesList) {
-                                <tr class="group-lane">
-                                    <td class="ps-4 py-2 fw-bold text-white-50">@die.Name</td>
-                                    <td class="border-start border-white border-opacity-5">
-                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" name="@die.Field" value="true"></label><label class="hud-pill-item red">NG<input type="radio" name="@die.Field" value="false"></label></div>
-                                    </td>
-                                    <td class="text-info-glow font-monospace text-center border-start border-white border-opacity-5" id="spec_@die.SpecKey">@die.Std</td>
-                                    <td class="border-start border-white border-opacity-5"><input class="hud-input-underlined py-1 text-center font-monospace text-warning" placeholder="---" /></td>
-                                    <td class="border-start border-white border-opacity-5"><input class="hud-input-underlined py-1 text-center font-monospace text-warning" placeholder="---" /></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                
+                <div class="p-3">
+                    <div class="row g-3">
+                        @{
+                            var diesList = new[] { 
+                                new { Name = "Nipple Die", Std = "--", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal" },
+                                new { Name = "Tube Die", Std = "--", Field = "TubeDieOK", SpecKey = "TubeDie", InitName = "TubeDieInitial", FinalName = "TubeDieFinal" },
+                                new { Name = "Middle Die", Std = "--", Field = "MiddleDieOK", SpecKey = "MiddleDie", InitName = "MiddleDieInitial", FinalName = "MiddleDieFinal" },
+                                new { Name = "Cover Die", Std = "--", Field = "CoverDieOK", SpecKey = "CoverDie", InitName = "CoverDieInitial", FinalName = "CoverDieFinal" },
+                                new { Name = "Spacer Die", Std = "--", Field = "SpacerDieOK", SpecKey = "SpacerDie", InitName = "SpacerDieInitial", FinalName = "SpacerDieFinal" },
+                                new { Name = "A Distance", Std = "--", Field = "ToleranceDieOK", SpecKey = "ToleranceDie", InitName = "ToleranceInitial", FinalName = "ToleranceFinal" }
+                            };
+                        }
+
+                        @foreach(var die in diesList) {
+                            <div class="col-md-6 col-xl-4">
+                                <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="label-stack">
+                                            <span class="label-sub">INSTRUMENT</span>
+                                            <span class="label-main fs-6">@die.Name</span>
+                                        </div>
+                                        <div class="hud-pill-group sm" style="width: 100px;">
+                                            <label class="hud-pill-item">OK<input type="radio" name="@die.Field" value="true"></label>
+                                            <label class="hud-pill-item red">NG<input type="radio" name="@die.Field" value="false"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 align-items-end mt-auto">
+                                        <div class="col-4">
+                                            <div class="text-center">
+                                                <label class="lbl-small mb-1 text-info-glow" style="font-size: 0.55rem;">STANDARD</label>
+                                                <div class="hud-input-underlined py-1 text-info-glow bg-dark bg-opacity-50 rounded-2 border-0" id="spec_@die.SpecKey" style="font-size: 0.9rem; min-height: 35px;">@die.Std</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-center">
+                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">BEFORE</label>
+                                                <input name="@die.InitName" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-center">
+                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">AFTER</label>
+                                                <input name="@die.FinalName" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
+
+                <style>
+                    .die-card { 
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+                        position: relative; 
+                        overflow: hidden;
+                    }
+                    .die-card:hover { 
+                        background: rgba(14, 165, 233, 0.08) !important; 
+                        border-color: rgba(14, 165, 233, 0.4) !important;
+                        transform: translateY(-2px);
+                        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                    }
+                    .die-card::before {
+                        content: '';
+                        position: absolute;
+                        top: 0; left: 0; width: 3px; height: 100%;
+                        background: rgba(255,255,255,0.05);
+                        transition: all 0.3s;
+                    }
+                    .die-card:hover::before {
+                        background: var(--hud-primary);
+                        box-shadow: 0 0 10px var(--hud-primary);
+                    }
+                </style>
             </div>
 
             <!-- SECTION: PARAMETERS TABLE (The Massive Grid) -->
