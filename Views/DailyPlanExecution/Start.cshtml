@@ -1,0 +1,64 @@
+@{
+    ViewData["Title"] = "Start Extrude Plan Execution";
+}
+
+<style>
+    .form-box {
+        background: rgba(25, 30, 40, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+</style>
+
+<div class="row fade-in justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-12">
+        <div class="form-box shadow-lg">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 text-primary mb-3" style="width: 70px; height: 70px;">
+                    <i class="bi bi-box-arrow-in-down fs-1"></i>
+                </div>
+                <h3 class="text-white fw-bold mb-1">Tarik Planning Master</h3>
+                <p class="text-white-50 small">Pilih Parameter untuk Mulai Kontrol Aktual Produksi Harian</p>
+            </div>
+
+            <form asp-action="CreateOrLoad" method="post">
+                <div class="mb-4">
+                    <label class="form-label text-info small fw-bold tracking-wide">TANGGAL KERJA</label>
+                    <input type="date" name="executionDate" class="form-control form-control-lg bg-black text-white border-secondary" required value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <label class="form-label text-info small fw-bold">SHIFT</label>
+                        <select name="shift" class="form-select form-select-lg bg-black text-white border-secondary" required>
+                            <option value="1">SHIFT 1</option>
+                            <option value="2">SHIFT 2</option>
+                            <option value="3">SHIFT 3</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-info small fw-bold">GROUP</label>
+                        <input type="text" name="groupName" class="form-control form-control-lg bg-black text-white border-secondary" placeholder="Cth: BIRU" required />
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-info small fw-bold">MESIN / LINE</label>
+                    <select name="machineName" class="form-select form-select-lg bg-black text-white border-secondary" required>
+                        <option value="DL01 engine">DL 1 (DL01 engine)</option>
+                        <option value="DL02 engine">DL 2 (DL02 engine)</option>
+                        <option value="DL03 engine">DL 3 (DL03 engine)</option>
+                    </select>
+                </div>
+                
+                <div class="d-grid mt-5">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
+                        <i class="bi bi-play-fill me-2"></i> GENERATE FORM AKTUAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,58 @@
+@model IEnumerable<VelastoProductionSystem.Models.DailyPlanExecution>
+
+@{
+    ViewData["Title"] = "Daily Execution Records";
+}
+
+<style>
+    .table-container {
+        max-height: 75vh; overflow-y: auto; overflow-x: auto;
+        border-radius: 15px; background: rgba(25, 30, 40, 0.4);
+        backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+
+<div class="row fade-in">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <div>
+                <h2 class="text-white fw-bold mb-1"><i class="bi bi-ui-checks-grid text-primary"></i> Extrude Plan Execution History</h2>
+                <p class="text-white-50 small mb-0">Daftar Riwayat Form Actual Plan Produksi</p>
+            </div>
+        </div>
+
+        <div class="table-container shadow-lg">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Shift</th>
+                        <th>Line/Machine</th>
+                        <th>Group</th>
+                        <th>PIC</th>
+                        <th>Line Stop</th>
+                        <th style="width: 100px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(!Model.Any()) {
+                        <tr><td colspan="7" class="text-center text-white-50 py-4">Belum ada data execution form.</td></tr>
+                    }
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td class="text-warning fw-bold">@item.ExecutionDate.ToString("dd MMM yyyy")</td>
+                            <td>@item.Shift</td>
+                            <td class="text-info fw-bold">@item.MachineName</td>
+                            <td>@item.GroupName</td>
+                            <td>@item.Pic1 , @item.Pic2</td>
+                            <td class="text-danger">@item.LineStopMinutes Menit</td>
+                            <td>
+                                <a asp-action="Execution" asp-route-id="@item.Id" class="btn btn-info btn-xs rounded-pill">Buka Form</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

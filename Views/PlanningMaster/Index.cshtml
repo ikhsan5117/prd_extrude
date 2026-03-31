@@ -1,0 +1,634 @@
+@model IEnumerable<VelastoProductionSystem.Models.PlanningMaster>
+@{
+    ViewData["Title"] = "Planning Master";
+}
+
+<style>
+    /* ─── Grid Layout ─── */
+    .row-line {
+        display: grid;
+        grid-template-columns: 32px 90px 240px 95px 85px 65px 65px 50px 75px 65px 65px 75px 75px 65px 75px 75px 32px;
+        gap: 4px;
+        align-items: center;
+        padding: 5px 8px;
+        border-radius: 10px;
+        margin-bottom: 4px;
+        transition: background 0.15s;
+    }
+    .row-line:hover { background: rgba(255,255,255,0.03); }
+    .row-prod    { border-left: 3px solid #3b82f6; background: rgba(59,130,246,0.04); }
+    .row-dandori { border-left: 3px solid #f59e0b; background: rgba(245,158,11,0.06); }
+    .row-rest    { border-left: 3px solid #6b7280; background: rgba(107,114,128,0.05); }
+    .col-lbl     { font-size: 0.58rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; font-weight: 700; height: 100%; display: flex; align-items: center; justify-content: center; }
+    
+    /* ─── Vertical Lines ─── */
+    .row-line > div {
+        border-right: 1px solid rgba(255,255,255,0.08);
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 2px;
+    }
+    .row-line > div:last-child { border-right: none; }
+
+    .cell-input {
+        background: rgba(0,0,0,0.25);
+        border: none;
+        color: #f8fafc;
+        border-radius: 0;
+        padding: 4px 6px;
+        font-size: 0.8rem;
+        width: 100%;
+        text-align: center;
+        transition: background 0.2s;
+    }
+    .cell-input:focus { outline: none; background: rgba(0,0,0,0.45); }
+    .cell-input.auto-filled { color: #34d399; background: transparent; }
+    .cell-input:disabled { opacity: 0.15; cursor: not-allowed; }
+
+    /* ─── Hover effects for grid rows ─── */
+    .row-line { cursor: default; }
+    .row-line input:hover:not(:disabled):not([readonly]) { background: rgba(255,255,255,0.05); }
+
+    /* ─── Need KG display ─── */
+    .need-display {
+        background: rgba(245,158,11,0.1);
+        border: 1px solid rgba(245,158,11,0.25);
+        border-radius: 7px;
+        padding: 5px 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #fcd34d;
+        text-align: center;
+        width: 100%;
+    }
+    .need-display.inner { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.25); color: #93c5fd; }
+
+    /* ─── Menit ─── */
+    .menit-display {
+        background: rgba(139,92,246,0.12);
+        border: 1px solid rgba(139,92,246,0.3);
+        border-radius: 7px;
+        padding: 5px 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #c4b5fd;
+        text-align: center;
+        width: 100%;
+    }
+
+    /* ─── Auto-complete ─── */
+    .part-search-wrap { position: relative; }
+    .autocomplete-list {
+        position: absolute; top: 110%; left: 0; right: 0; z-index: 999;
+        background: #1e2533; border: 1px solid rgba(59,130,246,0.4);
+        border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        max-height: 220px; overflow-y: auto;
+    }
+    .ac-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .ac-item:hover { background: rgba(59,130,246,0.15); }
+    .ac-code { font-weight: 700; color: #f8fafc; font-size: 0.82rem; }
+    .ac-desc { font-size: 0.7rem; color: #64748b; }
+
+    /* ─── Plan Builder container ─── */
+    .plan-builder { background: #1a1e26; border-radius: 18px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; }
+    .plan-header  { background: rgba(0,0,0,0.3); padding: 18px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .plan-body    { padding: 20px; }
+    .form-control-dark { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 9px 14px; }
+    .form-control-dark:focus { outline: none; border-color: #3b82f6; color: #fff; background: rgba(0,0,0,0.6); }
+    .form-select-dark { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 9px 14px; }
+    .form-select-dark option { background: #1e2229; }
+    .add-btn { border: 1px dashed rgba(255,255,255,0.15); background: transparent; color: #64748b; border-radius: 8px; padding: 6px 14px; font-size: 0.78rem; transition: all 0.2s; cursor: pointer; }
+    .add-btn:hover { border-color: #3b82f6; color: #93c5fd; background: rgba(59,130,246,0.08); }
+
+    /* ─── Saved Table ─── */
+    .hist-table th { background: #0f1319; color: #94a3b8; font-size: 0.58rem; text-transform: uppercase; padding: 10px 8px; border: none; white-space: nowrap; text-align: center; border-right: 1px solid rgba(255,255,255,0.05); }
+    .hist-table td { font-size: 0.77rem; padding: 6px 8px; border-color: rgba(255,255,255,0.04); vertical-align: middle; border-right: 1px solid rgba(255,255,255,0.05); }
+    .hist-table tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* ─── Scroll horizontal for small screens ─── */
+    .builder-scroll { overflow-x: auto; }
+    .builder-inner  { min-width: 1000px; }
+</style>
+
+<div class="fade-in">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="text-white fw-bold mb-1"><i class="bi bi-calendar-week text-warning me-2"></i> Planning Master</h2>
+            <p class="text-white-50 small mb-0">Buat jadwal harian — data part otomatis dari <strong class="text-success">DL0</strong></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="PartMaster" asp-action="Index" class="btn btn-sm btn-outline-info rounded-pill">
+                <i class="bi bi-database-fill me-1"></i> Part Master (DL0)
+            </a>
+            <form asp-action="ClearData" method="post" onsubmit="return confirm('Hapus semua data planning?')">
+                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                    <i class="bi bi-trash3 me-1"></i> Kosongkan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    { <div class="alert alert-success rounded-3 border-0 mb-3"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div> }
+    @if (TempData["ErrorMessage"] != null)
+    { <div class="alert alert-danger rounded-3 border-0 mb-3"><i class="bi bi-x-circle-fill me-2"></i>@TempData["ErrorMessage"]</div> }
+
+    <!-- ═══ BUILDER ═══ -->
+    <div class="plan-builder shadow-lg mb-4">
+        <div class="plan-header">
+            <div class="row g-3 align-items-end">
+                <div class="col-auto">
+                    <label class="col-lbl d-block mb-1">Machine / Line</label>
+                    <select id="hdrMachine" class="form-select-dark">
+                        <option value="DL01 engine">DL01 engine</option>
+                        <option value="DL02 engine">DL02 engine</option>
+                        <option value="DL03 engine">DL03 engine</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="col-lbl d-block mb-1">Tanggal</label>
+                    <input type="date" id="hdrDate" class="form-control-dark" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-auto">
+                    <label class="col-lbl d-block mb-1">Shift</label>
+                    <select id="hdrShift" class="form-select-dark">
+                        <option value="SHIFT 1">SHIFT 1</option>
+                        <option value="SHIFT 2">SHIFT 2</option>
+                        <option value="SHIFT 3">SHIFT 3</option>
+                    </select>
+                </div>
+                <div class="col-auto ms-auto">
+                    <button onclick="savePlan()" class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm text-dark">
+                        <i class="bi bi-floppy-fill me-1"></i> Simpan Planning
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="plan-body">
+            <div class="builder-scroll">
+                <div class="builder-inner">
+                    <!-- Header Labels -->
+                    <div class="row-line" style="border-left:none;background:rgba(255,255,255,0.03);padding-bottom:2px; height: 35px; border-radius: 5px 5px 0 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <div class="col-lbl">#</div>
+                        <div class="col-lbl">Tipe</div>
+                        <div class="col-lbl">Part Code / Aktivitas</div>
+                        <div class="col-lbl">Part No</div>
+                        <div class="col-lbl">TA No</div>
+                        <div class="col-lbl">C.IN</div>
+                        <div class="col-lbl">C.OUT</div>
+                        <div class="col-lbl">Len</div>
+                        <div class="col-lbl">Target</div>
+                        <div class="col-lbl text-info">INNER</div>
+                        <div class="col-lbl text-warning">OUTER</div>
+                        <div class="col-lbl">CT AWAL</div>
+                        <div class="col-lbl">CT -20%</div>
+                        <div class="col-lbl text-purple">Mnt</div>
+                        <div class="col-lbl">Start</div>
+                        <div class="col-lbl">End</div>
+                        <div class="col-lbl"></div>
+                    </div>
+                    <!-- Rows -->
+                    <div id="planRows"></div>
+                </div>
+            </div>
+
+            <!-- Add Buttons -->
+            <div class="d-flex gap-2 mt-3">
+                <button class="add-btn" onclick="addRow('PRODUKSI')">
+                    <i class="bi bi-plus-circle me-1 text-primary"></i> + Produksi
+                </button>
+                <button class="add-btn" onclick="addRow('DANDORI')">
+                    <i class="bi bi-plus-circle me-1 text-warning"></i> + Dandori
+                </button>
+                <button class="add-btn" onclick="addRow('ISTIRAHAT')">
+                    <i class="bi bi-plus-circle me-1 text-secondary"></i> + Istirahat
+                </button>
+                <span class="text-white-50 small ms-3 align-self-center">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Ketik Part Code → auto-fill → isi Target → kalkulasi otomatis (NEED(KG) & Menit)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SAVED DATA ═══ -->
+    <div>
+        <h6 class="text-white-50 mb-3 small text-uppercase fw-bold"><i class="bi bi-archive me-1"></i> Data Planning Tersimpan</h6>
+        <div style="background:#1a1e26;border-radius:14px;border:1px solid rgba(255,255,255,0.05);overflow:hidden;max-height:45vh;overflow-y:auto;">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-4 text-white-50 small">
+                    <i class="bi bi-inbox d-block mb-1" style="font-size:2rem;"></i>
+                    Belum ada planning tersimpan.
+                </div>
+            }
+            else
+            {
+                <div style="overflow-x:auto;">
+                    <table class="table table-dark table-hover mb-0 hist-table">
+                        <thead>
+                            <tr>
+                                <th>Machine</th>
+                                <th>Tanggal &amp; Shift</th>
+                                <th>Part Code / Desc</th>
+                                <th>Len</th>
+                                <th>In/Out/Comp</th>
+                                <th>Target</th>
+                                <th>INNER</th>
+                                <th>OUTER</th>
+                                <th>CT AWAL</th>
+                                <th>CT-20%</th>
+                                <th>Mnt</th>
+                                <th>Start</th>
+                                <th>End</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var isDandori   = item.PartName1?.ToUpper().Contains("DANDORI") == true;
+                                var isIstirahat = item.PartName1?.ToUpper().Contains("ISTIRAHAT") == true;
+                                <tr style="@(isDandori ? "border-left:3px solid #f59e0b;" : isIstirahat ? "opacity:0.45;" : "border-left:2px solid rgba(59,130,246,0.5);")">
+                                    <td class="text-info fw-bold">@item.MachineName</td>
+                                    <td class="text-warning small" style="white-space:nowrap;">@item.DateShiftString</td>
+                                    <td class="fw-bold">@item.PartName1 <br> <span class="text-white-50 fw-normal small">@item.PartName2</span></td>
+                                    <td class="text-center small">@item.Length</td>
+                                    <td class="text-center small" style="font-size:0.7rem;">@item.Compound</td>
+                                    <td class="text-center fw-bold">@(item.PlanTargetPcs.HasValue ? item.PlanTargetPcs.ToString() : "-")</td>
+                                    <td class="text-center text-info small">@item.NeedKgInner</td>
+                                    <td class="text-center text-warning small">@item.NeedKgOuter</td>
+                                    <td class="text-center small">@item.CtAwal</td>
+                                    <td class="text-center small text-warning">@item.CtMinus20</td>
+                                    <td class="text-center fw-bold" style="color:#c4b5fd;">@item.Menit</td>
+                                    <td class="text-center small">@item.WaktuMulai</td>
+                                    <td class="text-center small">@item.WaktuSelesai</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+let rowCounter = 0;
+// Tabel referensi data per row: { ctAwal, ct20, needKgInner, needKgOuter }
+const rowData = {};
+
+const shiftStarts = {
+    'SHIFT 1': '07:00',
+    'SHIFT 2': '15:30',
+    'SHIFT 3': '22:30'
+};
+
+function addRow(type) {
+    rowCounter++;
+    const id = rowCounter;
+    rowData[id] = { ctAwal: 0, needKgInner: 0, needKgOuter: 0 };
+
+    const badge = type === 'PRODUKSI'
+        ? `<span class="badge bg-primary" style="font-size:0.62rem;">PRODUKSI</span>`
+        : type === 'DANDORI'
+        ? `<span class="badge bg-warning text-dark" style="font-size:0.62rem;">DANDORI</span>`
+        : `<span class="badge bg-secondary" style="font-size:0.62rem;">ISTIRAHAT</span>`;
+
+    const isProd = type === 'PRODUKSI';
+
+    // Part cell — hanya produksi yang punya autocomplete
+    let partCell = isProd
+        ? `<div class="part-search-wrap">
+               <input class="cell-input" id="partInput_${id}"
+                      placeholder="Ketik Part Code..."
+                      oninput="searchPart(${id}, this.value)" 
+                      onblur="tryAutoLookup(${id})"
+                      onkeydown="if(event.key==='Enter'){tryAutoLookup(${id});event.preventDefault();}"
+                      autocomplete="off" />
+               <div class="autocomplete-list" id="acList_${id}" style="display:none;"></div>
+               <div id="descText_${id}" style="font-size:0.55rem; color:#6b7280; line-height:1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+           </div>`
+        : `<input class="cell-input" id="partInput_${id}"
+               value="${type}" placeholder="${type === 'DANDORI' ? 'Dies + Compound' : 'Istirahat'}" />`;
+
+    const disAttr = isProd ? '' : 'disabled';
+
+    const html = `
+    <div class="row-line ${type === 'PRODUKSI' ? 'row-prod' : type === 'DANDORI' ? 'row-dandori' : 'row-rest'}"
+         id="row_${id}" data-type="${type}" data-rowid="${id}">
+        <div class="small" style="color:#475569;">${id}</div>
+        <div>${badge}</div>
+        <div>${partCell}</div>
+        <div><input class="cell-input auto-filled text-center p-0" id="partNo_${id}" readonly /></div>
+        <div><input class="cell-input auto-filled text-center p-0" id="taNo_${id}" readonly /></div>
+        <div><input class="cell-input auto-filled text-center p-0" id="cIn_${id}" readonly /></div>
+        <div><input class="cell-input auto-filled text-center p-0" id="cOut_${id}" readonly /></div>
+        <div><input class="cell-input auto-filled text-center p-0" id="length_${id}" readonly /></div>
+        <div><input class="cell-input text-end fw-bold" id="target_${id}" type="number" min="0" oninput="onTargetChange(${id})" ${disAttr} /></div>
+        <div><div class="need-display inner border-0 bg-transparent p-0" id="needIn_${id}">-</div></div>
+        <div><div class="need-display border-0 bg-transparent p-0" id="needOut_${id}">-</div></div>
+        <div><input class="cell-input auto-filled text-center p-0" id="ctAwal_${id}" readonly /></div>
+        <div><input class="cell-input auto-filled text-center p-0" id="ct20_${id}" style="color:#fbbf24;" readonly /></div>
+        <div><div class="menit-display border-0 bg-transparent p-0" id="menit_${id}">-</div></div>
+        <div><input class="cell-input text-center" id="mulai_${id}" type="time" oninput="onMulaiChange(${id})" /></div>
+        <div><input class="cell-input auto-filled text-center" id="selesai_${id}" type="time" readonly /></div>
+        <div style="border:none;"><button onclick="removeRow(${id})" class="btn btn-sm btn-link text-danger p-0" style="font-size:0.9rem;">✕</button></div>
+    </div>`;
+
+    document.getElementById('planRows').insertAdjacentHTML('beforeend', html);
+ 
+    // Sync seluruh tabel
+    syncAllRows();
+}
+
+function removeRow(id) {
+    const el = document.getElementById('row_' + id);
+    if (el) { el.remove(); delete rowData[id]; }
+    syncAllRows();
+}
+
+// ─── Auto-complete Search ───
+let debTimer;
+function searchPart(id, q) {
+    clearTimeout(debTimer);
+    const ac = document.getElementById('acList_' + id);
+    if (q.length < 2) { ac.style.display = 'none'; return; }
+    debTimer = setTimeout(() => {
+        fetch(`/PartMaster/Search?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.length) { ac.style.display = 'none'; return; }
+                ac.innerHTML = data.map(p =>
+                    `<div class="ac-item" onclick="selectPart(${id}, '${p.partCode}')">
+                        <div class="ac-code">${p.partCode}&nbsp;<span style="color:#64748b;font-weight:400;">${p.partNumber || ''}</span></div>
+                        <div class="ac-desc">${p.description || ''}&nbsp;·&nbsp;CT: <strong>${p.ctAwal ?? '-'}</strong></div>
+                    </div>`
+                ).join('');
+                ac.style.display = 'block';
+            });
+    }, 260);
+}
+
+function selectPart(id, partCode) {
+    document.getElementById('acList_' + id).style.display = 'none';
+    fetch(`/PartMaster/Lookup?q=${encodeURIComponent(partCode)}`)
+        .then(r => r.json())
+        .then(p => {
+            const inp = document.getElementById('partInput_' + id);
+            if (!p) {
+                if (inp) {
+                    inp.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.4)';
+                    setTimeout(() => { if(inp) inp.style.boxShadow = 'none'; }, 1500);
+                }
+                return;
+            }
+            if (inp) {
+                inp.value = p.partCode || '';
+                inp.dataset.partCode   = p.partCode;
+                inp.dataset.partNumber = p.partNumber || '';
+                inp.dataset.desc       = p.description || '';
+                document.getElementById('descText_' + id).textContent = p.description || '';
+                inp.style.boxShadow    = 'none';
+            }
+
+            // Simpan data referensi
+            rowData[id] = {
+                ctAwal:      parseFloat(p.secPerPcs)   || 0,
+                ct20:        parseFloat(p.ctMinus20)   || 0,
+                needKgInner: parseFloat(p.needKgInner) || 0,
+                needKgOuter: parseFloat(p.needKgOuter) || 0
+            };
+
+            // Auto-fill compound & CT
+            const partNoEl = document.getElementById('partNo_'   + id);
+            const taNoEl   = document.getElementById('taNo_'     + id);
+            if (partNoEl) partNoEl.value = p.partCode || '';
+            if (taNoEl)   taNoEl.value   = p.partNumber || '';
+            
+            document.getElementById('cIn_'      + id).value = p.compoundInner || '';
+            document.getElementById('cOut_'     + id).value = p.compoundOuter || '';
+            document.getElementById('length_'   + id).value = (p.length && p.length > 0) ? p.length : '';
+            document.getElementById('ctAwal_'   + id).value = (p.secPerPcs && p.secPerPcs > 0) ? p.secPerPcs : '';
+            document.getElementById('ct20_'     + id).value = (p.ctMinus20 && p.ctMinus20 > 0) ? p.ctMinus20 : '';
+
+            // Recalculate all
+            syncAllRows();
+        });
+}
+
+// Jika user ketik manual dan tab, coba lookup otomatis
+function tryAutoLookup(id) {
+    const inp = document.getElementById('partInput_' + id);
+    if (!inp || !inp.value || inp.dataset.partCode) return;
+    setTimeout(() => {
+        if (!inp.dataset.partCode) selectPart(id, inp.value.trim());
+    }, 200);
+}
+
+function onTargetChange(id) {
+    syncAllRows();
+}
+
+function onMulaiChange(id) {
+    syncAllRows();
+}
+
+function recalcEndTime(id, menit) {
+    const mulaiEl   = document.getElementById('mulai_' + id);
+    const selesaiEl = document.getElementById('selesai_' + id);
+    if (!mulaiEl || !mulaiEl.value || menit < 0) return;
+
+    const [h, m] = mulaiEl.value.split(':').map(Number);
+    const total  = h * 60 + m + menit;
+    const endH   = Math.floor(total / 60) % 24;
+    const endM   = total % 60;
+    selesaiEl.value = pad(endH) + ':' + pad(endM);
+}
+
+// ─── Logika Waktu Lanjut Terus (Sequential Cascade) ───
+function syncAllRows() {
+    const rows = Array.from(document.querySelectorAll('#planRows .row-line'));
+    if (!rows.length) return;
+
+    // 1. Tentukan Waktu Mulai baris pertama
+    const shift = document.getElementById('hdrShift').value;
+    const firstMulaiEl = document.getElementById('mulai_' + rows[0].dataset.rowid);
+    if (!firstMulaiEl.value) {
+        firstMulaiEl.value = shiftStarts[shift] || '07:00';
+    }
+
+    // 2. Loop berurutan dari atas ke bawah
+    rows.forEach((row, i) => {
+        const id   = row.dataset.rowid;
+        const type = row.dataset.type;
+        
+        // Ambil Mulai (sudah diset oleh baris sebelumnya atau manual di baris 1)
+        const start = document.getElementById('mulai_' + id).value;
+        if (!start) return;
+
+        // Hitung Menit (Durasi)
+        let mnt = 0;
+        if (type === 'PRODUKSI') {
+            const target = parseFloat(document.getElementById('target_' + id).value) || 0;
+            const d = rowData[id] || {};
+            const ct = d.ct20 || d.ctAwal || 0;
+            mnt = Math.ceil((target * ct) / 60) || 0;
+            
+            // Update UI Menit
+            const mntEl = document.getElementById('menit_' + id);
+            if (mntEl) mntEl.textContent = mnt > 0 ? mnt : '-';
+            
+            // Update Material Calculations
+            const kgIn  = d.needKgInner || 0;
+            const kgOut = d.needKgOuter || 0;
+            const nIn   = (target * kgIn).toFixed(1);
+            const nOut  = (target * kgOut).toFixed(1);
+            document.getElementById('needIn_' + id).textContent  = parseFloat(nIn)  > 0 ? nIn  : '-';
+            document.getElementById('needOut_' + id).textContent = parseFloat(nOut) > 0 ? nOut : '-';
+        } else {
+            mnt = (type === 'DANDORI') ? 50 : 30;
+            document.getElementById('menit_' + id).textContent = mnt;
+        }
+
+        // Tentukan Selesai = Mulai + Menit
+        const [h, m] = start.split(':').map(Number);
+        const date = new Date(2020, 0, 1, h, m + mnt, 0);
+        const end = pad(date.getHours()) + ':' + pad(date.getMinutes());
+        document.getElementById('selesai_' + id).value = end;
+
+        // Set Mulai baris berikutnya jika ada
+        if (i < rows.length - 1) {
+            const nextId = rows[i+1].dataset.rowid;
+            document.getElementById('mulai_' + nextId).value = end;
+        }
+    });
+}
+
+function cascadeTimeFromPrevious(id) {
+    const rows  = Array.from(document.querySelectorAll('#planRows .row-line'));
+    const myIdx = rows.findIndex(r => r.dataset.rowid == id);
+    if (myIdx <= 0) return;
+    const prevId = rows[myIdx - 1].dataset.rowid;
+    const prev   = document.getElementById('selesai_' + prevId)?.value;
+    if (prev) document.getElementById('mulai_' + id).value = prev;
+}
+
+// Allow manual override of mulai by tracking user edits
+document.addEventListener('change', function(e) {
+    if (e.target.id === 'hdrShift') {
+        // Jika shift berubah, update baris pertama jika belum manual override
+        const firstRow = document.querySelector('#planRows .row-line');
+        if (firstRow) {
+            const firstId = firstRow.dataset.rowid;
+            const mulaiEl = document.getElementById('mulai_' + firstId);
+            if (mulaiEl && !mulaiEl.dataset.manualOverride) {
+                mulaiEl.value = shiftStarts[e.target.value] || '07:00';
+                onMulaiChange(firstId);
+            }
+        }
+    }
+    if (e.target.id?.startsWith('mulai_')) {
+        const match = e.target.id.match(/mulai_(\d+)/);
+        if (match) onMulaiChange(parseInt(match[1]));
+    }
+});
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+// ─── Save Plan ───
+function savePlan() {
+    const machine = document.getElementById('hdrMachine').value || '-';
+    const date    = document.getElementById('hdrDate').value;
+    const shift   = document.getElementById('hdrShift').value;
+    
+    const dateLabel = new Date(date).toLocaleDateString('id-ID', {
+        weekday:'long', day:'numeric', month:'long', year:'numeric'
+    }).toUpperCase();
+    const dateShiftString = `${dateLabel} ${shift}`;
+
+    const rows = [];
+    document.querySelectorAll('#planRows .row-line').forEach(row => {
+        const id   = row.dataset.rowid;
+        const type = row.dataset.type;
+        const partInput = document.getElementById('partInput_' + id);
+        
+        let pCode = partInput?.dataset?.partCode || partInput?.value || type || '';
+        let pDesc = partInput?.dataset?.desc || '';
+
+        const pNo     = document.getElementById('partNo_'    + id)?.value || '';
+        const tNo     = document.getElementById('taNo_'      + id)?.value || '';
+        const cIn     = document.getElementById('cIn_'       + id)?.value || '';
+        const cOut    = document.getElementById('cOut_'      + id)?.value || '';
+        const len     = document.getElementById('length_'    + id)?.value || '';
+        const target  = document.getElementById('target_'    + id)?.value || '';
+        const ctA     = document.getElementById('ctAwal_'    + id)?.value || '';
+        const ct2     = document.getElementById('ct20_'      + id)?.value || '';
+        const mnt     = document.getElementById('menit_'     + id)?.textContent?.trim() || '0';
+        const start   = document.getElementById('mulai_'     + id)?.value || '';
+        const end     = document.getElementById('selesai_'   + id)?.value || '';
+        const kIn     = document.getElementById('needIn_'    + id)?.textContent?.replace('-','').trim() || '';
+        const kOut    = document.getElementById('needOut_'   + id)?.textContent?.replace('-','').trim() || '';
+
+        rows.push({
+            MachineName:     machine,
+            DateShiftString: dateShiftString,
+            PartName1:       pCode,
+            PartName2:       pDesc,
+            Compound:        (cIn || cOut) ? `${cIn} / ${cOut}` : '',
+            CompoundInner:   cIn,
+            CompoundOuter:   cOut,
+            CompoundCombo:   (pNo || tNo) ? `${pNo} | ${tNo}` : '',
+            Length:          len,
+            PlanTargetPcs:   target ? parseInt(target) : null,
+            CtAwal:          ctA,
+            CtMinus20:       ct2,
+            NeedKgInner:     kIn,
+            NeedKgOuter:     kOut,
+            Menit:           mnt,
+            WaktuMulai:      start,
+            WaktuSelesai:    end
+        });
+    });
+
+    if (!rows.length) { 
+        alert('Tabel kosong. Tambahkan baris terlebih dahulu.'); 
+        return; 
+    }
+
+    console.log('Sending Rows:', rows);
+
+    fetch('/PlanningMaster/SavePlan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rows)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            alert(`✅ ${res.count} baris planning berhasil disimpan!`);
+            location.reload();
+        } else {
+            alert('❌ Gagal: ' + res.error);
+        }
+    })
+    .catch(err => {
+        alert('❌ Error Koneksi: ' + err.message);
+    });
+}
+
+// Tutup autocomplete klik luar
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.part-search-wrap'))
+        document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display='none');
+});
+
+// Start with empty rows so user can add manually
+// addRow('DANDORI');
+// addRow('PRODUKSI');
+</script>
+}

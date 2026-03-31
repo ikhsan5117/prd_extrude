@@ -19,6 +19,11 @@ namespace VelastoProductionSystem.Data
         public DbSet<MasterlistSpsDoubleLayer> MasterlistSpsDoubleLayers { get; set; }
         public DbSet<DimensionReport> DimensionReports { get; set; }
         public DbSet<DimensionMeasurement> DimensionMeasurements { get; set; }
+        public DbSet<PlanningMaster> PlanningMasters { get; set; }
+        public DbSet<DailyPlanExecution> DailyPlanExecutions { get; set; }
+        public DbSet<DailyPlanActivity> DailyPlanActivities { get; set; }
+        public DbSet<Machine> Machines { get; set; }
+        public DbSet<PartMaster> PartMasters { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

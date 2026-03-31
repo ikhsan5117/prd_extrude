@@ -59,17 +59,21 @@
                     <i class="bi bi-database"></i>
                     <span>Master Data</span>
                 </div>
-                <a asp-controller="StandardParameterSetting" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-sliders"></i>
-                    <span>Parameter Setting</span>
+                <a asp-controller="PlanningMaster" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-calendar-week text-warning"></i>
+                    <span>Planning Master</span>
+                </a>
+                <a asp-controller="PartMaster" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-database-fill-gear text-success"></i>
+                    <span>Part Master (DL0)</span>
                 </a>
                 <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
                     <i class="bi bi-file-earmark-spreadsheet"></i>
                     <span>SPS Excel Master</span>
                 </a>
-                <a asp-controller="PackingStandard" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Packing Standard</span>
+                <a asp-controller="Machine" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-gear-wide-connected text-info"></i>
+                    <span>Machine Management</span>
                 </a>
             </div>
 
@@ -78,6 +82,10 @@
                     <i class="bi bi-gear-wide-connected"></i>
                     <span>Production</span>
                 </div>
+                <a asp-controller="DailyPlanExecution" asp-action="Start" class="nav-item sub">
+                    <i class="bi bi-ui-checks-grid text-primary"></i>
+                    <span class="fw-bold">Input Actual Plan</span>
+                </a>
                 <a asp-controller="ProductionReport" asp-action="Create" class="nav-item sub">
                     <i class="bi bi-file-earmark-text text-warning"></i>
                     <span class="fw-bold">Form Parameter Setting</span>
@@ -97,6 +105,10 @@
                     <i class="bi bi-archive-fill"></i>
                     <span>HISTORY ARCHIVE</span>
                 </div>
+                <a asp-controller="DailyPlanExecution" asp-action="Index" class="nav-item sub">
+                    <i class="bi bi-ui-checks-grid text-info"></i>
+                    <span>Plan Execution Hist.</span>
+                </a>
                 <a asp-controller="ProductionReport" asp-action="ParameterHistory" class="nav-item sub">
                     <i class="bi bi-sliders text-warning"></i>
                     <span>Parameter History</span>

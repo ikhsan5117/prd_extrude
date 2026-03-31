@@ -188,12 +188,12 @@
                 <thead>
                     <!-- Primary Header Category -->
                     <tr>
-                        <th colspan="6" class="group-label">Identifikasi Utama</th>
-                        <th colspan="7" class="group-label group-label-orange">Spesifikasi Hose & Dies</th>
+                        <th colspan="9" class="group-label">Identifikasi Utama</th>
+                        <th colspan="11" class="group-label group-label-orange">Spesifikasi Hose & Dies</th>
                         <th colspan="2" class="group-label">Mesh</th>
-                        <th colspan="6" class="group-label group-label-orange">Suhu Pengerjaan (°C)</th>
-                        <th colspan="4" class="group-label">Output Mesin</th>
-                        <th colspan="4" class="group-label group-label-orange">Proses Akhir</th>
+                        <th colspan="10" class="group-label group-label-orange">Suhu Pengerjaan (°C)</th>
+                        <th colspan="6" class="group-label">Output Mesin</th>
+                        <th colspan="6" class="group-label group-label-orange">Proses Akhir</th>
                         <th colspan="6" class="group-label">Final Quality Matrix</th>
                         <th rowspan="2" class="align-middle">Opsi</th>
                     </tr>
@@ -204,11 +204,18 @@
                         <th>Machine</th>
                         <th>ITEM List</th>
                         <th>NO. DOC</th>
+                        <th>NO. REV</th>
+                        <th>REV. DATE</th>
+                        <th>FORMULASI</th>
                         <th>MC</th>
                         
                         <th class="marker-im"><span class="badge-im">IM</span>Customer</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Hose Type</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Material</th>
+                        <th>Inner Tube</th>
+                        <th>Outer Cover</th>
+                        <th>Use Limits In</th>
+                        <th>Use Limits Out</th>
                         <th>Dimensi</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Nipple</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Tube Die</th>
@@ -223,16 +230,24 @@
                         <th class="marker-re"><span class="badge-re">RE</span>Cyl 1-2</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Cyl 2-1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Cyl 2-2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Feed 1</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Feed 2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Screw Temp 1</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Screw Temp 2</th>
 
                         <th class="marker-re"><span class="badge-re">RE</span>Screw V1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Screw V2</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Press 1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Press 2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Am Meter</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>OD Sensor</th>
 
                         <th class="marker-im"><span class="badge-im">IM</span>Chiller</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Cutting</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Take-up</th>
                         <th>Mark Sort</th>
+                        <th>Text Material</th>
+                        <th>Mark Colour</th>
 
                         <th class="marker-im"><span class="badge-im">IM</span>± Inner</th>
                         <th class="marker-im"><span class="badge-im">IM</span>± Outer</th>
@@ -251,11 +266,18 @@
                             <td>@item.Machine</td>
                             <td class="x-small" style="min-width: 250px; white-space: normal; line-height: 1.2;">@item.ItemList</td>
                             <td class="x-small text-white-50">@item.DocumentNumber</td>
+                            <td>@item.RevisionNumber</td>
+                            <td>@item.RevisionDate</td>
+                            <td>@item.Formulasi</td>
                             <td class="fw-bold text-warning">@item.MachineCode</td>
                             
                             <td class="fw-bold">@item.Customer</td>
                             <td class="small text-truncate" style="max-width: 140px;">@item.HoseType</td>
                             <td><span class="badge bg-secondary">@item.Material</span></td>
+                            <td>@item.InnerTube</td>
+                            <td>@item.OuterCover</td>
+                            <td>@item.UseLimitsInner</td>
+                            <td>@item.UseLimitsOuter</td>
                             <td class="text-info">@item.Dimensi</td>
                             <td>@item.Nipple</td>
                             <td>@item.TubeDie</td>
@@ -270,16 +292,24 @@
                             <td>@item.Cylinder1_2</td>
                             <td>@item.Cylinder2_1</td>
                             <td>@item.Cylinder2_2</td>
+                            <td>@item.Feed1</td>
+                            <td>@item.Feed2</td>
+                            <td>@item.ScrewTemp1</td>
+                            <td>@item.ScrewTemp2</td>
 
                             <td>@item.ScrewSpeed1</td>
                             <td>@item.ScrewSpeed2</td>
                             <td>@item.Pressure1</td>
                             <td>@item.Pressure2</td>
+                            <td>@item.AmMeter</td>
+                            <td>@item.OdSensor</td>
 
                             <td class="text-info fw-bold">@item.ChillerWaterTemp</td>
                             <td>@item.CuttingSpeed</td>
                             <td>@item.TakeUpConveyorSpeed</td>
                             <td>@item.MarkingSort</td>
+                            <td>@item.TextMarkingMaterial</td>
+                            <td>@item.MarkingColour</td>
 
                             <td class="fw-bold">@item.ToleranceInner</td>
                             <td class="fw-bold">@item.ToleranceOuter</td>
