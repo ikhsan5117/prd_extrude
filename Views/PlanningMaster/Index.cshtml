@@ -258,28 +258,32 @@
                         </thead>
                         <tbody>
                             @{
-                                var groupedData = Model.OrderBy(x => x.Id)
-                                                      .GroupBy(x => new { x.MachineName, x.DateShiftString });
+                                // Kelompokkan data secara Global berdasarkan Tanggal + Shift
+                                // Urutkan grup berdasarkan Tanggal (Terbaru di atas)
+                                // Urutkan isi grup berdasarkan Jam Mulai (Alur Produksi)
+                                var groupedData = Model
+                                    .OrderByDescending(x => x.DateShiftString)
+                                    .ThenBy(x => x.WaktuMulai)
+                                    .GroupBy(x => x.DateShiftString);
                             }
                             @foreach (var group in groupedData)
                             {
                                 <tr style="background: rgba(30, 41, 59, 1); border-top: 3px solid #1e293b;">
                                     <td colspan="11" class="p-2">
                                         <div class="d-flex align-items-center gap-3">
-                                            <span class="badge bg-info text-dark fw-bold px-3 py-2" style="font-size:0.75rem;">@group.Key.MachineName</span>
-                                            <span class="text-white fw-bold" style="font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">
-                                                <i class="bi bi-calendar3 me-1 text-warning"></i> @group.Key.DateShiftString
+                                            <span class="text-white fw-bold" style="font-size:0.88rem; letter-spacing:1px; text-transform:uppercase;">
+                                                <i class="bi bi-calendar3 me-1 text-warning"></i> @group.Key
                                             </span>
                                         </div>
                                     </td>
                                 </tr>
-                                @foreach (var item in group)
+                                @foreach (var item in group.OrderBy(x => x.WaktuMulai))
                                 {
                                     var isDandori   = item.PartName1?.ToUpper().Contains("DANDORI") == true;
                                     var isIstirahat = item.PartName1?.ToUpper().Contains("ISTIRAHAT") == true;
                                     <tr style="@(isDandori ? "border-left:4px solid #f59e0b;" : isIstirahat ? "opacity:0.45;" : "border-left:3px solid #3b82f6;")">
-                                        <td class="fw-bold text-info">@item.Kode</td>
-                                        <td class="fw-bold">@item.PartName1</td>
+                                        <td class="fw-bold text-info">@item.PartName1</td>
+                                        <td class="fw-bold">@item.PartName2</td>
                                         <td class="text-center small">@item.Length</td>
                                         <td class="text-center small" style="font-size:0.7rem;">@item.Compound</td>
                                         <td class="text-center fw-bold">@(item.PlanTargetPcs.HasValue ? item.PlanTargetPcs.ToString() : "-")</td>
@@ -492,14 +496,24 @@ function syncAllRows() {
     let selectedMachine = (document.getElementById('hdrMachine').value || '').trim().toUpperCase();
     let selectedShift   = document.getElementById('hdrShift').value || '';
     
+    // Generate DateShiftString dari pilihan input untuk pencarian history yang akurat
+    const dateVal = document.getElementById('hdrDate').value;
+    const dateLabel = new Date(dateVal).toLocaleDateString('id-ID', {
+        weekday:'long', day:'numeric', month:'long', year:'numeric'
+    }).toUpperCase();
+    const selectedDateShiftString = `${dateLabel} ${selectedShift}`;
+
     // Jika masih kosong (belum diisi manual), coba sambungkan dari history (data tersimpan)
     if (!firstMulaiEl.value || (firstMulaiEl.dataset.isManual !== "true")) {
         let lastHistEnd = '';
         
-        // Cari baris terakhir di 'savedPlans' yang mesinnya sama
+        // Cari baris terakhir di 'savedPlans' yang Mesin DAN Tanggal/Shift nya sama persis
         if (savedPlans && savedPlans.length > 0) {
             const machinePlans = savedPlans
-                .filter(p => (p.machineName || '').trim().toUpperCase() === selectedMachine)
+                .filter(p => 
+                    (p.machineName || '').trim().toUpperCase() === selectedMachine && 
+                    (p.dateShiftString || '').trim().toUpperCase() === selectedDateShiftString.trim().toUpperCase()
+                )
                 .sort((a, b) => a.id - b.id);
             
             if (machinePlans.length > 0) {
