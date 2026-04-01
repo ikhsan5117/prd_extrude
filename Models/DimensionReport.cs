@@ -5,6 +5,7 @@ namespace VelastoProductionSystem.Models
     public class DimensionReport
     {
         public int Id { get; set; }
+        public int? ProductionReportId { get; set; } // Link to parent production log
 
         [Required]
         [Display(Name = "No. Dokumen")]

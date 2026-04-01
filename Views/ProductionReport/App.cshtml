@@ -590,113 +590,118 @@
                 </div>
             </div>
             
-            <div class="data-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 10px;">
-                            <th colspan="4" class="py-1 border-bottom border-primary border-opacity-25 tracking-widest fw-black text-center text-uppercase">PUKUL / JAM</th>
-                            @for(int i=0; i<6; i++) {
-                                <th class="p-0 border border-primary border-opacity-25" style="height: 25px;">
-                                    <input type="text" class="w-100 h-100 border-0 text-center bg-transparent text-info fw-bold" style="font-size: 10px;" placeholder="00:00" />
-                                </th>
-                            }
-                        </tr>
-                        <tr style="background: rgba(30, 41, 59, 0.7); color: #94a3b8; font-size: 9px;">
-                            <th class="p-2 border border-primary border-opacity-25 align-middle">POINT</th>
-                            <th class="p-2 border border-primary border-opacity-25 align-middle">FREKUENSI</th>
-                            <th class="p-2 border border-primary border-opacity-25 align-middle">STD DIMENSI</th>
-                            <th class="p-2 border border-primary border-opacity-25 align-middle" style="width: 70px;">SCALE</th>
-                            <th class="p-1 border border-primary border-opacity-25" style="width: 75px;">INITIAL</th>
-                            @for(int i=1; i<=5; i++) {
-                                <th class="p-1 border border-primary border-opacity-25">@i</th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            var stdVal = Model.StandardParameterSetting;
-                            var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
+            <div class="row g-4" id="dimGridHUD">
+                @{
+                    var stdVal = Model.StandardParameterSetting;
+                    var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
 
-                            // Helper to parse string to decimal (mendukung koma versi Indonesia dan titik Internasional)
-                            decimal D(string s, decimal def) {
-                                if (string.IsNullOrWhiteSpace(s)) return def;
-                                string cleanString = s.Replace(",", "."); 
-                                var match = System.Text.RegularExpressions.Regex.Match(cleanString, @"-?\d+(\.\d+)?");
-                                if (match.Success) {
-                                    return decimal.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
-                                }
-                                return def;
-                            }
-                            
-                            bool hasStandard = (master != null || stdVal != null);
-                            
-                            // Override standards if masterlist is present and std is null/zero
-                            decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 0m) : 0m);
-                            decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0m) : 0m);
-                            decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 0m) : 0m);
-                            decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0m;
-                            decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 0m) : 0m);
-                            decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0m) : 0m);
-
-                            var sections = new[] {
-                                new { Label = "Inner Diameter", Nom = idNom, Tol = idTol },
-                                new { Label = "In Thick (X)", Nom = tubeNom, Tol = tubeTol },
-                                new { Label = "In Thick (Y)", Nom = tubeNom, Tol = tubeTol },
-                                new { Label = "Total Thick (X)", Nom = coverNom, Tol = coverTol },
-                                new { Label = "Total Thick (Y)", Nom = coverNom, Tol = coverTol }
-                            };
+                    decimal D(string s, decimal def) {
+                        if (string.IsNullOrWhiteSpace(s)) return def;
+                        string cleanString = s.Replace(",", "."); 
+                        var match = System.Text.RegularExpressions.Regex.Match(cleanString, @"-?\d+(\.\d+)?");
+                        if (match.Success) {
+                            return decimal.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
                         }
+                        return def;
+                    }
 
-                        @foreach(var sec in sections) {
-                            for(int rIdx=0; rIdx<5; rIdx++) {
-                                string scaleStr = "-";
-                                string stdStr = "-";
-                                
-                                if (hasStandard && sec.Nom > 0) {
-                                    decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
-                                    scaleStr = scaleValue.ToString("0.00");
-                                    stdStr = $"{sec.Nom.ToString("0.0")} ± {sec.Tol.ToString("0.0")}";
-                                }
+                    decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 0m) : 0m);
+                    decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0m) : 0m);
+                    decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 0m) : 0m);
+                    decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0m;
+                    decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 0m) : 0m);
+                    decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0m) : 0m);
 
-                                <tr style="height: 22px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
-                                    @if(rIdx == 0) {
-                                        <td rowspan="5" class="point-name align-middle p-1" style="font-size: 10px;">@sec.Label</td>
-                                        <td rowspan="5" class="align-middle border-end border-primary border-opacity-25" style="font-size: 8px;">30m Sekali</td>
-                                        <td rowspan="5" class="std-dimension align-middle border-end border-primary border-opacity-25" style="font-size: 10px;">@stdStr</td>
+                    var idNomDisp = idNom.ToString("0.0");
+                    var idTolDisp = idTol.ToString("0.0");
+                    var idFull = $"{idNomDisp} ± {idTolDisp}";
+
+                    var tubeNomDisp = tubeNom.ToString("0.0");
+                    var tubeTolDisp = tubeTol.ToString("0.0");
+                    var tubeFull = $"{tubeNomDisp} ± {tubeTolDisp}";
+
+                    var coverNomDisp = coverNom.ToString("0.0");
+                    var coverTolDisp = coverTol.ToString("0.0");
+                    var coverFull = $"{coverNomDisp} ± {coverTolDisp}";
+
+                    var pitchNom = (stdVal?.SpiralPitch ?? 38);
+                    var pitchTol = (stdVal?.Tol_SpiralPitch ?? 5);
+                    var pitchFull = $"{pitchNom} ± {pitchTol}";
+
+                    var dimensionPoints = new[] {
+                        new { Name = "Inner Diameter", Key = "ID", Std = idFull, Icon = "bi-circle" },
+                        new { Name = "In Thick (X)", Key = "InThickX", Std = tubeFull, Icon = "bi-arrows-expand" },
+                        new { Name = "In Thick (Y)", Key = "InThickY", Std = tubeFull, Icon = "bi-arrows-vertical" },
+                        new { Name = "Total Thick (X)", Key = "TotThickX", Std = coverFull, Icon = "bi-plus-circle" },
+                        new { Name = "Total Thick (Y)", Key = "TotThickY", Std = coverFull, Icon = "bi-plus-circle-dotted" },
+                        new { Name = "Spiral Pitch", Key = "SpiralPitch", Std = pitchFull, Icon = "bi-soundwave" }
+                    };
+                }
+
+                @foreach (var dp in dimensionPoints) {
+                    <div class="col-md-6 col-xxl-4">
+                        <div class="content-card h-100 p-3" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi @dp.Icon text-info opacity-50"></i>
+                                    <span class="super-small fw-black text-white tracking-widest opacity-40">@dp.Name.ToUpper()</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-info p-0 px-2 super-small opacity-50" style="border-radius:20px" onclick="toggleJam('@dp.Key')">DETAIL (1-5)</button>
+                            </div>
+                            
+                            <div class="text-center py-2">
+                                <div class="super-small text-info opacity-40 mb-n1">STANDARD (mm)</div>
+                                <div class="fw-black text-info" id="spec_@dp.Key" style="font-size: 1.5rem; text-shadow: 0 0 15px rgba(56, 189, 248, 0.3)">@dp.Std</div>
+                            </div>
+
+                            <div class="mt-2">
+                                <div class="super-small opacity-30 text-center mb-1">INITIAL MEASUREMENT</div>
+                                <input name="Init_@dp.Key" 
+                                       class="input-init-big font-monospace w-100" 
+                                       placeholder="0.00" 
+                                       oninput="validateParam(this, 'spec_@dp.Key')" />
+                            </div>
+
+                            <!-- JAM 1-5 DETAIL -->
+                            <div class="d-none mt-3 p-2 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05)" id="jam_@dp.Key">
+                                <div class="row g-2">
+                                    @for(int j=1; j<=5; j++) {
+                                        <div class="col">
+                                            <div class="super-small text-center opacity-25">J-@j</div>
+                                            <input name="J@(j)_@dp.Key" class="simple-input text-center p-1 fs-6" placeholder="-" oninput="validateParam(this, 'spec_@dp.Key')" />
+                                        </div>
                                     }
-                                    <td class="border-end border-primary border-opacity-25" style="font-size: 9px; color: #94a3b8; background: rgba(255,255,255,0.02);">@scaleStr</td>
-                                    @for(int h=0; h<6; h++) {
-                                        <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 11px;" placeholder="-" /></td>
-                                    }
-                                </tr>
-                            }
-                        }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
 
-                        <!-- Spiral & Visual -->
-                        <tr style="height: 40px;">
-                            <td class="point-name align-middle">Spiral Pitch</td>
-                            <td class="align-middle">30m Sekali</td>
+                <!-- VISUAL CHECK HUD -->
+                <div class="col-12">
+                    <div class="content-card p-4" style="background: linear-gradient(135deg, rgba(30,41,59,0.5), rgba(15,23,42,0.3)); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <i class="bi bi-eye-fill text-warning fs-4"></i>
+                            <span class="fw-black text-white tracking-widest opacity-50">PRODUCTION VISUAL CHECK</span>
+                        </div>
+                        <div class="row g-4">
                             @{
-                                string spiralStr = hasStandard ? $"{(stdVal?.SpiralPitch ?? 38)} ± {(stdVal?.Tol_SpiralPitch ?? 5)}" : "-";
+                                var checks = new[] { "NO BURR", "NO LINE", "NO BUBBLE", "NO SCRATCH" };
                             }
-                            <td class="std-dimension align-middle">@spiralStr</td>
-                            <td style="background: rgba(255,255,255,0.05); font-size: 10px;">NOM</td>
-                            @for(int h=0; h<6; h++) {
-                                <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
+                            @foreach(var c in checks) {
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-black bg-opacity-30 rounded-3 text-center">
+                                        <div class="super-small fw-bold mb-2 opacity-50">@c</div>
+                                        <div class="btn-group w-100">
+                                            <button type="button" class="btn btn-sm btn-outline-success fw-bold" style="font-size: 10px;" onclick="setVisual(this)">OK</button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold" style="font-size: 10px;" onclick="setVisual(this)">NG</button>
+                                        </div>
+                                    </div>
+                                </div>
                             }
-                        </tr>
-                        <tr style="height: 45px;">
-                            <td class="point-name align-middle">Visual Check</td>
-                            <td class="align-middle">30m Sekali</td>
-                            <td colspan="2" class="align-middle" style="font-size: 9px; color: #94a3b8; text-align: left; padding-left: 10px;">
-                                @(hasStandard ? "No Burry, No Line, No Bubble, No Scratch" : "-")
-                            </td>
-                            @for(int h=0; h<6; h++) {
-                                <td style="padding: 0;"><input type="text" class="w-100 h-100 border-0 text-center" style="background: transparent; color: white; font-size: 12px; font-weight: bold;" placeholder="-" /></td>
-                            }
-                        </tr>
-                    </tbody>
-                </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -715,7 +720,7 @@
                     </div>
                     <div class="data-item">
                         <span class="label">VIN KODE</span>
-                        <input type="text" value="@Model.VinCode" placeholder="Enter VIN Code" class="simple-input" />
+                        <input type="text" id="vinCode" value="@Model.VinCode" placeholder="Enter VIN Code" class="simple-input" />
                     </div>
                 </div>
                 
@@ -726,7 +731,7 @@
                     </div>
                     <div class="data-item">
                         <span class="label">ACT PNJG</span>
-                        <input type="text" value="@Model.ActualLength" placeholder="Enter Actual Length" class="simple-input" />
+                        <input type="text" id="actualLength" value="@Model.ActualLength" placeholder="Enter Actual Length" class="simple-input" />
                     </div>
                 </div>
                 
@@ -748,18 +753,18 @@
                             </div>
                             
                             <div class="qty-input-section ok-section active">
-                                <input type="text" value="@Model.QtyOk" placeholder="0" class="qty-main-input" data-field="QtyOk" />
+                                <input type="text" id="qtyOk" value="@Model.QtyOk" placeholder="0" class="qty-main-input" data-field="QtyOk" />
                             </div>
                             
                             <div class="qty-input-section ng-section">
                                 <div class="ng-inputs">
                                     <div class="ng-input-group">
                                         <label>DIMENSI</label>
-                                        <input type="text" value="@Model.NgDimension" placeholder="0" class="ng-input" data-field="NgDimension" />
+                                        <input type="text" id="ngDim" value="@Model.NgDimension" placeholder="0" class="ng-input" data-field="NgDimension" />
                                     </div>
                                     <div class="ng-input-group">
                                         <label>VISUAL</label>
-                                        <input type="text" value="@Model.NgVisual" placeholder="0" class="ng-input" data-field="NgVisual" />
+                                        <input type="text" id="ngVis" value="@Model.NgVisual" placeholder="0" class="ng-input" data-field="NgVisual" />
                                     </div>
                                 </div>
                             </div>
@@ -770,7 +775,7 @@
                 <div class="data-row">
                     <div class="data-item full-width">
                         <span class="label">REMARK</span>
-                        <input type="text" value="@Model.Remark" placeholder="Enter remarks or notes..." class="simple-input full-width" />
+                        <input type="text" id="remark" value="@Model.Remark" placeholder="Enter remarks or notes..." class="simple-input full-width" />
                     </div>
                 </div>
             </div>
@@ -802,6 +807,42 @@
     <script>
         const reportId = @Model.Id;
         let isDirty = false;
+
+        function toggleJam(key) {
+            const el = document.getElementById('jam_' + key);
+            if(el) el.classList.toggle('d-none');
+        }
+
+        function validateParam(input, specId) {
+            const valStr = input.value.trim().replace(',', '.');
+            if(valStr === "") { input.classList.remove('valid-success', 'valid-error'); return; }
+            
+            const val = parseFloat(valStr);
+            const specEl = document.getElementById(specId);
+            if(!specEl || isNaN(val)) { input.classList.remove('valid-success', 'valid-error'); return; }
+            
+            let isValid = true;
+            // Handle standard with comma like "7,0 ± 6,8"
+            const specText = specEl.innerText.trim().replace(',', '.');
+            
+            try {
+                if (specText.includes('±')) {
+                    const parts = specText.split('±');
+                    const target = parseFloat(parts[0].trim());
+                    const tol = parseFloat(parts[1].trim());
+                    isValid = (val >= (target - tol) && val <= (target + tol));
+                } else if (specText.toLowerCase().includes('max')) {
+                    const maxVal = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    isValid = (val <= maxVal);
+                } else if (specText.toLowerCase().includes('min')) {
+                    const minVal = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    isValid = (val >= minVal);
+                }
+            } catch(e) { isValid = false; }
+
+            if (isValid) { input.classList.add('valid-success'); input.classList.remove('valid-error'); }
+            else { input.classList.add('valid-error'); input.classList.remove('valid-success'); }
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             // QTY Toggle
@@ -847,6 +888,7 @@
 
         async function saveData() {
             showNotification('Menyimpan data...', 'success');
+            const points = ['ID', 'InThickX', 'InThickY', 'TotThickX', 'TotThickY', 'SpiralPitch'];
             const payload = {
                 ReportId: reportId,
                 DocumentNumber: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DocumentNumber ?? "")),
@@ -854,13 +896,28 @@
                 DimensionDisplay: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Dimension ?? "")),
                 CustomerName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName ?? "")),
                 Yarn: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Yarn ?? "")),
-                VinCode: document.querySelector('input[placeholder="Enter VIN Code"]')?.value || '',
-                ActualLength: document.querySelector('input[placeholder="Enter Actual Length"]')?.value || '',
-                QtyOk: parseInt(document.querySelector('.qty-main-input')?.value) || 0,
-                NgDimension: parseInt(document.querySelector('input[data-field="NgDimension"]')?.value) || 0,
-                NgVisual: parseInt(document.querySelector('input[data-field="NgVisual"]')?.value) || 0,
-                Remark: document.querySelector('input[placeholder="Enter remarks or notes..."]')?.value || ''
+                VinCode: document.getElementById('vinCode')?.value || '',
+                ActualLength: document.getElementById('actualLength')?.value || '',
+                QtyOk: parseInt(document.getElementById('qtyOk')?.value) || 0,
+                NgDimension: parseInt(document.getElementById('ngDim')?.value) || 0,
+                NgVisual: parseInt(document.getElementById('ngVis')?.value) || 0,
+                Remark: document.getElementById('remark')?.value || '',
+                DimensionReadings: []
             };
+
+            // Loop HUD Tiles for measurements
+            points.forEach(p => {
+                payload.DimensionReadings.push({
+                    PointName: p,
+                    TimeSection: "INITIAL",
+                    Initial: document.querySelector(`input[name="Init_${p}"]`)?.value || '0',
+                    Reading1: document.getElementById(`r1_${p}`)?.value || '0',
+                    Reading2: document.getElementById(`r2_${p}`)?.value || '0',
+                    Reading3: document.getElementById(`r3_${p}`)?.value || '0',
+                    Reading4: document.getElementById(`r4_${p}`)?.value || '0',
+                    Reading5: document.getElementById(`r5_${p}`)?.value || '0'
+                });
+            });
 
             try {
                 const response = await fetch('/ProductionReport/SaveAppData', {
