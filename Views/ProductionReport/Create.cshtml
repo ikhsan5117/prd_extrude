@@ -87,34 +87,43 @@
             <style>
                 .hud-pill-group {
                     display: inline-flex;
-                    background: rgba(0, 0, 0, 0.4);
-                    padding: 3px;
-                    border-radius: 6px;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(15, 23, 42, 0.6);
+                    padding: 4px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(14, 165, 233, 0.2);
                     width: 100%;
+                    gap: 4px;
                 }
                 .hud-pill-item {
                     flex: 1;
-                    padding: 6px 4px;
-                    font-size: 0.7rem;
+                    padding: 8px 4px;
+                    font-size: 0.75rem;
                     font-weight: 900;
                     color: rgba(255, 255, 255, 0.3);
-                    border-radius: 4px;
+                    border-radius: 6px;
                     cursor: pointer;
-                    transition: all 0.2s;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
                     text-transform: uppercase;
                     text-align: center;
+                    border: 1px solid transparent;
                 }
                 .hud-pill-item input { display: none; }
                 .hud-pill-item:has(input:checked) {
                     background: #10b981;
                     color: white;
-                    box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+                    box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+                    border-color: rgba(255,255,255,0.2);
                 }
-                .hud-pill-item.red:has(input:checked) { background: #ef4444; }
-                .hud-pill-item.orange:has(input:checked) { background: #f59e0b; }
-                .hud-pill-group.sm { border-radius: 4px; padding: 2px; }
-                .hud-pill-group.sm .hud-pill-item { padding: 3px 2px; font-size: 0.65rem; border-radius: 3px; }
+                .hud-pill-item.red:has(input:checked) { 
+                    background: #ef4444; 
+                    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+                }
+                .hud-pill-item.orange:has(input:checked) { 
+                    background: #f59e0b; 
+                    box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+                }
+                .hud-pill-group.sm { border-radius: 6px; padding: 4px; }
+                .hud-pill-group.sm .hud-pill-item { padding: 8px 2px; font-size: 0.7rem; border-radius: 4px; }
                 
                 .compact-hud td { padding: 4px 1px !important; } /* REDUCED PADDING TO PREVENT INPUT SQUEEZING */
                 .compact-hud th { padding: 6px 1px !important; }
@@ -155,21 +164,34 @@
                 .group-lane { background: rgba(14, 165, 233, 0.03); }
                 .font-black { font-weight: 900 !important; font-size: 0.6rem !important; }
 
-                /* CUSTOM CHECKBOX STYLE */
-                .hud-check-box { position: relative; width: 22px; height: 22px; margin: 0 auto; }
-                .hud-check-box input { opacity: 0; width: 0; height: 0; cursor: pointer; }
-                .hud-check-box span {
-                    position: absolute; top: 0; left: 0; height: 22px; width: 22px;
-                    background-color: rgba(0, 0, 0, 0.4);
-                    border: 2px solid rgba(14, 165, 233, 0.3);
-                    border-radius: 4px; transition: all 0.2s;
+                /* CUSTOM CHECKBOX STYLE - LARGE & FUTURISTIC */
+                .hud-check-box { position: relative; width: 32px; height: 32px; margin: 0 auto; cursor: pointer; }
+                .hud-check-box input { 
+                    position: absolute; 
+                    opacity: 0; 
+                    width: 100%; 
+                    height: 100%; 
+                    cursor: pointer; 
+                    z-index: 2; 
+                    margin: 0;
                 }
-                .hud-check-box:hover input ~ span { border-color: #0ea5e9; }
-                .hud-check-box input:checked ~ span { background-color: rgba(14, 165, 233, 0.2); border-color: #0ea5e9; box-shadow: 0 0 10px rgba(14, 165, 233, 0.3); }
+                .hud-check-box span {
+                    position: absolute; top: 0; left: 0; height: 32px; width: 32px;
+                    background-color: rgba(15, 23, 42, 0.6);
+                    border: 2px solid rgba(14, 165, 233, 0.2);
+                    border-radius: 8px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    z-index: 1;
+                }
+                .hud-check-box:hover input ~ span { border-color: #0ea5e9; background: rgba(14, 165, 233, 0.1); }
+                .hud-check-box input:checked ~ span { 
+                    background-color: #0ea5e9; 
+                    border-color: white; 
+                    box-shadow: 0 0 20px rgba(14, 165, 233, 0.6); 
+                }
                 .hud-check-box span:after {
                     content: ""; position: absolute; display: none;
-                    left: 7px; top: 2px; width: 6px; height: 12px;
-                    border: solid #0ea5e9; border-width: 0 3px 3px 0;
+                    left: 11px; top: 5px; width: 8px; height: 16px;
+                    border: solid white; border-width: 0 4px 4px 0;
                     transform: rotate(45deg);
                 }
                 .hud-check-box input:checked ~ span:after { display: block; }
@@ -389,45 +411,63 @@
                                 <!-- MESH TYPE ZONE -->
                                 <tr class="group-lane">
                                     <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub">TIPE MESH</span><span class="label-main small">INNER (BEFORE)</span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-5"><div class="hud-check-box"><input type="checkbox"><span></span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-5"><div class="hud-check-box"><input type="checkbox"><span></span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div></td>
                                 </tr>
                                 <tr class="group-lane border-bottom border-white border-opacity-10">
                                     <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (BEFORE)</span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-5"><div class="hud-check-box"><input type="checkbox"><span></span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-5"><div class="hud-check-box"><input type="checkbox"><span></span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div></td>
                                 </tr>
                                 <!-- MESH CHECK ZONE -->
                                 <tr>
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">MESH CHECK</span><span class="label-main small">INNER (AFTER)</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-5">
-                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" name="MI" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" name="MI" value="B"></label><label class="hud-pill-item orange">ASING<input type="radio" name="MI" value="A"></label></div>
+                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub">MESH CHECK</span><span class="label-main small">INNER (AFTER)</span></div></td>
+                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
+                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshInnerCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshInnerCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshInnerCheck" value="ASING"></label></div>
                                     </td>
                                 </tr>
                                 <tr class="border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (AFTER)</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-5">
-                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" name="MO" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" name="MO" value="B"></label><label class="hud-pill-item orange">ASING<input type="radio" name="MO" value="A"></label></div>
+                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (AFTER)</span></div></td>
+                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
+                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshOuterCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshOuterCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshOuterCheck" value="ASING"></label></div>
                                     </td>
                                 </tr>
                                 <!-- EMBOSSING ZONE -->
                                 <tr class="group-lane border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">EMBOSSING</span><span class="label-main small">MARK DATA</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-5">
+                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub">EMBOSSING</span><span class="label-main small">MARK DATA</span></div></td>
+                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
                                         <div class="row g-2 align-items-center">
-                                            <div class="col-7"><input class="hud-input-underlined py-1 text-start ps-2 super-small" placeholder="Text Content..." /></div>
-                                            <div class="col-5"><input class="hud-input-underlined py-1 text-center super-small" placeholder="Prod. Date" /></div>
+                                            <div class="col-7"><input asp-for="EmbossMarkContent" class="hud-input-underlined py-1 text-center font-monospace small" placeholder="CONTENT" /></div>
+                                            <div class="col-5"><input type="date" asp-for="EmbossMarkDate" class="hud-input-underlined py-1 text-center font-monospace small" /></div>
                                         </div>
                                     </td>
                                 </tr>
                                 <!-- FINAL QC ZONE -->
                                 <tr>
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">QC DETAILS</span><span class="label-main small">FINAL CHECK</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-5">
-                                        <div class="d-flex flex-column gap-1">
-                                            <div class="d-flex align-items-center gap-2"><span class="label-sub font-black text-white" style="min-width:35px">COND</span><div class="hud-pill-group sm"><label class="hud-pill-item">BERSIH<input type="radio" name="cond" value="B"></label><label class="hud-pill-item red">KOTOR<input type="radio" name="cond" value="K"></label></div></div>
-                                            <div class="d-flex align-items-center gap-2"><span class="label-sub font-black text-white" style="min-width:35px">SURF</span><div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" name="surf" value="OK"></label><label class="hud-pill-item red">SCRATCH<input type="radio" name="surf" value="S"></label></div></div>
-                                            <div class="d-flex align-items-center gap-2"><span class="label-sub font-black text-white" style="min-width:35px">RES</span><div class="hud-pill-group sm"><label class="hud-pill-item">READ<input type="radio" name="emb" value="T"></label><label class="hud-pill-item red">UNREAD<input type="radio" name="emb" value="X"></label></div></div>
+                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub">QC DETAILS</span><span class="label-main small">FINAL CHECK</span></div></td>
+                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="label-sub font-black text-white-50" style="min-width:40px">COND</span>
+                                                <div class="hud-pill-group sm">
+                                                    <label class="hud-pill-item">BERSIH<input type="radio" asp-for="QcCond" value="BERSIH"></label>
+                                                    <label class="hud-pill-item red">KOTOR<input type="radio" asp-for="QcCond" value="KOTOR"></label>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="label-sub font-black text-white-50" style="min-width:40px">SURF</span>
+                                                <div class="hud-pill-group sm">
+                                                    <label class="hud-pill-item">OK<input type="radio" asp-for="QcSurf" value="OK"></label>
+                                                    <label class="hud-pill-item red">SCRATCH<input type="radio" asp-for="QcSurf" value="SCRATCH"></label>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="label-sub font-black text-white-50" style="min-width:40px">RES</span>
+                                                <div class="hud-pill-group sm">
+                                                    <label class="hud-pill-item">READ<input type="radio" asp-for="QcRes" value="READ"></label>
+                                                    <label class="hud-pill-item red">UNREAD<input type="radio" asp-for="QcRes" value="UNREAD"></label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -588,7 +628,7 @@
                                                 
                                                 <!-- BTM: INPUT (LARGE) -->
                                                 <div class="input-zone mt-2">
-                                                    <input name="Init_@key" 
+                                                    <input name="Init@(key)" 
                                                            class="hud-input-underlined text-center fw-black font-monospace w-100" 
                                                            placeholder="0.00" 
                                                            style="font-size: 1.6rem; height: 60px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2)"
@@ -994,10 +1034,11 @@
                 return;
             }
 
+
             let isValid = true;
             try {
-                // Remove units or extra chars for parsing
-                const cleanText = specText.replace(/[A-Za-z°%]/g, '').trim();
+                // Pre-clean: strip "Max.", "Min.", etc. to avoid token errors (like Max. 15 being parsed as .15)
+                let workingText = specText.replace(/max\.?/i, '').replace(/min\.?/i, '').replace(/[A-Za-z°%]/g, '').trim();
 
                 if (specText.includes('±')) {
                     const parts = specText.split('±');
@@ -1007,17 +1048,16 @@
                         isValid = (val >= (target - tolerance) && val <= (target + tolerance));
                     }
                 } else if (specText.toLowerCase().includes('max')) {
-                    const limit = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    const limit = parseFloat(workingText.replace(/[^-0-9.]/g, ''));
                     if (!isNaN(limit)) isValid = (val <= limit);
                 } else if (specText.toLowerCase().includes('min')) {
-                    const limit = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    const limit = parseFloat(workingText.replace(/[^-0-9.]/g, ''));
                     if (!isNaN(limit)) isValid = (val >= limit);
                 } else if (specText.includes('-')) {
                     const range = specText.replace(/[^-0-9.]+/g, ' ').trim().split(/\s+/).map(s => parseFloat(s));
                     if (range.length >= 2) isValid = (val >= range[0] && val <= range[1]);
                 } else {
-                    // Exact match attempt for pure numbers
-                    const target = parseFloat(cleanText);
+                    const target = parseFloat(workingText.replace(/[^-0-9.]/g, ''));
                     if(!isNaN(target)) isValid = (val === target);
                 }
             } catch (e) { 

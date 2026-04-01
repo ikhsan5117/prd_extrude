@@ -110,6 +110,66 @@ namespace VelastoProductionSystem.Models
         public decimal? WasteCoverAwal { get; set; }
         public decimal? WasteCoverAkhir { get; set; }
 
+        // MESH & EMBOSS QUALITY (IMAGE 2)
+        public bool MeshInner10Before { get; set; }
+        public bool MeshInner40Before { get; set; }
+        public bool MeshOuter10Before { get; set; }
+        public bool MeshOuter40Before { get; set; }
+        public string? MeshInnerCheck { get; set; } 
+        public string? MeshOuterCheck { get; set; }
+        public string? EmbossMarkContent { get; set; }
+        public DateTime? EmbossMarkDate { get; set; }
+        public string? QcCond { get; set; }
+        public string? QcSurf { get; set; }
+        public string? QcRes { get; set; }
+
+        // INITIAL INSTRUMENT PARAMETERS (For the "INITIAL" column in print)
+        public decimal? InitHeadTempInner { get; set; }
+        public decimal? InitCylinder1TempInner { get; set; }
+        public decimal? InitCylinder2TempInner { get; set; }
+        public decimal? InitCylinder3TempInner { get; set; }
+        public decimal? InitScrewTempInner { get; set; }
+        public decimal? InitScrewSpeedInner { get; set; }
+        public decimal? InitFeedRollRatioInner { get; set; }
+        public decimal? InitPressureInner { get; set; }
+
+        public decimal? InitHeadTempOuter { get; set; }
+        public decimal? InitCylinder1TempOuter { get; set; }
+        public decimal? InitCylinder2TempOuter { get; set; }
+        public decimal? InitCylinder3TempOuter { get; set; }
+        public decimal? InitScrewTempOuter { get; set; }
+        public decimal? InitScrewSpeedOuter { get; set; }
+        public decimal? InitFeedRollRatioOuter { get; set; }
+        public decimal? InitPressureOuter { get; set; }
+
+        public decimal? InitSpiralSpeed { get; set; }
+        public decimal? InitSpiralPitchSetting { get; set; }
+        public decimal? InitSpiralPitchDisplay { get; set; }
+
+        public decimal? InitPresetValue { get; set; }
+        public decimal? InitControlValue { get; set; }
+        public decimal? InitHoseSpeed { get; set; }
+        public decimal? InitTakeupConveyorSpeed { get; set; }
+        public decimal? InitCoolConveyorSpeed { get; set; }
+        public decimal? InitConveyorRatio { get; set; }
+        public decimal? InitUnsmoothSurface { get; set; }
+        public decimal? InitChillerWaterTemp { get; set; }
+        public decimal? InitCaterpillarGap { get; set; }
+
+        // DIES INITIAL/FINAL VALUES
+        public string? NippleDieInitial { get; set; }
+        public string? NippleDieFinal { get; set; }
+        public string? TubeDieInitial { get; set; }
+        public string? TubeDieFinal { get; set; }
+        public string? MiddleDieInitial { get; set; }
+        public string? MiddleDieFinal { get; set; }
+        public string? CoverDieInitial { get; set; }
+        public string? CoverDieFinal { get; set; }
+        public string? SpacerDieInitial { get; set; }
+        public string? SpacerDieFinal { get; set; }
+        public string? ToleranceInitial { get; set; }
+        public string? ToleranceFinal { get; set; }
+
         // Status
         [Display(Name = "Status")]
         public string Status { get; set; } = "NOW PRODUCING"; 

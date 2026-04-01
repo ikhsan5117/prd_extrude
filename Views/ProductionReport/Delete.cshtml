@@ -1,0 +1,42 @@
+@model VelastoProductionSystem.Models.ProductionReport
+
+@{
+    ViewData["Title"] = "Konfirmasi Hapus";
+}
+
+<div class="production-dashboard-sapphire fade-in d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="hud-container p-5 text-center shadow-2xl" style="max-width: 600px; border: 1px solid rgba(239, 68, 68, 0.3);">
+        <div class="mb-4">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 5rem;"></i>
+        </div>
+        
+        <h2 class="text-white fw-black mb-3">APAKAH ANDA YAKIN?</h2>
+        <p class="text-white-50 mb-4 fs-5">
+            Anda akan menghapus Laporan Produksi dengan Dokumen:<br/>
+            <code class="text-info fs-4 fw-bold">@Model.DocumentNumber</code><br/>
+            <span class="text-danger-50 small mt-2 d-block">*Tindakan ini tidak dapat dibatalkan (Irreversible)</span>
+        </p>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex gap-3 justify-content-center">
+                <a asp-action="ParameterHistory" class="btn btn-outline-glass rounded-pill px-5">
+                    BATAL (CANCEL)
+                </a>
+                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 shadow-lg">
+                    HAPUS SEKARANG (DELETE)
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .production-dashboard-sapphire {
+        background-color: #020617;
+        background-image: radial-gradient(at 0% 0%, rgba(153, 27, 27, 0.1) 0, transparent 50%);
+    }
+    .hud-container { background: rgba(8, 14, 30, 0.95); }
+    .btn-outline-glass { border: 1px solid rgba(255,255,255,0.2); color: white; }
+    .btn-outline-glass:hover { background: rgba(255,255,255,0.1); border-color: white; }
+</style>

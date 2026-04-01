@@ -37,6 +37,7 @@ namespace VelastoProductionSystem.Controllers
         public async Task<IActionResult> DimensionHistory()
         {
             var reports = await _context.ProductionReports
+                .Where(p => !string.IsNullOrEmpty(p.ActualLength) || !string.IsNullOrEmpty(p.VinCode) || p.QtyOk > 0 || p.NgDimension > 0 || p.NgVisual > 0)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
             return View(reports);
@@ -251,8 +252,8 @@ namespace VelastoProductionSystem.Controllers
                     _context.Add(report);
                     await _context.SaveChangesAsync();
                     
-                    TempData["SuccessMessage"] = "Produksi Dimulai! Silakan monitor di Dashboard.";
-                    return RedirectToAction(nameof(Details), new { id = report.Id });
+                    TempData["SuccessMessage"] = "Produksi Dimulai! Silakan monitor di Dashboard Parameter History.";
+                    return RedirectToAction(nameof(ParameterHistory));
                 }
                 catch (Exception ex)
                 {
@@ -296,7 +297,7 @@ namespace VelastoProductionSystem.Controllers
                     _context.Update(report);
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Data berhasil diupdate!";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(ParameterHistory));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -307,6 +308,34 @@ namespace VelastoProductionSystem.Controllers
 
             ViewBag.StandardParameterSettings = new SelectList(_context.StandardParameterSettings.OrderByDescending(s => s.CreatedDate), "Id", "DocumentNumber", report.StandardParameterSettingId);
             return View(report);
+        }
+
+        // GET: ProductionReport/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var report = await _context.ProductionReports
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (report == null) return NotFound();
+
+            return View(report);
+        }
+
+        // POST: ProductionReport/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var report = await _context.ProductionReports.FindAsync(id);
+            if (report != null)
+            {
+                _context.ProductionReports.Remove(report);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Laporan berhasil dihapus!";
+            }
+            
+            return RedirectToAction(nameof(ParameterHistory));
         }
 
         private bool ProductionReportExists(int id)
@@ -494,13 +523,16 @@ namespace VelastoProductionSystem.Controllers
             return File(bytes, "text/csv", $"ProductionReport_{report.DocumentNumber}_{DateTime.Now:yyyyMMdd}.csv");
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> UpdateRecap(int reportId, string vinCode, int qtyOk, int ngDim, int ngVis, string remark)
+        public async Task<IActionResult> UpdateRecap(int reportId, string vinCode, string actualLength, int qtyOk, int ngDim, int ngVis, string remark)
         {
             var report = await _context.ProductionReports.FindAsync(reportId);
             if (report != null)
             {
-                report.VinCode = vinCode;
+                if (!string.IsNullOrEmpty(vinCode)) report.VinCode = vinCode;
+                if (!string.IsNullOrEmpty(actualLength)) report.ActualLength = actualLength;
+                
                 report.QtyOk = qtyOk;
                 report.NgDimension = ngDim;
                 report.NgVisual = ngVis;

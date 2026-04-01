@@ -341,21 +341,29 @@
                                 <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
                                 <td class="text-center">@(Model.InnerMaterial ?? "-")</td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
-                                <td class="p-0 border-end-0 bg-info bg-opacity-5"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-info" value="@Model.InnerMaterialLotNo" placeholder="LOT INNER" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.InnerMaterialLotNo == "0" ? "" : Model.InnerMaterialLotNo)" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">OUTER(MATERIAL)</td>
                                 <td class="text-center">@(Model.OuterMaterial ?? "-")</td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
-                                <td class="p-0 border-end-0 bg-info bg-opacity-5"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-info" value="@Model.OuterMaterialLotNo" placeholder="LOT OUTER" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.OuterMaterialLotNo == "0" ? "" : Model.OuterMaterialLotNo)" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">YARN</td>
                                 <td class="text-center">ARAMID</td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
-                                <td class="p-0 border-end-0 bg-warning bg-opacity-10"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@Model.YarnLotNo" placeholder="INPUT YARN LOT" /></td>
+                                <td class="p-0 border-end-0 bg-light"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.YarnLotNo == "0" ? "" : Model.YarnLotNo)" placeholder="" /></td>
                             </tr>
                             
+                            @{
+                                var mSps = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                                string FDie(string? fromSps, decimal stdVal, string hardcode) {
+                                    if (!string.IsNullOrEmpty(fromSps) && fromSps != "-" && fromSps != "0") return fromSps;
+                                    if (stdVal != 0) return stdVal.ToString();
+                                    return hardcode;
+                                }
+                            }
                             <!-- DIES DIMENSION SECTION -->
                             <tr class="border-top-form">
                                 <th width="30" rowspan="7" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#f0f0f0; letter-spacing: 2px;">DIES DIMENSION</th>
@@ -369,73 +377,73 @@
                                 <td class="text-start ps-2">Ø NIPPLE DIE</td>
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
-                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.NippleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.NippleDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@(std.InnerDie == 0 ? "8.8±0.1" : std.InnerDie.ToString())</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="text-center">@FDie(mSps?.Nipple, std.InnerDie, "8.8±0.1")</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.NippleDieInitial == "0" ? "" : Model.NippleDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.NippleDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Ø TUBE DIE</td>
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
-                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.TubeDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.TubeDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@(std.TubeDie == 0 ? "11.1±0.1" : std.TubeDie.ToString())</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="text-center">@FDie(mSps?.TubeDie, std.TubeDie, "11.1±0.1")</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.TubeDieInitial == "0" ? "" : Model.TubeDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.TubeDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Ø MIDDLE DIE</td>
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
-                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.MiddleDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@(std.MiddleDie == 0 ? "14.2±0.1" : std.MiddleDie.ToString())</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="text-center">@FDie(null, std.MiddleDie, "14.2±0.1")</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.MiddleDieInitial == "0" ? "" : Model.MiddleDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.MiddleDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Ø COVER DIE</td>
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
-                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.CoverDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.CoverDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@(std.CoverDie == 0 ? "15.1±0.1" : std.CoverDie.ToString())</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="text-center">@FDie(mSps?.CoverDie, std.CoverDie, "15.1±0.1")</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.CoverDieInitial == "0" ? "" : Model.CoverDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.CoverDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Ø SPACER DIE</td>
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
-                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.SpacerDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@(std.SpacerDie == 0 ? "7.3±0.1" : std.SpacerDie.ToString())</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="text-center">@FDie(null, std.SpacerDie, "7.3±0.1")</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.SpacerDieInitial == "0" ? "" : Model.SpacerDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.SpacerDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">A DISTANCE</td>
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
-                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.ToleranceDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">0.4±0.1</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" placeholder="---" /></td>
+                                <td class="text-center">@FDie(null, std.ToleranceDie, "0.4±0.1")</td>
+                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.ToleranceInitial == "0" ? "" : Model.ToleranceInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.ToleranceFinal" placeholder="" /></td>
                             </tr>
                         </table>
                     </div>
@@ -448,19 +456,17 @@
                                 <th width="80" style="background:#f0f0f0;" class="text-start ps-2 border-start-0">Content</th>
                                 <th style="background:#f0f0f0;" class="text-center">Ø96 #10</th>
                                 <th colspan="2" style="background:#f0f0f0;" class="text-center border-end-0">Ø96 #40</th>
-                            </tr>
-
-                            <!-- Tipe Mesh -->
+                                                   <!-- Tipe Mesh -->
                             <tr>
                                 <td rowspan="2" class="align-middle text-center p-1" style="background-color: #f4f4f4; font-size: 11px;">Tipe Mesh<br/>(Sebelum<br/>Proses)</td>
                                 <td class="text-start ps-2">Inner</td>
-                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
-                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
+                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshInner10Before ? "Ø96 #10" : "")" placeholder="~" /></td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshInner40Before ? "Ø96 #40" : "")" placeholder="~" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Outer</td>
-                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
-                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" placeholder="~" /></td>
+                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshOuter10Before ? "Ø96 #10" : "")" placeholder="~" /></td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshOuter40Before ? "Ø96 #40" : "")" placeholder="~" /></td>
                             </tr>
 
                             <!-- Mesh Checking -->
@@ -468,25 +474,25 @@
                                 <td rowspan="2" class="align-middle text-center p-1" style="background-color: #f4f4f4; font-size: 11px;">Mesh<br/>Checking<br/>(Setelah<br/>Proses)</td>
                                 <td class="text-start ps-2">Inner</td>
                                 <td class="p-0 align-middle px-2">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> OK</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInnerCheck == "OK" ? "checked" : "") style="width:13px; height:13px;"> OK</label>
                                 </td>
                                 <td class="p-0 align-middle px-2">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Bolong</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInnerCheck == "BOLONG" ? "checked" : "") style="width:13px; height:13px;"> Bolong</label>
                                 </td>
                                 <td class="p-0 align-middle px-2 border-end-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Material Asing</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInnerCheck == "ASING" ? "checked" : "") style="width:13px; height:13px;"> Material Asing</label>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Outer</td>
                                 <td class="p-0 align-middle px-2">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> OK</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuterCheck == "OK" ? "checked" : "") style="width:13px; height:13px;"> OK</label>
                                 </td>
                                 <td class="p-0 align-middle px-2">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Bolong</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuterCheck == "BOLONG" ? "checked" : "") style="width:13px; height:13px;"> Bolong</label>
                                 </td>
                                 <td class="p-0 align-middle px-2 border-end-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Material Asing</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuterCheck == "ASING" ? "checked" : "") style="width:13px; height:13px;"> Material Asing</label>
                                 </td>
                             </tr>
 
@@ -494,39 +500,40 @@
                             <tr class="border-top-form">
                                 <td rowspan="5" class="align-middle text-center p-1 border-bottom-0" style="background-color: #f4f4f4; font-size: 11px;">Emboss<br/>Marking<br/>Check<br/>(Setelah<br/>Proses)</td>
                                 <td class="text-start ps-2">Text</td>
-                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" placeholder="~" /></td>
+                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" value="@Model.EmbossMarkContent" placeholder="~" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Date</td>
-                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" placeholder="~" /></td>
+                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" value="@Model.EmbossMarkDate?.ToString("dd.MM.yy")" placeholder="~" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Condition</td>
                                 <td colspan="1" class="p-0 align-middle px-2 border-end-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Bersih</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcCond == "BERSIH" ? "checked" : "") style="width:13px; height:13px;"> Bersih</label>
                                 </td>
                                 <td colspan="2" class="p-0 align-middle px-2 border-end-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Kotor</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcCond == "KOTOR" ? "checked" : "") style="width:13px; height:13px;"> Kotor</label>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Surface</td>
                                 <td colspan="1" class="p-0 align-middle px-2 border-end-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> OK</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcSurf == "OK" ? "checked" : "") style="width:13px; height:13px;"> OK</label>
                                 </td>
                                 <td colspan="2" class="p-0 align-middle px-2 border-end-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Scratch</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcSurf == "SCRATCH" ? "checked" : "") style="width:13px; height:13px;"> Scratch</label>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2 border-bottom-0">Text</td>
                                 <td colspan="1" class="p-0 align-middle px-2 border-end-0 border-bottom-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Terbaca</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcRes == "READ" ? "checked" : "") style="width:13px; height:13px;"> Terbaca</label>
                                 </td>
                                 <td colspan="2" class="p-0 align-middle px-2 border-end-0 border-bottom-0">
-                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" style="width:13px; height:13px;"> Tdk Terbaca</label>
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcRes == "UNREAD" ? "checked" : "") style="width:13px; height:13px;"> Tdk Terbaca</label>
                                 </td>
                             </tr>
+        </tr>
                         </table>
                     </div>
                 </div>
@@ -545,15 +552,25 @@
                         <tbody>
                             <!-- INNER SECTION -->
                             @{
+                                var sMaster = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                                string F(string? strVal, decimal fallbackVal, string prefix, string suffix) {
+                                    if (!string.IsNullOrWhiteSpace(strVal) && strVal != "-") {
+                                        if (strVal.Contains("±", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MAX", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MIN", StringComparison.OrdinalIgnoreCase)) return strVal;
+                                        return $"{prefix}{strVal}{suffix}";
+                                    }
+                                    if (fallbackVal > 0) return $"{prefix}{fallbackVal}{suffix}";
+                                    return "-";
+                                }
+
                                 var innerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = (std.HeadTemp == 0 ? "90" : std.HeadTemp.ToString()) + "±5" },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = (std.Cylinder1Temp == 0 ? "90" : std.Cylinder1Temp.ToString()) + "±5" },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = (std.Cylinder2Temp == 0 ? "90" : std.Cylinder2Temp.ToString()) + "±5" },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = (std.Cylinder3Temp == 0 ? "90" : std.Cylinder3Temp.ToString()) + "±5" },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = (std.ScrewTemp == 0 ? "90" : std.ScrewTemp.ToString()) + "±5" },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = (std.ScrewSpeed == 0 ? "6.1" : std.ScrewSpeed.ToString()) + "±2.5" },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = "MAX 120" },
-                                    new { L = "PRESSURE", K = "PressureInner", S = "MAX 50" }
+                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = F(sMaster?.HeadTemp1, std.HeadTemp, "", "±5") },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = F(sMaster?.Cylinder1_1, std.Cylinder1Temp, "", "±5") },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = F(sMaster?.Cylinder2_1, std.Cylinder2Temp, "", "±5") },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = F(null, std.Cylinder3Temp, "", "±5") },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = F(sMaster?.ScrewTemp1, std.ScrewTemp, "", "±5") },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = F(sMaster?.ScrewSpeed1, std.ScrewSpeed, "", "±2") },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = F(sMaster?.Feed1, std.FeedRollRatio, "Max ", "") },
+                                    new { L = "PRESSURE", K = "PressureInner", S = F(sMaster?.Pressure1, std.Pressure, "Max ", "") }
                                 };
                             }
                             @for(int r = 0; r < innerRows.Length; r++) {
@@ -561,7 +578,7 @@
                                     @if(r == 0) { <td rowspan="@innerRows.Length" class="hud-vertical-label">INNER TUBE</td> }
                                     <td class="text-end pe-2 py-1 fw-bold">@innerRows[r].L</td>
                                     <td class="small opacity-50 fw-bold">@innerRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(Model.GetType().GetProperty("Init" + innerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
                                             <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
@@ -574,14 +591,14 @@
                             <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var outerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = "90±5" },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = "90±5" },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = "90±5" },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = "-" },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = "90±5" },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = "8.2±2.5" },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = "MAX 120" },
-                                    new { L = "PRESSURE", K = "PressureOuter", S = "MAX 50" }
+                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp, "", "±5") },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder1Temp, "", "±5") },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2Temp, "", "±5") },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder3Temp, "", "±5") },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, std.ScrewTemp, "", "±5") },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, std.ScrewSpeed, "", "±2") },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, std.FeedRollRatio, "Max ", "") },
+                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, std.Pressure, "Max ", "") }
                                 };
                             }
                             @for(int r = 0; r < outerRows.Length; r++) {
@@ -589,7 +606,7 @@
                                     @if(r == 0) { <td rowspan="@outerRows.Length" class="hud-vertical-label">OUTER COVER</td> }
                                     <td class="text-end pe-2 py-1 fw-bold">@outerRows[r].L</td>
                                     <td class="small opacity-50 fw-bold">@outerRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(Model.GetType().GetProperty("Init" + outerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
                                             <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
@@ -602,8 +619,8 @@
                             <tr class="bg-secondary text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var otherRows = new[] {
-                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = "98±20" },
-                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = "35±5" },
+                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, std.SpiralSpeed, "", "±20") },
+                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(null, std.SpiralPitch, "", "±5") },
                                     new { L = "HOSE SPEED", K = "HoseSpeed", S = "3.4±2" },
                                     new { L = "CONV. RATIO", K = "ConveyorRatio", S = "100±10" }
                                 };
@@ -613,7 +630,7 @@
                                     @if(r == 0) { <td rowspan="@otherRows.Length" class="hud-vertical-label">MISC</td> }
                                     <td class="text-end pe-2 py-1 fw-bold">@otherRows[r].L</td>
                                     <td class="small opacity-50 fw-bold">@otherRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(Model.GetType().GetProperty("Init" + otherRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
                                             <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
@@ -660,13 +677,10 @@
                     </div>
                 </div>
 
-                <!-- SCANNER TRIGGER -->
+                <!-- SCANNER TRIGGER ELIMINATED -->
                 <div class="mt-4 no-print d-flex justify-content-center gap-3">
-                    <button type="button" id="btnVerify" class="btn btn-outline-primary px-4 rounded-pill fw-bold border-2" onclick="startVerifyScanner()">
-                        <i class="bi bi-qr-code-scan me-2"></i> VERIFY ITEM (SCAN)
-                    </button>
-                    <button type="button" id="btnInput" class="btn btn-primary px-4 rounded-pill opacity-50 pe-none" data-bs-toggle="modal" data-bs-target="#addReadingModal">
-                        <i class="bi bi-lock-fill me-2" id="iconLock"></i> <span id="textInput">INPUT TERKUNCI</span> (JAM KE-@(readings.Count))
+                    <button type="button" id="btnInput" class="btn btn-primary px-4 rounded-pill" data-bs-toggle="modal" data-bs-target="#addReadingModal">
+                        <i class="bi bi-plus-circle-fill me-2"></i> INPUT DATA PARAMETER (JAM KE-@(readings.Count))
                     </button>
                 </div>
             </div>
