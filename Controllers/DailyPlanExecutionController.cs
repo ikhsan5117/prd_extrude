@@ -87,29 +87,15 @@ namespace VelastoProductionSystem.Controllers
 
             if (existing != null)
             {
+                // Jika sudah ada tapi activities kosong, regenerate dari planning
+                if (existing.Activities.Count == 0)
+                {
+                    await LoadActivitiesFromPlanning(existing, executionDate, shift, machineName);
+                }
                 return RedirectToAction(nameof(Execution), new { id = existing.Id });
             }
 
-            // 2. Jika belum, tarik dari PlanningMasters
-            // Format pencarian: "SELASA, 31 MARET 2026 SHIFT 1"
-            var culture = new System.Globalization.CultureInfo("id-ID");
-            var datePart = executionDate.ToString("dd MMMM yyyy", culture).ToUpper(); // "31 MARET 2026"
-            
-            var plans = await _context.PlanningMasters
-                .Where(x => x.MachineName == machineName)
-                .OrderBy(x => x.Id)
-                .ToListAsync();
-                
-            // Pencarian fleksibel: harus ada tanggal (misal "31 MARET 2026") DAN harus ada Shift (misal "SHIFT 1")
-            var matchedPlans = plans.Where(x => 
-                !string.IsNullOrEmpty(x.DateShiftString) && 
-                x.DateShiftString.ToUpper().Contains(datePart) && 
-                x.DateShiftString.ToUpper().Contains(shift.ToUpper())
-            ).ToList();
-            
-            // Fallback: Jika hari ini kosong, jangan load sembarang data (agar operator tidak bingung)
-            // Namun untuk pertama kali, jika user memaksa buat tanpa plan, izinkan tapi list activities kosong
-
+            // 2. Buat baru & tarik dari PlanningMasters
             var newExec = new DailyPlanExecution
             {
                 MachineName = machineName,
@@ -122,31 +108,90 @@ namespace VelastoProductionSystem.Controllers
             _context.DailyPlanExecutions.Add(newExec);
             await _context.SaveChangesAsync();
 
+            await LoadActivitiesFromPlanning(newExec, executionDate, shift, machineName);
+
+            TempData["SuccessMessage"] = "Data Planning berhasil di-generate!";
+            return RedirectToAction(nameof(Execution), new { id = newExec.Id });
+        }
+
+        // ─── Helper: muat activities dari PlanningMasters ───────────────────
+        private async Task LoadActivitiesFromPlanning(DailyPlanExecution exec, DateTime executionDate, string shift, string machineName)
+        {
+            var culture = new System.Globalization.CultureInfo("id-ID");
+            var d1 = executionDate.ToString("d MMMM yyyy", culture).ToUpper();
+            var d2 = executionDate.ToString("dd MMMM yyyy", culture).ToUpper();
+            
+            // Bersihkan shift agar tidak double kata "SHIFT"
+            var cleanShift = (shift ?? "").ToUpper().Replace("SHIFT", "").Trim();
+            
+            var target1 = $", {d1} SHIFT {cleanShift}"; 
+            var target2 = $", {d2} SHIFT {cleanShift}";
+
+            // 1. Cari semua yang cocok
+            var allMatching = await _context.PlanningMasters
+                .Where(x => x.MachineName == machineName &&
+                            !string.IsNullOrEmpty(x.DateShiftString) &&
+                            (x.DateShiftString.ToUpper().Contains(target1) || x.DateShiftString.ToUpper().Contains(target2)))
+                .OrderByDescending(x => x.Id)
+                .ToListAsync();
+
+            if (!allMatching.Any()) return;
+
+            // 2. Ambil Batch Terakhir (Toleransi 10 detik agar aman)
+            var latestBatchTime = allMatching.First().CreatedAt;
+            var matchedPlans = allMatching
+                .Where(x => x.CreatedAt >= latestBatchTime.AddSeconds(-10)) 
+                .OrderBy(x => x.Id)
+                .ToList();
+
             int order = 1;
             foreach (var p in matchedPlans)
             {
-                if (string.IsNullOrEmpty(p.PartName1) && string.IsNullOrEmpty(p.PartName2)) continue;
-                
-                int? pMenit = null;
-                if (int.TryParse(p.Menit?.Replace("Menit", "").Trim(), out int m)) pMenit = m;
+                var s1 = p.PartName1?.ToUpper() ?? "";
+                var s2 = p.PartName2?.ToUpper() ?? "";
+                var sk = p.Kode?.ToUpper() ?? "";
+
+                if (s1.Contains("ISTIRAHAT") || s2.Contains("ISTIRAHAT") || sk.Contains("ISTIRAHAT")) continue;
+
+                bool isDandoriRow = s1.Contains("DANDORI") || s2.Contains("DANDORI") || sk.Contains("DANDORI");
 
                 var act = new DailyPlanActivity
                 {
-                    DailyPlanExecutionId = newExec.Id,
-                    PartName1 = p.PartName1, // Misal "NA2140"
-                    PartName2 = p.Kode,      // Kita simpan Kode (77259-BZ120) di PartName2 agar muncul di form tablet
-                    PlanQty = p.PlanTargetPcs,
-                    PlanDurationMinutes = pMenit,
+                    DailyPlanExecutionId = exec.Id,
+                    PartName1 = isDandoriRow ? "DANDORI" : (p.PartName1 ?? p.Kode), 
+                    PartName2 = isDandoriRow ? "" : (p.PartName1 == null ? "" : p.Kode),      
+                    PlanQty   = p.PlanTargetPcs,
+                    PlanDurationMinutes = int.TryParse(p.Menit?.Replace("Menit","").Trim(), out int m) ? m : (int?)null,
                     PlanStart = p.WaktuMulai,
-                    PlanEnd = p.WaktuSelesai,
+                    PlanEnd   = p.WaktuSelesai,
                     OrderIndex = order++
                 };
                 _context.DailyPlanActivities.Add(act);
             }
+
+            if (matchedPlans.Any())
+                await _context.SaveChangesAsync();
+        }
+
+        // ─── Regenerate activities untuk existing execution ──────────────────
+        [HttpPost]
+        public async Task<IActionResult> RegenerateActivities(int id)
+        {
+            var exec = await _context.DailyPlanExecutions
+                .Include(x => x.Activities)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (exec == null) return NotFound();
+
+            // Hapus activities lama
+            _context.DailyPlanActivities.RemoveRange(exec.Activities);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Data Planning hasil import berhasil di-generate!";
-            return RedirectToAction(nameof(Execution), new { id = newExec.Id });
+            // Reload dari planning
+            await LoadActivitiesFromPlanning(exec, exec.ExecutionDate, exec.Shift ?? "", exec.MachineName ?? "");
+
+            TempData["SuccessMessage"] = "Data aktivitas berhasil di-reload dari Planning Master!";
+            return RedirectToAction(nameof(Execution), new { id });
         }
 
         public async Task<IActionResult> Execution(int id)
@@ -183,10 +228,12 @@ namespace VelastoProductionSystem.Controllers
                 var dbAct = dbModel.Activities.FirstOrDefault(a => a.Id == act.Id);
                 if (dbAct != null)
                 {
-                    dbAct.ActualQty = act.ActualQty;
-                    dbAct.ActualStart = act.ActualStart;
-                    dbAct.ActualEnd = act.ActualEnd;
-                    dbAct.Remarks = act.Remarks;
+                    dbAct.PartName1     = act.PartName1;            // VIN Code (bisa dikoreksi operator)
+                    dbAct.ActualQty     = act.ActualQty;
+                    dbAct.ActualDurationMinutes = act.ActualDurationMinutes;
+                    dbAct.ActualStart   = act.ActualStart;
+                    dbAct.ActualEnd     = act.ActualEnd;
+                    dbAct.Remarks       = act.Remarks;
                 }
             }
 

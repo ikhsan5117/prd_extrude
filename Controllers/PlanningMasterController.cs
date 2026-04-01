@@ -128,10 +128,6 @@ namespace VelastoProductionSystem.Controllers
 
             try
             {
-                // Kosongkan data lama agar tidak menumpuk duplikat
-                _context.PlanningMasters.RemoveRange(_context.PlanningMasters);
-                await _context.SaveChangesAsync();
-
                 int insertedCount = 0;
 
                 using (var stream = new MemoryStream())
@@ -144,13 +140,22 @@ namespace VelastoProductionSystem.Controllers
                         var result = reader.AsDataSet();
                         string[] targetSheets = { "DL1", "DL2", "DL3" };
                         
-                        foreach (DataTable table in result.Tables)
-                        {
-                            string sheetName = table.TableName;
-                            if (!targetSheets.Any(x => sheetName.Contains(x))) continue;
+                        // Cari sheet yang cocok, atau ambil sheet pertama jika tidak ada yang cocok
+                        var tablesToProcess = result.Tables.Cast<DataTable>()
+                            .Where(t => targetSheets.Any(x => t.TableName.ToUpper().Contains(x)))
+                            .ToList();
 
+                        if (!tablesToProcess.Any() && result.Tables.Count > 0)
+                        {
+                            tablesToProcess.Add(result.Tables[0]); // Fallback ke sheet pertama
+                        }
+
+                        foreach (DataTable table in tablesToProcess)
+                        {
+                            string sheetName = table.TableName.ToUpper();
                             string currentMachineName = sheetName.Contains("DL1") ? "DL01 engine" : 
-                                                        sheetName.Contains("DL2") ? "DL02 engine" : "DL03 engine";
+                                                        sheetName.Contains("DL2") ? "DL02 engine" : 
+                                                        sheetName.Contains("DL3") ? "DL03 engine" : "DL01 engine";
 
                             string currentDateShift = "";
 
@@ -159,36 +164,44 @@ namespace VelastoProductionSystem.Controllers
                                 var col0 = table.Rows[r][0]?.ToString()?.Trim();
                                 var col1 = table.Rows[r][1]?.ToString()?.Trim();
 
-                                // Jika B berisi TANGGAL SHIFT dan A kosong
-                                if (string.IsNullOrEmpty(col0) && !string.IsNullOrEmpty(col1) && col1.Contains("SHIFT"))
+                                // Deteksi baris Tanggal/Shift (Cari teks SHIFT atau TANGGAL)
+                                if (string.IsNullOrEmpty(col0) && !string.IsNullOrEmpty(col1) && 
+                                   (col1.ToUpper().Contains("SHIFT") || col1.ToUpper().Contains("TANGGAL")))
                                 {
                                     currentDateShift = col1;
                                     continue;
                                 }
 
-                                // Jika A berisi angka (misal "30") artinya ini baris data!
+                                // Jika A berisi angka (misal "1", "2") dianggap baris data
                                 if (!string.IsNullOrEmpty(col0) && int.TryParse(col0, out _))
                                 {
-                                    // Ambil sesuai Column Index (0-based di pandas)
-                                    // Pastikan kita tidak overlap array length
                                     int totalCols = table.Columns.Count;
                                     string GetV(int idx) => (idx >= 0 && idx < totalCols) ? table.Rows[r][idx]?.ToString()?.Trim() ?? "" : "";
 
-                                    var part1 = GetV(1);
-                                    var part2 = GetV(2);
-                                    var comp = GetV(3);
-                                    
-                                    var qtyStr = GetV(20);
-                                    var durStr = GetV(22);
-                                    var startStr = GetV(23);
-                                    var endStr = GetV(24);
+                                    var part1 = GetV(1); // Kolom B
+                                    var part2 = GetV(2); // Kolom C
+                                    var comp  = GetV(3); // Kolom D
+                                    var len   = GetV(4); // Kolom E (Gaps/...)
 
-                                    // Parse jam agar rapi (kadang bertipe datetime)
-                                    if (DateTime.TryParse(startStr, out DateTime startTime)) startStr = startTime.ToString("HH:mm");
-                                    if (DateTime.TryParse(endStr, out DateTime endTime)) endStr = endTime.ToString("HH:mm");
+                                    var qtyStr   = GetV(5); // Kolom F (Plan Target)
+                                    var durStr   = GetV(7); // Kolom H (Durasi)
+                                    var startStr = GetV(8); // Kolom I (Waktu Mulai)
+                                    var endStr   = GetV(9); // Kolom J (Waktu Selesai)
+                                    
+                                    // Kolom-kolom tambahan jika ada (Gbr 12 tidak memperlihatkan CT, tapi kita coba tebak urutannya)
+                                    // CT biasanya ada di antara Target dan Menit
+                                    var ctStr = GetV(6); // Kolom G (Dilewati)
+
+                                    // Jika baris data ditemukan tapi TanggalShift belum ketemu, beri placeholder
+                                    if (string.IsNullOrEmpty(currentDateShift))
+                                        currentDateShift = DateTime.Now.ToString("dd MMMM yyyy").ToUpper() + " SHIFT 1";
 
                                     int? planQty = null;
                                     if (int.TryParse(qtyStr?.Replace(",", "").Replace(".", ""), out int q)) planQty = q;
+
+                                    // Percantik format jam
+                                    if (DateTime.TryParse(startStr, out DateTime st)) startStr = st.ToString("HH:mm");
+                                    if (DateTime.TryParse(endStr, out DateTime et)) endStr = et.ToString("HH:mm");
 
                                     var newPlan = new PlanningMaster
                                     {
@@ -200,7 +213,8 @@ namespace VelastoProductionSystem.Controllers
                                         PlanTargetPcs = planQty,
                                         Menit = durStr,
                                         WaktuMulai = startStr,
-                                        WaktuSelesai = endStr
+                                        WaktuSelesai = endStr,
+                                        CreatedAt = DateTime.Now
                                     };
 
                                     _context.PlanningMasters.Add(newPlan);
