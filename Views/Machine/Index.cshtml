@@ -113,30 +113,39 @@
                     </button>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover border-0">
-                        <thead>
-                            <tr style="border-bottom: 2px solid rgba(255,255,255,0.05);">
-                                <th class="border-0 text-white-50 small">SHIFT NAME</th>
-                                <th class="border-0 text-white-50 small text-center">START TIME</th>
-                                <th class="border-0 text-white-50 small text-end">ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var s in shifts)
-                            {
-                                <tr class="align-middle border-bottom border-white-5">
-                                    <td class="border-0 fw-bold text-info">@s.ShiftName</td>
-                                    <td class="border-0 text-center">
-                                        <input type="time" class="shift-input" value="@s.StartTime" onchange="updateShift(@s.Id, this.value)" />
-                                    </td>
-                                    <td class="border-0 text-end">
-                                        <span id="save-msg-@s.Id" class="text-success small me-2" style="display:none;"><i class="bi bi-check-lg"></i> Saved</span>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="row g-3" id="shiftList">
+                    @foreach (var s in shifts)
+                    {
+                        <div class="col-md-4 col-sm-6">
+                            <div class="stat-card h-100 d-flex flex-column justify-content-between position-relative overflow-hidden">
+                                <div class="position-absolute top-0 end-0 p-2">
+                                     <form asp-action="DeleteShift" method="post" onsubmit="return confirm('Hapus @s.ShiftName?')">
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <button type="submit" class="btn btn-link text-danger p-1 text-decoration-none opacity-50 hover-opacity-100">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <div>
+                                    <div class="stat-label mb-1">Shift Name</div>
+                                    <h4 class="text-info fw-black mt-0 mb-3 tracking-widest">@s.ShiftName</h4>
+                                    
+                                    <div class="stat-label mb-1">Start Time</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="position-relative flex-grow-1">
+                                            <i class="bi bi-clock position-absolute top-50 start-0 translate-middle-y ms-2 text-white-50"></i>
+                                            <input type="time" class="form-control bg-black border-secondary text-white ps-5 py-2 font-monospace" 
+                                                   value="@s.StartTime" onchange="updateShift(@s.Id, this.value)" 
+                                                   style="border-radius: 10px; font-size: 1.1rem;" />
+                                        </div>
+                                        <div id="save-msg-@s.Id" class="text-success fs-4" style="display:none;">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

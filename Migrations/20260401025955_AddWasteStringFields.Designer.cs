@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VelastoProductionSystem.Data;
 
@@ -11,9 +12,11 @@ using VelastoProductionSystem.Data;
 namespace VelastoProductionSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401025955_AddWasteStringFields")]
+    partial class AddWasteStringFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1104,20 +1107,8 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("ApprovedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ApprovedBySignature")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ApprovedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("CheckedBy")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CheckedBySignature")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CheckedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("CoverDieFinal")
                         .HasColumnType("nvarchar(max)");

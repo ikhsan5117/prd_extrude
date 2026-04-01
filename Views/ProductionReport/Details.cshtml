@@ -17,7 +17,7 @@
                 <span class="fw-black">PARAMETER SETTING</span>
             </div>
         </a>
-        <a href="?portal=dimension" class="portal-btn @(currentPortal == "dimension" ? "active" : "")">
+        <a href="/Dimensi/App?id=@Model.Id" class="portal-btn">
             <i class="bi bi-rulers fs-4"></i>
             <div>
                 <span class="small fw-bold d-block text-white-50">OPERATOR 2</span>
@@ -40,48 +40,13 @@
         <div class="hud-container fade-in">
             <!-- PORTAL 2: DIMENSION (App Sync Layout) -->
             <div class="content-card shadow-2xl mx-auto mb-4" style="background: rgba(15, 23, 42, 0.8); border: 2px solid var(--accent-blue); border-radius: 12px; overflow: hidden;">
-                <!-- 1. HEADER SYNC WITH APP -->
-                <div class="p-3 border-bottom-cyber" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
-                    <div class="row align-items-center">
-                        <div class="col-4">
-                            <div class="d-flex align-items-center gap-2">
-                                <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                    <span style="font-weight: 900; font-size: 20px; color: white;">V</span>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 900; font-size: 16px; color: #60a5fa; line-height: 1;">VELASTO</div>
-                                    <div style="font-size: 8px; color: #94a3b8; border-bottom: 1px solid #3b82f6; letter-spacing: 2px;">INDONESIA</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4 text-center">
-                            <h5 class="fw-black text-white mb-0 text-uppercase tracking-widest">Extruder Production Report</h5>
-                            <div class="text-info fw-bold extra-small">(Dimension)</div>
-                        </div>
-                        <div class="col-4 d-flex justify-content-end">
-                            <table class="signature-table" style="width: 180px; border: 1px solid #3b82f6; font-size: 9px; background: rgba(15,23,42,0.5);">
-                                <tr style="background: #3b82f6; color: white; font-weight: bold;">
-                                    <th class="p-1 border text-center">PREPARED</th>
-                                    <th class="p-1 border text-center">CHECKED</th>
-                                    <th class="p-1 border text-center">APPROVED</th>
-                                </tr>
-                                <tr style="height: 40px;">
-                                    <td class="border text-center align-middle text-info fw-bold">@Model.CreatedBy</td>
-                                    <td class="border text-center align-middle text-white-50">@Model.CheckedBy</td>
-                                    <td class="border text-center align-middle text-white-50">@Model.ApprovedBy</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. META INFO BAR -->
-                <div class="row g-0 border-bottom-cyber px-3 py-2" style="background: rgba(30, 41, 59, 0.4); font-size: 11px;">
+                <!-- 2. META INFO BAR (Now as Header) -->
+                <div class="row g-0 border-bottom-cyber px-3 py-3" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); font-size: 11px;">
                     <div class="col-3"><span class="text-info fw-bold">NO DOC :</span> <span class="text-white">@Model.DocumentNumber</span></div>
                     <div class="col-2"><span class="text-info fw-bold">REVISI :</span> <span class="text-white">@Model.RevisionNumber</span></div>
                     <div class="col-3"><span class="text-info fw-bold">DATE :</span> <span class="text-white">@Model.ProductionDate.ToString("dd/MMM/yyyy")</span></div>
                     <div class="col-2"><span class="text-info fw-bold">SHIFT :</span> <span class="text-white">@Model.Shift</span></div>
-                    <div class="col-2 text-end"><span class="text-warning fw-bold">@Model.HoseType / @Model.Dimension</span></div>
+                    <div class="col-2 text-end"><span class="text-warning fw-extra-bold fs-6">@Model.HoseType / @Model.Dimension</span></div>
                 </div>
 
                 <!-- 3. MAIN DATA TABLE (Fixed Pukul/Jam Matrix) -->
@@ -247,16 +212,31 @@
                                     <td class="border-bottom-form align-middle">Dibuat</td>
                                 </tr>
                                 <tr>
-                                    <td class="border-end-form border-bottom-form" style="height: 35px;"></td>
-                                    <td class="border-end-form border-bottom-form"></td>
-                                    <td class="border-bottom-form" style="position: relative;">
-                                        <!-- Simulated Signature Placeholder -->
+                                    <td class="border-end-form border-bottom-form cursor-pointer align-middle" style="height: 35px;" onclick="openApprovalModal('FOREMAN')">
+                                        @if(!string.IsNullOrEmpty(Model.ApprovedBy)) {
+                                            <div class="fw-black text-primary" style="font-size: 12px; letter-spacing: 1px;">@Model.ApprovedBySignature</div>
+                                            <div style="font-size: 8px; color: #666;">@Model.ApprovedDate?.ToString("dd/MM HH:mm")</div>
+                                        } else {
+                                            <span class="text-muted opacity-25"><i class="bi bi-pencil"></i></span>
+                                        }
+                                    </td>
+                                    <td class="border-end-form border-bottom-form cursor-pointer align-middle" onclick="openApprovalModal('LEADER')">
+                                        @if(!string.IsNullOrEmpty(Model.CheckedBy)) {
+                                            <div class="fw-black text-primary" style="font-size: 11px;">@Model.CheckedBySignature</div>
+                                            <div style="font-size: 8px; color: #666;">@Model.CheckedDate?.ToString("dd/MM HH:mm")</div>
+                                        } else {
+                                            <span class="text-muted opacity-25"><i class="bi bi-pencil"></i></span>
+                                        }
+                                    </td>
+                                    <td class="border-bottom-form align-middle">
+                                        <div class="fw-black text-dark">@Model.CreatedBy?.ToUpper()</div>
+                                        <div style="font-size: 8px; color: #666;">@Model.CreatedDate.ToString("dd/MM HH:mm")</div>
                                     </td>
                                 </tr>
                                 <tr style="height: 15px;">
-                                    <td class="border-end-form"></td>
-                                    <td class="border-end-form"></td>
-                                    <td></td>
+                                    <td class="border-end-form">Foreman</td>
+                                    <td class="border-end-form">Leader</td>
+                                    <td>Operator</td>
                                 </tr>
                             </table>
                         </div>
@@ -378,7 +358,7 @@
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
                                         <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.NippleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.NippleDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.NippleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(mSps?.Nipple, std.InnerDie, "8.8±0.1")</td>
@@ -390,7 +370,7 @@
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
                                         <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.TubeDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.TubeDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.TubeDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(mSps?.TubeDie, std.TubeDie, "11.1±0.1")</td>
@@ -402,7 +382,7 @@
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
                                         <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.MiddleDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(null, std.MiddleDie, "14.2±0.1")</td>
@@ -414,7 +394,7 @@
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
                                         <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.CoverDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.CoverDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.CoverDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(mSps?.CoverDie, std.CoverDie, "15.1±0.1")</td>
@@ -426,7 +406,7 @@
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
                                         <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.SpacerDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(null, std.SpacerDie, "7.3±0.1")</td>
@@ -438,7 +418,7 @@
                                 <td class="p-0 align-middle">
                                     <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
                                         <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
-                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.ToleranceDieOK && Model.Status != "NOW PRODUCING" ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(null, std.ToleranceDie, "0.4±0.1")</td>
@@ -562,34 +542,49 @@
                             @{
                                 var sMaster = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
                                 string F(string? strVal, decimal fallbackVal, string prefix, string suffix) {
+                                    string res = "-";
                                     if (!string.IsNullOrWhiteSpace(strVal) && strVal != "-") {
-                                        if (strVal.Contains("±", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MAX", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MIN", StringComparison.OrdinalIgnoreCase)) return strVal;
-                                        return $"{prefix}{strVal}{suffix}";
+                                        if (strVal.Contains("±", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MAX", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MIN", StringComparison.OrdinalIgnoreCase)) {
+                                            res = strVal;
+                                        } else {
+                                            res = $"{prefix}{strVal}{suffix}";
+                                        }
+                                    } else if (fallbackVal > 0) {
+                                        res = $"{prefix}{fallbackVal}{suffix}";
                                     }
-                                    if (fallbackVal > 0) return $"{prefix}{fallbackVal}{suffix}";
-                                    return "-";
+                                    return res;
+                                }
+
+                                string FormatVal(object? val, string unit) {
+                                    if (val == null) return "";
+                                    string vStr = "";
+                                    if (val is decimal d) vStr = d.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                                    else vStr = val.ToString() ?? "";
+                                    
+                                    if (string.IsNullOrWhiteSpace(vStr)) return "";
+                                    return vStr + (string.IsNullOrEmpty(unit) ? "" : $" {unit}");
                                 }
 
                                 var innerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = F(sMaster?.HeadTemp1, std.HeadTemp, "", "±5") },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = F(sMaster?.Cylinder1_1, std.Cylinder1Temp, "", "±5") },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = F(sMaster?.Cylinder2_1, std.Cylinder2Temp, "", "±5") },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = F(null, std.Cylinder3Temp, "", "±5") },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = F(sMaster?.ScrewTemp1, std.ScrewTemp, "", "±5") },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = F(sMaster?.ScrewSpeed1, std.ScrewSpeed, "", "±2") },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = F(sMaster?.Feed1, std.FeedRollRatio, "Max ", "") },
-                                    new { L = "PRESSURE", K = "PressureInner", S = F(sMaster?.Pressure1, std.Pressure, "Max ", "") }
+                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = F(sMaster?.HeadTemp1, std.HeadTemp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = F(sMaster?.Cylinder1_1, std.Cylinder1Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = F(sMaster?.Cylinder2_1, std.Cylinder2Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = F(null, std.Cylinder3Temp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = F(sMaster?.ScrewTemp1, std.ScrewTemp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = F(sMaster?.ScrewSpeed1, std.ScrewSpeed, "", "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = F(sMaster?.Feed1, std.FeedRollRatio, "MAX ", ""), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureInner", S = F(sMaster?.Pressure1, std.Pressure, "MAX ", ""), U = "MPa" }
                                 };
                             }
                             @for(int r = 0; r < innerRows.Length; r++) {
                                 <tr>
                                     @if(r == 0) { <td rowspan="@innerRows.Length" class="hud-vertical-label">INNER TUBE</td> }
-                                    <td class="text-end pe-2 py-1 fw-bold">@innerRows[r].L</td>
+                                    <td class="text-start ps-2 pe-1 py-1 fw-bold">@innerRows[r].L @(string.IsNullOrEmpty(innerRows[r].U) ? "" : $"({innerRows[r].U})")</td>
                                     <td class="small opacity-50 fw-bold">@innerRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(Model.GetType().GetProperty("Init" + innerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + innerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()), innerRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
-                                            <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
+                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), innerRows[r].U)" />
                                         </td>
                                     }
                                 </tr>
@@ -599,25 +594,25 @@
                             <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var outerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp, "", "±5") },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder1Temp, "", "±5") },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2Temp, "", "±5") },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder3Temp, "", "±5") },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, std.ScrewTemp, "", "±5") },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, std.ScrewSpeed, "", "±2") },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, std.FeedRollRatio, "Max ", "") },
-                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, std.Pressure, "Max ", "") }
+                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder1Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder3Temp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, std.ScrewTemp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, std.ScrewSpeed, "", "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, std.FeedRollRatio, "MAX ", ""), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, std.Pressure, "MAX ", ""), U = "MPa" }
                                 };
                             }
                             @for(int r = 0; r < outerRows.Length; r++) {
                                 <tr>
                                     @if(r == 0) { <td rowspan="@outerRows.Length" class="hud-vertical-label">OUTER COVER</td> }
-                                    <td class="text-end pe-2 py-1 fw-bold">@outerRows[r].L</td>
+                                    <td class="text-start ps-2 pe-1 py-1 fw-bold">@outerRows[r].L @(string.IsNullOrEmpty(outerRows[r].U) ? "" : $"({outerRows[r].U})")</td>
                                     <td class="small opacity-50 fw-bold">@outerRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(Model.GetType().GetProperty("Init" + outerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + outerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()), outerRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
-                                            <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
+                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), outerRows[r].U)" />
                                         </td>
                                     }
                                 </tr>
@@ -627,21 +622,21 @@
                             <tr class="bg-secondary text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var otherRows = new[] {
-                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, std.SpiralSpeed, "", "±20") },
-                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(null, std.SpiralPitch, "", "±5") },
-                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = "3.4±2" },
-                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = "100±10" }
+                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, std.SpiralSpeed, "", "±20"), U = "rpm" },
+                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(null, std.SpiralPitch, "", "±5"), U = "mm" },
+                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = "3.4±2", U = "m/min" },
+                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = "100±10", U = "%" }
                                 };
                             }
                             @for(int r = 0; r < otherRows.Length; r++) {
                                 <tr>
                                     @if(r == 0) { <td rowspan="@otherRows.Length" class="hud-vertical-label">MISC</td> }
-                                    <td class="text-end pe-2 py-1 fw-bold">@otherRows[r].L</td>
+                                    <td class="text-start ps-2 pe-1 py-1 fw-bold">@otherRows[r].L @(string.IsNullOrEmpty(otherRows[r].U) ? "" : $"({otherRows[r].U})")</td>
                                     <td class="small opacity-50 fw-bold">@otherRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@(Model.GetType().GetProperty("Init" + otherRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()) ?? "")" /></td>
+                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + otherRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()), otherRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
-                                            <input type="text" class="input-transparent" value="@(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()) ?? "")" />
+                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), otherRows[r].U)" />
                                         </td>
                                     }
                                 </tr>
@@ -653,26 +648,44 @@
                 <!-- 5. WASTE PERFORMANCE (Paper Theme) -->
                 <div class="row g-2 mb-4">
                     <div class="col-8">
-                        <table class="grid-form w-100 text-center">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-2 text-start">WASTE CATEGORY / ZONE</th>
-                                    <th width="120">INITIAL (AWAL)</th>
-                                    <th width="120">FINAL (AKHIR)</th>
-                                    <th class="text-info border-start border-dark">REMARK</th>
-                                </tr>
-                            </thead>
+                        <table class="grid-form w-100 text-center m-0">
                             <tbody>
-                                <tr>
-                                    <td class="text-start ps-2 py-2 fw-bold">INNER TUBE WASTE (CLEANING)</td>
-                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteInnerAwal" /></td>
-                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteInnerAkhir" /></td>
-                                    <td rowspan="2" class="border-start border-dark bg-light small align-middle">MONITOR WASTE DURANTE PROCESSO.</td>
+                                <tr class="bg-light">
+                                    <th rowspan="6" class="align-middle fw-bold text-center border-end-0 border-bottom-0" style="width: 30px; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 2px;">WASTE</th>
+                                    <th colspan="2" class="align-middle py-2 border-end-0 text-uppercase" style="font-size: 0.75rem;">Initial Setting</th>
+                                    <th class="align-middle border-end-0 text-uppercase" style="width: 15%; font-size: 0.75rem;">Awal</th>
+                                    <th class="align-middle border-end border-dark text-uppercase" style="width: 15%; font-size: 0.75rem;">Akhir</th>
+                                    <th class="align-middle border-bottom-0 text-start ps-2 pt-2 text-uppercase" style="width: 30%; font-size: 0.75rem;">Note :</th>
+                                </tr>
+                                <tr class="bg-light">
+                                    <th colspan="2" class="align-middle py-2 border-end-0 text-uppercase" style="font-size: 0.75rem;">Berat (kg)</th>
+                                    <th class="align-middle border-end-0 border-bottom-0" style="background-color: #fff;"></th>
+                                    <th class="align-middle border-end border-dark border-bottom-0" style="background-color: #fff;"></th>
+                                    <td rowspan="5" class="align-top text-start text-dark p-2 border-bottom-0" style="font-size: 11px; background-color: #f8f9fa;">
+                                        Lakukan pengecekan parameter pada saat<br/>awal, tengah & akhir proses.
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td class="text-start ps-2 py-2 fw-bold">COVER WASTE (CLEANING)</td>
-                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteCoverAwal" /></td>
-                                    <td class="p-0"><input type="text" class="input-transparent" value="@Model.WasteCoverAkhir" /></td>
+                                    <td rowspan="2" class="text-start ps-2 align-middle border-bottom-0 fw-bold border-end-0 text-uppercase" style="font-size: 0.7rem; width: 140px; background-color: #f8f9fa;">Dandori Awal<br/><span class="fw-normal">(Cleaning)</span></td>
+                                    <td class="text-start ps-2 border-end-0 text-uppercase" style="font-size: 0.7rem; width: 60px;">Inner</td>
+                                    <td class="p-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAI_Awal ?? Model.WasteInnerAwal?.ToString())" /></td>
+                                    <td class="p-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAI_Akhir ?? Model.WasteInnerAkhir?.ToString())" /></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-start ps-2 border-end-0 text-uppercase" style="font-size: 0.7rem;">Cover</td>
+                                    <td class="p-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAC_Awal ?? Model.WasteCoverAwal?.ToString())" /></td>
+                                    <td class="p-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAC_Akhir ?? Model.WasteCoverAkhir?.ToString())" /></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2" class="text-start ps-2 align-middle border-bottom-0 fw-bold border-end-0 text-uppercase" style="font-size: 0.7rem; background-color: #f8f9fa;">Dandori Akhir<br/><span class="fw-normal">(Remain Material)</span></td>
+                                    <td class="text-start ps-2 border-end-0 text-uppercase" style="font-size: 0.7rem;">Inner</td>
+                                    <td class="p-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DRAI_Awal ?? Model.WasteWeightAwal?.ToString())" /></td>
+                                    <td class="p-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DRAI_Akhir ?? Model.WasteWeightAkhir?.ToString())" /></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-start ps-2 border-bottom-0 border-end-0 text-uppercase" style="font-size: 0.7rem;">Cover</td>
+                                    <td class="p-0 border-bottom-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@Model.DRAC_Awal" /></td>
+                                    <td class="p-0 border-bottom-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@Model.DRAC_Akhir" /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1510,5 +1523,49 @@
             if (el) el.addEventListener('input', updateFinishTotal);
         });
         updateFinishTotal(); // Initial call
+
+        // APPROVAL PROTOCOL LOGIC
+        function openApprovalModal(role) {
+            Swal.fire({
+                title: `VERIFIKASI ${role}`,
+                html: `
+                    <div class="text-center p-3">
+                        <i class="bi bi-shield-lock-fill text-info fs-1 mb-3"></i>
+                        <div class="text-white-50 small mb-3">SILAKAN MASUKKAN PIN ATAU SCAN ID CARD</div>
+                        <input type="password" id="staffPin" class="form-control text-center bg-dark text-white fw-bold fs-4 border-info" 
+                               placeholder="****" maxlength="6" style="letter-spacing: 10px;">
+                    </div>
+                `,
+                background: '#0d1117',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonText: 'VERIFY NOW',
+                confirmButtonColor: '#3b82f6',
+                preConfirm: () => {
+                    const pin = Swal.getPopup().querySelector('#staffPin').value;
+                    if (!pin) { Swal.showValidationMessage('PIN WAJIB DIISI!'); return false; }
+                    return { pin: pin };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    verifyStaff(role, result.value.pin);
+                }
+            });
+        }
+
+        async function verifyStaff(role, pin) {
+            const res = await fetch('/ProductionReport/VerifyApproval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id: @Model.Id, role: role, pin: pin })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'VERIFIKASI BERHASIL!', text: `Terima kasih, ${data.name}`, timer: 1500, showConfirmButton: false });
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                Swal.fire({ icon: 'error', title: 'GAGAL!', text: data.message });
+            }
+        }
     </script>
 }

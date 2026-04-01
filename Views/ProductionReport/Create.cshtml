@@ -660,52 +660,90 @@
             <!-- SECTION: WASTE & FOOTER HUD -->
             <div class="row g-3">
                 <div class="col-lg-7">
-                    <div class="hud-card d-flex h-100 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
-                        <div class="hud-vertical-label bg-black bg-opacity-40 fw-black text-info font-monospace tracking-widest pt-2">WASTE PERFORMANCE</div>
-                        <div class="flex-grow-1 p-0 overflow-hidden">
-                            <table class="table-hud-unified instrument-style m-0 text-center super-small font-monospace">
-                                <thead>
-                                    <tr class="bg-black bg-opacity-60 text-info">
-                                        <th width="30%" class="ps-3 text-start small border border-white border-opacity-20">PHASE / POINT</th>
-                                        <th width="35%" class="bg-primary bg-opacity-10 text-white small border border-white border-opacity-20">AWAL (kg)</th>
-                                        <th width="35%" class="bg-success bg-opacity-10 text-white small border border-white border-opacity-20">AKHIR (kg)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
-                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AWAL</div>
-                                            <div class="text-info super-small fw-bold">INNER TUBE</div>
-                                        </td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAI_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAI_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                    </tr>
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
-                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AWAL</div>
-                                            <div class="text-warning super-small fw-bold">COVER</div>
-                                        </td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAC_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DAC_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                    </tr>
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
-                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AKHIR</div>
-                                            <div class="text-info super-small fw-bold">INNER TUBE</div>
-                                        </td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAI_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAI_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                    </tr>
-                                    <tr class="group-lane">
-                                        <td class="text-start ps-3 py-1 border border-white border-opacity-20">
-                                            <div class="fw-bold text-white super-small opacity-50">DANDORI AKHIR</div>
-                                            <div class="text-warning super-small fw-bold">COVER</div>
-                                        </td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAC_Awal" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                        <td class="p-1 align-middle border border-white border-opacity-20"><input name="DRAC_Akhir" class="hud-input-underlined text-warning fw-black text-center py-1" placeholder="0.00" /></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div class="hud-card h-100 shadow-hud-blue border-white border-opacity-10 p-3 bg-black bg-opacity-40">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-trash text-info fs-5 me-2"></i>
+                            <div class="text-info-glow tracking-widest fw-black">WASTE PERFORMANCE (KG)</div>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <!-- DANDORI AWAL -->
+                            <div class="col-md-6">
+                                <div class="border border-white border-opacity-10 rounded-2 p-2 bg-black bg-opacity-20 h-100">
+                                    <div class="text-white opacity-50 super-small fw-bold tracking-widest mb-2 border-bottom border-info border-opacity-25 pb-1">DANDORI AWAL (CLEANING)</div>
+                                    
+                                    <div class="d-flex flex-column gap-2 mt-2">
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-info super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem"></i>INNER TUBE</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DAI_Awal" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DAI_Akhir" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-warning super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem"></i>COVER</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DAC_Awal" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow: 0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DAC_Akhir" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow: 0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- DANDORI AKHIR -->
+                            <div class="col-md-6">
+                                <div class="border border-white border-opacity-10 rounded-2 p-2 bg-black bg-opacity-20 h-100">
+                                    <div class="text-white opacity-50 super-small fw-bold tracking-widest mb-2 border-bottom border-warning border-opacity-25 pb-1">DANDORI AKHIR (REMAIN)</div>
+                                    
+                                    <div class="d-flex flex-column gap-2 mt-2">
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-info super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem"></i>INNER TUBE</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DRAI_Awal" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DRAI_Akhir" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-warning super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem"></i>COVER</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DRAC_Awal" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow: 0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DRAC_Akhir" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow: 0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

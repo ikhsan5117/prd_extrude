@@ -239,7 +239,21 @@ namespace VelastoProductionSystem.Controllers
                         report.ProductionDate = DateTime.Today;
 
                     report.CreatedBy = report.CreatedBy ?? "Operator 1";
-                    report.Shift = report.Shift ?? "Shift 1";
+                    
+                    if (string.IsNullOrEmpty(report.Shift))
+                    {
+                        var shifts = await _context.ShiftMasters.OrderBy(s => s.StartTime).ToListAsync();
+                        if (shifts.Any())
+                        {
+                            var now = DateTime.Now.TimeOfDay;
+                            var currentShift = shifts.LastOrDefault(s => TimeSpan.Parse(s.StartTime) <= now) ?? shifts.Last();
+                            report.Shift = currentShift.ShiftName;
+                        }
+                        else
+                        {
+                            report.Shift = "SHIFT 1";
+                        }
+                    }
                     report.CustomerName = report.CustomerName ?? "-";
                     report.CreatedDate = DateTime.Now;
                     report.Status = "NOW PRODUCING";
@@ -402,6 +416,43 @@ namespace VelastoProductionSystem.Controllers
                 return Json(new { success = true });
             }
             return Json(new { success = false });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyApproval(int id, string role, string pin)
+        {
+            var report = await _context.ProductionReports.FindAsync(id);
+            if (report == null) return Json(new { success = false, message = "Report not found" });
+
+            // SIMPLE PIN LOGIC: 4321 for Leader (Diperiksa), 1234 for Foreman (Disetujui)
+            // In real app, check against StaffMaster/Users table
+            bool isValid = false;
+            string staffName = "";
+
+            if (role == "LEADER" && pin == "4321") { isValid = true; staffName = "LEADER PRODUCTION"; }
+            else if (role == "FOREMAN" && pin == "1234") { isValid = true; staffName = "FOREMAN EXTRUDER"; }
+
+            if (isValid)
+            {
+                if (role == "LEADER")
+                {
+                    report.CheckedBy = staffName;
+                    report.CheckedDate = DateTime.Now;
+                    report.CheckedBySignature = staffName.ToUpper();
+                }
+                else
+                {
+                    report.ApprovedBy = staffName;
+                    report.ApprovedDate = DateTime.Now;
+                    report.ApprovedBySignature = staffName.ToUpper();
+                    report.Status = "COMPLETED";
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, name = staffName, date = DateTime.Now.ToString("dd/MM/yyyy HH:mm") });
+            }
+
+            return Json(new { success = false, message = "PIN SALAH!" });
         }
 
         [HttpPost]

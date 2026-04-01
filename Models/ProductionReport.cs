@@ -109,6 +109,16 @@ namespace VelastoProductionSystem.Models
         public decimal? WasteInnerAkhir { get; set; }
         public decimal? WasteCoverAwal { get; set; }
         public decimal? WasteCoverAkhir { get; set; }
+        
+        // NEW STRING-BASED WASTE TRACKING FROM PAPER FORM
+        public string? DAI_Awal { get; set; }
+        public string? DAI_Akhir { get; set; }
+        public string? DAC_Awal { get; set; }
+        public string? DAC_Akhir { get; set; }
+        public string? DRAI_Awal { get; set; }
+        public string? DRAI_Akhir { get; set; }
+        public string? DRAC_Awal { get; set; }
+        public string? DRAC_Akhir { get; set; }
 
         // MESH & EMBOSS QUALITY (IMAGE 2)
         public bool MeshInner10Before { get; set; }
@@ -141,6 +151,11 @@ namespace VelastoProductionSystem.Models
         public decimal? InitScrewSpeedOuter { get; set; }
         public decimal? InitFeedRollRatioOuter { get; set; }
         public decimal? InitPressureOuter { get; set; }
+        
+        public DateTime? CheckedDate { get; set; }
+        public DateTime? ApprovedDate { get; set; }
+        public string? ApprovedBySignature { get; set; } // For visual text-glow signature
+        public string? CheckedBySignature { get; set; }  // For visual text-glow signature
 
         public decimal? InitSpiralSpeed { get; set; }
         public decimal? InitSpiralPitchSetting { get; set; }

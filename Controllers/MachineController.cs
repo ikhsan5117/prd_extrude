@@ -112,6 +112,19 @@ namespace VelastoProductionSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> DeleteShift(int id)
+        {
+            var shift = await _context.ShiftMasters.FindAsync(id);
+            if (shift != null)
+            {
+                _context.ShiftMasters.Remove(shift);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Shift berhasil dihapus.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
         private async Task EnsureDefaultShifts()
         {
             if (!await _context.ShiftMasters.AnyAsync())

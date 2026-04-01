@@ -2,320 +2,1127 @@
 
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Extruder Production Hub";
+    ViewData["Title"] = "Dimension Input Hub";
 }
-
-@Html.AntiForgeryToken()
 
 @section Styles {
     <style>
         :root {
-            --bg-deep: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-deep: #0b0f19;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(56, 189, 248, 0.1);
             --accent-glow: #38bdf8;
             --accent-success: #4ade80;
             --accent-warning: #fbbf24;
             --accent-danger: #f87171;
-            --text-main: #f8fafc;
+            --text-white: #f8fafc;
             --text-dim: #94a3b8;
         }
 
         body {
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
-            color: var(--text-main);
+            background: radial-gradient(circle at top right, #1e293b, #0b0f19);
+            color: var(--text-white);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
+            padding: 0;
+            margin: 0;
         }
 
-        .hub-container {
-            max-width: 1500px;
-            margin: 0 auto;
-            padding: 16px;
-            animation: fadeIn 0.6s ease-out;
+        .dimension-hub {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: calc(100vh - 60px); 
+            gap: 2px;
+            background: var(--glass-border);
         }
 
         /* Glass Panel */
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            margin-bottom: 16px;
-        }
-
-        /* Action Bar */
-        .action-bar {
+        .hub-panel {
+            background: var(--bg-deep);
             display: flex;
-            align-items: center;
-            padding: 8px 20px;
-            gap: 20px;
-        }
-        .scanner-input-group {
-            display: flex;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
+            flex-direction: column;
             overflow: hidden;
-            border: 1px solid var(--glass-border);
-            width: 400px;
-        }
-        .scanner-input-group input {
-            background: transparent; border: none; color: #fff; padding: 10px 15px; width: 100%; outline: none; font-size: 13px;
-        }
-        .scanner-input-group button {
-            background: var(--accent-glow); border: none; color: #000; padding: 0 20px; font-weight: 800; cursor: pointer;
         }
 
-        /* Header Card */
-        .header-grid {
-            display: grid;
-            grid-template-columns: 240px 1fr 200px;
-            padding: 15px 24px;
-            align-items: center;
-        }
-        .brand-box img { height: 35px; filter: brightness(0) invert(1); }
-        .title-box { text-align: center; }
-        .title-box h1 { margin: 0; font-size: 18px; font-weight: 800; background: linear-gradient(to right, #fff, var(--accent-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .meta-strip {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
-            padding: 12px 24px;
-            background: rgba(0,0,0,0.2);
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
-        }
-        .meta-cell { border-left: 1px solid rgba(255,255,255,0.1); padding-left: 10px; }
-        .meta-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; }
-        .meta-val { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* Workspace Grid */
-        .workspace {
-            display: grid;
-            grid-template-columns: 1.4fr 1.6fr;
-            gap: 16px;
-        }
-
-        /* Measurement Card Modernized */
-        .mc-card { margin-bottom: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-        .mc-header {
-            background: rgba(255,255,255,0.03);
-            padding: 8px 16px;
+        /* Header / Meta Bar */
+        .meta-header {
+            background: rgba(0,0,0,0.4);
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .mc-title { font-size: 12px; font-weight: 800; color: var(--accent-glow); }
-        .mc-standard { font-size: 11px; background: rgba(56, 189, 248, 0.1); padding: 2px 10px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2); }
 
-        .mc-grid {
-            display: grid;
-            grid-template-columns: 60px 40px repeat(5, 1fr);
-            gap: 1px;
-            background: rgba(255,255,255,0.05);
+        .meta-info {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+            color: var(--text-dim);
         }
-        .mc-h { background: rgba(0,0,0,0.2); font-size: 8px; color: var(--text-dim); padding: 4px; text-align: center; }
-        .mc-cell { background: rgba(15,23,42,0.4); display: flex; align-items: center; justify-content: center; }
-        .mc-scale { font-size: 10px; font-weight: 700; color: #60a5fa; }
-        .mc-initial { font-size: 9px; color: #94a3b8; }
-        .mc-input {
-            width: 100%; border: none; background: transparent; color: #fff; text-align: center; font-size: 13px; font-weight: 700; padding: 10px 0; outline: none;
-        }
-        .mc-input:focus { background: rgba(56, 189, 248, 0.1); }
 
-        /* Production Stream (Right) */
-        .stream-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .stream-table th { 
-            background: rgba(0,0,0,0.2); color: var(--text-dim); padding: 10px 4px; font-size: 9px; 
-            text-transform: uppercase; border-bottom: 1px solid var(--glass-border); 
+        .meta-info b { color: var(--accent-glow); }
+
+        /* Left Section: Quality (Jam/Pukul) */
+        .quality-matrix { flex: 1; overflow-y: auto; padding: 0px; }
+        
+        .q-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .q-table th { background: rgba(0,0,0,0.3); padding: 8px; font-size: 9px; color: var(--text-dim); border: 1px solid var(--glass-border); text-align: center; }
+        .q-table td { border: 1px solid var(--glass-border); padding: 0; }
+        
+        .q-row-label { background: rgba(56, 189, 248, 0.05); font-size: 10px; font-weight: 800; color: var(--accent-glow); padding: 8px !important; }
+        .q-row-std { font-size: 9px; font-weight: 700; color: var(--accent-warning); text-align: center; padding: 4px !important; }
+        
+        .q-input {
+            width: 100%; height: 40px; border: none; background: transparent; color: #fff; text-align: center; font-family: monospace; font-weight: 800; font-size: 14px; outline: none;
         }
-        .stream-row { border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.2s; }
-        .stream-row:hover { background: rgba(255,255,255,0.02); }
-        .stream-row td { padding: 4px; }
-        .stream-input {
-            width: 100%; background: transparent; border: none; color: #fff; font-size: 12px; outline: none; padding: 4px 0;
+        .q-input:focus { background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-glow); }
+
+        /* Right Section: Production */
+        .production-stream { flex: 1; overflow-y: auto; padding: 0; }
+        
+        .p-table { width: 100%; border-collapse: collapse; }
+        .p-table th { background: rgba(0,0,0,0.3); padding: 10px 4px; font-size: 9px; color: var(--text-dim); border: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 10; }
+        .p-table td { border: 1px solid var(--glass-border); padding: 0; }
+        
+        .p-input {
+            width: 100%; border: none; background: transparent; color: #fff; padding: 10px 6px; font-size: 12px; outline: none; text-align: center;
+        }
+        .p-input:focus { background: rgba(0,0,0,0.3); }
+
+
+
+        /* New Report Header Styles */
+        .report-header-box {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .logo-v {
+            background: var(--accent-glow);
+            color: #000;
+            font-weight: 900;
+            font-size: 24px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+        }
+
+        .signature-box {
+            width: 250px;
+        }
+
+        .sig-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .sig-table th {
+            background: #2563eb;
+            color: white;
+            font-size: 8px;
+            padding: 4px;
             text-align: center;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            text-transform: uppercase;
         }
-        .stream-input::placeholder { color: rgba(255,255,255,0.1); }
 
-        .btn-sync {
-            background: linear-gradient(135deg, #0ea5e9, #2563eb);
-            color: #fff; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px;
-            font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        .sig-table td {
+            height: 25px;
+            background: rgba(0,0,0,0.3);
+            text-align: center;
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-dim);
+            border-right: 1px solid rgba(56, 189, 248, 0.2);
+            border-top: 1px solid rgba(56, 189, 248, 0.2);
         }
-        .btn-sync:hover { transform: scale(1.02); filter: brightness(1.1); }
 
-        @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--accent-glow);
+            text-transform: uppercase;
+        }
+
+        .meta-item { flex: 1; }
+        .meta-item b {
+            color: white;
+            margin-left: 5px;
+        }
+
+        /* Jam Selector Navigation */
+        .jam-nav {
+            display: flex; gap: 12px; margin-bottom: 30px; justify-content: center;
+        }
+        .jam-btn {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: var(--text-dim);
+            padding: 12px 25px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 800;
+            transition: all 0.4s;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            position: relative;
+            min-width: 90px;
+        }
+        .jam-btn:hover { border-color: var(--accent-glow); color: #fff; transform: translateY(-3px); }
+        .jam-btn.active {
+            background: var(--accent-glow);
+            color: #000;
+            border-color: transparent;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Delete Button on Slot */
+        .slot-delete-btn {
+            position: absolute; top: -8px; right: -8px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #ef4444; color: #fff; border: 2px solid #0f172a;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; opacity: 0; transition: all 0.3s;
+            z-index: 10;
+        }
+        .jam-btn:hover .slot-delete-btn { opacity: 1; transform: scale(1.1); }
+        .slot-delete-btn:hover { background: #b91c1c; }
+
+        .add-btn { background: rgba(56, 189, 248, 0.1); border-style: dashed; }
+
+        /* Futuristic Card Enhancement */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 25px;
+        }
+        .dimensi-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            border-radius: 0;
+            padding: 24px;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        /* Compact Technical HUD Ribbon */
+        .tech-header-ribbon {
+            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(56, 189, 248, 0.1);
+            border-left: 5px solid var(--accent-glow); border-radius: 0;
+            display: flex; align-items: stretch; max-width: 1000px; margin: 0 auto 15px auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(15px);
+        }
+        
+        .header-cluster {
+            flex: 1; padding: 8px 15px; display: flex; flex-direction: column; gap: 2px;
+            border-right: 1px solid rgba(255,255,255,0.05); position: relative;
+        }
+        .header-cluster:last-child { border-right: none; }
+
+        /* Responsive Tablet Grid (The FIX) */
+        @@media (max-width: 992px) {
+            .tech-header-ribbon { 
+                display: grid; grid-template-columns: 1fr 1fr; 
+                max-width: 100%; margin: 0 0 15px 0; 
+            }
+            .header-cluster { border-right: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .header-cluster:nth-child(even) { border-right: none; }
+            .header-cluster:nth-child(3), .header-cluster:nth-child(4) { border-bottom: none; }
+            .m-val { font-size: 11px; }
+            .m-lbl { font-size: 7.5px; }
+        }
+        
+        .m-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; font-weight: 900; letter-spacing: 1.5px; }
+        .m-row { display: flex; align-items: baseline; gap: 8px; margin-top: 1px; }
+        .m-val { font-size: 12px; color: #fff; font-weight: 800; letter-spacing: 0.5px; white-space: nowrap; }
+        .m-accent { color: var(--accent-glow); text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+        /* Item List Scanner Bar (Sharp) */
+        .search-action-bar {
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            max-width: 1000px; margin: 0 auto 15px auto;
+        }
+        .search-input-group {
+            flex: 1; display: flex; align-items: stretch; background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.2); border-left: 5px solid var(--accent-glow);
+            border-radius: 0; overflow: hidden;
+        }
+        .search-icon { padding: 10px 15px; color: var(--accent-glow); font-size: 18px; display: flex; align-items: center; }
+        .search-input-group input {
+            flex: 1; background: transparent; border: none; outline: none; padding: 10px 15px;
+            color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 1px;
+        }
+        .search-btn {
+            background: var(--accent-glow); color: #000; border: none; padding: 0 25px;
+            font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.3s;
+            border-radius: 0;
+        }
+        .search-btn:hover { background: #fff; box-shadow: 0 0 15px var(--accent-glow); }
+        
+        .status-indicator { display: flex; align-items: center; gap: 10px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px #fbbf24; animation: pulse 1.5s infinite; }
+        .status-text { font-size: 9px; color: #fbbf24; font-weight: 800; letter-spacing: 1px; }
+
+        @@keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+
+        .m-sub { font-size: 9px; color: rgba(255,255,255,0.4); font-weight: 600; text-transform: uppercase; }
+        .m-icon { font-size: 10px; color: var(--accent-glow); opacity: 0.5; margin-right: 5px; }
+        
+        .dimensi-card:hover { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); }
+
+        .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-point { font-weight: 800; font-size: 14px; color: #fff; letter-spacing: 2px; opacity: 0.95; }
+        .card-icon { font-size: 20px; background: linear-gradient(135deg, var(--accent-glow), #0ea5e9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Centered Standard Section - Clean Version */
+        .std-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin-bottom: 20px; background: transparent; border: none;
+        }
+        .std-label { 
+            font-size: 8px; color: var(--text-dim); font-weight: 900; 
+            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; 
+            opacity: 0.6;
+        }
+        .std-value { 
+            font-size: 14px; color: var(--accent-glow); font-weight: 900; 
+            letter-spacing: 1px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        /* Update Old Badge CSS */
+        .card-std-badge { display: none; } /* Replaced by std-container */
+
+        /* New Pill Limit Tags */
+        .limit-row { display: flex; gap: 12px; margin-bottom: 25px; }
+        .limit-pill { 
+            flex: 1; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .limit-label { font-size: 9px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px; }
+        .limit-val { font-size: 14px; font-weight: 900; }
+        .limit-val.min { color: #34d399; }
+        .limit-val.max { color: #fbbf24; }
+
+        .card-std-badge { 
+            font-size: 9px; color: var(--accent-glow); opacity: 0.7;
+            padding: 2px 0; font-weight: 900; letter-spacing: 1px; display: block; margin-bottom: 5px;
+        }
+
+        /* Recessed Input Styling */
+        .input-group-custom { display: flex; flex-direction: column; gap: 12px; }
+        .input-group-custom label { font-size: 10px; color: var(--text-dim); font-weight: 900; letter-spacing: 1.5px; opacity: 0.6; text-align: center; }
+        
+        .c-input {
+            background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px; color: #fff; padding: 20px; font-size: 32px; font-weight: 900;
+            text-align: center; outline: none; width: 100%; transition: all 0.3s;
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.6);
+            font-family: 'Inter', sans-serif;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .c-input:focus { border-color: var(--accent-glow); background: rgba(56, 189, 248, 0.05); box-shadow: 0 0 20px rgba(56, 189, 248, 0.1), inset 0 4px 20px rgba(0,0,0,0.7); }
+
+        /* Status Effects */
+        .status-badge {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
+            background: var(--accent-glow); opacity: 0.2; border-radius: 0 0 30px 30px; transition: all 0.4s;
+        }
+        .status-ok { border-color: rgba(16, 185, 129, 0.3); }
+        .status-ok .status-badge { opacity: 1; background: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .status-ok .c-input { color: #10b981; text-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        
+        .status-ng { border-color: rgba(239, 68, 68, 0.3); }
+        .status-ng .status-badge { opacity: 1; background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+        .status-ng .c-input { color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.3); animation: shake 0.5s ease-in-out; }
+
+        @@keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Visual Check Robust Styles */
+        .visual-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px;
+        }
+        .visual-item {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px; border-radius: 20px; text-align: center;
+            transition: all 0.3s;
+        }
+        .visual-item:hover { background: rgba(56, 189, 248, 0.05); border-color: rgba(56, 189, 248, 0.2); }
+        .visual-label { 
+            font-size: 10px; color: var(--text-dim); font-weight: 900; 
+            letter-spacing: 1.5px; display: block; margin-bottom: 12px;
+        }
+        .segmented-control {
+            display: flex; background: rgba(0,0,0,0.4); 
+            padding: 5px; border-radius: 12px; gap: 5px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .seg-btn {
+            flex: 1; border: none; background: transparent; color: var(--text-dim);
+            font-size: 11px; font-weight: 900; padding: 10px 0;
+            border-radius: 8px; cursor: pointer; transition: all 0.3s;
+        }
+        .seg-btn.active-ok { background: #10b981; color: #000; box-shadow: 0 4px 10px rgba(16,185,129,0.3); }
+        .seg-btn.active-ng { background: #ef4444; color: #fff; box-shadow: 0 4px 10px rgba(239,68,68,0.3); }
+
+        /* Production Data (Gbr 2) Integration - Sharp & Compact */
+        /* Production Metrics (Inspired by Image) */
+        .metrics-layout { display: grid; grid-template-columns: 1fr 1fr 1fr 280px; gap: 15px; margin-top: 30px; }
+        
+        .metric-card {
+            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(56, 189, 248, 0.1);
+            padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 0; min-height: 140px; text-align: center;
+        }
+        .metric-card.plan { border-top: 4px solid var(--text-dim); }
+        .metric-card.actual { border-top: 4px solid var(--accent-glow); }
+        .metric-card.achievement { border-top: 4px solid var(--accent-success); }
+
+        .metric-label { font-size: 10px; font-weight: 900; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
+        .metric-val { font-size: 38px; font-weight: 900; color: #fff; line-height: 1; }
+        .metric-sub { font-size: 10px; color: var(--text-dim); font-weight: 700; margin-top: 5px; }
+
+        .achievement-val { color: var(--accent-success); text-shadow: 0 0 15px rgba(74, 222, 128, 0.3); }
+
+        .big-submit-tile {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff; border: none; padding: 20px; border-radius: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 15px; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+        }
+        .big-submit-tile:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4); }
+        .big-submit-tile i { font-size: 40px; }
+        .submit-text-group { text-align: center; }
+        .st-main { font-size: 18px; font-weight: 900; letter-spacing: 2px; display: block; }
+        .st-sub { font-size: 9px; opacity: 0.8; font-weight: 600; display: block; margin-top: 5px; }
+
+        /* Production Analytics Dashboard (Gbr 4 Style) */
+        .analytics-container {
+            display: grid; grid-template-columns: 1fr 1fr 250px; gap: 20px;
+            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(56, 189, 248, 0.1);
+            padding: 25px; margin-top: 30px; backdrop-filter: blur(15px);
+        }
+        .metric-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .m-box { 
+            background: rgba(0,0,0,0.3); border-left: 3px solid var(--accent-glow);
+            padding: 12px 18px; border-radius: 0;
+        }
+        .m-box.success { border-left-color: var(--accent-success); }
+        .m-box.warning { border-left-color: var(--accent-warning); }
+
+        .m-tag { font-size: 8px; color: var(--text-dim); font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; }
+        .m-val-big { font-size: 24px; font-weight: 900; color: #fff; display: block; margin-top: 2px; }
+        .m-unit { font-size: 9px; opacity: 0.6; margin-left: 5px; }
+
+        .timing-section { 
+            display: flex; flex-direction: column; gap: 10px; border-left: 1px solid rgba(255,255,255,0.05); padding-left: 20px;
+        }
+        .time-box { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px 15px; }
+        .time-label { font-size: 9px; font-weight: 800; color: var(--text-dim); }
+        .time-val { font-size: 14px; font-weight: 900; color: var(--accent-glow); font-family: monospace; }
+
+        .achievement-tile {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; text-align: center;
+        }
+        .ach-pct { font-size: 42px; font-weight: 900; color: var(--accent-success); text-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+        .ach-label { font-size: 10px; font-weight: 900; color: #fff; letter-spacing: 2px; margin-top: 5px; }
+
+        .footer-note-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; margin-top: 15px; }
+        .remarks-area { background: rgba(0,0,0,0.3); padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        .f-textarea {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 0; padding: 15px; color: #fff; width: 100%;
+            font-size: 13px; outline: none; height: 100px; resize: none;
+        }
+
+        .tracking-widest { letter-spacing: 0.2em; }
+        .fw-black { font-weight: 900; }
+
+        /* ===== PRODUCTION DATA SUMMARY ===== */
+        .section-title {
+            font-size: 11px; font-weight: 900; color: var(--accent-glow);
+            letter-spacing: 2px; display: flex; align-items: center; gap: 10px;
+            margin: 25px 0 15px 0; padding: 10px 15px;
+            border-left: 4px solid var(--accent-glow);
+            background: rgba(56, 189, 248, 0.05);
+            text-transform: uppercase;
+        }
+        .prod-data-container {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 0; padding: 20px;
+            backdrop-filter: blur(15px);
+        }
+        .prod-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        .field-column { display: flex; flex-direction: column; gap: 12px; }
+        .field-box { display: flex; flex-direction: column; gap: 0; }
+        .field-label {
+            background: rgba(56, 189, 248, 0.08); color: var(--accent-glow);
+            padding: 6px 12px; font-size: 9px; font-weight: 900;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            border-left: 3px solid var(--accent-glow);
+        }
+        .field-input-wrap {
+            background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06);
+            border-top: none; padding: 10px 14px;
+        }
+        .f-input {
+            background: transparent; border: none; color: #fff; width: 100%;
+            font-size: 14px; font-weight: 700; outline: none; letter-spacing: 0.5px;
+        }
+        .qty-row { display: flex; gap: 8px; }
+        .qty-btn {
+            flex: 1; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03); color: var(--text-dim);
+            font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            border-radius: 0;
+        }
+        .qty-btn:hover { border-color: var(--accent-glow); color: #fff; }
+        .qty-btn.active-ok { border-color: #10b981; color: #10b981; background: rgba(16,185,129,0.08); }
+        .qty-btn.active-ng { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
     </style>
 }
 
-<div class="hub-container">
-    <!-- Top Action Bar -->
-    <div class="glass-panel action-bar no-print">
-        <div style="display:flex; align-items:center; gap:10px">
-            <i class="bi bi-radar text-info fs-5"></i>
-            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; color: var(--accent-glow)">SYSTEM ACTIVE</span>
+
+
+<!-- NEW REPORT HEADER (AS PER IMAGE) -->
+<div class="app-container pt-3">
+    <!-- Main Header -->
+    <div class="text-center mb-3 animate__animated animate__fadeInDown">
+        <h2 class="display-6 fw-bold tracking-widest text-uppercase" style="letter-spacing: 6px;">EXTRUDER PRODUCTION REPORT</h2>
+        <div class="text-primary fw-bold" style="font-size: 13px; letter-spacing: 4px;">( DIMENSION )</div>
+    </div>
+
+    <!-- Item List Scanner Action Bar -->
+    <div class="search-action-bar animate__animated animate__fadeInDown mb-3">
+        <div class="search-input-group">
+            <span class="search-icon"><i class="bi bi-qr-code-scan"></i></span>
+            <input type="text" id="main-item-search" placeholder="SCAN OR TYPE ITEM LIST CODE..." autocomplete="off" onkeypress="if(event.key === 'Enter') loadMaster()">
+            <button class="search-btn" id="btn-master-search" onclick="loadMaster()"><i class="bi bi-search"></i> SEARCH</button>
         </div>
-        <div class="scanner-input-group">
-            <input type="text" id="spsLookup" placeholder="Scan Barcode / QR Extruder..." autofocus />
-            <button onclick="lookupSps()">LOAD</button>
-        </div>
-        <div style="flex:1; text-align:right" id="scanStatus" class="d-none">
-            <span class="badge rounded-pill bg-info text-dark">SYNCING DATA...</span>
+        <div class="status-indicator">
+            <span id="scan-status-dot" class="status-dot"></span>
+            <span id="scan-status-text" class="status-text">WAITING FOR ITEM SCAN</span>
         </div>
     </div>
 
-    <!-- Hub Header Card -->
-    <div class="glass-panel">
-        <div class="header-grid">
-            <div class="brand-box"><img src="/images/velasto-logo-e1700056160273.png" alt="Velasto" /></div>
-            <div class="title-box">
-                <h1>HUB PRODUCTION REPORT</h1>
-                <div style="font-size: 9px; color: var(--text-dim); text-transform: uppercase">Operational Tracking Station - Extruder</div>
-            </div>
-            <div style="text-align: right">
-                <div style="font-size: 12px; font-weight: 800; color: var(--accent-glow)" id="docNo">@Model.DocumentNumber</div>
-                <div style="font-size: 9px; color: var(--text-dim)" id="printedAt">TIME: @DateTime.Now.ToString("HH:mm")</div>
+    <!-- Unified Technical HUD Dashboard -->
+    <div class="tech-header-ribbon animate__animated animate__fadeIn">
+        <!-- LINE CLUSTER -->
+        <div class="header-cluster" style="border-left: 5px solid var(--accent-glow);">
+            <span class="m-lbl"><i class="bi bi-gear-fill m-icon"></i> PRODUCTION LINE</span>
+            <div class="m-row">
+                <span class="m-val m-accent" id="h-line">DL01 ENGINE</span>
             </div>
         </div>
-        <div class="meta-strip">
-            <div class="meta-cell"><div class="meta-label">Customer</div><div class="meta-val" id="customer">@Model.CustomerName</div></div>
-            <div class="meta-cell"><div class="meta-label">Revision No</div><div class="meta-val" id="revNo">6</div></div>
-            <div class="meta-cell"><div class="meta-label">Production Date</div><div class="meta-val">@Model.ProductionDate.ToString("dd MMM yyyy")</div></div>
-            <div class="meta-cell"><div class="meta-label">Active Shift</div><div class="meta-val">@Model.Shift</div></div>
-            <div class="meta-cell"><div class="meta-label">Hose Type</div><div class="meta-val" id="hoseTypeDisp">@Model.HoseType</div></div>
-            <div class="meta-cell"><div class="meta-label">Operator</div><div class="meta-val">@User.Identity?.Name</div></div>
-        </div>
-    </div>
-
-    <!-- Workspace -->
-    <div class="workspace">
-        <!-- Measurement Hub -->
-        <div id="measurementHub">
-            <div class="glass-panel" style="padding: 40px; text-align: center; color: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.1)">
-                <i class="bi bi-shield-lock-fill fs-1 d-block mb-2"></i>
-                <span style="font-size: 11px; text-transform: uppercase; font-weight: 800">AWAITING UNIT SCAN...</span>
+        <!-- ADMIN CLUSTER -->
+        <div class="header-cluster">
+            <span class="m-lbl"><i class="bi bi-tag-fill m-icon"></i> DOC NO.</span>
+            <div class="m-row">
+                <span class="m-val" id="h-doc">@(string.IsNullOrEmpty(Model.DocumentNumber) ? "---" : Model.DocumentNumber)</span>
+                <span class="m-sub">REV.0</span>
             </div>
         </div>
-
-        <!-- Production Stream -->
-        <div class="glass-panel" style="padding: 0; overflow: hidden;">
-            <div style="background: rgba(255,255,255,0.03); padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center">
-                <span style="font-weight: 800; font-size: 13px">PRODUCTION STREAM</span>
-                <span id="bypassDisp" style="font-size:10px; color:var(--accent-glow)">ByPass: -</span>
+        <!-- TIMING CLUSTER -->
+        <div class="header-cluster">
+            <span class="m-lbl"><i class="bi bi-clock-fill m-icon"></i> TIME / SHIFT</span>
+            <div class="m-row">
+                <span class="m-val">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
+                <span class="m-val m-accent" id="h-shift">@(Model.Shift ?? "---")</span>
             </div>
-            <div style="max-height: 700px; overflow-y: auto;">
-                <table class="stream-table">
-                    <thead>
-                        <tr>
-                            <th style="width:110px">Part Number</th>
-                            <th style="width:50px">Vin</th>
-                            <th style="width:40px">Std P</th>
-                            <th style="width:40px">Act P</th>
-                            <th style="width:40px">Tgt</th>
-                            <th style="width:30px">OK</th>
-                            <th style="width:30px">NG D</th>
-                            <th style="width:30px">NG V</th>
-                            <th>Remark</th>
-                        </tr>
-                    </thead>
-                    <tbody id="prodTBody">
-                        @for(int i=0; i<24; i++) {
-                            <tr class="stream-row">
-                                <td><input type="text" id="partNum_@i" class="stream-input" placeholder="Part#" /></td>
-                                <td><input type="text" id="vin_@i" class="stream-input" placeholder="..." /></td>
-                                <td><input type="text" id="stdP_@i" class="stream-input" /></td>
-                                <td><input type="text" id="actP_@i" class="stream-input" /></td>
-                                <td><input type="text" id="tgt_@i" class="stream-input" /></td>
-                                <td><input type="text" id="ok_@i" class="stream-input" style="color:var(--accent-success)" /></td>
-                                <td><input type="text" id="ngD_@i" class="stream-input" style="color:var(--accent-danger)" /></td>
-                                <td><input type="text" id="ngV_@i" class="stream-input" style="color:var(--accent-danger)" /></td>
-                                <td><input type="text" id="rem_@i" class="stream-input" style="text-align:left; padding-left:5px" /></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+        </div>
+        <!-- PRODUCT CLUSTER -->
+        <div class="header-cluster">
+            <span class="m-lbl"><i class="bi bi-cpu-fill m-icon"></i> CUSTOMER / SPEC</span>
+            <div class="m-row">
+                <span class="m-val" id="h-customer">---</span>
+                <span class="m-sub" id="h-hose">---</span>
             </div>
-            <div style="padding: 15px;">
-                <button class="btn-sync" onclick="saveReport()">SYNC & FINALIZE PRODUCTION</button>
+        </div>
+        <!-- PIC CLUSTER -->
+        <div class="header-cluster">
+            <span class="m-lbl"><i class="bi bi-person-fill m-icon"></i> OPERATOR PIC</span>
+            <div class="m-row">
+                <span class="m-val" id="h-pic-1">PIC 1: ---</span>
+                <span class="m-val" id="h-pic-2">PIC 2: ---</span>
             </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        const measurementHub = document.getElementById('measurementHub');
-        const spsLookup = document.getElementById('spsLookup');
+<!-- SMART DIMENSION HUB -->
+<div class="p-3">
+    <!-- DIMENSION SECTION -->
+    <div class="section-title">
+        <i class="bi bi-rulers"></i>
+        DIMENSION INSPECTION
+    </div>
 
-        async function lookupSps() {
-            const val = spsLookup.value;
-            if(!val) return;
-            document.getElementById('scanStatus').classList.remove('d-none');
-            try {
-                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(val)}`);
-                const result = await res.json();
-                document.getElementById('scanStatus').classList.add('d-none');
-                if(result.success) {
-                    populate(result.data);
-                    spsLookup.value = "";
-                } else alert(result.message);
-            } catch(e) { console.error(e); }
+    <!-- Dynamic Timeline Navigator -->
+    <div class="jam-nav" id="timelineContainer">
+        <!-- Buttons will be generated here -->
+        <button class="jam-btn add-btn" onclick="addNewSlot()">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="card-grid" id="cardContainer">
+        <!-- Inner Diameter Card -->
+        <div class="dimensi-card" id="card-inner-dia">
+            <div class="card-header-flex">
+                <div class="card-point">INNER DIAMETER</div>
+                <i class="bi bi-circle card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-inner-dia">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-inner-dia-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-inner-dia-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <input type="number" class="c-input" id="val-inner-dia" step="0.01" oninput="validateCard('inner-dia')" placeholder="0.00" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Inner Thick X Card -->
+        <div class="dimensi-card" id="card-inner-tx">
+            <div class="card-header-flex">
+                <div class="card-point">INNER THICK (X)</div>
+                <i class="bi bi-arrows-expand card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-inner-tx">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-inner-tx-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-inner-tx-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <input type="number" class="c-input" id="val-inner-tx" step="0.01" oninput="validateCard('inner-tx')" placeholder="0.00" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Inner Thick Y Card -->
+        <div class="dimensi-card" id="card-inner-ty">
+            <div class="card-header-flex">
+                <div class="card-point">INNER THICK (Y)</div>
+                <i class="bi bi-arrows-vertical card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-inner-ty">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-inner-ty-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-inner-ty-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <input type="number" class="c-input" id="val-inner-ty" step="0.01" oninput="validateCard('inner-ty')" placeholder="0.00" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Total Thick X Card -->
+        <div class="dimensi-card" id="card-total-tx">
+            <div class="card-header-flex">
+                <div class="card-point">TOTAL THICK (X)</div>
+                <i class="bi bi-arrows-expand card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-total-tx">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-total-tx-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-total-tx-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <input type="number" class="c-input" id="val-total-tx" step="0.01" oninput="validateCard('total-tx')" placeholder="0.00" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Total Thick Y Card -->
+        <div class="dimensi-card" id="card-total-ty">
+            <div class="card-header-flex">
+                <div class="card-point">TOTAL THICK (Y)</div>
+                <i class="bi bi-arrows-vertical card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-total-ty">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-total-ty-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-total-ty-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <input type="number" class="c-input" id="val-total-ty" step="0.01" oninput="validateCard('total-ty')" placeholder="0.00" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Spiral Pitch Card -->
+        <div class="dimensi-card" id="card-spiral">
+            <div class="card-header-flex">
+                <div class="card-point">SPIRAL PITCH</div>
+                <i class="bi bi-hr card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-spiral">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-spiral-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-spiral-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL PITCH VALUE</label>
+                <input type="number" class="c-input" id="val-spiral" step="1" oninput="validateCard('spiral')" placeholder="0" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- VISUAL CHECK CARD -->
+        <div class="dimensi-card" id="card-visual">
+            <div class="card-header-flex">
+                <div class="card-point">VISUAL CHECK</div>
+                <i class="bi bi-eye-fill card-icon"></i>
+            </div>
+            <div class="visual-grid">
+                <div class="visual-item">
+                    <i class="bi bi-eraser-fill text-primary mb-1"></i>
+                    <span class="visual-label">BURRY</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-burry-ok" onclick="toggleVisual('burry', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-burry-ng" onclick="toggleVisual('burry', 'ng')">NG</button>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <i class="bi bi-border-width text-primary mb-1"></i>
+                    <span class="visual-label">LINE</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-line-ok" onclick="toggleVisual('line', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-line-ng" onclick="toggleVisual('line', 'ng')">NG</button>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <i class="bi bi-droplet-fill text-primary mb-1"></i>
+                    <span class="visual-label">BUBBLE</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-bubble-ok" onclick="toggleVisual('bubble', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-bubble-ng" onclick="toggleVisual('bubble', 'ng')">NG</button>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <i class="bi bi-scissors text-primary mb-1"></i>
+                    <span class="visual-label">SCRATCH</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-scratch-ok" onclick="toggleVisual('scratch', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-scratch-ng" onclick="toggleVisual('scratch', 'ng')">NG</button>
+                    </div>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+    </div> <!-- END CARD GRID -->
+
+    <!-- PRODUCTION DATA SECTION -->
+    <div class="section-title">
+        <i class="bi bi-clipboard2-data-fill"></i> PRODUCTION DATA Summary
+    </div>
+    <div class="prod-data-container">
+        <div class="prod-grid">
+            <div class="field-column">
+                <div class="field-box">
+                    <span class="field-label">PART NUMBER</span>
+                    <div class="field-input-wrap"><div class="f-input" id="disp-part-no">-</div></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">STD PNJG</span>
+                    <div class="field-input-wrap"><div class="f-input" id="disp-std-pnjg">-</div></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">QTY TARGET</span>
+                    <div class="field-input-wrap"><div class="f-input" id="disp-qty-target">0</div></div>
+                </div>
+            </div>
+            <div class="field-column">
+                <div class="field-box">
+                    <span class="field-label">VIN KODE</span>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="val-vin-kode" placeholder="Enter VIN Code"></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">ACT PNJG</span>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="val-act-pnjg" placeholder="Enter length"></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">QTY ACTUAL STATUS</span>
+                    <div class="qty-row">
+                        <button type="button" class="qty-btn" id="qty-ok" onclick="setQtyStatus('ok')"><i class="bi bi-check-circle-fill"></i> ALL OK</button>
+                        <button type="button" class="qty-btn" id="qty-ng" onclick="setQtyStatus('ng')"><i class="bi bi-x-circle-fill"></i> CONTAINS NG</button>
+                    </div>
+                    
+                    <div id="qtyContentArea" style="margin-top: 15px; min-height: 50px;">
+                        <!-- OK PANEL: Muncul 1 Input di Tengah -->
+                        <div id="okPanel" style="display: none; text-align: center;">
+                            <span style="font-size: 8px; color: #10b981; font-weight: 800; display: block; margin-bottom: 5px;">TOTAL QTY OK</span>
+                            <div class="field-input-wrap" style="max-width: 250px; margin: 0 auto; border-color: rgba(16, 185, 129, 0.4);">
+                                <input type="number" class="f-input" id="val-qty-ok" value="0">
+                            </div>
+                        </div>
+
+                        <!-- NG PANEL: Muncul 2 Input Berjejer -->
+                        <div id="ngPanel" style="display: none; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG DIMENSI</span>
+                                <div class="field-input-wrap" style="border-color: #ef4444;">
+                                    <input type="number" class="f-input" id="val-ng-dimensi" value="0">
+                                </div>
+                            </div>
+                            <div>
+                                <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG VISUAL</span>
+                                <div class="field-input-wrap" style="border-color: #ef4444;">
+                                    <input type="number" class="f-input" id="val-ng-visual" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Full Width Remark -->
+            <div style="grid-column: span 2; margin-top: 10px;">
+                <span class="field-label">REMARK / NOTES</span>
+                <textarea class="f-textarea" id="val-remark" placeholder="Enter any specific observations or production notes..."></textarea>
+            </div>
+        </div>
+    </div>
+</div> <!-- END SMART DIMENSION HUB --></div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let measurements = [ { time: null, data: {} } ];
+        let currentIndex = 0;
+        let activeStandards = {
+            innerDia: { val: 11.0, tol: 0.2 },
+            innerTx: { val: 1.8, tol: 0.2 },
+            innerTy: { val: 1.8, tol: 0.2 },
+            totalTx: { val: 3.3, tol: 0.2 },
+            totalTy: { val: 3.3, tol: 0.2 },
+            spiral: { val: 38, tol: 5 }
+        };
+
+        window.onload = () => renderTimeline();
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineContainer');
+            const btns = container.querySelectorAll('.jam-btn:not(.add-btn)');
+            btns.forEach(b => b.remove());
+
+            measurements.forEach((slot, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `jam-btn ${idx === currentIndex ? 'active' : ''}`;
+                btn.innerText = slot.time || `P-${idx + 1}`;
+                btn.onclick = () => switchSlot(idx);
+                
+                if (measurements.length > 1) {
+                    const del = document.createElement('div');
+                    del.className = 'slot-delete-btn';
+                    del.innerHTML = '<i class="bi bi-x-lg"></i>';
+                    del.onclick = (e) => { e.stopPropagation(); removeSlot(idx); };
+                    btn.appendChild(del);
+                }
+                container.insertBefore(btn, container.querySelector('.add-btn'));
+            });
         }
 
-        function populate(data) {
-            document.getElementById('hoseTypeDisp').innerText = data.hoseType;
-            document.getElementById('customer').innerText = data.customer || "-";
-            document.getElementById('docNo').innerText = data.docNo || "SOP/DIM/VLT";
-            document.getElementById('revNo').innerText = data.revNo || "R01";
-            document.getElementById('bypassDisp').innerText = `ByPass: ${data.bypass || "-"}`;
-
-            const pSet = [
-                { n: "Inner Diameter", s: data.dimensi, t: data.toleranceInner },
-                { n: "Inner Thickness (x/y)", s: data.tebalInner, t: "0.2" },
-                { n: "Total Thickness (x/y)", s: data.tebalTotal, t: data.toleranceOuter },
-                { n: "Spiral Pitch", s: "32 ± 5", t: "-" },
-                { n: "Visual Appearance", s: "No Burry/Bubble", t: "-" }
-            ];
-
-            let html = "";
-            pSet.forEach(p => {
-                const sv = parseFloat(p.s) || 0;
-                const tv = parseFloat(p.t) || 0;
-                const rowCount = tv > 0 ? 5 : 1;
-
-                html += `<div class="glass-panel mc-card">
-                    <div class="mc-header">
-                        <span class="mc-title">${p.n}</span>
-                        <div class="mc-standard">${p.s}</div>
-                    </div>
-                    <div class="mc-grid">
-                        <div class="mc-h">SCALE</div><div class="mc-h">INIT</div>
-                        <div class="mc-h">SEQ 1</div><div class="mc-h">SEQ 2</div><div class="mc-h">SEQ 3</div><div class="mc-h">SEQ 4</div><div class="mc-h">SEQ 5</div>`;
-
-                for(let r=0; r < rowCount; r++) {
-                    const scale = tv > 0 ? (sv + (tv - (tv * 0.5 * r))).toFixed(2) : "-";
-                    html += `<div class="mc-cell mc-scale">${scale}</div><div class="mc-cell mc-initial">ok</div>`;
-                    for(let t=0; t<5; t++) {
-                        html += `<div class="mc-cell"><input type="text" class="mc-input" placeholder="-" /></div>`;
-                    }
-                }
-                html += `</div></div>`;
+        async function removeSlot(idx) {
+            const result = await Swal.fire({
+                title: 'Hapus Sesi?', text: "Data pada sesi ini akan hilang!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus'
             });
-            measurementHub.innerHTML = html;
-
-            const pnValue = data.itemList || data.excelId || data.hoseType;
-            for(let i=0; i<24; i++) {
-                const pn = document.getElementById(`partNum_${i}`);
-                if(pn) pn.value = pnValue;
+            if (result.isConfirmed) {
+                measurements.splice(idx, 1);
+                if (currentIndex >= measurements.length) currentIndex = measurements.length - 1;
+                loadDataToUI();
+                renderTimeline();
             }
         }
 
-        function saveReport() { alert("Production Data Synchronized!"); window.location.href = "/Dimensi/Index"; }
-        spsLookup.addEventListener('keypress', (e) => { if(e.key === 'Enter') lookupSps(); });
-        window.onload = () => { setTimeout(() => spsLookup.focus(), 500); };
+        function addNewSlot() {
+            saveCurrentData();
+            measurements.push({ time: null, data: {} });
+            switchSlot(measurements.length - 1);
+        }
+
+        function switchSlot(idx) {
+            saveCurrentData();
+            currentIndex = idx;
+            loadDataToUI();
+            renderTimeline();
+        }
+
+        function setQtyStatus(state) {
+            const okBtn = document.getElementById('qty-ok');
+            const ngBtn = document.getElementById('qty-ng');
+            const okPanel = document.getElementById('okPanel');
+            const ngPanel = document.getElementById('ngPanel');
+
+            if(!okBtn || !ngBtn || !okPanel || !ngPanel) return;
+
+            // Reset UI
+            okBtn.classList.remove('active-ok');
+            ngBtn.classList.remove('active-ng');
+            okPanel.style.display = 'none';
+            ngPanel.style.display = 'none';
+
+            if(state === 'ok') {
+                okBtn.classList.add('active-ok');
+                okPanel.style.display = 'block';
+            } else if(state === 'ng') {
+                ngBtn.classList.add('active-ng');
+                ngPanel.style.display = 'grid';
+            }
+            saveCurrentData();
+        }
+
+        function toggleVisual(item, state) {
+            const okBtn = document.getElementById(`v-${item}-ok`);
+            const ngBtn = document.getElementById(`v-${item}-ng`);
+            okBtn.classList.remove('active-ok');
+            ngBtn.classList.remove('active-ng');
+            if (state === 'ok') okBtn.classList.add('active-ok');
+            else ngBtn.classList.add('active-ng');
+            renderVisualStatus();
+            saveCurrentData();
+        }
+
+        function renderVisualStatus() {
+            const card = document.getElementById('card-visual');
+            const items = ['burry', 'line', 'bubble', 'scratch'];
+            let allOK = true, anyNG = false, anySelected = false;
+
+            items.forEach(it => {
+                const isOK = document.getElementById(`v-${it}-ok`).classList.contains('active-ok');
+                const isNG = document.getElementById(`v-${it}-ng`).classList.contains('active-ng');
+                if (isOK || isNG) anySelected = true;
+                if (isNG) anyNG = true;
+                if (!isOK) allOK = false;
+            });
+
+            card.classList.remove('status-ok', 'status-ng');
+            if (anySelected) {
+                if (anyNG) card.classList.add('status-ng');
+                else if (allOK) card.classList.add('status-ok');
+            }
+        }
+
+        function saveCurrentData() {
+            const current = measurements[currentIndex];
+            if(!current) return;
+
+            const vStates = {};
+            ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
+                const ok = document.getElementById(`v-${it}-ok`).classList.contains('active-ok');
+                const ng = document.getElementById(`v-${it}-ng`).classList.contains('active-ng');
+                vStates[it] = ok ? 'ok' : (ng ? 'ng' : null);
+            });
+
+            current.data = {
+                vin: document.getElementById('val-vin-kode').value,
+                actPnjg: document.getElementById('val-act-pnjg').value,
+                remark: document.getElementById('val-remark').value,
+                qtySt: document.getElementById('qty-ok').classList.contains('active-ok') ? 'ok' : (document.getElementById('qty-ng').classList.contains('active-ng') ? 'ng' : null),
+                qtyOk: document.getElementById('val-qty-ok').value,
+                ngDim: document.getElementById('val-ng-dimensi').value,
+                ngVis: document.getElementById('val-ng-visual').value,
+                innerDia: document.getElementById('val-inner-dia').value,
+                innerTx: document.getElementById('val-inner-tx').value,
+                innerTy: document.getElementById('val-inner-ty').value,
+                totalTx: document.getElementById('val-total-tx').value,
+                totalTy: document.getElementById('val-total-ty').value,
+                spiral: document.getElementById('val-spiral').value,
+                visual: vStates
+            };
+
+            const hasVal = Object.values(current.data).some(v => v !== "" && v !== "0" && v !== null && typeof v !== 'object') || 
+                           Object.values(vStates).some(v => v !== null);
+
+            if (hasVal && !current.time) {
+                const now = new Date();
+                current.time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            }
+        }
+
+        function loadDataToUI() {
+            const data = measurements[currentIndex].data || {};
+            
+            document.getElementById('val-vin-kode').value = data.vin || '';
+            document.getElementById('val-act-pnjg').value = data.actPnjg || '';
+            document.getElementById('val-remark').value = data.remark || '';
+            document.getElementById('val-qty-ok').value = data.qtyOk || '0';
+            document.getElementById('val-ng-dimensi').value = data.ngDim || '0';
+            document.getElementById('val-ng-visual').value = data.ngVis || '0';
+            
+            // Set Initial Panel Visibility
+            setQtyStatus(data.qtySt);
+
+            document.getElementById('val-inner-dia').value = data.innerDia || '';
+            document.getElementById('val-inner-tx').value = data.innerTx || '';
+            document.getElementById('val-inner-ty').value = data.innerTy || '';
+            document.getElementById('val-total-tx').value = data.totalTx || '';
+            document.getElementById('val-total-ty').value = data.totalTy || '';
+            document.getElementById('val-spiral').value = data.spiral || '';
+            
+            const v = data.visual || {};
+            ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
+                const bOk = document.getElementById(`v-${it}-ok`), bNg = document.getElementById(`v-${it}-ng`);
+                bOk.classList.remove('active-ok'); bNg.classList.remove('active-ng');
+                if (v[it] === 'ok') bOk.classList.add('active-ok');
+                else if (v[it] === 'ng') bNg.classList.add('active-ng');
+            });
+
+            ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(validateCard);
+            renderVisualStatus();
+        }
+
+        function validateCard(id) {
+            const card = document.getElementById(`card-${id}`), std = activeStandards[id.replace('-','')], inp = document.getElementById(`val-${id}`);
+            if(!card || !std || !inp) return;
+            const val = parseFloat(inp.value);
+            let isOK = !isNaN(val) && (val >= (std.val - std.tol) && val <= (std.val + std.tol));
+            card.classList.remove('status-ok', 'status-ng');
+            if (!isNaN(val)) card.classList.add(isOK ? 'status-ok' : 'status-ng');
+        }
+
+        async function loadMaster() {
+            const code = document.getElementById('main-item-search').value;
+            if(!code) return;
+            Swal.fire({ title: 'FETCHING MASTER...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}`);
+                const data = await res.json();
+                Swal.close();
+                if(data.success) {
+                    const m = data.data;
+                    
+                    // Update Technical Header Ribbon
+                    document.getElementById('h-customer').innerText = m.customer || "GENERAL";
+                    document.getElementById('h-type').innerText = m.panjang ? `${m.panjang} MM` : m.hoseType;
+                    document.getElementById('h-hose').innerText = `HOSE: ${m.hoseType || "---"}`;
+                    document.getElementById('h-wire').innerText = `WIRE: ${m.wireType || m.yarn || "NONE"}`;
+                    document.getElementById('h-bypass').innerText = `BP: ${m.byPass || "2.5 mm"}`;
+                    
+                    // Update Status Indicator
+                    const dot = document.getElementById('scan-status-dot');
+                    const text = document.getElementById('scan-status-text');
+                    dot.style.background = '#10b981'; dot.style.boxShadow = '0 0 10px #10b981';
+                    text.innerText = 'READY TO MEASURE'; text.style.color = '#10b981';
+
+                    const points = [
+                        { id: 'innerDia', val: parseFloat(m.innerTube), tol: parseFloat(m.toleranceInner), el: 'inner-dia' },
+                        { id: 'innerTx', val: parseFloat(m.tebalInner), tol: 0.2, el: 'inner-tx' },
+                        { id: 'totalTx', val: parseFloat(m.tebalTotal), tol: 0.2, el: 'total-tx' }
+                    ];
+                    points.forEach(p => {
+                        activeStandards[p.id] = { val: p.val, tol: p.tol };
+                        document.getElementById(`std-${p.el}`).innerText = `${p.val} ± ${p.tol}`;
+                        document.getElementById(`limit-${p.el}-min`).innerText = (p.val - p.tol).toFixed(2);
+                        document.getElementById(`limit-${p.el}-max`).innerText = (p.val + p.tol).toFixed(2);
+                    });
+                    Swal.fire({ icon: 'success', title: 'MASTER LOADED', timer: 800, showConfirmButton: false });
+                    loadDataToUI();
+                }
+            } catch (e) { }
+        }
+
+        function finalize() {
+            saveCurrentData();
+            Swal.fire({
+                icon: 'question',
+                title: 'SUBMIT REPORT?',
+                text: 'Pastikan semua jam sudah terisi dengan benar.',
+                showCancelButton: true,
+                confirmButtonText: 'YA, SUBMIT',
+                confirmButtonColor: '#10b981'
+            }).then(r => {
+                 if(r.isConfirmed) {
+                     Swal.fire({ icon: 'success', title: 'SYNC SUCCESS!', timer: 2000, showConfirmButton: false });
+                     setTimeout(() => window.location.href = '/Dimensi/Index', 2000);
+                 }
+            });
+        }
     </script>
 }
