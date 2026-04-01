@@ -158,6 +158,7 @@ namespace VelastoProductionSystem.Controllers
                                                         sheetName.Contains("DL3") ? "DL03 engine" : "DL01 engine";
 
                             string currentDateShift = "";
+                            TimeSpan lastEndTime = new TimeSpan(7, 30, 0); 
 
                             for (int r = 0; r < table.Rows.Count; r++)
                             {
@@ -166,9 +167,26 @@ namespace VelastoProductionSystem.Controllers
 
                                 // Deteksi baris Tanggal/Shift (Cari teks SHIFT atau TANGGAL)
                                 if (string.IsNullOrEmpty(col0) && !string.IsNullOrEmpty(col1) && 
-                                   (col1.ToUpper().Contains("SHIFT") || col1.ToUpper().Contains("TANGGAL")))
+                                   (col1.ToUpper().Contains("SHIFT") || col1.ToUpper().Contains("TANGGAL") || col1.ToUpper().Contains("RABU") || col1.ToUpper().Contains("KAMIS") || col1.ToUpper().Contains("SENIN") || col1.ToUpper().Contains("SELASA")))
                                 {
                                     currentDateShift = col1;
+                                    lastEndTime = new TimeSpan(7, 30, 0); // Default
+
+                                    // CEK KE DATABASE: Apakah sudah ada planning untuk tanggal/shift ini?
+                                    // Jika ada, ambil jam selesainya yang paling terakhir.
+                                    var existingRecords = await _context.PlanningMasters
+                                        .Where(x => x.MachineName == currentMachineName && x.DateShiftString == currentDateShift)
+                                        .OrderByDescending(x => x.Id)
+                                        .ToListAsync();
+
+                                    if (existingRecords.Any())
+                                    {
+                                        var lastRec = existingRecords.First();
+                                        if (TimeSpan.TryParse(lastRec.WaktuSelesai, out TimeSpan ts))
+                                        {
+                                            lastEndTime = ts;
+                                        }
+                                    }
                                     continue;
                                 }
 
@@ -178,43 +196,40 @@ namespace VelastoProductionSystem.Controllers
                                     int totalCols = table.Columns.Count;
                                     string GetV(int idx) => (idx >= 0 && idx < totalCols) ? table.Rows[r][idx]?.ToString()?.Trim() ?? "" : "";
 
-                                    var part1 = GetV(1); // Kolom B
-                                    var part2 = GetV(2); // Kolom C
-                                    var comp  = GetV(3); // Kolom D
-                                    var len   = GetV(4); // Kolom E (Gaps/...)
+                                    var partCodeFromExcel = GetV(1); 
+                                    var qtyStr = GetV(5); 
+                                    if (string.IsNullOrEmpty(qtyStr)) qtyStr = GetV(2); 
 
-                                    var qtyStr   = GetV(5); // Kolom F (Plan Target)
-                                    var durStr   = GetV(7); // Kolom H (Durasi)
-                                    var startStr = GetV(8); // Kolom I (Waktu Mulai)
-                                    var endStr   = GetV(9); // Kolom J (Waktu Selesai)
-                                    
-                                    // Kolom-kolom tambahan jika ada (Gbr 12 tidak memperlihatkan CT, tapi kita coba tebak urutannya)
-                                    // CT biasanya ada di antara Target dan Menit
-                                    var ctStr = GetV(6); // Kolom G (Dilewati)
+                                    int? planQty = int.TryParse(qtyStr?.Replace(",", "").Replace(".", ""), out int q) ? q : (int?)null;
+                                    var pm = await _context.PartMasters.FirstOrDefaultAsync(x => x.PartCode == partCodeFromExcel);
 
-                                    // Jika baris data ditemukan tapi TanggalShift belum ketemu, beri placeholder
-                                    if (string.IsNullOrEmpty(currentDateShift))
-                                        currentDateShift = DateTime.Now.ToString("dd MMMM yyyy").ToUpper() + " SHIFT 1";
+                                    // Hitung Menit
+                                    int durationMinutes = (pm != null && planQty.HasValue) 
+                                                ? (int)(planQty.Value * (pm.CtAwal ?? 0) / 60) 
+                                                : (int.TryParse(GetV(7), out int m) ? m : 0);
 
-                                    int? planQty = null;
-                                    if (int.TryParse(qtyStr?.Replace(",", "").Replace(".", ""), out int q)) planQty = q;
-
-                                    // Percantik format jam
-                                    if (DateTime.TryParse(startStr, out DateTime st)) startStr = st.ToString("HH:mm");
-                                    if (DateTime.TryParse(endStr, out DateTime et)) endStr = et.ToString("HH:mm");
+                                    // LOGIKA AUTO-SCHEDULE
+                                    var startTime = lastEndTime;
+                                    var endTime = startTime.Add(TimeSpan.FromMinutes(durationMinutes));
+                                    lastEndTime = endTime; // Untuk baris berikutnya
 
                                     var newPlan = new PlanningMaster
                                     {
                                         MachineName = currentMachineName,
                                         DateShiftString = currentDateShift,
-                                        PartName1 = part1,
-                                        PartName2 = part2,
-                                        Compound = comp,
+                                        CreatedAt = DateTime.Now,
+                                        PartName1 = partCodeFromExcel,
+                                        PartName2 = pm?.PartNumber ?? GetV(2),
                                         PlanTargetPcs = planQty,
-                                        Menit = durStr,
-                                        WaktuMulai = startStr,
-                                        WaktuSelesai = endStr,
-                                        CreatedAt = DateTime.Now
+                                        Compound  = pm?.CompoundCombo ?? GetV(3),
+                                        Length    = pm?.Length ?? GetV(4),
+                                        CtAwal    = pm?.CtAwal?.ToString("G29"),
+                                        CtMinus20 = pm?.CtMinus20?.ToString("G29"),
+                                        NeedKgInner = pm?.NeedKgInner?.ToString("G29"),
+                                        NeedKgOuter = pm?.NeedKgOuter?.ToString("G29"),
+                                        Menit = durationMinutes.ToString(),
+                                        WaktuMulai = startTime.ToString(@"hh\:mm"),
+                                        WaktuSelesai = endTime.ToString(@"hh\:mm")
                                     };
 
                                     _context.PlanningMasters.Add(newPlan);
@@ -226,7 +241,7 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = $"Sukses Scan File! Berhasil mengekstrak {insertedCount} baris jadwal dari Excel ke Database.";
+                TempData["SuccessMessage"] = $"Sukses Scan File! Berhasil mengekstrak {insertedCount} baris dan menjadwalkan jam secara otomatis.";
             }
             catch (Exception ex)
             {
