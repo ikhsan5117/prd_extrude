@@ -456,17 +456,25 @@
                                 <th width="80" style="background:#f0f0f0;" class="text-start ps-2 border-start-0">Content</th>
                                 <th style="background:#f0f0f0;" class="text-center">Ø96 #10</th>
                                 <th colspan="2" style="background:#f0f0f0;" class="text-center border-end-0">Ø96 #40</th>
-                                                   <!-- Tipe Mesh -->
+                            <!-- Tipe Mesh -->
                             <tr>
                                 <td rowspan="2" class="align-middle text-center p-1" style="background-color: #f4f4f4; font-size: 11px;">Tipe Mesh<br/>(Sebelum<br/>Proses)</td>
                                 <td class="text-start ps-2">Inner</td>
-                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshInner10Before ? "Ø96 #10" : "")" placeholder="~" /></td>
-                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshInner40Before ? "Ø96 #40" : "")" placeholder="~" /></td>
+                                <td class="p-0 align-middle text-center">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInner10Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInner40Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Outer</td>
-                                <td class="p-0 align-middle text-center"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshOuter10Before ? "Ø96 #10" : "")" placeholder="~" /></td>
-                                <td colspan="2" class="p-0 align-middle text-center border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.MeshOuter40Before ? "Ø96 #40" : "")" placeholder="~" /></td>
+                                <td class="p-0 align-middle text-center">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuter10Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuter40Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
                             </tr>
 
                             <!-- Mesh Checking -->
