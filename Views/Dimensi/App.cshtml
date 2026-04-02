@@ -282,6 +282,11 @@
             </button>
         </div>
         
+        <!-- History Shortcut -->
+        <a href="/Dimensi/History" class="bt-icon-btn" style="text-decoration: none;" title="View Inspection History">
+            <i class="bi bi-clock-history"></i>
+        </a>
+        
         <!-- Compact Bluetooth Tool Control -->
         <div class="bt-icon-btn" id="toolLinkBtn" onclick="showBluetoothSettings()" title="Bluetooth Tool Settings">
             <i class="bi bi-bluetooth"></i>
@@ -1220,18 +1225,25 @@
                 ].map(p => ({
                     PointName: p.name,
                     TimeSection: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                    Reading1: getV(p.id)
+                    Reading1: (document.getElementById(`val-${p.id}`)?.value || "0"),
+                    Reading2: "", Reading3: "", Reading4: "", Reading5: "",
+                    ScaleValue: 0, Initial: ""
                 }));
 
                 const payload = {
+                    ReportId: 0,
+                    DocumentNumber: document.getElementById('h-doc')?.innerText || "---",
                     HoseType: document.getElementById('h-hose')?.innerText || "",
-                    CustomerName: document.getElementById('h-cust')?.innerText || "",
+                    CustomerName: document.getElementById('h-customer')?.innerText || "",
                     DimensionDisplay: getD('std-pnjg'),
                     VinCode: document.getElementById('val-vin-kode')?.value || "",
-                    ItemList: getD('part-no'),
+                    ActualLength: document.getElementById('val-act-pnjg')?.value || "",
+                    QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || "0"),
                     QtyOk: parseInt(document.getElementById('val-qty-ok')?.value || "0"),
-                    QtyNg: 0, // Calculate if needed
+                    NgDimension: parseInt(document.getElementById('val-ng-dimensi')?.value || "0"),
+                    NgVisual: parseInt(document.getElementById('val-ng-visual')?.value || "0"),
                     Remark: document.getElementById('val-remark')?.value || "",
+                    ByPass: "",
                     DimensionReadings: readings
                 };
 
