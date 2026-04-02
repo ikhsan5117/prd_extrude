@@ -86,17 +86,37 @@
         .t-icon { font-size: 14px; color: #94a3b8; }
         .tool-link-btn.active .t-icon { color: var(--accent-success); }
 
+        /* --- New Modular Dashboard Widgets (Non-Table) --- */
         .tech-header-ribbon {
-            background: linear-gradient(90deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.4) 100%); 
-            border: 1px solid var(--glass-border); border-left: 6px solid var(--accent-glow);
-            display: grid; grid-template-columns: 1.2fr 0.8fr 1.2fr 1fr 1fr;
-            max-width: 1400px; margin: 0 auto 30px auto; width: 100%;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4); backdrop-filter: blur(15px); border-radius: 4px;
-            min-height: 80px; 
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 15px; max-width: 1400px; margin: 0 auto 30px auto; width: 100%;
+            padding: 0 15px;
         }
         .header-cluster {
-            padding: 12px 15px; display: flex; flex-direction: column; justify-content: space-between;
-            border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.3s; overflow: hidden;
+            background: rgba(30, 41, 59, 0.4); border: 1px solid var(--glass-border);
+            border-left: 4px solid var(--accent-glow); border-radius: 8px;
+            padding: 15px 20px; display: flex; flex-direction: column; justify-content: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .header-cluster:hover {
+            transform: translateY(-3px); border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.15);
+            background: rgba(30, 41, 59, 0.6);
+        }
+        
+        /* --- Responsive Cockpit (Tablet Mode) --- */
+        @@media (max-width: 1200px) {
+            .tech-header-ribbon { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .header-cluster { min-height: 80px; padding: 15px; }
+        }
+        
+        @@media (max-width: 900px) {
+            .search-input-group { width: 100%; max-width: none; }
+        }
+
+        @@media (max-width: 600px) {
+            .tech-header-ribbon { grid-template-columns: 1fr; }
         }
         .header-cluster:last-child { border-right: none; }
         .m-lbl { font-size: 8px; color: var(--text-dim); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; opacity: 0.6; white-space: nowrap; }
@@ -160,10 +180,28 @@
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); width: 100%; transition: all 0.3s;
         }
         .status-badge { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.4s; }
-        .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 15px var(--accent-success); }
-        .status-ok .c-input { color: var(--accent-success); }
-        .status-ng .status-badge { background: var(--accent-danger); box-shadow: 0 0 15px var(--accent-danger); }
-        .status-ng .c-input { color: var(--accent-danger); }
+        .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 20px var(--accent-success); }
+        .status-ok .c-input { 
+            color: #10b981 !important; 
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); 
+            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.1);
+        }
+        .status-ng .status-badge { background: #ff4d4d; box-shadow: 0 0 25px #ff4d4d; }
+        .status-ng .c-input { 
+            color: #ff4d4d !important; 
+            border-color: rgba(255, 77, 77, 0.5) !important;
+            text-shadow: 0 0 15px rgba(255, 77, 77, 0.5); 
+            box-shadow: inset 0 0 20px rgba(255, 77, 77, 0.15);
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        @@keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
 
         /* --- Visual Check & Summary --- */
         .visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -243,22 +281,22 @@
             </button>
         </div>
         
-        <!-- Compact Bluetooth Tool Toggle -->
-        <div class="bt-icon-btn" id="toolLinkBtn" onclick="toggleToolLink()" title="Toggle Bluetooth Tool Link">
+        <!-- Compact Bluetooth Tool Control -->
+        <div class="bt-icon-btn" id="toolLinkBtn" onclick="showBluetoothSettings()" title="Bluetooth Tool Settings">
             <i class="bi bi-bluetooth"></i>
         </div>
     </div>
 
     <!-- Unified Technical HUD Dashboard -->
     <div class="tech-header-ribbon animate__animated animate__fadeIn">
-        <!-- LINE CLUSTER -->
+        <!-- CLUSTER 1: LINE -->
         <div class="header-cluster">
             <span class="m-lbl"><i class="bi bi-gear-fill m-icon"></i> PRODUCTION LINE</span>
             <div class="m-row">
                 <span class="m-val m-accent" id="h-line">DL01 ENGINE</span>
             </div>
         </div>
-        <!-- ADMIN CLUSTER -->
+        <!-- CLUSTER 2: DOC -->
         <div class="header-cluster">
             <span class="m-lbl"><i class="bi bi-tag-fill m-icon"></i> DOC NO.</span>
             <div class="m-row">
@@ -266,8 +304,8 @@
                 <span class="m-sub" id="h-rev">REV.0</span>
             </div>
         </div>
-        <!-- TIMING CLUSTER -->
-        <div class="header-cluster" style="min-width: 180px;">
+        <!-- CLUSTER 3: TIMING -->
+        <div class="header-cluster">
             <span class="m-lbl"><i class="bi bi-clock-fill m-icon"></i> TIME / SHIFT</span>
             <div class="m-row">
                 <span class="m-val" style="font-size: 11px;">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
@@ -275,29 +313,17 @@
                 <span class="m-val m-accent" id="h-shift">@(Model.Shift ?? "---")</span>
             </div>
         </div>
-        <!-- PRODUCT CLUSTER -->
+        <!-- CLUSTER 4: PRODUCT -->
         <div class="header-cluster">
             <span class="m-lbl"><i class="bi bi-cpu-fill m-icon"></i> CUSTOMER / SPEC</span>
             <div class="m-row">
-                <span class="m-val" id="h-customer">---</span>
-                <span class="m-divider"></span>
-                <span class="m-val m-accent" id="h-hose">---</span>
+                <div id="h-row-hose" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="m-val" id="h-customer">---</span>
+                    <span class="m-divider"></span>
+                    <span class="m-val m-accent" id="h-hose" style="font-size: 11px;">---</span>
+                </div>
             </div>
         </div>
-        <!-- PIC CLUSTER -->
-        <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-person-fill m-icon"></i> OPERATOR PIC</span>
-            <div class="m-row">
-                <div style="display: flex; align-items: baseline; gap: 4px;">
-                    <span style="font-size: 7px; color: var(--text-dim); font-weight: 900;">1:</span>
-                    <span class="m-val" id="h-pic-1" style="font-size: 11px;">---</span>
-                </div>
-                <span class="m-divider"></span>
-                <div style="display: flex; align-items: baseline; gap: 4px;">
-                    <span style="font-size: 7px; color: var(--text-dim); font-weight: 900;">2:</span>
-                    <span class="m-val" id="h-pic-2" style="font-size: 11px;">---</span>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -543,7 +569,7 @@
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY TARGET</span>
-                    <div class="field-input-wrap"><div class="f-input" id="disp-qty-target">0</div></div>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="disp-qty-target" value="0"></div>
                 </div>
             </div>
             <div class="field-column">
@@ -649,17 +675,128 @@
         }
 
         let isToolConnected = false;
+        let toolPrefix = "";
+        let linkedDeviceName = "NONE / MANUAL";
 
-        function toggleToolLink() {
-            isToolConnected = !isToolConnected;
+        async function scanForTool() {
+            try {
+                if (!navigator.bluetooth) {
+                    Swal.fire({ icon: 'error', title: 'NOT SUPPORTED', text: 'Browser Anda tidak mendukung Web Bluetooth API.' });
+                    return;
+                }
+                
+                const filterVal = document.getElementById('bt-filter-name')?.value.trim();
+                const options = filterVal 
+                    ? { filters: [{ namePrefix: filterVal }] } 
+                    : { acceptAllDevices: true };
+
+                const device = await navigator.bluetooth.requestDevice(options);
+                linkedDeviceName = device.name || "UNNAMED DEVICE";
+                
+                // Update UI in popup if still open
+                const nameEl = document.getElementById('val-device-name');
+                if(nameEl) nameEl.innerText = linkedDeviceName;
+                
+                Swal.fire({ icon: 'success', title: 'TOOL ASSIGNED', text: `${linkedDeviceName} Linked`, timer: 1500, showConfirmButton: false, position: 'top-end', toast: true });
+            } catch (e) {
+                console.error("Discovery Cancelled", e);
+            }
+        }
+
+        async function showBluetoothSettings() {
+            const res = await Swal.fire({
+                title: 'BLUETOOTH TOOL CONTROL',
+                html: `
+                    <div style="text-align: left; background: rgba(15, 23, 42, 0.5); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        
+                        <!-- NEW SEARCH / FILTER AREA -->
+                        <div style="margin-bottom: 20px; background: rgba(30, 41, 59, 0.6); padding: 15px; border-radius: 10px; border-bottom: 3px solid var(--accent-glow);">
+                            <label style="color: #64748b; font-size: 9px; font-weight: 900; display: block; margin-bottom: 8px; letter-spacing: 1px;">SEARCH BY NAME PREFIX</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="bt-filter-name" placeholder="Contoh: SYLVAC / MIT..." 
+                                    style="flex: 1; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; padding: 0 12px; font-size: 11px; font-weight: 700;">
+                                <button onclick="scanForTool()" style="background: var(--accent-glow); border: none; color: #000; padding: 0 15px; border-radius: 4px; font-size: 10px; font-weight: 800; cursor: pointer; transition: 0.3s;">
+                                    <i class="bi bi-search"></i> SCAN
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px; padding: 0 10px;">
+                            <h6 style="color: #64748b; margin: 0 0 5px 0; font-size: 10px; font-weight: 900;">CURRENT ASSIGNED DEVICE</h6>
+                            <div id="device-badge" style="color: #fff; font-size: 15px; font-weight: 800; letter-spacing: 1px;">
+                                <i class="bi bi-cpu" style="color: var(--accent-glow);"></i> <span id="val-device-name">${linkedDeviceName}</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px; display: flex; align-items: start; gap: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <i class="bi bi-fingerprint" style="color: #38bdf8; font-size: 20px;"></i>
+                            <div>
+                                <h6 style="color: #fff; margin: 0 0 5px 0;">TOOL FINGERPRINT (ID)</h6>
+                                <p style="color: #94a3b8; font-size: 11px; margin: 0;">Sinkronisasi ID prefix dari sinyal alat.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <input type="text" id="bt-test-field" placeholder="Tekan DATA pada alat untuk deteksi ID..." 
+                                style="width: 100%; height: 45px; background: rgba(30, 41, 59, 0.4); border: 1px dashed rgba(56, 189, 248, 0.3); border-radius: 6px; color: #38bdf8; text-align: center; font-weight: 700; font-size: 16px;">
+                            <div id="prefix-badge" style="margin-top:10px; font-size: 10px; color: #10b981; font-weight: 800; ${toolPrefix ? '' : 'display: none;'}">
+                                <i class="bi bi-check-circle-fill"></i> DETECTED PREFIX: <span id="val-tool-prefix">${toolPrefix || 'NONE'}</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
+                            <div>
+                                <h6 style="color: #fff; margin: 0;">ACTIVATE SMART LINK</h6>
+                                <p style="color: #64748b; font-size: 10px; margin: 0;">Hanya terima data jika ID Cocok.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="bt-active-toggle" ${isToolConnected ? 'checked' : ''} style="width: 50px; height: 25px; cursor: pointer;">
+                            </div>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'SAVE & LOCK TOOL',
+                confirmButtonColor: '#10b981',
+                cancelButtonText: 'DISCONNECT',
+                didOpen: () => {
+                    const testInput = document.getElementById('bt-test-field');
+                    testInput.onkeyup = (e) => {
+                        if (e.key === 'Enter') {
+                            const raw = testInput.value.trim();
+                            const match = raw.match(/^([A-Za-z0-9]+)[:]/);
+                            if (match) {
+                                toolPrefix = match[1];
+                                document.getElementById('prefix-badge').style.display = 'block';
+                                document.getElementById('val-tool-prefix').innerText = toolPrefix;
+                            }
+                        }
+                    }
+                },
+                preConfirm: () => {
+                    return document.getElementById('bt-active-toggle').checked;
+                }
+            });
+
+            if (res.isConfirmed) {
+                isToolConnected = res.value;
+                updateBtUI();
+            } else if (res.dismiss === Swal.DismissReason.cancel) {
+                isToolConnected = false;
+                toolPrefix = "";
+                linkedDeviceName = "NONE / MANUAL";
+                updateBtUI();
+            }
+        }
+
+        function updateBtUI() {
             const btn = document.getElementById('toolLinkBtn');
-            
             if (isToolConnected) {
                 btn.classList.add('active');
-                Swal.fire({ icon: 'success', title: 'AUTO-NEXT ENABLED', text: 'Bluetooth Tool Linked', timer: 1200, showConfirmButton: false, position: 'top-end', toast: true });
+                Swal.fire({ icon: 'success', title: 'TOOL SYNCED', text: 'Smart-Link is now ACTIVE', timer: 1200, showConfirmButton: false, position: 'top-end', toast: true });
             } else {
                 btn.classList.remove('active');
-                Swal.fire({ icon: 'info', title: 'MANUAL MODE', text: 'Auto-Next Disabled', timer: 1200, showConfirmButton: false, position: 'top-end', toast: true });
+                Swal.fire({ icon: 'info', title: 'DISCONNECTED', text: 'Switched to Manual Mode', timer: 1200, showConfirmButton: false, position: 'top-end', toast: true });
             }
         }
 
@@ -672,9 +809,15 @@
 
                     const active = document.activeElement;
                     if (active && (active.classList.contains('c-input') || active.classList.contains('f-input'))) {
-                        // Prevent default behavior to handle navigation manually
                         e.preventDefault();
                         
+                        // Handle Signal Prefixes (ID Filter)
+                        let val = active.value.trim();
+                        if (toolPrefix && val.startsWith(toolPrefix)) {
+                            // Strip prefix if detected (e.g. "CAL01:12.05" becomes "12.05")
+                            active.value = val.replace(toolPrefix, '').replace(':', '').trim();
+                        }
+
                         // List all relevant fields in sequence
                         const sequence = Array.from(document.querySelectorAll('.c-input, .f-input:not([readonly])'));
                         const currentIdx = sequence.indexOf(active);
@@ -682,14 +825,11 @@
                         if (currentIdx > -1 && currentIdx < sequence.length - 1) {
                             const next = sequence[currentIdx + 1];
                             next.focus();
-                            if (next.tagName === 'INPUT') next.select(); // Auto-select for easy overwrite
-                            
-                            // Smooth scroll to next card if it's a dimension card
+                            if (next.tagName === 'INPUT') next.select();
                             const card = next.closest('.dimensi-card');
                             if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         } else if (currentIdx === sequence.length - 1) {
-                            // If at the last field, trigger a "Saved" visual feedback
-                            Swal.fire({ icon: 'success', title: 'ALL MEASUREMENTS ENTERED', timer: 1000, showConfirmButton: false, position: 'top-end' });
+                            Swal.fire({ icon: 'success', title: 'SEQUENCE COMPLETED', timer: 1000, showConfirmButton: false, position: 'top-end', toast: true });
                         }
                     }
                 }
@@ -869,12 +1009,19 @@
         }
 
         function validateCard(id) {
-            const card = document.getElementById(`card-${id}`), std = activeStandards[id.replace('-','')], inp = document.getElementById(`val-${id}`);
-            if(!card || !std || !inp) return;
-            const val = parseFloat(inp.value);
-            let isOK = !isNaN(val) && (val >= (std.val - std.tol) && val <= (std.val + std.tol));
+            const cleanId = id.toLowerCase().replace(/-/g, '');
+            const card = document.getElementById(`card-${id}`), std = activeStandards[cleanId], inp = document.getElementById(`val-${id}`);
+            if(!card || !inp) return;
+            
+            const val = parseFloat(inp.value.replace(/[+]/g, ''));
             card.classList.remove('status-ok', 'status-ng');
-            if (!isNaN(val)) card.classList.add(isOK ? 'status-ok' : 'status-ng');
+            
+            if (!isNaN(val) && std && std.val !== 0) {
+                const min = std.val - std.tol;
+                const max = std.val + std.tol;
+                const isOK = (val >= min && val <= max);
+                card.classList.add(isOK ? 'status-ok' : 'status-ng');
+            }
         }
 
         async function loadMaster() {
@@ -889,8 +1036,23 @@
                     const m = data.data;
                     
                     // Update Refined Technical HUD Ribbon (v3 IDs)
-                    document.getElementById('h-customer').innerText = m.customer || "GENERAL";
-                    document.getElementById('h-hose').innerText = m.hoseType || "---";
+                    const lineEl = document.getElementById('h-line');
+                    const custEl = document.getElementById('h-customer');
+                    const hoseEl = document.getElementById('h-hose');
+                    const docEl = document.getElementById('h-doc');
+
+                    if(lineEl) lineEl.innerText = "DL01 ENGINE LINE"; 
+                    if(custEl) custEl.innerText = m.customer || "GENERAL";
+                    if(hoseEl) hoseEl.innerText = m.hoseType || "---";
+                    if(docEl) docEl.innerText = m.docNo || "---";
+
+                    // Populate Data Summary
+                    const partEl = document.getElementById('disp-part-no');
+                    if(partEl) partEl.innerText = m.itemList || "---";
+                    
+                    const stdPnjgEl = document.getElementById('disp-std-pnjg');
+                    if(stdPnjgEl) stdPnjgEl.innerText = m.dimensi || "---"; // Temp fallback to dimensi
+
                     document.getElementById('h-row-hose')?.classList.add('animate__animated', 'animate__pulse');
                     
                     // Update Status Indicator
@@ -899,19 +1061,39 @@
                     if (dot) { dot.style.background = '#10b981'; dot.style.boxShadow = '0 0 10px #10b981'; }
                     if (text) { text.innerText = 'READY TO MEASURE'; text.style.color = '#10b981'; }
 
+                    const getF = (v) => { 
+                        if(!v) return 0;
+                        const match = v.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/);
+                        return match ? parseFloat(match[0]) : 0;
+                    };
+
                     const points = [
-                        { id: 'innerDia', val: parseFloat(m.innerTube), tol: parseFloat(m.toleranceInner), el: 'inner-dia' },
-                        { id: 'innerTx', val: parseFloat(m.tebalInner), tol: 0.2, el: 'inner-tx' },
-                        { id: 'totalTx', val: parseFloat(m.tebalTotal), tol: 0.2, el: 'total-tx' }
+                        { id: 'innerdia', rawStr: m.toleranceInner, el: 'inner-dia' },
+                        { id: 'innertx', rawStr: m.tebalInner, el: 'inner-tx' },
+                        { id: 'innerty', rawStr: m.tebalInner, el: 'inner-ty' },
+                        { id: 'totaltx', rawStr: m.tebalTotal, el: 'total-tx' },
+                        { id: 'totalty', rawStr: m.tebalTotal, el: 'total-ty' }
                     ];
                     points.forEach(p => {
-                        activeStandards[p.id] = { val: p.val, tol: p.tol };
                         const stdEl = document.getElementById(`std-${p.el}`);
                         const minEl = document.getElementById(`limit-${p.el}-min`);
                         const maxEl = document.getElementById(`limit-${p.el}-max`);
-                        if (stdEl) stdEl.innerText = `${p.val} ± ${p.tol}`;
-                        if (minEl) minEl.innerText = (p.val - p.tol).toFixed(2);
-                        if (maxEl) maxEl.innerText = (p.val + p.tol).toFixed(2);
+                        
+                        // Smart Parser for "Value ± Tolerance" strings
+                        const parseStd = (str) => {
+                            if(!str || str === '---') return { val: 0, tol: 0.1 };
+                            const parts = str.toString().replace(/,/g, '.').split(/[±/+-]+/);
+                            const val = parseFloat(parts[0]) || 0;
+                            const tol = (parts.length > 1) ? (parseFloat(parts[1]) || 0.1) : 0.1;
+                            return { val, tol };
+                        };
+
+                        const stdData = parseStd(p.rawStr);
+                        activeStandards[p.id] = stdData;
+                        
+                        if (stdEl) stdEl.innerText = stdData.val === 0 ? "NO DATA" : `${stdData.val} ± ${stdData.tol}`;
+                        if (minEl) minEl.innerText = stdData.val === 0 ? "---" : (stdData.val - stdData.tol).toFixed(2);
+                        if (maxEl) maxEl.innerText = stdData.val === 0 ? "---" : (stdData.val + stdData.tol).toFixed(2);
                     });
                     
                     Swal.fire({ icon: 'success', title: 'MASTER LOADED', timer: 800, showConfirmButton: false });
