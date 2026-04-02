@@ -3,66 +3,198 @@
 }
 
 <style>
-    .form-box {
-        background: rgba(25, 30, 40, 0.6);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 20px;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 30px;
+    .execution-start-container {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 1000px;
+    }
+
+    .form-box-premium {
+        background: linear-gradient(145deg, rgba(20, 25, 45, 0.95), rgba(15, 20, 35, 0.98));
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(0, 102, 255, 0.15);
+        border-radius: 30px;
+        max-width: 550px;
+        width: 100%;
+        padding: 45px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 102, 255, 0.05);
+        position: relative;
+        overflow: hidden;
+        animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .form-box-premium::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #0066ff, #00d2ff, #0066ff);
+        background-size: 200% 100%;
+        animation: gradientShift 4s linear infinite;
+    }
+
+    @@keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+    }
+
+    @@keyframes cardAppear {
+        from { opacity: 0; transform: translateY(30px) rotateX(-5deg); }
+        to { opacity: 1; transform: translateY(0) rotateX(0); }
+    }
+
+    .icon-header-box {
+        width: 85px;
+        height: 85px;
+        background: rgba(0, 102, 255, 0.1);
+        border: 1px solid rgba(0, 102, 255, 0.2);
+        box-shadow: 0 0 30px rgba(0, 102, 255, 0.15);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 24px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .form-box-premium:hover .icon-header-box {
+        transform: scale(1.05) rotate(5deg);
+        background: rgba(0, 102, 255, 0.15);
+        box-shadow: 0 0 40px rgba(0, 102, 255, 0.25);
+    }
+
+    .premium-label {
+        color: #00d2ff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .premium-input, .premium-select {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: white !important;
+        border-radius: 14px !important;
+        padding: 14px 18px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .premium-input:focus, .premium-select:focus {
+        border-color: #0066ff !important;
+        box-shadow: 0 0 20px rgba(0, 102, 255, 0.2) !important;
+        background: rgba(0, 102, 255, 0.05) !important;
+        transform: translateY(-2px);
+    }
+
+    .btn-generate-premium {
+        background: linear-gradient(90deg, #0066ff, #0052cc);
+        border: none;
+        padding: 16px;
+        border-radius: 50px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
+        margin-top: 20px;
+    }
+
+    .btn-generate-premium:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(0, 102, 255, 0.45);
+        color: white;
+    }
+
+    .btn-generate-premium:active {
+        transform: scale(0.98);
+    }
+
+    .status-badge-inline {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
     }
 </style>
 
-<div class="row fade-in justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-12">
-        <div class="form-box shadow-lg">
-            <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 text-primary mb-3" style="width: 70px; height: 70px;">
-                    <i class="bi bi-box-arrow-in-down fs-1"></i>
-                </div>
-                <h3 class="text-white fw-bold mb-1">Tarik Planning Master</h3>
-                <p class="text-white-50 small">Pilih Parameter untuk Mulai Kontrol Aktual Produksi Harian</p>
+<div class="execution-start-container fade-in">
+    <div class="form-box-premium">
+        <div class="text-center mb-5">
+            <div class="icon-header-box">
+                <i class="bi bi-cpu-fill fs-1 text-primary"></i>
+            </div>
+            <h2 class="text-white fw-black mb-2 tracking-tighter" style="font-size: 1.8rem;">DALIY PLAN HUD</h2>
+            <div class="d-flex align-items-center justify-content-center gap-2">
+                <span class="status-badge-inline"><i class="bi bi-lightning-fill me-1"></i> READY TO SYNC</span>
+                <span class="text-white-50 tiny-text">PRODUCTION SYSTEM V4.0</span>
+            </div>
+        </div>
+
+        <form asp-action="CreateOrLoad" method="post">
+            <div class="mb-4">
+                <label class="premium-label"><i class="bi bi-calendar3"></i> TANGGAL KERJA</label>
+                <input type="date" name="executionDate" class="form-control form-control-lg premium-input" required value="@DateTime.Now.ToString("yyyy-MM-dd")" />
             </div>
 
-            <form asp-action="CreateOrLoad" method="post">
-                <div class="mb-4">
-                    <label class="form-label text-info small fw-bold tracking-wide">TANGGAL KERJA</label>
-                    <input type="date" name="executionDate" class="form-control form-control-lg bg-black text-white border-secondary" required value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-6">
-                        <label class="form-label text-info small fw-bold">SHIFT</label>
-                        <select name="shift" class="form-select form-select-lg bg-black text-white border-secondary" required>
-                            @if (ViewBag.Shifts != null) {
-                                foreach (var s in (List<VelastoProductionSystem.Models.ShiftMaster>)ViewBag.Shifts) {
-                                    <option value="@s.ShiftName">@s.ShiftName</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label text-info small fw-bold">GROUP / REGU</label>
-                        <input type="text" name="groupName" class="form-control form-control-lg bg-black text-white border-secondary" placeholder="Cth: BIRU" required />
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label text-info small fw-bold">MESIN / LINE</label>
-                    <select name="machineName" class="form-select form-select-lg bg-black text-white border-secondary" required>
-                        @if (ViewBag.Machines != null) {
-                            foreach (var m in (List<string>)ViewBag.Machines) {
-                                <option value="@m">@m</option>
+            <div class="row g-3 mb-4">
+                <div class="col-6">
+                    <label class="premium-label"><i class="bi bi-clock-history"></i> SHIFT</label>
+                    <select name="shift" class="form-select form-select-lg premium-select" required>
+                        @if (ViewBag.Shifts != null) {
+                            foreach (var s in (List<VelastoProductionSystem.Models.ShiftMaster>)ViewBag.Shifts) {
+                                <option value="@s.ShiftName">@s.ShiftName</option>
                             }
                         }
                     </select>
                 </div>
-                
-                <div class="d-grid mt-5">
-                    <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
-                        <i class="bi bi-play-fill me-2"></i> GENERATE FORM AKTUAL
-                    </button>
+                <div class="col-6">
+                    <label class="premium-label"><i class="bi bi-people-fill"></i> GROUP / REGU</label>
+                    <select name="groupName" class="form-select form-select-lg premium-select" required>
+                        <option value="BIRU">BIRU</option>
+                        <option value="MERAH">MERAH</option>
+                    </select>
                 </div>
-            </form>
+            </div>
+
+            <div class="mb-4">
+                <label class="premium-label"><i class="bi bi-gear-wide-connected"></i> MESIN / LINE</label>
+                <select name="machineName" class="form-select form-select-lg premium-select" required>
+                    @if (ViewBag.Machines != null) {
+                        foreach (var m in (List<string>)ViewBag.Machines) {
+                            <option value="@m">@m</option>
+                        }
+                    }
+                </select>
+            </div>
+            
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-generate-premium text-uppercase">
+                    <i class="bi bi-terminal-fill me-2"></i> GENERATE DASHBOARD AKTUAL
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-4 text-center">
+            <p class="text-white-50 super-small m-0">Synchronizing with Master Parts database...</p>
         </div>
     </div>
 </div>
+
+<style>
+    .fw-black { font-weight: 950; }
+    .tracking-tighter { letter-spacing: -1.5px; }
+    .tiny-text { font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.3); text-transform: uppercase; }
+    .super-small { font-size: 0.65rem; font-weight: 600; color: rgba(255,255,255,0.4); }
+</style>

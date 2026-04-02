@@ -79,7 +79,7 @@
                                 var stdVal = Model.StandardParameterSetting;
 
                                 // Helper to parse string to decimal
-                                decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                                decimal D(string? s, decimal def) => decimal.TryParse(s ?? "0", System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
 
                                 // Override standards if masterlist is present and std is null/zero
                                 decimal idNom = master != null ? D(master.Dimensi, 11.0m) : (stdVal?.InnerDie ?? 11.0m);

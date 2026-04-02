@@ -154,6 +154,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "ITEM (Part List)")]
         public string? ItemList { get; set; }
 
+        [Display(Name = "Spiral Pitch")]
+        public string? ToleranceSpiralPitch { get; set; }
+
         [Display(Name = "MC")]
         public string? MachineCode { get; set; }
     }

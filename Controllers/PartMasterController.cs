@@ -36,14 +36,16 @@ namespace VelastoProductionSystem.Controllers
 
             // Coba exact match dulu (case-insensitive)
             var part = await _context.PartMasters
-                .Where(x => x.PartCode.ToLower() == search.ToLower() || x.PartNumber.ToLower() == search.ToLower())
+                .Where(x => (x.PartCode != null && x.PartCode.ToLower() == search.ToLower()) || 
+                            (x.PartNumber != null && x.PartNumber.ToLower() == search.ToLower()))
                 .FirstOrDefaultAsync();
 
             // Jika gagal, coba yang diawali dengan search
             if (part == null)
             {
                 part = await _context.PartMasters
-                    .Where(x => x.PartCode.Contains(search) || x.PartNumber.Contains(search))
+                    .Where(x => (x.PartCode != null && x.PartCode.Contains(search)) || 
+                                (x.PartNumber != null && x.PartNumber.Contains(search)))
                     .FirstOrDefaultAsync();
             }
 

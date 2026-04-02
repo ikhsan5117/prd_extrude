@@ -595,7 +595,7 @@
                     var stdVal = Model.StandardParameterSetting;
                     var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
 
-                    decimal D(string s, decimal def) {
+                    decimal D(string? s, decimal def) {
                         if (string.IsNullOrWhiteSpace(s)) return def;
                         string cleanString = s.Replace(",", "."); 
                         var match = System.Text.RegularExpressions.Regex.Match(cleanString, @"-?\d+(\.\d+)?");

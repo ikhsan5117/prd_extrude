@@ -474,7 +474,7 @@ namespace VelastoProductionSystem.Controllers
         {
             try
             {
-                ProductionReport report;
+                ProductionReport? report;
                 if (data.ReportId == 0)
                 {
                     // Create new report from Scanned App

@@ -67,7 +67,7 @@
                             <div class="col-md-12">
                                 <div class="info-chip-tactical">
                                     <span class="data-label-tactical">2. Class</span>
-                                    <span class="data-value-tactical">@(Model.Class ?? "-")</span>
+                                    <span class="data-value-tactical">@(Model?.Class ?? "-")</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -100,14 +100,14 @@
                                 <tbody>
                                     <tr>
                                         <td class="fw-bold text-start text-white-50">Dandori</td>
-                                        <td>@Model.DandoriStartProdTime?.ToString("HH:mm")</td>
-                                        <td>@Model.DandoriEndProdTime?.ToString("HH:mm")</td>
+                                        <td>@Model?.DandoriStartProdTime?.ToString("HH:mm")</td>
+                                        <td>@Model?.DandoriEndProdTime?.ToString("HH:mm")</td>
                                     </tr>
                                     <tr>
                                         <td class="fw-bold text-start text-white-50">Production</td>
-                                        <td>@Model.ProductionStartTime?.ToString("HH:mm")</td>
+                                        <td>@Model?.ProductionStartTime?.ToString("HH:mm")</td>
                                         <td>
-                                            @if (Model.ProductionEndTime != null)
+                                            @if (Model?.ProductionEndTime != null)
                                             {
                                                 @Model.ProductionEndTime?.ToString("HH:mm")
                                             }
@@ -134,39 +134,39 @@
                             <div class="card-header">1) Inner</div>
                             <div class="info-row">
                                 <span class="data-label-tactical">Material</span>
-                                <span class="data-value-tactical text-info">@Model.MaterialInner</span>
+                                <span class="data-value-tactical text-info">@Model?.MaterialInner</span>
                                 <hr class="my-2 opacity-10">
                                 <div class="d-flex justify-content-between">
                                     <div>
                                         <span class="data-label-tactical">No. Lot</span>
-                                        <span class="data-value-tactical fs-6">@Model.MaterialInnerLotNo</span>
+                                        <span class="data-value-tactical fs-6">@Model?.MaterialInnerLotNo</span>
                                     </div>
                                     <div class="text-end">
                                         <span class="data-label-tactical">SG</span>
-                                        <span class="data-value-tactical fs-6">@Model.MaterialInnerSG</span>
+                                        <span class="data-value-tactical fs-6">@Model?.MaterialInnerSG</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    @if (!string.IsNullOrEmpty(Model.MaterialMiddle))
+                    @if (!string.IsNullOrEmpty(Model?.MaterialMiddle))
                     {
                         <div class="col-md-4">
                             <div class="card material-card-tactical middle">
                                 <div class="card-header">2) Middle</div>
                                 <div class="info-row">
                                     <span class="data-label-tactical">Material</span>
-                                    <span class="data-value-tactical text-warning">@Model.MaterialMiddle</span>
+                                    <span class="data-value-tactical text-warning">@Model?.MaterialMiddle</span>
                                     <hr class="my-2 opacity-10">
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <span class="data-label-tactical">No. Lot</span>
-                                            <span class="data-value-tactical fs-6">@Model.MaterialMiddleLotNo</span>
+                                            <span class="data-value-tactical fs-6">@Model?.MaterialMiddleLotNo</span>
                                         </div>
                                         <div class="text-end">
                                             <span class="data-label-tactical">SG</span>
-                                            <span class="data-value-tactical fs-6">@Model.MaterialMiddleSG</span>
+                                            <span class="data-value-tactical fs-6">@Model?.MaterialMiddleSG</span>
                                         </div>
                                     </div>
                                 </div>
@@ -179,16 +179,16 @@
                             <div class="card-header">3) Outer</div>
                             <div class="info-row">
                                 <span class="data-label-tactical">Material</span>
-                                <span class="data-value-tactical text-success">@Model.MaterialOuter</span>
+                                <span class="data-value-tactical text-success">@Model?.MaterialOuter</span>
                                 <hr class="my-2 opacity-10">
                                 <div class="d-flex justify-content-between">
                                     <div>
                                         <span class="data-label-tactical">No. Lot</span>
-                                        <span class="data-value-tactical fs-6">@Model.MaterialOuterLotNo</span>
+                                        <span class="data-value-tactical fs-6">@Model?.MaterialOuterLotNo</span>
                                     </div>
                                     <div class="text-end">
                                         <span class="data-label-tactical">SG</span>
-                                        <span class="data-value-tactical fs-6">@Model.MaterialOuterSG</span>
+                                        <span class="data-value-tactical fs-6">@Model?.MaterialOuterSG</span>
                                     </div>
                                 </div>
                             </div>

@@ -256,7 +256,7 @@ namespace VelastoProductionSystem.Controllers
         {
             try
             {
-                NowProducing record;
+                NowProducing? record;
                 if (data.Id > 0)
                 {
                     record = await _context.NowProducings.FindAsync(data.Id);

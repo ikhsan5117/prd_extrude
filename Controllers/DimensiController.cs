@@ -233,8 +233,11 @@ namespace VelastoProductionSystem.Controllers
         {
             // First save the latest data
             var saveResult = await SaveData(data);
-            if (!(saveResult is JsonResult jr && (bool)((dynamic)jr.Value).success)) 
+            if (saveResult is JsonResult { Value: { } } jr && (bool)((dynamic)jr.Value).success) {
+                // success
+            } else {
                 return saveResult;
+            }
 
             // Then finalize status
             var report = await _context.DimensionReports.FindAsync(data.ReportId);

@@ -283,8 +283,16 @@ body {
 
 .nav-item:hover,
 .nav-item.active {
-    background: rgba(0, 102, 255, 0.1);
-    color: var(--velasto-blue);
+    background: rgba(0, 102, 255, 0.12);
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 102, 255, 0.5);
+}
+
+.nav-item:hover i,
+.nav-item.active i {
+    color: #00d2ff !important;
+    transform: scale(1.2) rotate(5deg);
+    filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.5));
 }
 
 .nav-item:hover::before,
