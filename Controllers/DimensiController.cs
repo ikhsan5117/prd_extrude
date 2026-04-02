@@ -103,6 +103,50 @@ namespace VelastoProductionSystem.Controllers
             return View(reports);
         }
 
+        // GET: /Dimensi/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var report = await _context.DimensionReports
+                .Include(r => r.Measurements)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (report == null) return NotFound();
+            return View(report);
+        }
+
+        // GET: /Dimensi/Edit/5
+        public IActionResult Edit(int id)
+        {
+            return RedirectToAction(nameof(App), new { id });
+        }
+
+        // GET: /Dimensi/Create
+        public IActionResult Create()
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var report = await _context.DimensionReports
+                .Include(r => r.Measurements)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (report == null) return NotFound();
+
+            if (report.Measurements != null)
+            {
+                _context.DimensionMeasurements.RemoveRange(report.Measurements);
+            }
+
+            _context.DimensionReports.Remove(report);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(History));
+        }
+
         [HttpPost]
         public async Task<IActionResult> SaveData([FromBody] DimensionReportAppData data)
         {
@@ -159,13 +203,16 @@ namespace VelastoProductionSystem.Controllers
                         {
                             DimensionReportId = report.Id,
                             PointName = mData.PointName,
-                            TimeSection = mData.TimeSection,
+                            TimeSection = string.IsNullOrWhiteSpace(mData.TimeSection) ? DateTime.Now.ToString("HH:mm") : mData.TimeSection,
+                            Frequency = string.IsNullOrWhiteSpace(mData.Frequency) ? "30m Sekali" : mData.Frequency,
+                            StandardDimension = mData.StandardDimension,
                             Initial = mData.Initial,
                             R1 = decimal.TryParse(mData.Reading1, out var r1) ? r1 : null,
                             R2 = decimal.TryParse(mData.Reading2, out var r2) ? r2 : null,
                             R3 = decimal.TryParse(mData.Reading3, out var r3) ? r3 : null,
                             R4 = decimal.TryParse(mData.Reading4, out var r4) ? r4 : null,
                             R5 = decimal.TryParse(mData.Reading5, out var r5) ? r5 : null,
+                            Status = string.IsNullOrWhiteSpace(mData.Status) ? "OK" : mData.Status,
                             RecordedTime = DateTime.Now
                         };
                         _context.DimensionMeasurements.Add(reading);

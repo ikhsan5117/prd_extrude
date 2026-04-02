@@ -25,12 +25,16 @@ namespace VelastoProductionSystem.Models
     {
         public string PointName { get; set; } = "";
         public string TimeSection { get; set; } = "";
+        public string Frequency { get; set; } = "";
+        public string StandardDimension { get; set; } = "";
         public string Initial { get; set; } = "";
         public string Reading1 { get; set; } = "";
         public string Reading2 { get; set; } = "";
         public string Reading3 { get; set; } = "";
         public string Reading4 { get; set; } = "";
         public string Reading5 { get; set; } = "";
+        public string Status { get; set; } = "OK";
+        public decimal ScaleValue { get; set; }
     }
 
     public class ExtruderProducePayload

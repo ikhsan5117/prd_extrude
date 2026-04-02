@@ -1,390 +1,508 @@
-@model VelastoProductionSystem.Models.ProductionReport
+﻿@model VelastoProductionSystem.Models.DimensionReport
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Detail Dimensi";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Dimensi - Velasto Production System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #3b82f6;
-            --secondary-color: #10b981;
-            --dark-bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border-color: #334155;
-        }
+<style>
+    :root {
+        --paper: #f7f7f2;
+        --paper-border: #c3c3b8;
+        --text: #222222;
+        --label: #555555;
+        --accent: #000000;
+        --grid-line: #777777;
+    }
 
+    body {
+        background: #d3d3cc;
+    }
+
+    .page-shell {
+        width: 100%;
+        min-height: 100vh;
+        padding: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .paper {
+        width: 297mm;
+        min-height: 210mm;
+        background: var(--paper);
+        border: 1px solid var(--paper-border);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        padding: 18mm 18mm 14mm;
+        box-sizing: border-box;
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .report-header {
+        display: grid;
+        grid-template-columns: 1.18fr 1fr 0.8fr;
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 8px;
+    }
+
+    .logo-block {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .brand-logo {
+        width: 142px;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .brand-name {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
+    .brand-subtitle {
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--label);
+    }
+
+    .header-info {
+        display: grid;
+        gap: 4px;
+        margin-top: 4px;
+        font-size: 10.5px;
+        line-height: 1.4;
+    }
+
+    .info-line {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .info-label {
+        min-width: 76px;
+        font-weight: 700;
+        color: var(--label);
+        text-transform: uppercase;
+    }
+
+    .info-value {
+        flex: 1;
+        border-bottom: 1px solid var(--grid-line);
+        padding-bottom: 1px;
+        color: var(--text);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .title-block {
+        text-align: center;
+    }
+
+    .title-block h1 {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.05;
+    }
+
+    .title-block .subtitle {
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--label);
+        letter-spacing: 0.05em;
+    }
+
+    .title-block h1 {
+        margin: 0;
+        font-size: 32px;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+    }
+
+    .title-block .subtitle {
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--label);
+    }
+
+    .approval-box {
+        width: 280px;
+        border: 1px solid var(--grid-line);
+        border-collapse: collapse;
+        font-size: 10px;
+    }
+
+    .approval-box th,
+    .approval-box td {
+        border: 1px solid var(--grid-line);
+        padding: 6px 8px;
+    }
+
+    .approval-box th {
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        background: #e8e8e1;
+    }
+
+    .datatype-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .data-line {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 11px;
+    }
+
+    .data-label {
+        min-width: 82px;
+        font-weight: 700;
+        color: var(--label);
+    }
+
+    .data-value {
+        flex: 1;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .divider-line {
+        border-top: 1px solid var(--grid-line);
+        margin: 4px 0 8px;
+    }
+
+    .body-grid {
+        display: grid;
+        grid-template-columns: 2.2fr 1fr;
+        gap: 14px;
+        margin-top: 12px;
+    }
+
+    .measurement-panel,
+    .summary-panel,
+    .right-panel {
+        background: transparent;
+    }
+
+    .measurement-heading {
+        font-size: 11px;
+        color: var(--label);
+        padding: 8px 10px;
+        border: 1px solid var(--grid-line);
+        background: #f5f5ee;
+        margin-bottom: 8px;
+        border-radius: 4px;
+    }
+
+    .right-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 132px;
+        gap: 12px;
+        align-items: start;
+    }
+
+    .right-table-wrapper {
+        overflow: hidden;
+        border: 1px solid var(--grid-line);
+        border-radius: 4px;
+        background: white;
+    }
+
+    .remark-box {
+        border: 1px solid var(--grid-line);
+        min-height: 180px;
+        padding: 10px;
+        font-size: 10px;
+        line-height: 1.4;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        background: #fafaf3;
+    }
+
+    .remark-title {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 10px;
+        margin-bottom: 8px;
+    }
+
+    .right-table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    .measurement-table th,
+    .measurement-table td,
+    .summary-table th,
+    .summary-table td,
+    .detail-table th,
+    .detail-table td,
+    .right-table th,
+    .right-table td {
+        border: 1px solid var(--grid-line);
+        padding: 6px 8px;
+        font-size: 10px;
+    }
+
+    .measurement-table th {
+        background: #e9e9e2;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .measurement-table td {
+        background: white;
+    }
+
+    .row-summary {
+        background: #fafaf3;
+    }
+
+    .summary-panel .section-title,
+    .measurement-panel .section-title {
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .summary-card {
+        margin-bottom: 8px;
+    }
+
+    .summary-table th {
+        background: #f3f3ec;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .summary-table td {
+        background: white;
+    }
+
+    .remark-box {
+        margin-top: 8px;
+        border: 1px solid var(--grid-line);
+        min-height: 72px;
+        padding: 8px;
+        font-size: 10px;
+        line-height: 1.4;
+    }
+
+    .footer-note {
+        margin-top: 10px;
+        font-size: 10px;
+        line-height: 1.4;
+    }
+
+    .footer-note strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+    }
+
+    @@page {
+        size: A4 landscape;
+        margin: 8mm;
+    }
+
+    @@media print {
         body {
-            background: var(--dark-bg);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
+            background: white;
         }
-
-        .back-btn {
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
+        .page-shell {
+            padding: 0;
         }
-
-        .back-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: translateX(-5px);
-        }
-
-        .detail-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-        }
-
-        .detail-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0;
-            color: white;
-        }
-
-        .detail-subtitle {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-top: 5px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .info-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .info-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-
-        .info-value {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .dimensi-table {
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-            margin-bottom: 30px;
-        }
-
-        .table {
-            margin: 0;
-            color: var(--text-primary);
-        }
-
-        .table thead th {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2));
-            color: var(--primary-color);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-            padding: 15px;
+        .paper {
+            box-shadow: none;
             border: none;
+            width: auto;
+            min-height: auto;
+            padding: 0;
+            margin: 0;
         }
-
-        .table tbody tr {
-            transition: all 0.3s ease;
+        .sheet-actions {
+            display: none;
         }
+    }
 
-        .table tbody tr:hover {
-            background: rgba(59, 130, 246, 0.1);
+    @@media (max-width: 1200px) {
+        .body-grid {
+            grid-template-columns: 1fr;
         }
-
-        .table tbody td {
-            padding: 15px;
-            vertical-align: middle;
-            border-bottom: 1px solid var(--border-color);
+        .report-header {
+            flex-direction: column;
+            gap: 10px;
         }
-
-        .table tbody tr:last-child td {
-            border-bottom: none;
+        .approval-box {
+            width: 100%;
         }
+    }
+</style>
 
-        .point-name {
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .std-value {
-            font-family: 'Courier New', monospace;
-            background: rgba(59, 130, 246, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        .input-field {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-align: center;
-            font-weight: 600;
-            width: 80px;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .actions-section {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .action-btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .action-btn-primary {
-            background: var(--primary-color);
-            color: white;
-            border: 1px solid var(--primary-color);
-        }
-
-        .action-btn-primary:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
-        }
-
-        .action-btn-success {
-            background: var(--secondary-color);
-            color: white;
-            border: 1px solid var(--secondary-color);
-        }
-
-        .action-btn-success:hover {
-            background: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-        }
-
-        @@media (max-width: 768px) {
-            .detail-title {
-                font-size: 1.5rem;
-            }
-            
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .table {
-                font-size: 0.9rem;
-            }
-            
-            .table thead th,
-            .table tbody td {
-                padding: 10px 8px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container-fluid">
-        <!-- Back Button -->
-        <a href="/Dimensi/Index" class="back-btn">
-            <i class="bi bi-arrow-left"></i>
-            Kembali ke Daftar
-        </a>
-
-        <!-- Detail Header -->
-        <div class="detail-header">
-            <h1 class="detail-title">Detail Dimensi</h1>
-            <p class="detail-subtitle">@(Model.StandardParameterSetting?.ProductCode ?? "N/A") - @(Model.Dimension ?? "N/A")</p>
+<div class="page-shell">
+    <div class="paper">
+        <div class="sheet-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:12px;">
+            <a href="/Dimensi/History" class="sheet-button btn-secondary" style="border-radius: 4px; padding: 8px 14px; font-size: 12px;">Kembali</a>
+            <a href="#" onclick="window.print(); return false;" class="sheet-button btn-primary" style="border-radius: 4px; padding: 8px 14px; font-size: 12px;">Cetak A4</a>
         </div>
 
-        <!-- Information Grid -->
-        <div class="info-grid">
-            <div class="info-card">
-                <div class="info-label">Tanggal Produksi</div>
-                <div class="info-value">@Model.ProductionDate.ToString("dd MMMM yyyy")</div>
+        <div class="report-header">
+            <div>
+                <div class="logo-block">
+                    <img src="/images/velasto-logo-e1700056160273.png" alt="Velasto Logo" class="brand-logo" />
+                    <div>
+                        <div class="brand-name">Velasto</div>
+                        <div class="brand-subtitle">Indonesia</div>
+                    </div>
+                </div>
+                <div class="header-info">
+                    <div class="info-line"><span class="info-label">No. Dok.</span><span class="info-value">@Model.DocumentNumber</span></div>
+                    <div class="info-line"><span class="info-label">Revisi</span><span class="info-value">-</span></div>
+                    <div class="info-line"><span class="info-label">Date</span><span class="info-value">@Model.ProductionDate.ToString("dd MMM yyyy")</span></div>
+                    <div class="info-line"><span class="info-label">Shift</span><span class="info-value">@(Model.Shift ?? "-")</span></div>
+                    <div class="info-line"><span class="info-label">Customer</span><span class="info-value">@(Model.CustomerName ?? "-")</span></div>
+                </div>
             </div>
-            <div class="info-card">
-                <div class="info-label">Shift</div>
-                <div class="info-value">@Model.Shift</div>
-            </div>
-            <div class="info-card">
-                <div class="info-label">Document Number</div>
-                <div class="info-value">@Model.DocumentNumber</div>
-            </div>
-            <div class="info-card">
-                <div class="info-label">Part Number</div>
-                <div class="info-value">@(Model.Dimension ?? "N/A")</div>
-            </div>
-        </div>
 
-        <!-- Dimensi Table -->
-        <div class="dimensi-table">
-            <table class="table">
+            <div class="title-block">
+                <h1>Extruder Production Report</h1>
+                <div class="subtitle">(Dimension)</div>
+            </div>
+
+            <table class="approval-box">
                 <thead>
                     <tr>
-                        <th rowspan="2">POINT</th>
-                        <th rowspan="2">FREKUENSI</th>
-                        <th rowspan="2">STD DIMENSI</th>
-                        <th colspan="6">PUKUL / JAM</th>
-                    </tr>
-                    <tr>
-                        <th>07:30</th>
-                        <th>08:00</th>
-                        <th>08:30</th>
-                        <th>09:00</th>
-                        <th>09:30</th>
-                        <th>10:00</th>
+                        <th>Prepared</th>
+                        <th>Checked</th>
+                        <th>Approved</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="point-name">Inner Diameter</td>
-                        <td>30m Sekali</td>
-                        <td><span class="std-value">11.0 ± 0.2</span></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                    </tr>
-                    <tr>
-                        <td class="point-name">Inner Thickness (X)</td>
-                        <td>30m Sekali</td>
-                        <td><span class="std-value">1.8 ± 0.2</span></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                    </tr>
-                    <tr>
-                        <td class="point-name">Inner Thickness (Y)</td>
-                        <td>30m Sekali</td>
-                        <td><span class="std-value">1.8 ± 0.2</span></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                    </tr>
-                    <tr>
-                        <td class="point-name">Total Thickness (X)</td>
-                        <td>30m Sekali</td>
-                        <td><span class="std-value">3.3 ± 0.2</span></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                    </tr>
-                    <tr>
-                        <td class="point-name">Total Thickness (Y)</td>
-                        <td>30m Sekali</td>
-                        <td><span class="std-value">3.3 ± 0.2</span></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                    </tr>
-                    <tr>
-                        <td class="point-name">Spiral Pitch</td>
-                        <td>30m Sekali</td>
-                        <td><span class="std-value">38 ± 5</span></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                    </tr>
-                    <tr>
-                        <td class="point-name">Visual Check</td>
-                        <td>30m Sekali</td>
-                        <td colspan="2" style="font-size: 0.9rem; color: var(--text-secondary);">No Burry, No Line, No Bubble, No Scratch</td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
-                        <td><input type="text" class="input-field" placeholder="-" /></td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="actions-section">
-            <a href="#" class="action-btn action-btn-primary">
-                <i class="bi bi-save"></i>
-                Simpan
-            </a>
-            <a href="#" class="action-btn action-btn-success">
-                <i class="bi bi-printer"></i>
-                Cetak
-            </a>
+        <div class="divider-line"></div>
+
+        <div class="body-grid">
+            <div class="measurement-panel">
+                <div class="measurement-heading">Type: @(Model.HoseType ?? "-") | Water By Pass: @(Model.ByPass ?? "-") | @(Model.DimensionDisplay ?? "-")</div>
+                <div class="section-title">Dimension Measurement</div>
+                <table class="measurement-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 23%;">POINT</th>
+                            <th style="width: 15%;">FREKUENSI</th>
+                            <th style="width: 15%;">STD. DIMENSI</th>
+                            <th style="width: 12%;">INITIAL</th>
+                            <th style="width: 8%;">1</th>
+                            <th style="width: 8%;">2</th>
+                            <th style="width: 8%;">3</th>
+                            <th style="width: 8%;">4</th>
+                            <th style="width: 8%;">5</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var points = new[] {
+                                "Inner Diameter",
+                                "Inner Thickness (X)",
+                                "Inner Thickness (Y)",
+                                "Spiral Pitch",
+                                "Total Thickness (X)",
+                                "Total Thickness (Y)"
+                            };
+                            var measurements = Model.Measurements?.ToDictionary(m => m.PointName, StringComparer.OrdinalIgnoreCase) ?? new Dictionary<string, VelastoProductionSystem.Models.DimensionMeasurement>(StringComparer.OrdinalIgnoreCase);
+                        }
+                        @foreach (var point in points)
+                        {
+                            var row = measurements.ContainsKey(point) ? measurements[point] : null;
+                            <tr>
+                                <td>@point</td>
+                                <td>@(row?.Frequency ?? "30m Sekali")</td>
+                                <td>@(row?.StandardDimension ?? "-")</td>
+                                <td>@(row?.Initial ?? "-")</td>
+                                <td>@(row?.R1?.ToString("0.00") ?? "-")</td>
+                                <td>@(row?.R2?.ToString("0.00") ?? "-")</td>
+                                <td>@(row?.R3?.ToString("0.00") ?? "-")</td>
+                                <td>@(row?.R4?.ToString("0.00") ?? "-")</td>
+                                <td>@(row?.R5?.ToString("0.00") ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="right-panel">
+                <div class="right-table-wrapper">
+                    <table class="right-table">
+                        <thead>
+                            <tr>
+                                <th>PART NUMBER</th>
+                                <th>VIN KODE</th>
+                                <th>STD. PANJANG</th>
+                                <th>ACT. PANJANG</th>
+                                <th>QTY TARGET</th>
+                                <th colspan="3">QTY. ACTUAL</th>
+                            </tr>
+                            <tr>
+                                <th colspan="5"></th>
+                                <th>OK</th>
+                                <th>Dimensi</th>
+                                <th>Visual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@(Model.DimensionDisplay ?? "-")</td>
+                                <td>@(Model.VinCode ?? "-")</td>
+                                <td>@(Model.StandardLength ?? "-")</td>
+                                <td>@(Model.ActualLength ?? "-")</td>
+                                <td>@Model.QtyTarget</td>
+                                <td>@Model.QtyOk</td>
+                                <td>@Model.NgDimension</td>
+                                <td>@Model.NgVisual</td>
+                            </tr>
+                            <tr>
+                                <td colspan="8" style="height: 130px; border-top: none;">&nbsp;</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="remark-box">
+                    <div class="remark-title">REMARK</div>
+                    <div class="remark-value">@(!string.IsNullOrWhiteSpace(Model.Remark) ? Model.Remark : "-")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <strong>Attention:</strong>
+            1. Setiap operator wajib menggunakan APD (sepatu safety & sarung tangan). 2. Periksa Dies sebelum dan sesudah proses. 3. Pastikan semua parameter sesuai dengan SPS.
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>

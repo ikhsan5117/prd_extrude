@@ -1,3 +1,4 @@
+@inject VelastoProductionSystem.Data.ApplicationDbContext _context
 @model VelastoProductionSystem.Models.ProductionReport
 
 @{
@@ -161,12 +162,24 @@
             </thead>
             <tbody>
                 @{
+                    var master = _context.MasterlistSpsDoubleLayers.FirstOrDefault(m => m.HoseType == Model.HoseType);
+                    
+                    // Helper to parse string to decimal
+                    decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                    
+                    decimal idNom = master != null ? D(master.Dimensi, 11.0m) : 11.0m;
+                    decimal idTol = master != null ? D(master.ToleranceInner, 0.2m) : 0.2m;
+                    decimal tubeNom = master != null ? D(master.TebalInner, 1.8m) : 1.8m;
+                    decimal tubeTol = 0.2m;
+                    decimal coverNom = master != null ? D(master.TebalTotal, 3.3m) : 3.3m;
+                    decimal coverTol = master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m;
+
                     var pGroups = new[] {
-                        new { Name = "Inner Diameter", Std = "11.0 ± 0.2", Values = new[] { "11.20", "11.10", "11.00", "10.90", "10.80" } },
-                        new { Name = "Inner Thickness (x)", Std = "1.8 ± 0.2", Values = new[] { "2.00", "1.90", "1.80", "1.70", "1.60" } },
-                        new { Name = "Inner Thickness (y)", Std = "1.8 ± 0.2", Values = new[] { "2.00", "1.90", "1.80", "1.70", "1.60" } },
-                        new { Name = "Total Thickness (x)", Std = "3.3 ± 0.2", Values = new[] { "3.50", "3.40", "3.30", "3.20", "3.10" } },
-                        new { Name = "Total Thickness (y)", Std = "3.3 ± 0.2", Values = new[] { "3.50", "3.40", "3.30", "3.20", "3.10" } }
+                        new { Name = "Inner Diameter", Std = $"{idNom:0.0} ± {idTol:0.0}", Values = new[] { (idNom+idTol*1.0m).ToString("0.00"), (idNom+idTol*0.5m).ToString("0.00"), idNom.ToString("0.00"), (idNom-idTol*0.5m).ToString("0.00"), (idNom-idTol*1.0m).ToString("0.00") } },
+                        new { Name = "Inner Thickness (x)", Std = $"{tubeNom:0.0} ± {tubeTol:0.0}", Values = new[] { (tubeNom+tubeTol*1.0m).ToString("0.00"), (tubeNom+tubeTol*0.5m).ToString("0.00"), tubeNom.ToString("0.00"), (tubeNom-tubeTol*0.5m).ToString("0.00"), (tubeNom-tubeTol*1.0m).ToString("0.00") } },
+                        new { Name = "Inner Thickness (y)", Std = $"{tubeNom:0.0} ± {tubeTol:0.0}", Values = new[] { (tubeNom+tubeTol*1.0m).ToString("0.00"), (tubeNom+tubeTol*0.5m).ToString("0.00"), tubeNom.ToString("0.00"), (tubeNom-tubeTol*0.5m).ToString("0.00"), (tubeNom-tubeTol*1.0m).ToString("0.00") } },
+                        new { Name = "Total Thickness (x)", Std = $"{coverNom:0.0} ± {coverTol:0.0}", Values = new[] { (coverNom+coverTol*1.0m).ToString("0.00"), (coverNom+coverTol*0.5m).ToString("0.00"), coverNom.ToString("0.00"), (coverNom-coverTol*0.5m).ToString("0.00"), (coverNom-coverTol*1.0m).ToString("0.00") } },
+                        new { Name = "Total Thickness (y)", Std = $"{coverNom:0.0} ± {coverTol:0.0}", Values = new[] { (coverNom+coverTol*1.0m).ToString("0.00"), (coverNom+coverTol*0.5m).ToString("0.00"), coverNom.ToString("0.00"), (coverNom-coverTol*0.5m).ToString("0.00"), (coverNom-coverTol*1.0m).ToString("0.00") } }
                     };
                 }
 
@@ -188,7 +201,7 @@
                             {
                                 <td rowspan="27">@(Model.StandardParameterSetting?.ProductCode ?? "-")</td>
                                 <td rowspan="27">@Model.VinCode</td>
-                                <td rowspan="27">@Model.StandardLength</td>
+                                <td rowspan="27">@(master?.Dimensi ?? Model.StandardLength)</td>
                                 <td rowspan="27" style="font-weight: bold;">@Model.ActualLength</td>
                                 <td rowspan="27">@Model.QtyTarget</td>
                                 <td rowspan="27" style="font-weight: bold;">@Model.QtyOk</td>
@@ -202,7 +215,7 @@
                 <tr>
                     <td class="point-name">Spiral Pitch</td>
                     <td>30m Sekali</td>
-                    <td style="font-weight: bold;">38 ± 5</td>
+                    <td style="font-weight: bold;">@(master?.ToleranceSpiralPitch ?? "38 ± 5")</td>
                     <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                 </tr>
                 <tr>

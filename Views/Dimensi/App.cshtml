@@ -655,7 +655,32 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        let measurements = [ { time: null, data: {} } ];
+        let measurements = @Html.Raw(Json.Serialize(Model.Measurements.GroupBy(m => m.TimeSection).Select(g => new {
+            time = g.Key,
+            data = new {
+                vin = Model.VinCode,
+                actPnjg = Model.ActualLength,
+                remark = Model.Remark,
+                qtySt = Model.Status == "COMPLETED" ? "ok" : "ng",
+                qtyOk = Model.QtyOk,
+                ngDim = Model.NgDimension,
+                ngVis = Model.NgVisual,
+                innerDia = g.FirstOrDefault(x => x.PointName == "Inner Diameter")?.R1,
+                innerTx = g.FirstOrDefault(x => x.PointName == "Inner Thick X")?.R1,
+                innerTy = g.FirstOrDefault(x => x.PointName == "Inner Thick Y")?.R1,
+                totalTx = g.FirstOrDefault(x => x.PointName == "Total Thick X")?.R1,
+                totalTy = g.FirstOrDefault(x => x.PointName == "Total Thick Y")?.R1,
+                spiral = g.FirstOrDefault(x => x.PointName == "Spiral Pitch")?.R1,
+                visual = new { 
+                    burry = "ok", line = "ok", bubble = "ok", scratch = "ok" 
+                } // Visual labels can be expanded as needed
+            }
+        })));
+
+        if (!measurements || measurements.length === 0) {
+            measurements = [ { time: null, data: { vin: "@Model.VinCode", actPnjg: "@Model.ActualLength", remark: "@Model.Remark", qtyOk: "@Model.QtyOk", ngDim: "@Model.NgDimension", ngVis: "@Model.NgVisual" } } ];
+        }
+
         let currentIndex = 0;
         let activeStandards = {
             innerDia: { val: 11.0, tol: 0.2 },
@@ -669,7 +694,9 @@
         let html5QrCode;
 
         window.onload = () => {
+            loadMaster();
             renderTimeline();
+            loadDataToUI();
             initSmartNext();
         };
 
@@ -1222,13 +1249,23 @@
                     { name: 'Total Thick X', id: 'total-tx' },
                     { name: 'Total Thick Y', id: 'total-ty' },
                     { name: 'Spiral Pitch', id: 'spiral' }
-                ].map(p => ({
-                    PointName: p.name,
-                    TimeSection: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                    Reading1: (document.getElementById(`val-${p.id}`)?.value || "0"),
-                    Reading2: "", Reading3: "", Reading4: "", Reading5: "",
-                    ScaleValue: 0, Initial: ""
-                }));
+                ].map(p => {
+                    const card = document.getElementById(`card-${p.id}`);
+                    return {
+                        PointName: p.name,
+                        TimeSection: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                        Frequency: '30m Sekali',
+                        StandardDimension: (document.getElementById(`std-${p.id}`)?.innerText || ""),
+                        Initial: "",
+                        Reading1: (document.getElementById(`val-${p.id}`)?.value || "0"),
+                        Reading2: "",
+                        Reading3: "",
+                        Reading4: "",
+                        Reading5: "",
+                        Status: card?.classList.contains('status-ng') ? 'NG' : 'OK',
+                        ScaleValue: 0
+                    };
+                });
 
                 const payload = {
                     ReportId: 0,

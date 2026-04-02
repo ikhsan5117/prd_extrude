@@ -1,3 +1,4 @@
+@inject VelastoProductionSystem.Data.ApplicationDbContext _context
 @model VelastoProductionSystem.Models.ProductionReport
 
 @{
@@ -74,19 +75,19 @@
                         </thead>
                         <tbody>
                             @{
+                                var master = _context.MasterlistSpsDoubleLayers.FirstOrDefault(m => m.HoseType == Model.HoseType);
                                 var stdVal = Model.StandardParameterSetting;
-                                var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
 
                                 // Helper to parse string to decimal
                                 decimal D(string s, decimal def) => decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
 
                                 // Override standards if masterlist is present and std is null/zero
-                                decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 11.0m) : 11.0m);
-                                decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0.2m) : 0.2m);
-                                decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 1.8m) : 1.8m);
+                                decimal idNom = master != null ? D(master.Dimensi, 11.0m) : (stdVal?.InnerDie ?? 11.0m);
+                                decimal idTol = master != null ? D(master.ToleranceInner, 0.2m) : (stdVal?.ToleranceDie ?? 0.2m);
+                                decimal tubeNom = master != null ? D(master.TebalInner, 1.8m) : (stdVal?.TubeDie ?? 1.8m);
                                 decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0.2m;
-                                decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 3.3m) : 3.3m);
-                                decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m);
+                                decimal coverNom = master != null ? D(master.TebalTotal, 3.3m) : (stdVal?.CoverDie ?? 3.3m);
+                                decimal coverTol = master != null ? D(master.ToleranceOuter, 0.2m) : (stdVal?.Tol_CoverDie ?? 0.2m);
 
                                 var sections = new[] {
                                     new { Label = "Inner Diameter", Nom = idNom, Tol = idTol, Prop = "InnerDiameter" },
@@ -124,7 +125,12 @@
                             <tr style="height: 40px; border-top: 2px solid rgba(59, 130, 246, 0.3);">
                                 <td class="p-2 text-start fw-bold text-info" style="font-size: 11px;">Spiral Pitch</td>
                                 <td class="text-white-50" style="font-size: 9px;">30m Sekali</td>
-                                <td class="text-warning fw-bold" style="font-size: 11px;">@(std?.SpiralPitch ?? 38) ± @(std?.Tol_SpiralPitch ?? 5)</td>
+                                <td class="text-warning fw-bold" style="font-size: 11px;">
+                                    @{
+                                        string spiralStr = master?.ToleranceSpiralPitch ?? $"{std?.SpiralPitch ?? 38} ± {std?.Tol_SpiralPitch ?? 5}";
+                                    }
+                                    @spiralStr
+                                </td>
                                 <td class="bg-white-5" style="font-size: 10px;">NOM</td>
                                 @for(int h=0; h<6; h++) {
                                     var r = h < readings.Count ? readings[h] : null;
