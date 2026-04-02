@@ -190,9 +190,10 @@
         .status-ng .status-badge { background: #ff4d4d; box-shadow: 0 0 25px #ff4d4d; }
         .status-ng .c-input { 
             color: #ff4d4d !important; 
-            border-color: rgba(255, 77, 77, 0.5) !important;
+            background: rgba(255, 77, 77, 0.15) !important;
+            border-color: rgba(255, 77, 77, 0.6) !important;
             text-shadow: 0 0 15px rgba(255, 77, 77, 0.5); 
-            box-shadow: inset 0 0 20px rgba(255, 77, 77, 0.15);
+            box-shadow: inset 0 0 25px rgba(255, 77, 77, 0.2), 0 0 15px rgba(255, 77, 77, 0.2);
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
         
@@ -368,7 +369,7 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="number" class="c-input" id="val-inner-dia" step="0.01" oninput="validateCard('inner-dia')" placeholder="0.00" />
+                <input type="text" inputmode="decimal" class="c-input" id="val-inner-dia" oninput="validateCard('inner-dia')" placeholder="0.00" />
             </div>
             <span class="status-badge"></span>
         </div>
@@ -395,7 +396,7 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="number" class="c-input" id="val-inner-tx" step="0.01" oninput="validateCard('inner-tx')" placeholder="0.00" />
+                <input type="text" inputmode="decimal" class="c-input" id="val-inner-tx" oninput="validateCard('inner-tx')" placeholder="0.00" />
             </div>
             <span class="status-badge"></span>
         </div>
@@ -422,7 +423,7 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="number" class="c-input" id="val-inner-ty" step="0.01" oninput="validateCard('inner-ty')" placeholder="0.00" />
+                <input type="text" inputmode="decimal" class="c-input" id="val-inner-ty" oninput="validateCard('inner-ty')" placeholder="0.00" />
             </div>
             <span class="status-badge"></span>
         </div>
@@ -449,7 +450,7 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="number" class="c-input" id="val-total-tx" step="0.01" oninput="validateCard('total-tx')" placeholder="0.00" />
+                <input type="text" inputmode="decimal" class="c-input" id="val-total-tx" oninput="validateCard('total-tx')" placeholder="0.00" />
             </div>
             <span class="status-badge"></span>
         </div>
@@ -476,7 +477,7 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="number" class="c-input" id="val-total-ty" step="0.01" oninput="validateCard('total-ty')" placeholder="0.00" />
+                <input type="text" inputmode="decimal" class="c-input" id="val-total-ty" oninput="validateCard('total-ty')" placeholder="0.00" />
             </div>
             <span class="status-badge"></span>
         </div>
@@ -503,7 +504,7 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL PITCH VALUE</label>
-                <input type="number" class="c-input" id="val-spiral" step="1" oninput="validateCard('spiral')" placeholder="0" />
+                <input type="text" inputmode="decimal" class="c-input" id="val-spiral" oninput="validateCard('spiral')" placeholder="0" />
             </div>
             <span class="status-badge"></span>
         </div>
@@ -551,6 +552,27 @@
             <span class="status-badge"></span>
         </div>
     </div> <!-- END CARD GRID -->
+
+    <!-- FLOATING ACTION BUTTON -->
+    <div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000; display: flex; gap: 15px; align-items: center;">
+        <div id="save-status" style="color: #10b981; font-size: 11px; opacity: 0; transition: 0.5s; font-weight: 800;">
+            <i class="bi bi-check2-circle"></i> DATA SAVED TO HISTORY
+        </div>
+        <button type="button" onclick="submitEntry()" class="submit-btn" style="
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white; padding: 18px 35px; border: none; border-radius: 50px;
+            font-weight: 800; font-size: 16px; cursor: pointer;
+            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.4);
+            display: flex; align-items: center; gap: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase; letter-spacing: 1px;
+            border: 2px solid rgba(255,255,255,0.1);
+        " onmouseover="this.style.transform='scale(1.05) translateY(-5px)'; this.style.boxShadow='0 15px 50px rgba(37, 99, 235, 0.6)';" 
+          onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.boxShadow='0 10px 40px rgba(37, 99, 235, 0.4)';">
+            <i class="bi bi-cloud-arrow-up-fill" style="font-size: 24px;"></i>
+            SUBMIT ENTRY
+        </button>
+    </div>
 
     <!-- PRODUCTION DATA SECTION -->
     <div class="section-title">
@@ -800,6 +822,69 @@
             }
         }
 
+        // TURBO BACKGROUND SCRUBBER: For stubborn bluetooth tools 
+        setInterval(() => {
+            document.querySelectorAll('.c-input').forEach(input => {
+                const raw = input.value;
+                if (!raw || raw === "0" || raw === "0.00") return;
+                
+                // If it contains raw tool symbols (+ or leading 000)
+                if (raw.includes('+') || (raw.startsWith('0') && raw.length > 4)) {
+                    // FORCE CLEAN: No matter if focused or not
+                    let n = parseFloat(raw.toString().replace(/[+]/g, ''));
+                    if (!isNaN(n)) {
+                        input.value = n.toFixed(2);
+                        const id = input.id.replace('val-', '');
+                        validateCard(id);
+                    }
+                }
+            });
+        }, 200);
+
+        // DEEP CLEAN ON BLUR: When operator moves to next field
+        document.addEventListener('blur', (e) => {
+            if (e.target.classList.contains('c-input')) {
+                const input = e.target;
+                let n = parseFloat(input.value.toString().replace(/[+]/g, ''));
+                if (!isNaN(n)) {
+                    input.value = n.toFixed(2);
+                    validateCard(input.id.replace('val-', ''));
+                }
+            }
+        }, true);
+
+        // IMMEDIATE DELEGATE: For live updates        // --- THE ATOMIC INSTANT SCRUBBER ---
+        // Handles text fields and cleans tool output (+006.10 -> 6.10) instantly
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('c-input')) {
+                const input = e.target;
+                let val = input.value;
+                
+                // Nuclear Regex: Strip PLUS and stripping leading zeros before any digits
+                let cleaned = val.replace(/[+]/g, '').replace(/^0+(?=\d)/, '');
+                
+                if (input.value !== cleaned) {
+                    input.value = cleaned;
+                }
+                
+                validateCard(input.id.replace('val-', ''));
+            }
+        });
+
+        // Ensure initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            initSmartNext();
+            loadMaster();
+            renderTimeline();
+        });
+
+        function cleanValue(raw) {
+            if(!raw || raw === "0" || raw === "0.00") return "0.00";
+            let cleaned = raw.toString().replace(/[+]/g, '').trim();
+            let n = parseFloat(cleaned);
+            return isNaN(n) ? cleaned : n.toFixed(2);
+        }
+
         function initSmartNext() {
             // Global Enter key listener for Bluetooth tools and manual input
             document.addEventListener('keydown', (e) => {
@@ -815,22 +900,30 @@
                         let val = active.value.trim();
                         if (toolPrefix && val.startsWith(toolPrefix)) {
                             // Strip prefix if detected (e.g. "CAL01:12.05" becomes "12.05")
-                            active.value = val.replace(toolPrefix, '').replace(':', '').trim();
+                            val = val.replace(toolPrefix, '').replace(':', '').trim();
                         }
-
-                        // List all relevant fields in sequence
-                        const sequence = Array.from(document.querySelectorAll('.c-input, .f-input:not([readonly])'));
-                        const currentIdx = sequence.indexOf(active);
                         
-                        if (currentIdx > -1 && currentIdx < sequence.length - 1) {
-                            const next = sequence[currentIdx + 1];
-                            next.focus();
-                            if (next.tagName === 'INPUT') next.select();
-                            const card = next.closest('.dimensi-card');
-                            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        } else if (currentIdx === sequence.length - 1) {
-                            Swal.fire({ icon: 'success', title: 'SEQUENCE COMPLETED', timer: 1000, showConfirmButton: false, position: 'top-end', toast: true });
-                        }
+                        // CLEAN VALUE: Remove + and leading zeros
+                        // Add a tiny delay to wait for tool to finish typing final digits
+                        setTimeout(() => {
+                            active.value = cleanValue(active.value);
+                            const id = active.id.replace('val-', '');
+                            validateCard(id);
+
+                            // List all relevant fields in sequence
+                            const sequence = Array.from(document.querySelectorAll('.c-input, .f-input:not([readonly])'));
+                            const currentIdx = sequence.indexOf(active);
+                            
+                            if (currentIdx > -1 && currentIdx < sequence.length - 1) {
+                                const next = sequence[currentIdx + 1];
+                                next.focus();
+                                if (next.tagName === 'INPUT') next.select();
+                                const card = next.closest('.dimensi-card');
+                                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            } else if (currentIdx === sequence.length - 1) {
+                                Swal.fire({ icon: 'success', title: 'SEQUENCE COMPLETED', timer: 1000, showConfirmButton: false, position: 'top-end', toast: true });
+                            }
+                        }, 20);
                     }
                 }
             });
@@ -1013,13 +1106,15 @@
             const card = document.getElementById(`card-${id}`), std = activeStandards[cleanId], inp = document.getElementById(`val-${id}`);
             if(!card || !inp) return;
             
-            const val = parseFloat(inp.value.replace(/[+]/g, ''));
+            // Clean local value for parsing
+            const raw = inp.value.toString().replace(/[+]/g, '').trim();
+            const val = parseFloat(raw);
             card.classList.remove('status-ok', 'status-ng');
             
             if (!isNaN(val) && std && std.val !== 0) {
                 const min = std.val - std.tol;
                 const max = std.val + std.tol;
-                const isOK = (val >= min && val <= max);
+                const isOK = (val >= (min - 0.001) && val <= (max + 0.001)); // Tolerance buffer
                 card.classList.add(isOK ? 'status-ok' : 'status-ng');
             }
         }
@@ -1072,7 +1167,8 @@
                         { id: 'innertx', rawStr: m.tebalInner, el: 'inner-tx' },
                         { id: 'innerty', rawStr: m.tebalInner, el: 'inner-ty' },
                         { id: 'totaltx', rawStr: m.tebalTotal, el: 'total-tx' },
-                        { id: 'totalty', rawStr: m.tebalTotal, el: 'total-ty' }
+                        { id: 'totalty', rawStr: m.tebalTotal, el: 'total-ty' },
+                        { id: 'spiral', rawStr: m.toleranceSpiralPitch || "---", el: 'spiral' }
                     ];
                     points.forEach(p => {
                         const stdEl = document.getElementById(`std-${p.el}`);
@@ -1103,6 +1199,100 @@
                     loadDataToUI();
                 }
             } catch (e) { }
+        }
+
+        async function submitEntry() {
+            const btn = event?.currentTarget;
+            if(btn) btn.disabled = true;
+
+            try {
+                const getV = (id) => document.getElementById(`val-${id}`)?.value || "0";
+                const getD = (id) => document.getElementById(`disp-${id}`)?.innerText || "";
+                
+                // Collect readings
+                const readings = [
+                    { name: 'Inner Diameter', id: 'inner-dia' },
+                    { name: 'Inner Thick X', id: 'inner-tx' },
+                    { name: 'Inner Thick Y', id: 'inner-ty' },
+                    { name: 'Total Thick X', id: 'total-tx' },
+                    { name: 'Total Thick Y', id: 'total-ty' },
+                    { name: 'Spiral Pitch', id: 'spiral' }
+                ].map(p => ({
+                    PointName: p.name,
+                    TimeSection: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                    Reading1: getV(p.id)
+                }));
+
+                const payload = {
+                    HoseType: document.getElementById('h-hose')?.innerText || "",
+                    CustomerName: document.getElementById('h-cust')?.innerText || "",
+                    DimensionDisplay: getD('std-pnjg'),
+                    VinCode: document.getElementById('val-vin-kode')?.value || "",
+                    ItemList: getD('part-no'),
+                    QtyOk: parseInt(document.getElementById('val-qty-ok')?.value || "0"),
+                    QtyNg: 0, // Calculate if needed
+                    Remark: document.getElementById('val-remark')?.value || "",
+                    DimensionReadings: readings
+                };
+
+                const response = await fetch('/Dimensi/SaveData', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if(result.success) {
+                    // Flash success message
+                    const status = document.getElementById('save-status');
+                    status.style.opacity = '1';
+                    
+                    // Reset HUD
+                    resetHUD();
+                    
+                    setTimeout(() => { status.style.opacity = '0'; }, 3000);
+                } else {
+                    Swal.fire('Error', result.message || 'Failed to save', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Sistem Gagal Menyimpan', 'error');
+            } finally {
+                if(btn) btn.disabled = false;
+            }
+        }
+
+        function resetHUD() {
+            // Reset all values to 0
+            document.querySelectorAll('.c-input').forEach(inp => {
+                inp.value = "0";
+                // Trigger validation to clear color
+                const id = inp.id.replace('val-', '');
+                validateCard(id);
+            });
+
+            // Reset summary fields
+            ['val-vin-kode', 'val-act-pnjg', 'val-qty-ok', 'val-remark'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.value = el.nodeName === 'INPUT' ? "" : "0";
+            });
+
+            // Reset visual buttons
+            document.querySelectorAll('.seg-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Clean visual evaluations
+            visualEvals = { burry: null, line: null, bubble: null, scratch: null };
+
+            // Notification
+            Swal.fire({
+                icon: 'success',
+                title: 'DATA SAVED',
+                text: 'Dashboard dikosongkan untuk batch berikutnya.',
+                timer: 1500,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true
+            });
         }
 
         function finalize() {
