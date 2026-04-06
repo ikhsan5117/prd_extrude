@@ -316,7 +316,7 @@
             <div class="m-row">
                 <span class="m-val" style="font-size: 11px;">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
                 <span class="m-divider"></span>
-                <span class="m-val m-accent" id="h-shift">@(Model.Shift ?? "---")</span>
+                <span class="m-val m-accent" id="h-shift" onclick="toggleShift()" style="cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
             </div>
         </div>
         <!-- CLUSTER 4: PRODUCT -->
@@ -683,12 +683,12 @@
 
         let currentIndex = 0;
         let activeStandards = {
-            innerDia: { val: 11.0, tol: 0.2 },
-            innerTx: { val: 1.8, tol: 0.2 },
-            innerTy: { val: 1.8, tol: 0.2 },
-            totalTx: { val: 3.3, tol: 0.2 },
-            totalTy: { val: 3.3, tol: 0.2 },
-            spiral: { val: 38, tol: 5 }
+            innerdiameter: { val: 11.0, tol: 0.2 },
+            innerthicknessx: { val: 1.8, tol: 0.2 },
+            innerthicknessy: { val: 1.8, tol: 0.2 },
+            totalthicknessx: { val: 3.3, tol: 0.2 },
+            totalthicknessy: { val: 3.3, tol: 0.2 },
+            spiralpitch: { val: 38, tol: 5 }
         };
 
         let html5QrCode;
@@ -731,6 +731,29 @@
         let isToolConnected = false;
         let toolPrefix = "";
         let linkedDeviceName = "NONE / MANUAL";
+
+        function toggleShift() {
+            const el = document.getElementById('h-shift');
+            const current = el.innerText;
+            let next = "Shift 1";
+            if (current === "Shift 1") next = "Shift 2";
+            else if (current === "Shift 2") next = "Shift 3";
+            el.innerText = next;
+            
+            // Pulse effect
+            el.classList.remove('animate__animated', 'animate__pulse');
+            setTimeout(() => el.classList.add('animate__animated', 'animate__pulse'), 10);
+            
+            Swal.fire({ 
+                icon: 'info', 
+                title: 'SHIFT UPDATED', 
+                text: `Toggled to ${next}`, 
+                timer: 1000, 
+                showConfirmButton: false, 
+                toast: true, 
+                position: 'top-end' 
+            });
+        }
 
         async function scanForTool() {
             try {
@@ -1076,13 +1099,6 @@
             });
 
             current.data = {
-                vin: document.getElementById('val-vin-kode').value,
-                actPnjg: document.getElementById('val-act-pnjg').value,
-                remark: document.getElementById('val-remark').value,
-                qtySt: document.getElementById('qty-ok').classList.contains('active-ok') ? 'ok' : (document.getElementById('qty-ng').classList.contains('active-ng') ? 'ng' : null),
-                qtyOk: document.getElementById('val-qty-ok').value,
-                ngDim: document.getElementById('val-ng-dimensi').value,
-                ngVis: document.getElementById('val-ng-visual').value,
                 innerDia: document.getElementById('val-inner-dia').value,
                 innerTx: document.getElementById('val-inner-tx').value,
                 innerTy: document.getElementById('val-inner-ty').value,
@@ -1104,33 +1120,28 @@
         function loadDataToUI() {
             const data = measurements[currentIndex].data || {};
             
-            document.getElementById('val-vin-kode').value = data.vin || '';
-            document.getElementById('val-act-pnjg').value = data.actPnjg || '';
-            document.getElementById('val-remark').value = data.remark || '';
-            document.getElementById('val-qty-ok').value = data.qtyOk || '0';
-            document.getElementById('val-ng-dimensi').value = data.ngDim || '0';
-            document.getElementById('val-ng-visual').value = data.ngVis || '0';
-            
-            // Set Initial Panel Visibility
-            setQtyStatus(data.qtySt);
-
+            // Per-slot measurements
             document.getElementById('val-inner-dia').value = data.innerDia || '';
             document.getElementById('val-inner-tx').value = data.innerTx || '';
             document.getElementById('val-inner-ty').value = data.innerTy || '';
             document.getElementById('val-total-tx').value = data.totalTx || '';
             document.getElementById('val-total-ty').value = data.totalTy || '';
             document.getElementById('val-spiral').value = data.spiral || '';
-            
+
+            // Per-slot Visual Check UI refresh
             const v = data.visual || {};
             ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
-                const bOk = document.getElementById(`v-${it}-ok`), bNg = document.getElementById(`v-${it}-ng`);
-                bOk.classList.remove('active-ok'); bNg.classList.remove('active-ng');
-                if (v[it] === 'ok') bOk.classList.add('active-ok');
-                else if (v[it] === 'ng') bNg.classList.add('active-ng');
+                const okBtn = document.getElementById(`v-${it}-ok`);
+                const ngBtn = document.getElementById(`v-${it}-ng`);
+                okBtn.classList.remove('active-ok');
+                ngBtn.classList.remove('active-ng');
+                if (v[it] === 'ok') okBtn.classList.add('active-ok');
+                else if (v[it] === 'ng') ngBtn.classList.add('active-ng');
             });
-
-            ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(validateCard);
             renderVisualStatus();
+
+            // Run validation for all cards
+            ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
         }
 
         function validateCard(id) {
@@ -1234,45 +1245,81 @@
         }
 
         async function submitEntry() {
-            const btn = event?.currentTarget;
+            saveCurrentData();
+            const btn = document.querySelector('.submit-btn');
             if(btn) btn.disabled = true;
 
             try {
-                const getV = (id) => document.getElementById(`val-${id}`)?.value || "0";
-                const getD = (id) => document.getElementById(`disp-${id}`)?.innerText || "";
+                // Collect all unique points exactly as per Paper standard
+                const allPoints = ['Inner Diameter', 'Inner Thickness (x)', 'Inner Thickness (y)', 'Total Thickness (x)', 'Total Thickness (y)', 'Spiral Pitch'];
                 
-                // Collect readings
-                const readings = [
-                    { name: 'Inner Diameter', id: 'inner-dia' },
-                    { name: 'Inner Thick X', id: 'inner-tx' },
-                    { name: 'Inner Thick Y', id: 'inner-ty' },
-                    { name: 'Total Thick X', id: 'total-tx' },
-                    { name: 'Total Thick Y', id: 'total-ty' },
-                    { name: 'Spiral Pitch', id: 'spiral' }
-                ].map(p => {
-                    const card = document.getElementById(`card-${p.id}`);
-                    return {
-                        PointName: p.name,
-                        TimeSection: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                // Aggregate all slots into multi-column readings
+                const aggregateReadings = allPoints.map(pName => {
+                    const cleanKey = pName.toLowerCase().replace(/ /g, '').replace('(', '').replace(')', '');
+                    const std = activeStandards[cleanKey] || { val: 0, tol: 0 };
+
+                    const rowData = {
+                        PointName: pName,
+                        TimeSection: measurements[0]?.time || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
                         Frequency: '30m Sekali',
-                        StandardDimension: (document.getElementById(`std-${p.id}`)?.innerText || ""),
-                        Initial: "",
-                        Reading1: (document.getElementById(`val-${p.id}`)?.value || "0"),
-                        Reading2: "",
-                        Reading3: "",
-                        Reading4: "",
-                        Reading5: "",
-                        Status: card?.classList.contains('status-ng') ? 'NG' : 'OK',
-                        ScaleValue: 0
+                        StandardDimension: std.val > 0 ? (std.val + " ± " + std.tol) : "-",
+                        Initial: "", 
+                        Reading1: "", Reading2: "", Reading3: "", Reading4: "", Reading5: "",
+                        Status: "OK"
                     };
+
+                    // Fill R1 to R5 based on slots
+                    measurements.forEach((slot, idx) => {
+                        const key = pName.toLowerCase().includes('diameter') ? 'innerDia' :
+                                    pName.toLowerCase().includes('thickness (x)') ? 'innerTx' :
+                                    pName.toLowerCase().includes('thickness (y)') ? 'innerTy' :
+                                    pName.toLowerCase().includes('total thickness (x)') ? 'totalTx' :
+                                    pName.toLowerCase().includes('total thickness (y)') ? 'totalTy' :
+                                    pName.toLowerCase().includes('spiral pitch') ? 'spiral' : null;
+                        
+                        if(key && idx < 5) {
+                            const val = slot.data[key];
+                            rowData[`Reading${idx + 1}`] = val || "";
+                            
+                            if(std.val > 0 && val !== "" && val !== null) {
+                                const v = parseFloat(val);
+                                if(!isNaN(v) && (v < (std.val - std.tol - 0.001) || v > (std.val + std.tol + 0.001))) {
+                                    rowData.Status = "NG";
+                                }
+                            }
+                        }
+                    });
+
+                    return rowData;
                 });
+
+                // Add Visual Check point with per-slot summary
+                const visualSummary = {
+                    PointName: 'Visual Check',
+                    TimeSection: measurements[0]?.time || "",
+                    Frequency: '30m Sekali',
+                    StandardDimension: "No Burry, No Line, No Bubble, No Scratch",
+                    Initial: "OK", 
+                    Reading1: "", Reading2: "", Reading3: "", Reading4: "", Reading5: "",
+                    Status: "OK"
+                };
+
+                measurements.forEach((slot, idx) => {
+                    if(idx < 5) {
+                        const v = slot.data.visual || {};
+                        const isNG = Object.values(v).some(val => val === 'ng');
+                        visualSummary[`Reading${idx + 1}`] = isNG ? "0" : (Object.values(v).length > 0 ? "1" : "");
+                        if(isNG) visualSummary.Status = "NG";
+                    }
+                });
+                aggregateReadings.push(visualSummary);
 
                 const payload = {
                     ReportId: 0,
                     DocumentNumber: document.getElementById('h-doc')?.innerText || "---",
                     HoseType: document.getElementById('h-hose')?.innerText || "",
                     CustomerName: document.getElementById('h-customer')?.innerText || "",
-                    DimensionDisplay: getD('std-pnjg'),
+                    DimensionDisplay: document.getElementById('disp-part-no')?.innerText || "",
                     VinCode: document.getElementById('val-vin-kode')?.value || "",
                     ActualLength: document.getElementById('val-act-pnjg')?.value || "",
                     QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || "0"),
@@ -1280,8 +1327,9 @@
                     NgDimension: parseInt(document.getElementById('val-ng-dimensi')?.value || "0"),
                     NgVisual: parseInt(document.getElementById('val-ng-visual')?.value || "0"),
                     Remark: document.getElementById('val-remark')?.value || "",
-                    ByPass: "",
-                    DimensionReadings: readings
+                    ByPass: document.getElementById('h-hose')?.innerText.split('|')[1]?.trim() || "",
+                    Shift: document.getElementById('h-shift')?.innerText || "",
+                    DimensionReadings: aggregateReadings
                 };
 
                 const response = await fetch('/Dimensi/SaveData', {
@@ -1312,31 +1360,46 @@
         }
 
         function resetHUD() {
-            // Reset all values to 0
+            // 1. Reset Global Data
+            measurements = [{ time: null, data: {} }];
+            currentIndex = 0;
+
+            // 2. Clear All Card Inputs
             document.querySelectorAll('.c-input').forEach(inp => {
-                inp.value = "0";
-                // Trigger validation to clear color
+                inp.value = "";
                 const id = inp.id.replace('val-', '');
                 validateCard(id);
             });
 
-            // Reset summary fields
-            ['val-vin-kode', 'val-act-pnjg', 'val-qty-ok', 'val-remark'].forEach(id => {
+            // 3. Clear Summary Inputs
+            ['val-vin-kode', 'val-act-pnjg', 'val-qty-ok', 'val-ng-dimensi', 'val-ng-visual', 'val-remark'].forEach(id => {
                 const el = document.getElementById(id);
-                if(el) el.value = el.nodeName === 'INPUT' ? "" : "0";
+                if(el) el.value = "";
             });
 
-            // Reset visual buttons
-            document.querySelectorAll('.seg-btn').forEach(btn => btn.classList.remove('active'));
-            
-            // Clean visual evaluations
-            visualEvals = { burry: null, line: null, bubble: null, scratch: null };
+            // 4. Clear Static Labels
+            ['disp-part-no', 'disp-std-pnjg'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.innerText = "-";
+            });
+            const qtyTargetEl = document.getElementById('disp-qty-target');
+            if(qtyTargetEl) qtyTargetEl.value = "0";
 
-            // Notification
+            // 5. Reset Visual Buttons & Status
+            document.querySelectorAll('.seg-btn').forEach(btn => btn.classList.remove('active-ok', 'active-ng'));
+            document.querySelectorAll('.qty-btn').forEach(btn => btn.classList.remove('active-ok', 'active-ng'));
+            document.getElementById('okPanel').style.display = 'none';
+            document.getElementById('ngPanel').style.display = 'none';
+
+            // 6. UI Update
+            renderTimeline();
+            loadDataToUI();
+
+            // 7. Notification (Toast)
             Swal.fire({
                 icon: 'success',
-                title: 'DATA SAVED',
-                text: 'Dashboard dikosongkan untuk batch berikutnya.',
+                title: 'DASHBOARD RESET',
+                text: 'Data tersimpan & Layar dikosongkan.',
                 timer: 1500,
                 showConfirmButton: false,
                 position: 'top-end',

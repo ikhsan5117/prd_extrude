@@ -548,6 +548,7 @@ textarea.form-control {
     border-radius: 10px;
     padding: 0.7rem 1rem;
     transition: all 0.3s ease;
+    color-scheme: dark;
 }
 
 .form-control:focus,

@@ -30,11 +30,48 @@ namespace VelastoProductionSystem.Controllers
 
         private string GetCurrentShift()
         {
+            // Trying to sync with ShiftMaster if available, otherwise using the 07:30/19:30 logic from Management UI
+            var shifts = _context.ShiftMasters.ToList();
+            var now = DateTime.Now.TimeOfDay;
+
+            if (shifts.Any())
+            {
+                var sortedShifts = shifts
+                    .Select(s => {
+                        TimeSpan.TryParse(s.StartTime, out var ts);
+                        return new { Name = s.ShiftName, Start = ts };
+                    })
+                    .OrderBy(s => s.Start)
+                    .ToList();
+
+                for (int i = 0; i < sortedShifts.Count; i++)
+                {
+                    var current = sortedShifts[i];
+                    var next = (i + 1 < sortedShifts.Count) ? sortedShifts[i + 1] : sortedShifts[0];
+
+                    if (current.Start < next.Start)
+                    {
+                        if (now >= current.Start && now < next.Start) return current.Name;
+                    }
+                    else // Over midnight case
+                    {
+                        if (now >= current.Start || now < next.Start) return current.Name;
+                    }
+                }
+            }
+
+            // Fallback to the 07:30/19:30 configuration shown in the image
             var hour = DateTime.Now.Hour;
-            if (hour >= 7 && hour < 15) return "Shift 1";
-            if (hour >= 15 && hour < 23) return "Shift 2";
-            return "Shift 3";
+            var minute = DateTime.Now.Minute;
+            var totalMinutes = (hour * 60) + minute;
+
+            // Shift 1 start 07:30 (450 mins)
+            // Shift 2 start 19:30 (1170 mins)
+            if (totalMinutes >= 450 && totalMinutes < 1170) return "Shift 1";
+            return "Shift 2";
         }
+
+
 
         [HttpGet]
         public async Task<JsonResult> GetSpsStandard(string hoseType)
@@ -168,7 +205,8 @@ namespace VelastoProductionSystem.Controllers
                         ProductionDate = DateTime.Now,
                         Status = "ACTIVE",
                         CreatedDate = DateTime.Now,
-                        CreatedBy = "QC Operator"
+                        CreatedBy = "QC Operator",
+                        Shift = data.Shift ?? GetCurrentShift()
                     };
                     _context.DimensionReports.Add(report);
                     await _context.SaveChangesAsync();
@@ -188,6 +226,7 @@ namespace VelastoProductionSystem.Controllers
                 report.ByPass = data.ByPass ?? "";
                 report.CustomerName = data.CustomerName ?? "-";
                 report.Yarn = data.Yarn ?? "";
+                report.Shift = data.Shift ?? report.Shift ?? GetCurrentShift();
 
                 // Clear and Re-add measurements for simplicity
                 if (report.Measurements != null)
@@ -207,11 +246,11 @@ namespace VelastoProductionSystem.Controllers
                             Frequency = string.IsNullOrWhiteSpace(mData.Frequency) ? "30m Sekali" : mData.Frequency,
                             StandardDimension = mData.StandardDimension,
                             Initial = mData.Initial,
-                            R1 = decimal.TryParse(mData.Reading1, out var r1) ? r1 : null,
-                            R2 = decimal.TryParse(mData.Reading2, out var r2) ? r2 : null,
-                            R3 = decimal.TryParse(mData.Reading3, out var r3) ? r3 : null,
-                            R4 = decimal.TryParse(mData.Reading4, out var r4) ? r4 : null,
-                            R5 = decimal.TryParse(mData.Reading5, out var r5) ? r5 : null,
+                            R1 = decimal.TryParse(mData.Reading1, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r1) ? r1 : null,
+                            R2 = decimal.TryParse(mData.Reading2, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r2) ? r2 : null,
+                            R3 = decimal.TryParse(mData.Reading3, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r3) ? r3 : null,
+                            R4 = decimal.TryParse(mData.Reading4, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r4) ? r4 : null,
+                            R5 = decimal.TryParse(mData.Reading5, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r5) ? r5 : null,
                             Status = string.IsNullOrWhiteSpace(mData.Status) ? "OK" : mData.Status,
                             RecordedTime = DateTime.Now
                         };

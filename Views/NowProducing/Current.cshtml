@@ -199,8 +199,8 @@
                 <!-- Footer Section: SPV Check & Notes -->
                 <div class="row g-4">
                     <div class="col-lg-8">
-                        <div class="spv-glow-container @(Model.SPVCheck ? "checked" : "")">
-                            @if (Model.SPVCheck)
+                        <div class="spv-glow-container @(Model?.SPVCheck == true ? "checked" : "")">
+                            @if (Model?.SPVCheck == true)
                             {
                                 <i class="bi bi-check-circle-fill spv-icon-glow text-success"></i>
                                 <h4 class="text-white fw-bold mb-1">SUPERVISOR CHECKED</h4>

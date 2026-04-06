@@ -16,6 +16,8 @@ namespace VelastoProductionSystem.Models
         public int NgVisual { get; set; }
         public string? Remark { get; set; }
         public string? ByPass { get; set; }
+        public string? Shift { get; set; }
+        public int RevisionNumber { get; set; }
         
         // Dimension readings array
         public List<DimensionReadingData> DimensionReadings { get; set; } = new List<DimensionReadingData>();

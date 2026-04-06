@@ -10,6 +10,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "No. Dokumen")]
         public string DocumentNumber { get; set; } = string.Empty;
 
+        [Display(Name = "No. Revisi")]
+        public int RevisionNumber { get; set; }
+
         [Required]
         [Display(Name = "Tanggal Produksi")]
         public DateTime ProductionDate { get; set; } = DateTime.Now;

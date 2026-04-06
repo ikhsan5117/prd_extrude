@@ -6,334 +6,207 @@
 
 <style>
     :root {
-        --hist-bg: rgba(15, 23, 42, 0.9);
-        --card-bg: rgba(15, 23, 42, 0.72);
-        --accent-glow: #38bdf8;
-        --text-dim: #94a3b8;
+        --bg: #010409;
+        --tile-bg: rgba(21, 27, 38, 0.7);
+        --accent: #0066ff;
+        --accent-glow: rgba(0, 102, 255, 0.4);
+        --success: #00ff88;
+        --danger: #ff4d4d;
+        --border: rgba(255,255,255,0.06);
     }
 
-    .history-page {
-        min-height: calc(100vh - 140px);
-        padding: 40px 20px 60px;
-        display: flex;
-        justify-content: center;
-        background: linear-gradient(180deg, rgba(6, 15, 34, 0.95) 0%, rgba(9, 16, 29, 1) 100%);
+    body { 
+        background: var(--bg); color: #e6edf3; font-family: 'Outfit', sans-serif;
+        background-image: 
+            radial-gradient(circle at 0% 0%, rgba(0, 102, 255, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
     }
 
-    .history-container {
-        width: 100%;
-        max-width: 1220px;
-        margin: 0 auto;
-    }
+    .fade-in { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @@keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-    .glass-card {
-        background: var(--card-bg);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 24px;
-        backdrop-filter: blur(24px);
-        padding: 32px;
-        box-shadow: 0 35px 80px -45px rgba(0,0,0,0.65);
-    }
+    .history-page { padding: 40px 20px 100px; }
+    .history-container { max-width: 1400px; margin: 0 auto; }
 
+    /* ─── HEADER HUD ─── */
     .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: 18px;
-        margin-bottom: 28px;
+        display: flex; justify-content: space-between; align-items: flex-end;
+        margin-bottom: 50px; border-bottom: 1px solid var(--border); padding-bottom: 30px;
+    }
+    .page-title { font-size: 3.5rem; font-weight: 1000; letter-spacing: -3px; color: #fff; line-height: 0.9; }
+    .page-subtitle { color: #8b949e; font-size: 0.9rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; }
+
+    .btn-action {
+        display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-radius: 12px;
+        font-weight: 800; text-decoration: none; transition: 0.3s; font-size: 0.8rem;
+    }
+    .btn-action.prm { background: var(--accent); color: #fff; box-shadow: 0 10px 40px var(--accent-glow); }
+    .btn-action.sec { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #8b949e; }
+    .btn-action:hover { transform: translateY(-3px) scale(1.05); }
+
+    /* ─── SEARCH / FILTER ─── */
+    .search-hub {
+        margin-bottom: 40px; position: relative;
+    }
+    .search-input {
+        background: rgba(21, 27, 38, 0.5); border: 1px solid var(--border);
+        border-radius: 16px; padding: 20px 20px 20px 60px; width: 100%;
+        color: #fff; font-size: 1.1rem; font-weight: 600; outline: none; transition: 0.3s;
+    }
+    .search-input:focus { border-color: var(--accent); background: rgba(0, 102, 255, 0.05); }
+
+    /* ─── MASONRY GRID ─── */
+    .history-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 30px;
     }
 
-    .page-header h1 {
-        margin: 0;
-        font-size: 2.4rem;
-        letter-spacing: -1px;
+    .hist-tile {
+        background: var(--tile-bg); border: 1px solid var(--border);
+        border-radius: 32px; padding: 35px; position: relative;
+        backdrop-filter: blur(20px); transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex; flex-direction: column; gap: 25px; overflow: hidden;
+    }
+    .hist-tile:hover { 
+        transform: translateY(-15px) rotateX(2deg); 
+        border-color: rgba(255,255,255,0.1);
+        box-shadow: 0 50px 100px rgba(0,0,0,0.4);
+    }
+    .hist-tile::after {
+        content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 150px;
+        background: radial-gradient(circle at top right, rgba(0, 102, 255, 0.1), transparent 70%);
     }
 
-    .page-header p {
-        margin: 6px 0 0;
-        color: rgba(255,255,255,0.72);
-        font-size: 0.95rem;
-        max-width: 560px;
+    .tile-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .doc-num { font-size: 1rem; font-weight: 900; color: var(--accent); letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; }
+    .date-stamp { font-size: 0.8rem; color: #484f58; font-weight: 700; }
+
+    .product-info { border-left: 2px solid var(--accent); padding-left: 20px; }
+    .hose-type { font-size: 1.8rem; font-weight: 1000; color: #fff; line-height: 1.1; margin-bottom: 5px; }
+    .cust-name { font-size: 0.9rem; font-weight: 700; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+
+    .telemetry-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .stat-box {
+        background: rgba(0,0,0,0.2); border-radius: 20px; padding: 20px;
+        text-align: center; border: 1px solid rgba(255,255,255,0.02);
     }
+    .stat-val { font-size: 2.2rem; font-weight: 1000; line-height: 1; }
+    .stat-val.ok { color: var(--success); }
+    .stat-val.ng { color: var(--danger); }
+    .stat-lbl { font-size: 0.65rem; font-weight: 900; color: #484f58; text-transform: uppercase; margin-top: 8px; letter-spacing: 2px; }
 
-    .btn-back {
-        background: rgba(255,255,255,0.05);
-        color: #fff;
-        padding: 12px 24px;
-        border-radius: 999px;
-        text-decoration: none;
-        font-size: 0.95rem;
-        font-weight: 700;
-        transition: all 0.25s ease;
-        border: 1px solid rgba(255,255,255,0.12);
-        white-space: nowrap;
+    .trace-info { display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid var(--border); }
+    .trace-item { display: flex; flex-direction: column; gap: 4px; }
+    .trace-lbl { font-size: 0.65rem; font-weight: 800; color: #484f58; text-transform: uppercase; }
+    .trace-val { font-size: 1rem; font-weight: 900; color: #fff; }
+
+    .actions-row { display: flex; gap: 10px; margin-top: 10px; }
+    .btn-circle {
+        flex: 1; height: 50px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+        color: #fff; font-size: 1.2rem; transition: 0.3s; text-decoration: none;
     }
+    .btn-circle:hover { background: var(--accent); border-color: var(--accent); transform: scale(1.05); color: #fff; }
+    .btn-circle.edit:hover { background: #fbbf24; border-color: #fbbf24; color: #000; }
+    .btn-circle.del:hover { background: #ff4d4d; border-color: #ff4d4d; }
 
-    .btn-back:hover {
-        background: #38bdf8;
-        color: #020617;
-        text-decoration: none;
-        transform: translateY(-1px);
+    .status-badge {
+        position: absolute; top: 0; left: 0; padding: 6px 15px;
+        font-size: 0.6rem; font-weight: 900; letter-spacing: 1px;
+        border-radius: 0 0 15px 0;
     }
+    .st-comp { background: rgba(0, 255, 136, 0.15); color: var(--success); }
+    .st-active { background: rgba(0, 102, 255, 0.15); color: var(--accent); }
 
-    .table-wrapper {
-        overflow-x: auto;
-        border-radius: 20px;
-        padding-right: 10px;
-    }
-
-    .table-custom {
-        width: 100%;
-        min-width: 860px;
-        border-collapse: separate;
-        border-spacing: 0 12px;
-    }
-
-    .table-custom th {
-        padding: 18px 18px 12px;
-        text-align: left;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 1.8px;
-        color: var(--text-dim);
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .row-item {
-        background: rgba(255,255,255,0.04);
-        transition: transform 0.22s ease, background 0.22s ease;
-        cursor: pointer;
-        border-radius: 20px;
-        overflow: hidden;
-    }
-
-    .row-item:hover {
-        background: rgba(56, 189, 248, 0.08);
-        transform: translateY(-1px);
-    }
-
-    .row-item td {
-        padding: 20px 18px;
-        font-size: 0.95rem;
-        vertical-align: top;
-        border: none;
-    }
-
-    .row-item td:last-child {
-        text-align: right;
-        width: 120px;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-
-    .btn-secondary {
-        background: rgba(56, 189, 248, 0.18);
-        color: #38bdf8;
-        border-color: rgba(56, 189, 248, 0.25);
-    }
-
-    .btn-secondary:hover {
-        background: rgba(56, 189, 248, 0.28);
-    }
-
-    .action-buttons {
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-    }
-
-    .action-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #cbd5e1;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.08);
-        transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
-    }
-
-    .action-btn:hover {
-        transform: translateY(-1px);
-        background: rgba(56, 189, 248, 0.12);
-        color: #38bdf8;
-    }
-
-    .action-view:hover { color: #38bdf8; }
-    .action-edit:hover { color: #fbbf24; }
-    .action-delete:hover { color: #f87171; }
-
-    .action-cell {
-        min-width: 136px;
-    }
-
-    .btn-back { display: inline-flex; align-items: center; justify-content: center; }
-
-    .status-active {
-        background: rgba(16, 185, 129, 0.12);
-        color: #a3f7c8;
-        border: 1px solid rgba(16, 185, 129, 0.22);
-    }
-
-    .status-comp {
-        background: rgba(56, 189, 248, 0.12);
-        color: #a5f3fc;
-        border: 1px solid rgba(56, 189, 248, 0.22);
-    }
-
-    .lbl-sec {
-        color: rgba(255,255,255,0.55);
-        font-size: 0.78rem;
-        display: block;
-        margin-bottom: 6px;
-    }
-
-    .val-sec {
-        font-weight: 700;
-        color: #ffffff;
-        display: inline-block;
-    }
-
-    .text-action {
-        color: rgba(255,255,255,0.65);
-        transition: color 0.22s ease;
-    }
-
-    .row-item:hover .text-action {
-        color: #38bdf8;
-    }
-
-    @@media (max-width: 992px) {
-        .history-page {
-            padding: 30px 16px 50px;
-        }
-
-        .page-header {
-            align-items: flex-start;
-        }
-
-        .page-header h1 {
-            font-size: 2rem;
-        }
-
-        .table-custom th,
-        .row-item td {
-            padding: 14px 12px;
-        }
-    }
-
-    @@media (max-width: 640px) {
-        .page-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .btn-back {
-            width: 100%;
-            text-align: center;
-        }
-
-        .table-custom {
-            min-width: 100%;
-        }
+    @@media (max-width: 900px) {
+        .history-grid { grid-template-columns: 1fr; }
+        .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
     }
 </style>
+</style>
+</style>
 
-<div class="history-page animate__animated animate__fadeIn">
+<div class="history-page">
     <div class="history-container">
-        <div class="page-header">
+        <!-- ── HEADER HUD ── -->
+        <div class="page-header fade-in">
             <div>
-                <h1 class="fw-bold mb-1">Dimension History</h1>
-                <p>Review and audit all measurement inspections</p>
+                <div class="page-title">Dimension History</div>
+                <div class="page-subtitle">Quality Audit & Traceability Engine</div>
             </div>
-            <div class="header-actions">
-                <a href="/Dimensi/Index" class="btn-back btn-secondary">
-                    <i class="bi bi-plus-lg me-2"></i> NEW DIMENSION REPORT
+            <div class="d-flex gap-3">
+                <a href="/Dimensi/Index" class="btn-action prm">
+                    <i class="bi bi-plus-circle-fill"></i> NEW_INSPECTION
                 </a>
-                <a href="/Dimensi/Index" class="btn-back">
-                    <i class="bi bi-arrow-left me-2"></i> BACK TO HUD
+                <a href="/DailyPlanExecution/@TempData["ExecId"]" class="btn-action sec">
+                    <i class="bi bi-terminal-fill"></i> BACK_TO_COCKPIT
                 </a>
             </div>
         </div>
 
-        <div class="glass-card">
-            <div class="table-wrapper">
-                <table class="table-custom">
-                    <thead>
-                        <tr>
-                            <th>INSPECTION INFO</th>
-                            <th>PRODUCT DETAILS</th>
-                            <th>PRODUCTION TRACE</th>
-                            <th>QUALITY</th>
-                            <th>STATUS</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr class="row-item">
-                                <td>
-                                    <span class="lbl-sec">@item.CreatedDate.ToString("dd MMM yyyy")</span>
-                                    <span class="val-sec">@item.DocumentNumber</span>
-                                </td>
-                                <td>
-                                    <span class="lbl-sec">@(item.CustomerName?.ToUpper() ?? "---")</span>
-                                    <span class="val-sec" style="color: var(--accent-glow)">@(item.HoseType ?? "---")</span>
-                                </td>
-                                <td>
-                                    <span class="lbl-sec">SHIFT / VIN</span>
-                                    <span class="val-sec">@($"{item.Shift ?? "---"} | {item.VinCode ?? "---"}")</span>
-                                </td>
-                                <td>
-                                    <div style="display: flex; gap: 18px; flex-wrap: wrap;">
-                                        <div>
-                                            <span class="lbl-sec">OK</span>
-                                            <span class="val-sec text-success">@item.QtyOk</span>
-                                        </div>
-                                        <div>
-                                            <span class="lbl-sec">NG</span>
-                                            <span class="val-sec text-danger">@item.NgDimension</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-pill @(item.Status == "COMPLETED" ? "status-comp" : "status-active")">
-                                        @item.Status
-                                    </span>
-                                </td>
-                                <td class="text-end action-cell">
-                                    <div class="action-buttons">
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="action-btn action-view" title="Details">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn action-edit" title="Edit">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this report?');" style="display:inline;">
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <button type="submit" class="action-btn action-delete" title="Delete">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+        <!-- ── SEARCH HUD ── -->
+        <div class="search-hub fade-in" style="animation-delay: 0.1s;">
+            <i class="bi bi-search" style="position: absolute; left: 25px; top: 22px; color: var(--accent); font-size: 1.2rem;"></i>
+            <input type="text" class="search-input" placeholder="SEARCH_BY_VIN_OR_DOC_NUMBER..." />
+        </div>
+
+        <!-- ── MASONRY TILES ── -->
+        <div class="history-grid">
+            @foreach (var item in Model.OrderByDescending(x => x.CreatedDate))
+            {
+                <div class="hist-tile fade-in" style="animation-delay: 0.2s;">
+                    <span class="status-badge @(item.Status == "COMPLETED" ? "st-comp" : "st-active")">
+                        @(item.Status == "COMPLETED" ? "SYNCED" : "PENDING")
+                    </span>
+
+                    <div class="tile-header">
+                        <div class="doc-num">@item.DocumentNumber</div>
+                        <div class="date-stamp">@item.CreatedDate.ToString("dd MMM yyyy, HH:mm")</div>
+                    </div>
+
+                    <div class="product-info">
+                        <div class="hose-type">@(item.HoseType ?? "UNDEFINED_PART")</div>
+                        <div class="cust-name">@(item.CustomerName ?? "UNKNOWN_CLIENT")</div>
+                    </div>
+
+                    <div class="telemetry-row">
+                        <div class="stat-box">
+                            <div class="stat-val ok">@item.QtyOk</div>
+                            <div class="stat-lbl">PASSED</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val ng">@item.NgDimension</div>
+                            <div class="stat-lbl">FAILED</div>
+                        </div>
+                    </div>
+
+                    <div class="trace-info">
+                        <div class="trace-item">
+                            <span class="trace-lbl">VIN_CODE</span>
+                            <span class="trace-val">@(item.VinCode ?? "---")</span>
+                        </div>
+                        <div class="trace-item text-end">
+                            <span class="trace-lbl">SHIFT</span>
+                            <span class="trace-val">@(item.Shift ?? "-")</span>
+                        </div>
+                    </div>
+
+                    <div class="actions-row">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-circle" title="View Dossier">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-circle edit" title="Edit Dossier">
+                            <i class="bi bi-sliders"></i>
+                        </a>
+                        <form asp-action="Delete" method="post" onsubmit="return confirm('ERASE DOSSIER?');" style="flex:1; display:flex;">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn-circle del" style="width:100%; border:none;" title="Delete Dossier">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
