@@ -2,12 +2,58 @@
     ViewData["Title"] = "Dashboard";
 }
 
+<style>
+    .pulse-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 4px 12px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+    
+    .status-dot.pulse {
+        animation: pulse-green 2s infinite;
+        box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+        border-radius: 50%;
+    }
+
+    @@keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .xsmall { font-size: 0.7rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+
+    .card-icon-bg {
+        position: absolute;
+        bottom: -25px;
+        right: -10px;
+        font-size: 7.5rem;
+        opacity: 0.12;
+        transform: rotate(-15deg);
+        pointer-events: none;
+        transition: all 0.5s ease;
+    }
+    
+    .card:hover .card-icon-bg {
+        transform: rotate(-5deg) scale(1.1);
+        opacity: 0.15;
+    }
+</style>
+
 <!-- Decorative Blobs -->
 <div class="decoration-blob blob-1"></div>
 <div class="decoration-blob blob-2"></div>
 
 <!-- Dashboard Header -->
-<div class="dashboard-header mb-5 animate-fadeInUp">
+<div class="dashboard-header mb-3 animate-fadeInUp">
     <div>
         <h1 class="dashboard-title h-auto py-2">
             Production Cockpit <span class="text-white-50 fw-light">v4.0</span>
@@ -18,211 +64,244 @@
     </div>
 </div>
 
-<!-- Statistics Cards -->
-<div class="row g-4 mb-5">
-    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-1">
-        <div class="card stat-card blue h-100">
-            <a asp-controller="ProductionReport" asp-action="Index" class="stretched-link"></a>
-            <div class="card-body d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="stat-icon" style="background: rgba(0, 102, 255, 0.15);">
-                        <i class="bi bi-clipboard2-pulse" style="color: var(--velasto-blue);"></i>
-                    </div>
-                    <div class="d-flex flex-column align-items-center">
-                        <h2 class="stat-number mb-0">@ViewBag.TotalProductions</h2>
-                        <p class="stat-label mb-0">Reports</p>
-                    </div>
-                </div>
-                <div>
-                    <p class="stat-desc">Kelola dan tinjau laporan parameter produk.</p>
-                </div>
+<!-- SPC Filters -->
+<div class="px-3 pb-1 mb-3 bg-transparent animate-fadeInUp">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="text-white-50 xsmall uppercase tracking-wider mb-1" style="font-size: 0.65rem;">Pilih Produk</label>
+            <select id="productFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white">
+                <option value="">Semua Produk</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="text-white-50 xsmall uppercase tracking-wider mb-1" style="font-size: 0.65rem;">Kriteria Dimensi</label>
+            <select id="criteriaFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white">
+                <option value="InnerThickness">Thickness</option>
+                <option value="Diameter">Diameter</option>
+                <option value="TotalThickness">Total Thickness</option>
+                <option value="SpiralPitch">Spiral Pitch</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="text-white-50 xsmall uppercase tracking-wider mb-1" style="font-size: 0.65rem;">Rentang Waktu</label>
+            <select id="rangeFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white">
+                <option value="7">7 Hari Terakhir</option>
+                <option value="30" selected>30 Hari Terakhir</option>
+                <option value="90">90 Hari Terakhir</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards (SPC Metrics) -->
+<div class="row g-3 mb-3">
+    <div class="col-lg-4 animate-fadeInUp delay-1">
+        <div class="card glass-panel h-100 border-0" style="background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(0,0,0,0.4)) !important;">
+            <div class="card-body text-center p-3">
+                <i class="bi bi-gear-fill card-icon-bg"></i>
+                <p class="text-white-50 small xsmall uppercase tracking-wider mb-2">CP (Process Capability)</p>
+                <h2 id="cpValue" class="fs-1 fw-bold text-success mb-2">0.00</h2>
+                <div id="cpBadge" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">Capable</div>
             </div>
         </div>
     </div>
-    
-    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-2">
-        <div class="card stat-card green h-100">
-            <a asp-controller="NowProducing" asp-action="Current" class="stretched-link"></a>
-            <div class="card-body d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15);">
-                        <i class="bi bi-play-fill" style="color: #10b981;"></i>
-                    </div>
-                    <div class="d-flex flex-column align-items-center">
-                        <h2 class="stat-number mb-0">@ViewBag.ActiveProductions</h2>
-                        <p class="stat-label mb-0">Active</p>
-                    </div>
-                </div>
-                <div>
-                    <p class="stat-desc">Pantau proses produksi yang sedang berjalan.</p>
-                </div>
+    <div class="col-lg-4 animate-fadeInUp delay-2">
+        <div class="card glass-panel h-100 border-0" style="background: linear-gradient(145deg, rgba(245, 158, 11, 0.1), rgba(0,0,0,0.4)) !important;">
+            <div class="card-body text-center p-3">
+                <i class="bi bi-speedometer2 card-icon-bg"></i>
+                <p class="text-white-50 small xsmall uppercase tracking-wider mb-2">CPK (Process Capability Index)</p>
+                <h2 id="cpkValue" class="fs-1 fw-bold text-warning mb-2">0.00</h2>
+                <div id="cpkBadge" class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-2">Not Capable</div>
             </div>
         </div>
     </div>
-    
-    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-3">
-        <div class="card stat-card cyan h-100">
-            <a asp-controller="ProductionReport" asp-action="Index" class="stretched-link"></a>
-            <div class="card-body d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15);">
-                        <i class="bi bi-calendar3-event" style="color: #3b82f6;"></i>
-                    </div>
-                    <div class="d-flex flex-column align-items-center">
-                        <h2 class="stat-number mb-0">@ViewBag.TodayProductions</h2>
-                        <p class="stat-label mb-0">Today</p>
-                    </div>
+    <div class="col-lg-4 animate-fadeInUp delay-3">
+        <div class="card glass-panel h-100 border-0">
+            <div class="card-body p-3 d-flex flex-column justify-content-center">
+                <i class="bi bi-clipboard-data-fill card-icon-bg"></i>
+                <p class="text-white-50 small xsmall uppercase tracking-wider mb-3 text-center">Ringkasan Data</p>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-white-50">Rerata:</span>
+                    <span id="meanValue" class="fw-bold text-info">0.00 mm</span>
                 </div>
-                <div>
-                    <p class="stat-desc">Ringkasan hasil produksi untuk hari ini.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 animate-fadeInUp delay-4">
-        <div class="card stat-card gold h-100">
-            <a asp-controller="LotTag" asp-action="Index" class="stretched-link"></a>
-            <div class="card-body d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="stat-icon" style="background: rgba(251, 191, 36, 0.15);">
-                        <i class="bi bi-ui-checks" style="color: #fbbf24;"></i>
-                    </div>
-                    <div class="d-flex flex-column align-items-center">
-                        <h2 class="stat-number mb-0">@ViewBag.TotalLotTags</h2>
-                        <p class="stat-label mb-0">Lot Tags</p>
-                    </div>
-                </div>
-                <div>
-                    <p class="stat-desc">Manajemen penomoran lot dan identifikasi.</p>
+                <div class="d-flex justify-content-between">
+                    <span class="text-white-50">Std Deviasi:</span>
+                    <span id="stdDevValue" class="fw-bold text-primary">0.000</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Quick Actions & System Info -->
-<div class="row g-4 mb-5">
-    <div class="col-lg-7 animate-fadeInUp delay-3">
-        <div class="card h-100 glass-panel">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-lightning-charge-fill me-2"></i> Quick Actions</span>
-                <span class="badge bg-primary rounded-pill">Productivity</span>
-            </div>
-            <div class="card-body p-4">
-                <div class="quick-actions">
-                    <a asp-controller="NowProducing" asp-action="Create" class="quick-action-item qa-green">
-                        <div class="qa-icon-wrap">
-                            <i class="bi bi-plus-lg"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="action-title">Start New Production</div>
-                            <small class="action-desc">Initialize production tracking & monitoring</small>
-                        </div>
-                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
-                    </a>
-
-                    <a asp-controller="ProductionReport" asp-action="Create" class="quick-action-item qa-blue">
-                        <div class="qa-icon-wrap">
-                            <i class="bi bi-file-earmark-plus"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="action-title">Create Production Report</div>
-                            <small class="action-desc">Document production parameters & readings</small>
-                        </div>
-                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
-                    </a>
-
-                    <a asp-controller="LotTag" asp-action="Create" class="quick-action-item qa-gold">
-                        <div class="qa-icon-wrap">
-                            <i class="bi bi-tags-fill"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="action-title">Generate Lot Tag</div>
-                            <small class="action-desc">Create product identification label</small>
-                        </div>
-                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
-                    </a>
-
-                    <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="quick-action-item qa-red">
-                        <div class="qa-icon-wrap">
-                            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="action-title">SPS Excel Master</div>
-                            <small class="action-desc">Import &amp; sync masterlist SPS double layer</small>
-                        </div>
-                        <div class="qa-arrow"><i class="bi bi-arrow-right"></i></div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-5 animate-fadeInUp delay-4">
-        <div class="card h-100 glass-panel">
-            <div class="card-header">
-                <i class="bi bi-grid-3x3-gap-fill me-2"></i> System Directory
-            </div>
-            <div class="card-body p-4">
-                <div class="dir-grid">
-                    <a asp-controller="StandardParameterSetting" asp-action="Index" class="dir-card">
-                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(0,102,255,0.25), rgba(0,102,255,0.05)); border: 1px solid rgba(0,102,255,0.3);">
-                            <i class="bi bi-sliders2" style="color: #60a5fa;"></i>
-                        </div>
-                        <div class="dir-label">Param. Setting</div>
-                        <div class="dir-sub">Master SPS</div>
-                    </a>
-                    <a asp-controller="NowProducing" asp-action="Current" class="dir-card">
-                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.05)); border: 1px solid rgba(16,185,129,0.3);">
-                            <i class="bi bi-play-circle-fill" style="color: #34d399;"></i>
-                        </div>
-                        <div class="dir-label">Now Producing</div>
-                        <div class="dir-sub">Live Monitor</div>
-                    </a>
-                    <a asp-controller="ProductionReport" asp-action="Index" class="dir-card">
-                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.05)); border: 1px solid rgba(59,130,246,0.3);">
-                            <i class="bi bi-clipboard2-data-fill" style="color: #93c5fd;"></i>
-                        </div>
-                        <div class="dir-label">Prod. Report</div>
-                        <div class="dir-sub">All Reports</div>
-                    </a>
-                    <a asp-controller="LotTag" asp-action="Index" class="dir-card">
-                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(251,191,36,0.25), rgba(251,191,36,0.05)); border: 1px solid rgba(251,191,36,0.3);">
-                            <i class="bi bi-qr-code" style="color: #fcd34d;"></i>
-                        </div>
-                        <div class="dir-label">Lot Tag</div>
-                        <div class="dir-sub">QC &amp; Tags</div>
-                    </a>
-                    <a asp-controller="PackingStandard" asp-action="Index" class="dir-card">
-                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(168,85,247,0.05)); border: 1px solid rgba(168,85,247,0.3);">
-                            <i class="bi bi-box-seam-fill" style="color: #c084fc;"></i>
-                        </div>
-                        <div class="dir-label">Packing Std</div>
-                        <div class="dir-sub">Standards</div>
-                    </a>
-                    <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="dir-card">
-                        <div class="dir-icon" style="background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.05)); border: 1px solid rgba(239,68,68,0.3);">
-                            <i class="bi bi-file-earmark-spreadsheet-fill" style="color: #f87171;"></i>
-                        </div>
-                        <div class="dir-label">SPS Master</div>
-                        <div class="dir-sub">Excel Import</div>
-                    </a>
-                </div>
-
-                <div class="plant-badge mt-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.3); width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                            <i class="bi bi-building-fill-check" style="color: #60a5fa; font-size: 1.4rem;"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold text-white">PT. Velasto Indonesia</h6>
-                            <p class="mb-0 small" style="color: rgba(255,255,255,0.45);">Plant 2504 &mdash; Tango Factory &bull; Est. 2004</p>
-                        </div>
+<!-- Main Production Trend Chart (SPC Style) -->
+<div class="row g-3 mb-3">
+    <div class="col-12 animate-fadeInUp delay-4">
+        <div class="card glass-panel overflow-hidden">
+            <div class="card-header border-bottom border-white border-opacity-10 p-3 bg-dark bg-opacity-50">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold fs-6">Trend Dimensi: <span id="criteriaTitle">Thickness</span></h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill xsmall">
+                            <i class="bi bi-info-circle me-1"></i> Data-driven Output
+                        </span>
                     </div>
+                </div>
+            </div>
+            <div class="card-body p-4 bg-black bg-opacity-10">
+                <div class="chart-container" style="position: relative; height:450px; width:100%">
+                    <canvas id="spcTrendChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            const spcCtx = document.getElementById('spcTrendChart').getContext('2d');
+            
+            // Populate Products
+            $.get('/Home/GetSpcProducts', function(data) {
+                const select = $('#productFilter');
+                data.forEach(p => {
+                    select.append(`<option value="${p.value}">${p.text}</option>`);
+                });
+            });
+
+            let spcChart = new Chart(spcCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: 'rgba(255,255,255,0.7)', usePointStyle: true, font: { size: 11 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: 'rgba(255,255,255,0.5)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.5)', maxRotation: 45, minRotation: 45 }
+                        }
+                    }
+                }
+            });
+
+            function loadSpcData() {
+                const product = $('#productFilter').val();
+                const criteria = $('#criteriaFilter').val();
+                const range = $('#rangeFilter').val();
+
+                $('#criteriaTitle').text($('#criteriaFilter option:selected').text());
+
+                $.get(`/Home/GetSpcData?productCode=${product}&criteria=${criteria}&timeRange=${range}`, function(data) {
+                    if (data.success) {
+                        const s = data.summary;
+                        $('#cpValue').text(s.cp);
+                        $('#cpkValue').text(s.cpk);
+                        $('#meanValue').text(s.avg + ' mm');
+                        $('#stdDevValue').text(s.stdDev);
+
+                        // Badges color logic
+                        if (s.cpk > 1.33) {
+                            $('#cpkBadge').text('Excellent').removeClass('bg-warning-subtle text-warning').addClass('bg-success-subtle text-success');
+                            $('#cpkValue').removeClass('text-warning').addClass('text-success');
+                        } else if (s.cpk >= 1.0) {
+                            $('#cpkBadge').text('Capable').removeClass('bg-warning-subtle text-warning').addClass('bg-info-subtle text-info');
+                            $('#cpkValue').removeClass('text-warning').addClass('text-info');
+                        } else {
+                            $('#cpkBadge').text('Not Capable').addClass('bg-warning-subtle text-warning');
+                            $('#cpkValue').addClass('text-warning');
+                        }
+
+                        // Chart update
+                        const datasets = [
+                            {
+                                label: 'Actual Sisi A',
+                                data: data.chart.seriesA,
+                                borderColor: '#00d2ff',
+                                backgroundColor: 'transparent',
+                                tension: 0.4,
+                                pointRadius: 5,
+                                pointBackgroundColor: '#00d2ff',
+                                z: 10
+                            }
+                        ];
+
+                        if (data.chart.seriesB && data.chart.seriesB.length > 0) {
+                            datasets.push({
+                                label: 'Actual Sisi B',
+                                data: data.chart.seriesB,
+                                borderColor: '#cc22ff',
+                                backgroundColor: 'transparent',
+                                tension: 0.4,
+                                pointRadius: 5,
+                                pointStyle: 'triangle',
+                                pointBackgroundColor: '#cc22ff',
+                                z: 9
+                            });
+                        }
+
+                        // Add limit lines (SPC Style)
+                        const uslData = new Array(data.chart.labels.length).fill(data.chart.uslLine);
+                        const lslData = new Array(data.chart.labels.length).fill(data.chart.lslLine);
+                        const targetData = new Array(data.chart.labels.length).fill(data.chart.targetLine);
+
+                        datasets.push({
+                            label: 'Spec Max (USL)',
+                            data: uslData,
+                            borderColor: '#ef4444',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false,
+                            borderDash: [5, 5]
+                        });
+                        datasets.push({
+                            label: 'Spec Min (LSL)',
+                            data: lslData,
+                            borderColor: '#ef4444',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false,
+                            borderDash: [5, 5]
+                        });
+                        datasets.push({
+                            label: 'Target',
+                            data: targetData,
+                            borderColor: 'rgba(255,255,255,0.3)',
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            fill: false
+                        });
+
+                        spcChart.data.labels = data.chart.labels;
+                        spcChart.data.datasets = datasets;
+                        spcChart.update();
+                    } else {
+                        // Show empty or mock if needed
+                        console.log(data.message);
+                    }
+                });
+            }
+
+            // Filters change event
+            $('#productFilter, #criteriaFilter, #rangeFilter').change(loadSpcData);
+
+            // Initial load
+            setTimeout(loadSpcData, 500);
+        });
+    </script>
+}
