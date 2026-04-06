@@ -150,6 +150,14 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (report == null) return NotFound();
+
+            // Fetch from BOTH tables to ensure we find the standard
+            ViewBag.Sps = await _context.StandardParameterSettings
+                .FirstOrDefaultAsync(s => s.ProductCode == report.HoseType || (report.HoseType != null && s.ProductCode != null && s.ProductCode.Contains(report.HoseType)));
+            
+            ViewBag.Master = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType || m.ItemList == report.HoseType || (report.HoseType != null && m.ItemList != null && m.ItemList.Contains(report.HoseType)));
+
             return View(report);
         }
 
@@ -218,7 +226,9 @@ namespace VelastoProductionSystem.Controllers
                 report.HoseType = data.HoseType ?? "";
                 report.DimensionDisplay = data.DimensionDisplay ?? "";
                 report.VinCode = data.VinCode ?? "";
+                report.StandardLength = data.StandardLength ?? "";
                 report.ActualLength = data.ActualLength ?? "";
+                report.QtyTarget = data.QtyTarget;
                 report.QtyOk = data.QtyOk;
                 report.NgDimension = data.NgDimension;
                 report.NgVisual = data.NgVisual;

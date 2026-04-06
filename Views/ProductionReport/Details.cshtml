@@ -78,16 +78,27 @@
                                 var master = _context.MasterlistSpsDoubleLayers.FirstOrDefault(m => m.HoseType == Model.HoseType);
                                 var stdVal = Model.StandardParameterSetting;
 
-                                // Helper to parse string to decimal
-                                decimal D(string? s, decimal def) => decimal.TryParse(s ?? "0", System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                                // Helpers for robust parsing
+                                decimal D(string? s, decimal def) {
+                                    if (string.IsNullOrEmpty(s)) return def;
+                                    var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                                    return (matches.Count > 0) ? decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture) : def;
+                                }
+                                decimal DTol(string? s, decimal def) {
+                                    if (string.IsNullOrEmpty(s)) return def;
+                                    var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                                    if (matches.Count == 0) return def;
+                                    decimal val = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    return (val > 2.0m) ? def : val;
+                                }
 
-                                // Override standards if masterlist is present and std is null/zero
-                                decimal idNom = master != null ? D(master.Dimensi, 11.0m) : (stdVal?.InnerDie ?? 11.0m);
-                                decimal idTol = master != null ? D(master.ToleranceInner, 0.2m) : (stdVal?.ToleranceDie ?? 0.2m);
-                                decimal tubeNom = master != null ? D(master.TebalInner, 1.8m) : (stdVal?.TubeDie ?? 1.8m);
-                                decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0.2m;
-                                decimal coverNom = master != null ? D(master.TebalTotal, 3.3m) : (stdVal?.CoverDie ?? 3.3m);
-                                decimal coverTol = master != null ? D(master.ToleranceOuter, 0.2m) : (stdVal?.Tol_CoverDie ?? 0.2m);
+                                // PRIORITY: SPS (stdVal) > Masterlist > Default
+                                decimal idNom = (stdVal?.InnerDie > 0) ? stdVal.InnerDie : D(master?.Dimensi, 11.0m);
+                                decimal idTol = (stdVal?.ToleranceDie > 0) ? stdVal.ToleranceDie : DTol(master?.ToleranceInner, 0.1m);
+                                decimal tubeNom = (stdVal?.TubeDie > 0) ? stdVal.TubeDie : D(master?.TebalInner, 1.8m);
+                                decimal tubeTol = (stdVal?.Tol_TubeDie > 0) ? stdVal.Tol_TubeDie : DTol(master?.ToleranceOuter, 0.2m);
+                                decimal coverNom = (stdVal?.CoverDie > 0) ? stdVal.CoverDie : D(master?.TebalTotal, 3.3m);
+                                decimal coverTol = (stdVal?.Tol_CoverDie > 0) ? stdVal.Tol_CoverDie : DTol(master?.ToleranceOuter, 0.2m);
 
                                 var sections = new[] {
                                     new { Label = "Inner Diameter", Nom = idNom, Tol = idTol, Prop = "InnerDiameter" },
@@ -105,12 +116,27 @@
                                         @if(rIdx == 0) {
                                             <td rowspan="5" class="p-1 border-end border-primary border-opacity-25 text-start fw-bold text-info" style="font-size: 10px;">@sec.Label</td>
                                             <td rowspan="5" class="border-end border-primary border-opacity-25 text-white-50" style="font-size: 8px;">30m Sekali</td>
-                                            <td rowspan="5" class="border-end border-primary border-opacity-25 text-warning fw-bold" style="font-size: 10px;">@sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")</td>
+                                            <td rowspan="5" class="border-end border-primary border-opacity-25 p-0" style="background: rgba(0,0,0,0.2);">
+                                                <div style="display: flex; height: 100%; min-height: 100px; align-items: stretch;">
+                                                    <!-- Legend Ref -->
+                                                    <div style="width: 45px; background: rgba(30, 41, 59, 0.6); border-right: 1px solid rgba(59, 130, 246, 0.2); font-size: 8px; font-family: monospace; display: flex; flex-direction: column; justify-content: space-around; text-align: right; padding-right: 3px; line-height: 1; color: #94a3b8;">
+                                                        <div>@((sec.Nom + sec.Tol).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                        <div>@((sec.Nom + sec.Tol/2).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                        <div style="color: #fff; font-weight: bold;">@sec.Nom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)</div>
+                                                        <div>@((sec.Nom - sec.Tol/2).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                        <div>@((sec.Nom - sec.Tol).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                    </div>
+                                                    <!-- Main Display -->
+                                                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 10px; color: #fbbf24; text-align: center; padding: 2px;">
+                                                        @sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")
+                                                    </div>
+                                                </div>
+                                            </td>
                                         }
                                         <td class="border-end border-primary border-opacity-25 bg-white-5" style="font-size: 9px; color: #94a3b8;">@scaleValue.ToString("0.00")</td>
                                         @for(int h=0; h<6; h++) {
                                             var reading = h < readings.Count ? readings[h] : null;
-                                            var val = (decimal?)reading?.GetType().GetProperty(sec.Prop)?.GetValue(reading);
+                                            var val = (reading != null) ? (decimal?)reading.GetType().GetProperty(sec.Prop)?.GetValue(reading) : null;
                                             bool isMatch = val != null && Math.Abs(val.Value - scaleValue) < (sec.Tol * 0.26m);
                                             
                                             <td class="border-end border-primary border-opacity-25 p-0 position-relative @(isMatch ? "bg-info-glow" : "")">
@@ -127,7 +153,7 @@
                                 <td class="text-white-50" style="font-size: 9px;">30m Sekali</td>
                                 <td class="text-warning fw-bold" style="font-size: 11px;">
                                     @{
-                                        string spiralStr = master?.ToleranceSpiralPitch ?? $"{std?.SpiralPitch ?? 38} ± {std?.Tol_SpiralPitch ?? 5}";
+                                        string spiralStr = master?.ToleranceSpiralPitch ?? $"{stdVal?.SpiralPitch ?? 38} ± {stdVal?.Tol_SpiralPitch ?? 5}";
                                     }
                                     @spiralStr
                                 </td>

@@ -9,6 +9,7 @@ namespace VelastoProductionSystem.Models
         public string? CustomerName { get; set; }
         public string? Yarn { get; set; }
         public string? VinCode { get; set; }
+        public string? StandardLength { get; set; }
         public string? ActualLength { get; set; }
         public int QtyTarget { get; set; }
         public int QtyOk { get; set; }

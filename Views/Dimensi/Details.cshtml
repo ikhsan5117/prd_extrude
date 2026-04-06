@@ -174,18 +174,107 @@
                 </tr>
                 @{
                     var measurements = Model.Measurements?.ToDictionary(m => m.PointName, StringComparer.OrdinalIgnoreCase) ?? new Dictionary<string, VelastoProductionSystem.Models.DimensionMeasurement>(StringComparer.OrdinalIgnoreCase);
+                    var sps = ViewBag.Sps as VelastoProductionSystem.Models.StandardParameterSetting;
+                    var master = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                    
                     var mainPoints = new[] {
                         "Inner Diameter", "Inner Thickness (x)", "Inner Thickness (y)", 
                         "Total Thickness (x)", "Total Thickness (y)"
                     };
+
+                    (decimal t, decimal tol)? GetCleanSps(string point, string rawText) {
+                        try {
+                            decimal target = 0, tol = 0;
+                            decimal defaultTol = point.Contains("Thick") ? 0.2m : 0.1m;
+
+                            // 1. PRIORITIZE SPS (StandardParameterSetting) for Clean Numerics
+                            if (sps != null) {
+                                if (point.Contains("Diameter")) { target = sps.InnerDie; tol = sps.ToleranceDie; }
+                                else if (point.Contains("Inner Thick")) { target = sps.TubeDie; tol = sps.Tol_TubeDie; }
+                                else if (point.Contains("Total Thick")) { target = sps.CoverDie; tol = sps.Tol_CoverDie; }
+                            }
+
+                            // 2. USE MASTERLIST for TARGET (Dimensi) if SPS is missing
+                            if (target <= 0 && master != null) {
+                                if (point.Contains("Diameter")) target = ParseNum(master.Dimensi);
+                                else if (point.Contains("Inner Thick")) target = ParseNum(master.TebalInner);
+                                else if (point.Contains("Total Thick")) target = ParseNum(master.TebalTotal);
+                            }
+
+                            // 3. TOLERANCE REFINEMENT (Masterlist fallback)
+                            if (tol <= 0) {
+                                if (master != null) {
+                                    if (point.Contains("Diameter")) tol = ParseTol(master.ToleranceInner, 0.1m);
+                                    else if (point.Contains("Thick")) tol = ParseTol(master.ToleranceOuter, 0.2m);
+                                    else if (point.Contains("Spiral")) tol = ParseTol(master.ToleranceSpiralPitch, 5.0m);
+                                }
+                            }
+
+                            // Final Default Safety
+                            if (tol <= 0) tol = defaultTol;
+
+                            // 4. ABSOLUTE FALLBACK (Legacy Reports)
+                            if (target <= 0) {
+                                var matches = System.Text.RegularExpressions.Regex.Matches(rawText.Replace(",", "."), @"\d+(?:\.\d+)?");
+                                if (matches.Count >= 2) {
+                                    target = decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    tol = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    if (tol > 2.0m) tol = defaultTol;
+                                } else if (matches.Count == 1) {
+                                    target = decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    tol = defaultTol;
+                                }
+                            }
+
+                            return target > 0 ? (target, tol) : null;
+                        } catch { return null; }
+                    }
+
+                    decimal ParseNum(string? s) {
+                        if (string.IsNullOrEmpty(s)) return 0;
+                        var m = System.Text.RegularExpressions.Regex.Match(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                        return m.Success ? decimal.Parse(m.Value, System.Globalization.CultureInfo.InvariantCulture) : 0;
+                    }
+
+                    decimal ParseTol(string? s, decimal def) {
+                        if (string.IsNullOrEmpty(s)) return def;
+                        var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                        if (matches.Count == 0) return def;
+                        decimal val = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                        return val > 2.0m ? def : val; // OD/Length filtering
+                    }
+
+                    string F(decimal v) => v.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
                 }
                 @foreach (var point in mainPoints)
                 {
                     var row = measurements.ContainsKey(point) ? measurements[point] : null;
+                    var spsVal = GetCleanSps(point, row?.StandardDimension ?? "");
+                    
                     <tr>
                         <td class="row-point">@point</td>
                         <td>@(row?.Frequency ?? "30 Menit Sekali")</td>
-                        <td>@(row?.StandardDimension ?? "-")</td>
+                        <td style="padding: 0 !important; background: #fff; vertical-align: middle; border: 1px solid #ccc;">
+                            @if (spsVal != null) {
+                                var v = spsVal.Value;
+                                <table style="width: 100%; border-collapse: collapse; min-height: 85px; border: none !important; margin: 0;">
+                                    <tr>
+                                        <td rowspan="5" style="padding-left: 15px; vertical-align: middle; text-align: left; border: none !important;">
+                                            <div style="font-weight: 800; font-size: 12px; color: #333; white-space: nowrap;">
+                                                @v.t.ToString("0.00").Replace(".", ",") ± @v.tol.ToString("0.0").Replace(".", ",")
+                                            </div>
+                                        </td>
+                                        <td style="width: 45px; height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #bbb; text-align: right; padding-right: 8px; border: none !important; vertical-align: top;">@F(v.t + v.tol)</td>
+                                    </tr>
+                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 8px; border: none !important; vertical-align: middle;">@F(v.t + v.tol/2)</td></tr>
+                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #999; text-align: right; padding-right: 8px; border: none !important; vertical-align: middle; font-weight: bold;">@F(v.t)</td></tr>
+                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 8px; border: none !important; vertical-align: middle;">@F(v.t - v.tol/2)</td></tr>
+                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #bbb; text-align: right; padding-right: 8px; border: none !important; vertical-align: bottom;">@F(v.t - v.tol)</td></tr>
+                                </table>
+                            } else {
+                                <div style="font-size: 10px; color: #ccc; text-align: center; padding: 10px;">@(row?.StandardDimension ?? "-")</div>
+                            }
+                        </td>
                         <!-- INITIAL & 1-5 Sub Matrix -->
                         <td class="sub-matrix-td">
                             <table class="sub-matrix-inner">
@@ -214,11 +303,12 @@
                 @{
                     var spiralRow = measurements.ContainsKey("Spiral Pitch") ? measurements["Spiral Pitch"] : null;
                     var visualRow = measurements.ContainsKey("Visual Check") ? measurements["Visual Check"] : null;
+                    var spiralStd = (sps != null && sps.SpiralPitch > 0) ? $"{sps.SpiralPitch.ToString("0")} ± {sps.Tol_SpiralPitch.ToString("0")}" : (spiralRow?.StandardDimension ?? "38 ± 5");
                 }
                 <tr>
                     <td class="row-point">Spiral Pitch</td>
                     <td>@(spiralRow?.Frequency ?? "30 Menit Sekali")</td>
-                    <td>@(spiralRow?.StandardDimension ?? "38±5")</td>
+                    <td>@spiralStd</td>
                     <td>@(spiralRow?.Initial ?? "-")</td>
                     <td>@spiralRow?.R1?.ToString("0.00")</td>
                     <td>@spiralRow?.R2?.ToString("0.00")</td>
@@ -261,11 +351,11 @@
                     <th width="35">Visual</th>
                 </tr>
                 <tr>
-                    <td>@(Model.DimensionDisplay ?? "-")</td>
+                    <td>@(Model.DimensionDisplay ?? Model.HoseType ?? "-")</td>
                     <td>@(Model.VinCode ?? "-")</td>
-                    <td>@(Model.StandardLength ?? "-")</td>
+                    <td>@(string.IsNullOrEmpty(Model.StandardLength) || Model.StandardLength == "-" ? (master?.Dimensi ?? "-") : Model.StandardLength)</td>
                     <td>@(Model.ActualLength ?? "-")</td>
-                    <td>@Model.QtyTarget</td>
+                    <td>@(Model.QtyTarget > 0 ? Model.QtyTarget.ToString() : "-")</td>
                     <td>@Model.QtyOk</td>
                     <td>@Model.NgDimension</td>
                     <td>@Model.NgVisual</td>

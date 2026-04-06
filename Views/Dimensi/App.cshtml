@@ -592,7 +592,7 @@
                 </div>
                 <div class="field-box">
                     <span class="field-label">STD PNJG</span>
-                    <div class="field-input-wrap"><div class="f-input" id="disp-std-pnjg">-</div></div>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="-"></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY TARGET</span>
@@ -1205,34 +1205,36 @@
                         return match ? parseFloat(match[0]) : 0;
                     };
 
-                    const points = [
-                        { id: 'innerdia', rawStr: m.toleranceInner, el: 'inner-dia' },
-                        { id: 'innertx', rawStr: m.tebalInner, el: 'inner-tx' },
-                        { id: 'innerty', rawStr: m.tebalInner, el: 'inner-ty' },
-                        { id: 'totaltx', rawStr: m.tebalTotal, el: 'total-tx' },
-                        { id: 'totalty', rawStr: m.tebalTotal, el: 'total-ty' },
-                        { id: 'spiral', rawStr: m.toleranceSpiralPitch || "---", el: 'spiral' }
-                    ];
-                    points.forEach(p => {
-                        const stdEl = document.getElementById(`std-${p.el}`);
-                        const minEl = document.getElementById(`limit-${p.el}-min`);
-                        const maxEl = document.getElementById(`limit-${p.el}-max`);
-                        
-                        // Smart Parser for "Value ± Tolerance" strings
-                        const parseStd = (str) => {
-                            if(!str || str === '---') return { val: 0, tol: 0.1 };
-                            const parts = str.toString().replace(/,/g, '.').split(/[±/+-]+/);
-                            const val = parseFloat(parts[0]) || 0;
-                            const tol = (parts.length > 1) ? (parseFloat(parts[1]) || 0.1) : 0.1;
-                            return { val, tol };
-                        };
+                    const parseV = (str, def = 0) => {
+                        if(!str || str === '---') return def;
+                        const m = str.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                        return m ? parseFloat(m[0]) : def;
+                    };
+                    const parseT = (str, def = 0.1) => {
+                        if(!str || str === '---') return def;
+                        const m = str.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                        if (!m) return def;
+                        let val = parseFloat(m[m.length - 1]);
+                        return val > 2.0 ? def : val;
+                    };
 
-                        const stdData = parseStd(p.rawStr);
-                        activeStandards[p.id] = stdData;
+                    const configs = [
+                        { id: 'innerdia', v: m.dimensi, t: m.toleranceInner, el: 'inner-dia', dt: 0.1 },
+                        { id: 'innertx', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                        { id: 'innerty', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                        { id: 'totaltx', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                        { id: 'totalty', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                        { id: 'spiral', v: m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
+                    ];
+
+                    configs.forEach(p => {
+                        const target = parseV(p.v);
+                        const tol = parseT(p.t, p.dt);
+                        activeStandards[p.id] = { val: target, tol: tol };
                         
-                        if (stdEl) stdEl.innerText = stdData.val === 0 ? "NO DATA" : `${stdData.val} ± ${stdData.tol}`;
-                        if (minEl) minEl.innerText = stdData.val === 0 ? "---" : (stdData.val - stdData.tol).toFixed(2);
-                        if (maxEl) maxEl.innerText = stdData.val === 0 ? "---" : (stdData.val + stdData.tol).toFixed(2);
+                        document.getElementById(`std-${p.el}`).innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)} ± ${tol.toFixed(2)}`;
+                        document.getElementById(`limit-${p.el}-min`).innerText = target === 0 ? "---" : (target - tol).toFixed(2);
+                        document.getElementById(`limit-${p.el}-max`).innerText = target === 0 ? "---" : (target + tol).toFixed(2);
                     });
                     
                     Swal.fire({ icon: 'success', title: 'MASTER LOADED', timer: 800, showConfirmButton: false });
@@ -1321,6 +1323,7 @@
                     CustomerName: document.getElementById('h-customer')?.innerText || "",
                     DimensionDisplay: document.getElementById('disp-part-no')?.innerText || "",
                     VinCode: document.getElementById('val-vin-kode')?.value || "",
+                    StandardLength: document.getElementById('disp-std-pnjg')?.value || "",
                     ActualLength: document.getElementById('val-act-pnjg')?.value || "",
                     QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || "0"),
                     QtyOk: parseInt(document.getElementById('val-qty-ok')?.value || "0"),
