@@ -1189,7 +1189,10 @@
                     if(partEl) partEl.innerText = m.itemList || "---";
                     
                     const stdPnjgEl = document.getElementById('disp-std-pnjg');
-                    if(stdPnjgEl) stdPnjgEl.innerText = m.dimensi || "---"; // Temp fallback to dimensi
+                    if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
+                    
+                    const qtyTargetInput = document.getElementById('disp-qty-target');
+                    if(qtyTargetInput && qtyTargetInput.value == "0") qtyTargetInput.value = ""; // Let user type easily
 
                     document.getElementById('h-row-hose')?.classList.add('animate__animated', 'animate__pulse');
                     
