@@ -5,19 +5,21 @@
 
 <style>
 :root {
-    --bg: #04080f;
-    --surface: rgba(10,20,38,0.98);
-    --surface2: rgba(18,28,54,0.85);
-    --border: rgba(255,255,255,0.06);
+    --bg: #090c14;
+    --surface: rgba(12,18,32,0.98);
+    --surface2: rgba(20,30,55,0.85);
+    --border: rgba(255,255,255,0.08);
     --accent: #4f6ef7;
     --accent-glow: rgba(79,110,247,0.4);
+    --cyan: #00f2fe;
+    --cyan-glow: rgba(0,242,254,0.4);
     --ok: #00e676;
     --ok-glow: rgba(0,230,118,0.4);
     --ng: #ff4d4d;
     --ng-glow: rgba(255,77,77,0.4);
     --warn: #ffaa00;
-    --muted: #4b6382;
-    --glass: rgba(255,255,255,0.02);
+    --muted: #64748b;
+    --glass: rgba(255,255,255,0.03);
 }
 body { 
     background: var(--bg); 
@@ -41,27 +43,42 @@ body {
     z-index: 100;
 }
 .h-pill { 
-    background: var(--glass);
-    border: 1px solid var(--border); 
-    padding: 12px 24px; 
-    border-radius: 18px; 
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 12px 20px;
+    border-radius: 18px;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    transition: all 0.3s;
+    box-shadow: inset 0 1px 5px rgba(255,255,255,0.02);
 }
-.h-label { font-size: 0.55rem; font-weight: 900; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-.h-val   { font-size: 1.1rem; font-weight: 1000; color: #fff; letter-spacing: -0.5px; }
+.h-pill:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+.h-label { font-size: 0.65rem; font-weight: 800; letter-spacing: 2px; color: #94a3b8; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.h-val   { font-size: 1.35rem; font-weight: 1000; color: #fff; letter-spacing: -0.5px; }
+.h-val-sub { font-size: 0.9rem; font-weight: 900; color: #a855f7; margin-left: 6px; }
+.i-cyan { color: var(--cyan); text-shadow: 0 0 10px var(--cyan-glow); }
+.i-gold { color: #facc15; text-shadow: 0 0 10px rgba(250,204,21,0.4); }
+.i-mag  { color: #d946ef; text-shadow: 0 0 10px rgba(217,70,239,0.4); }
 
-/* OVERVIEW BAR */
-.overview-bar { 
-    background: var(--surface2); 
-    border: 1px solid var(--border); 
-    border-radius: 24px; 
-    padding: 26px 36px; 
-    margin-bottom: 30px;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+.pic-input {
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 1.1rem;
+    width: 100%;
+    outline: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-bottom: 1px dashed rgba(255,255,255,0.2) !important;
+    padding-bottom: 4px !important;
+    transition: all 0.3s;
 }
+.pic-input:focus { border-bottom-style: solid !important; border-color: var(--accent) !important; }
+.pic-input::placeholder { color: rgba(255,255,255,0.15); font-weight: 500; font-size: 0.95rem; }
+
+/* OVERVIEW BAR MOVED TO DASHBOARD */
 .prog-track { width:100%; height:8px; background:rgba(255,255,255,0.03); border-radius:99px; overflow:hidden; border: 1px solid rgba(255,255,255,0.02); }
 .prog-fill  { height:100%; border-radius:99px; background:linear-gradient(90deg, #4f6ef7, #9d7cfc); box-shadow:0 0 25px var(--accent-glow); transition:width .7s cubic-bezier(.4,0,.2,1); }
 
@@ -88,73 +105,156 @@ body {
     display:flex; align-items:center; justify-content:center; 
     font-weight:1000; font-size:14px; color:var(--accent); 
 }
-
-/* OUTPUT REFINEMENT */
-.output-box { 
-    position:relative; 
-    background: linear-gradient(145deg, #0a0e17 0%, #000 100%);
-    border-radius:24px; 
-    border:1px solid rgba(255,255,255,0.06); 
-    padding:30px 20px 24px; 
-    margin-bottom: 24px;
-    box-shadow: inset 0 2px 20px rgba(0,0,0,0.5);
+.card-inner {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
 }
-.output-num { 
-    font-size:7rem; font-weight:1000; letter-spacing:-8px; line-height:0.9; 
-    color:var(--ok); text-shadow:0 0 50px var(--ok-glow); 
-    margin: 10px 0;
+.card-left { display: flex; flex-direction: column; }
+.card-right { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 16px; 
+    border-left: 1px dashed var(--border);
+    padding-left: 32px;
 }
-.ng-corner-num { font-size:2.6rem; font-weight:1000; color:var(--ng); text-shadow:0 0 30px var(--ng-glow); }
-
-/* PREMIUM BUTTONS */
-.btn-ok-q { 
-    flex:1; padding:22px; 
-    background: linear-gradient(135deg, #00e676 0%, #009624 100%); 
-    border:none; border-radius:20px; color:#fff; 
-    font-weight:1000; font-size:1.4rem; letter-spacing: 1px;
-    box-shadow:0 15px 35px rgba(0,230,118,0.25);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+.part-input {
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 900;
+    width: 100%;
+    outline: none !important;
+    border-bottom: 2px solid transparent !important;
+    transition: all 0.3s;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
-.btn-ok-q:active { transform: scale(0.96); }
-
-.btn-ng-q { 
-    flex:1; padding:22px; 
-    background: rgba(255,77,77,0.03);
-    border:2px solid var(--ng); border-radius:20px; color:var(--ng); 
-    font-weight:900; font-size:1.4rem; 
+.part-input:focus { border-bottom: 2px solid var(--accent) !important; }
+.quick-btn-row { display: flex; gap: 12px; }
+.meta-tile {
+    background: linear-gradient(145deg, rgba(20,30,55,0.4) 0%, rgba(10,15,25,0.6) 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: inset 0 2px 15px rgba(0,0,0,0.4), 0 5px 15px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+}
+.meta-tile::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.3;
+}
+.meta-inp {
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 900;
+    width: 100px;
+    outline: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.2) !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+.meta-inp:focus { border-color: var(--accent) !important; }
+.time-row { display: flex; align-items: center; gap: 12px; }
+.btn-override-q {
+    background: rgba(255,255,255,0.05);
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 16px;
+    color: var(--muted);
+    font-weight: 800;
     transition: all 0.3s;
 }
-.btn-ng-q:hover { background: rgba(255,77,77,0.1); box-shadow: 0 0 20px var(--ng-glow); }
+.btn-override-q:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+
+/* OUTPUT REFINEMENT -> HUD METERS */
+.hud-meters { display: flex; gap: 20px; align-items: stretch; margin-bottom: 24px; }
+.lcd-meter {
+    background: rgba(10,15,25, 0.6);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px;
+    padding: 24px 30px;
+    box-shadow: inset 0 2px 15px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; overflow: hidden;
+}
+.lcd-meter.ok-meter { flex: 2; border-color: rgba(0,230,118, 0.15); border-left: 4px solid var(--ok); }
+.lcd-meter.ng-meter { flex: 1; border-color: rgba(255,77,77, 0.15); border-right: 4px solid var(--ng); }
+
+.lcd-label { font-size: 0.75rem; font-weight: 800; letter-spacing: 2px; color: var(--muted); padding-bottom: 8px; margin-bottom: 12px; }
+.lcd-label.border-ok { border-bottom: 1px solid rgba(0,230,118,0.2); }
+.lcd-label.border-ng { border-bottom: 1px solid rgba(255,77,77,0.2); }
+
+.lcd-val { font-size: 6rem; font-weight: 1000; line-height: 0.95; letter-spacing: -3px; }
+.lcd-val.ok-val { color: var(--ok); text-shadow: 0 0 45px var(--ok-glow); }
+.lcd-val.ng-val { color: var(--ng); text-shadow: 0 0 30px var(--ng-glow); font-size: 4.5rem; }
+.lcd-sub { font-size: 0.85rem; font-weight: 700; color: #64748b; }
+
+/* PREMIUM TACTILE BUTTONS */
+.btn-ok-q { 
+    flex:1; padding:20px; 
+    background: linear-gradient(180deg, rgba(0,230,118,0.2) 0%, rgba(0,230,118,0.05) 100%);
+    border: 1px solid rgba(0,230,118,0.4);
+    border-radius:18px; color:#fff; 
+    font-weight:900; font-size:1.3rem; letter-spacing: 1px;
+    box-shadow: 0 10px 25px rgba(0,230,118,0.1), inset 0 2px 5px rgba(0,230,118,0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+}
+.btn-ok-q:active { transform: scale(0.96); box-shadow: none; }
+.btn-ok-q:hover { background: rgba(0,230,118,0.25); box-shadow: 0 15px 35px rgba(0,230,118,0.3), inset 0 2px 10px rgba(0,230,118,0.5); }
+
+.btn-ng-q { 
+    flex:1; padding:20px; 
+    background: linear-gradient(180deg, rgba(255,77,77,0.15) 0%, rgba(255,77,77,0.02) 100%);
+    border:1px solid rgba(255,77,77,0.3); border-radius:18px; color:var(--ng); 
+    font-weight:900; font-size:1.3rem; 
+    box-shadow: 0 10px 25px rgba(255,77,77,0.1), inset 0 2px 5px rgba(255,77,77,0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+}
+.btn-ng-q:hover { background: rgba(255,77,77,0.2); box-shadow: 0 15px 35px rgba(255,77,77,0.25), inset 0 2px 10px rgba(255,77,77,0.3); }
 
 /* FOOTER DOWNTIME */
 .downtime-footer {
-    position: fixed;
-    bottom: 20px; left: 20px; right: 20px;
-    background: rgba(10,20,38,0.92);
-    backdrop-filter: blur(30px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 28px;
-    padding: 24px 32px;
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    gap: 30px;
-    box-shadow: 0 -20px 80px rgba(0,0,0,0.6);
-    z-index: 999;
+    margin-top: 40px;
+}
+.downtime-footer .btn-save {
+    /* pointer-events override not needed anymore */
 }
 
 /* INPUT REFINEMENT */
 .time-inp { 
-    background: rgba(255,255,255,0.02); 
-    border: 1px solid rgba(255,255,255,0.08); 
-    color: #fff; font-size: 1.3rem; font-weight: 900; 
-    width: 100px; padding: 12px; border-radius: 12px;
+    background: rgba(10,15,25,0.8); 
+    border: 1px solid rgba(0,242,254,0.2); 
+    color: var(--cyan); font-size: 1.5rem; font-weight: 1000; 
+    width: 105px; padding: 14px; border-radius: 14px;
+    text-align: center;
+    transition: all 0.3s;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 0 10px rgba(0,242,254,0.05);
+    text-shadow: 0 0 10px var(--cyan-glow);
+}
+.time-inp:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,242,254,0.3), inset 0 2px 10px rgba(0,0,0,0.5);
+    transform: translateY(-2px);
+    outline: none;
 }
 .remarks-inp { 
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 16px; padding: 16px 20px; color: #94a3b8; 
+    background: transparent !important;
+    border: none !important;
+    border-radius: 16px; padding: 16px 20px; color: #fff !important; 
     width: 100% !important; height: auto !important; min-height: 56px;
+    outline: none !important;
+    resize: none;
 }
+.remarks-inp:focus { outline: none !important; }
 
 .btn-add-part {
     background: linear-gradient(90deg, rgba(79,110,247,0.1) 0%, rgba(79,110,247,0.05) 100%);
@@ -174,7 +274,7 @@ body {
 .achieve-fill  { height:100%; border-radius:99px; transition:width .7s; }
 
 /* Save btn */
-.btn-save { width:100%; padding:28px; background:linear-gradient(135deg,#10b981,#065f46); border:none; border-radius:22px; color:#fff; font-weight:950; font-size:1.1rem; letter-spacing:4px; text-transform:uppercase; cursor:pointer; box-shadow:0 20px 50px rgba(16,185,129,.3); transition:all .4s; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.btn-save { width:100%; padding:28px; background:linear-gradient(135deg,#10b981,#065f46); border:none; border-radius:22px; color:#fff; font-weight:950; font-size:1.1rem; letter-spacing:4px; text-transform:uppercase; cursor:pointer; box-shadow:0 20px 50px rgba(16,185,129,.3); transition:all .4s; display:flex; justify-content:center; align-items:center; }
 .btn-save:hover { transform:translateY(-6px); box-shadow:0 30px 70px rgba(16,185,129,.4); }
 
 /* Add card btn */
@@ -199,7 +299,53 @@ body {
 /* empty */
 .empty-state { text-align:center; padding:50px 20px; background:var(--surface); border:2px dashed rgba(255,255,255,.05); border-radius:22px; margin-bottom:20px; }
 
-@@media (max-width:900px) { .card-inner { grid-template-columns:1fr; } .card-right { flex-direction:row; flex-wrap:wrap; } .meta-tile { flex:1; min-width:140px; } }
+/* HUD ACTION BUTTONS */
+.hud-actions { display: flex; gap: 10px; margin-top: 16px; }
+.btn-hud { 
+    flex: 1; padding: 16px 8px; border-radius: 16px; 
+    font-size: 0.65rem; font-weight: 1000; letter-spacing: 2px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+    background: rgba(10,15,25, 0.6);
+    border: 1px solid rgba(255,255,255,0.05);
+    color: var(--muted);
+    cursor: pointer;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+}
+.btn-hud i { font-size: 1.2rem; }
+.btn-hud:active { transform: scale(0.95); }
+
+/* VIBRANT IDLE STATES */
+.btn-run { border: 1px solid rgba(0,230,118,0.2) !important; color: rgba(0,230,118,0.4); }
+.btn-stop { border: 1px solid rgba(255,77,77,0.2) !important; color: rgba(255,77,77,0.4); }
+.btn-break { border: 1px solid rgba(250,204,21,0.2) !important; color: rgba(250,204,21,0.4); }
+
+.btn-hud:hover { transform: translateY(-3px); background: rgba(255,255,255,0.05); color: #fff; }
+
+.btn-hud.active-run { 
+    background: linear-gradient(180deg, rgba(0,230,118,0.25) 0%, rgba(0,230,118,0.05) 100%);
+    border-color: var(--ok) !important; color: #fff !important;
+    box-shadow: 0 0 25px rgba(0,230,118,0.3), inset 0 2px 5px rgba(0,230,118,0.5);
+    animation: pulse-run 2s infinite;
+}
+.btn-hud.active-stop { 
+    background: linear-gradient(180deg, rgba(255,77,77,0.25) 0%, rgba(255,77,77,0.05) 100%);
+    border-color: var(--ng) !important; color: #fff !important;
+    box-shadow: 0 0 25px rgba(255,77,77,0.3), inset 0 2px 5px rgba(255,77,77,0.5);
+}
+.btn-hud.active-break { 
+    background: linear-gradient(180deg, rgba(250,204,21,0.25) 0%, rgba(250,204,21,0.05) 100%);
+    border-color: #facc15 !important; color: #fff !important;
+    box-shadow: 0 0 25px rgba(250,204,21,0.3), inset 0 2px 5px rgba(250,204,21,0.5);
+}
+
+@@keyframes pulse-run { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+@@media (max-width:1100px) { 
+    .card-inner { grid-template-columns:1fr; gap: 16px; } 
+    .card-right { flex-direction:column; border-left:none; border-top:1px dashed var(--border); padding-left:0; padding-top:20px; } 
+    .meta-tile { width: 100%; }
+}
 </style>
 
 <!-- OVERRIDE MODAL -->
@@ -219,63 +365,52 @@ body {
 <form asp-action="SaveExecution" method="post" id="execForm" class="px-3 pb-5">
 <input type="hidden" asp-for="Id" />
 
-<!-- ── PREMIUM HUD HEADER ── -->
-<div class="exec-header d-flex justify-content-between align-items-center flex-wrap gap-4 mt-3">
-    <div class="d-flex align-items-center gap-3">
-        <div class="h-pill">
-            <span class="h-label"><i class="bi bi-cpu-fill"></i> PRODUCTION LINE</span>
-            <span class="h-val text-primary" style="font-size:1.5rem;">@Model.MachineName</span>
+<!-- ── VIBRANT HUD HEADER ── -->
+<div class="exec-header mt-3">
+    <!-- Top Row: Line & Shift Sejajar -->
+    <div class="row g-4 mb-3">
+        <div class="col-6">
+            <div class="h-pill w-100" style="border-left: 3px solid var(--cyan);">
+                <span class="h-label"><i class="bi bi-cpu i-cyan"></i> PRODUCTION LINE</span>
+                <span class="h-val i-cyan">@Model.MachineName</span>
+            </div>
         </div>
-        <div class="h-pill">
-            <span class="h-label"><i class="bi bi-calendar3"></i> REPORTING DATE</span>
-            <span class="h-val">@Model.ExecutionDate.ToString("dd MMMM yyyy")</span>
-        </div>
-        <div class="h-pill">
-            <span class="h-label"><i class="bi bi-clock-history"></i> CURRENT SHIFT</span>
-            <span class="h-val">SHIFT @Model.Shift &nbsp;<span style="color:var(--accent);">@Model.GroupName</span></span>
+        <div class="col-6">
+            <div class="h-pill w-100" style="border-left: 3px solid #d946ef;">
+                <span class="h-label"><i class="bi bi-clock-history i-mag"></i> CURRENT SHIFT</span>
+                <span class="h-val">SHIFT @(Model.Shift?.ToUpper().Replace("SHIFT", "").Trim()) <span class="h-val-sub" style="color:#d946ef;">@Model.GroupName</span></span>
+            </div>
         </div>
     </div>
-    <div class="d-flex gap-3">
-        <div class="h-pill" style="min-width:180px;">
-            <span class="h-label">OPERATOR PIC 1</span>
-            <input type="text" asp-for="Pic1" class="pic-input" placeholder="Nama Lengkap" />
+
+    <!-- Middle Row: Reporting Date Full Width -->
+    <div class="row g-4 mb-3">
+        <div class="col-12">
+            <div class="h-pill w-100" style="border-left: 3px solid #facc15;">
+                <span class="h-label"><i class="bi bi-calendar3 i-gold"></i> REPORTING DATE</span>
+                <span class="h-val">@Model.ExecutionDate.ToString("dd MMMM yyyy")</span>
+            </div>
         </div>
-        <div class="h-pill" style="min-width:180px;">
-            <span class="h-label">OPERATOR PIC 2</span>
-            <input type="text" asp-for="Pic2" class="pic-input" placeholder="Nama Lengkap" />
+    </div>
+    
+    <!-- Bottom Row: PIC Sejajar -->
+    <div class="row g-4">
+        <div class="col-6">
+            <div class="h-pill w-100" style="background: rgba(0,242,254,0.03); border: 1px solid rgba(0,242,254,0.15);">
+                <span class="h-label" style="color:var(--cyan);"><i class="bi bi-person-badge"></i> OPERATOR PIC 1</span>
+                <input type="text" asp-for="Pic1" class="pic-input mt-1" style="font-size:1.3rem; border-color:rgba(0,242,254,0.2) !important;" placeholder="Ketik nama PIC 1..." />
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="h-pill w-100" style="background: rgba(217,70,239,0.03); border: 1px solid rgba(217,70,239,0.15);">
+                <span class="h-label" style="color:#d946ef;"><i class="bi bi-person-badge"></i> OPERATOR PIC 2</span>
+                <input type="text" asp-for="Pic2" class="pic-input mt-1" style="font-size:1.3rem; border-color:rgba(217,70,239,0.2) !important;" placeholder="Ketik nama PIC 2..." />
+            </div>
         </div>
     </div>
 </div>
 
-<!-- ── GLOBAL PROGRESS HUD ── -->
-<div class="overview-bar">
-    <div class="d-flex justify-content-between align-items-end mb-3">
-        <div>
-            <div class="h-label"><i class="bi bi-activity"></i> ACTIVE PLAN PROGRESS</div>
-            <div id="globalPct" class="h-val" style="font-size:2.2rem;color:var(--accent);line-height:1;">0.0%</div>
-        </div>
-        <div style="text-align:right;">
-            <div class="h-label">CUMULATIVE OUTPUT</div>
-            <div id="globalFrac" class="h-val">0 / 0 pcs</div>
-        </div>
-    </div>
-    <div class="prog-track"><div class="prog-fill" id="globalProgFill" style="width:0%"></div></div>
-    
-    <div class="d-flex gap-4 mt-4">
-        <div class="h-pill" style="border:none;background:rgba(0,230,118,0.05);flex:1;padding:15px 20px;">
-            <span class="h-label" style="color:var(--ok);letter-spacing:2px;">TOTAL OK</span>
-            <span id="globalOK" class="h-val" style="color:var(--ok);font-size:1.6rem;">0</span>
-        </div>
-        <div class="h-pill" style="border:none;background:rgba(255,77,77,0.05);flex:1;padding:15px 20px;">
-            <span class="h-label" style="color:var(--ng);letter-spacing:2px;">TOTAL NG</span>
-            <span id="globalNG" class="h-val" style="color:var(--ng);font-size:1.6rem;">0</span>
-        </div>
-        <div class="h-pill" style="border:none;background:rgba(255,170,0,0.05);flex:1;padding:15px 20px;">
-            <span class="h-label" style="color:var(--warn);letter-spacing:2px;">DANDORI</span>
-            <span id="globalDandori" class="h-val" style="color:var(--warn);font-size:1.6rem;">0 min</span>
-        </div>
-    </div>
-</div>
+<!-- ── GLOBAL PROGRESS HUD (Moved to Dashboard) ── -->
 
 
 <!-- ── ACTIVITY CARDS ── -->
@@ -302,53 +437,87 @@ body {
                     <input type="hidden" name="activities[@i].Id" value="@act.Id" />
                 </div>
 
-                <div class="output-box">
-                    <div class="h-label" style="letter-spacing:4px;">OUTPUT (PLAN OK)</div>
-                    <div class="output-num" id="onum-@i" onclick="openModal(@i)">@(act.ActualQty ?? 0)</div>
-                    <input type="hidden" name="activities[@i].ActualQty" id="qty-@i" value="@(act.ActualQty ?? 0)" />
-                    <div class="output-target" style="font-size:.85rem;color:var(--muted);margin-top:10px;">Target: @act.PlanQty pcs &nbsp;|&nbsp; Shift OK: <b id="shiftOK-@i" style="color:var(--ok)">@(act.ActualQty ?? 0)</b> NG: <b id="shiftNG-@i" style="color:var(--ng)">0</b></div>
-                    
-                    <div class="ng-corner">
-                        <div class="h-label" style="color:var(--ng);letter-spacing:1px;font-size:0.5rem;">PLAN NG</div>
-                        <div class="ng-corner-num" id="ngnum-@i" style="font-size:2.2rem;">0</div>
-                    </div>
-
-                    <div class="card-prog-row px-4 mt-3">
-                        <div class="prog-track" style="height:6px;background:rgba(255,255,255,0.05);"><div class="prog-fill" id="cpfill-@i" style="width:@actPct%;background:var(--ok);"></div></div>
+                <div class="hud-meters">
+                    <!-- Unified Output Meter -->
+                    <div class="lcd-meter w-100 cursor-pointer" onclick="openModal(@i)" style="border-color: rgba(0,230,118, 0.15); border-left: 4px solid var(--ok); border-right: 4px solid var(--ng);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <!-- OK Section (Left) -->
+                            <div>
+                                <div class="lcd-label border-ok d-inline-block"><i class="bi bi-bullseye"></i> OUTPUT AKTUAL (OK)</div>
+                                <div class="d-flex align-items-baseline gap-3">
+                                    <div class="lcd-val ok-val" id="onum-@i">@(act.ActualQty ?? 0)</div>
+                                    <div style="font-size:1.8rem; color:rgba(255,255,255,0.3); font-weight:900;">/ @act.PlanQty <span style="font-size:1rem;">pcs</span></div>
+                                </div>
+                            </div>
+                            <!-- NG Section (Top Right) -->
+                            <div class="text-center" style="min-width: 120px; display:flex; flex-direction:column; align-items:center;">
+                                <div class="lcd-val ng-val" id="ngnum-@i" style="font-size:2.8rem; line-height:1; text-shadow:0 0 15px var(--ng-glow);">0</div>
+                                <div class="lcd-label d-inline-block" style="border-top: 1px solid rgba(255,77,77,0.3); padding-top: 6px; padding-bottom: 0; margin-bottom: 0; margin-top: 6px;"><i class="bi bi-exclamation-triangle"></i> TOTAL NG</div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="activities[@i].ActualQty" id="qty-@i" value="@(act.ActualQty ?? 0)" />
+                        
+                        <div class="mt-4 pt-1">
+                            <div class="d-flex justify-content-between align-items-end mb-2" style="font-size:0.75rem; font-weight:800; color:#64748b; letter-spacing:1px;">
+                                <div>
+                                    <i class="bi bi-flag me-1"></i>
+                                    <span style="opacity:0.7;">Total OK:</span> <span id="totok-@i" style="color:var(--ok); font-size:0.85rem;">@(act.ActualQty ?? 0)</span> 
+                                    <span style="margin:0 5px; color:rgba(255,255,255,0.15);">|</span> 
+                                    <span style="opacity:0.7;">NG:</span> <span id="totng-@i" style="color:var(--ng); font-size:0.85rem;">0</span>
+                                </div>
+                                <div id="pcttxt-@i" style="color:var(--ok); font-size:0.9rem;">@actPct%</div>
+                            </div>
+                            <!-- Mini embedded prog track -->
+                            <div class="prog-track" style="height:8px; background:rgba(255,255,255,0.08); border-radius:6px; overflow:hidden;">
+                                <div class="prog-fill" id="cpfill-@i" style="width:@(actPct == 0 && act.ActualQty > 0 ? 1 : actPct)%; background:var(--ok); box-shadow:0 0 15px var(--ok-glow); border-radius:6px;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="quick-btn-row">
-                    <button type="button" class="btn-ok-q" onclick="addOK(@i)"><i class="bi bi-check2"></i> +1 OK</button>
-                    <button type="button" class="btn-ng-q" onclick="addNG(@i)"><i class="bi bi-x"></i> +1 NG</button>
-                    <button type="button" class="btn-override-q" style="padding:0 20px;" onclick="openModal(@i)"><i class="bi bi-pencil-square"></i> Override</button>
+                <div class="quick-btn-row mt-3">
+                    <button type="button" class="btn-ok-q glossy" onclick="addOK(@i)"><i class="bi bi-check2-circle"></i> +1 OK</button>
+                    <button type="button" class="btn-ng-q glossy" onclick="addNG(@i)"><i class="bi bi-x-circle"></i> +1 NG</button>
+                    <button type="button" class="btn-override-q glossy ms-auto" style="padding:0 24px;" onclick="openModal(@i)"><i class="bi bi-sliders"></i> Override</button>
                 </div>
                 
-                <div class="meta-tile mt-4 d-flex align-items-center gap-3" style="background:rgba(255,255,255,0.02);border-radius:18px;">
-                    <i class="bi bi-chat-square-dots-fill" style="color:var(--accent);font-size:1.2rem;margin-left:15px;"></i>
-                    <textarea name="activities[@i].Remarks" class="remarks-inp" style="background:transparent;border:none;" placeholder="Catatan kendala / status...">@act.Remarks</textarea>
-                </div>
+                <input type="hidden" name="activities[@i].Remarks" value="@act.Remarks" />
             </div>
 
             <div class="card-right">
+                <input type="hidden" class="run-status" value="STOPPED" />
                 <div class="meta-tile">
-                    <div class="h-label">WAKTU KERJA</div>
-                    <div class="d-flex align-items-baseline gap-2 mt-1">
-                        <input type="number" name="activities[@i].ActualDurationMinutes" value="@act.ActualDurationMinutes" class="meta-inp" placeholder="0" style="font-size:2rem;" />
-                        <span style="font-size:1rem;color:var(--muted);font-weight:700;">min</span>
+                    <div class="h-label" style="color:var(--cyan); text-shadow:0 0 10px var(--cyan-glow); font-size:0.65rem; letter-spacing:3px;"><i class="bi bi-clock-history"></i> WINDOW TIMELINE</div>
+                    <div class="time-row justify-content-between mt-3">
+                        <input type="text" name="activities[@i].ActualStart" value="@act.ActualStart" class="time-inp act-start" placeholder="00:00" />
+                        <div class="time-sep" style="font-weight:900; color:var(--cyan); opacity:0.6; font-size:1.5rem;">➔</div>
+                        <input type="text" name="activities[@i].ActualEnd" value="@act.ActualEnd" class="time-inp act-end" placeholder="00:00" />
                     </div>
-                    <div class="meta-sub" style="font-size:.7rem;color:var(--muted);margin-top:5px;">PLAN: @act.PlanDurationMinutes min</div>
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,242,254,0.1);">
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span style="font-size:0.75rem; color:var(--muted); font-weight:900; letter-spacing:1px; color:rgba(255,255,255,0.4);">PLAN:</span>
+                            <input type="number" name="activities[@i].ActualDurationMinutes" value="@act.ActualDurationMinutes" class="meta-inp text-end act-minutes" placeholder="0" style="font-size:1.7rem; width:75px; background:transparent !important; border:none; padding:0; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;" />
+                            <span style="font-size:1.2rem; color:rgba(255,255,255,0.3); font-weight:900;">/ @act.PlanDurationMinutes <span style="font-size:0.75rem;">min</span></span>
+                        </div>
+                        <div class="meta-sub" style="font-size:.75rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow);"><i class="bi bi-calendar3"></i> SCH: @act.PlanStart – @act.PlanEnd</div>
+                    </div>
+                </div>
+                
+                <div class="hud-actions">
+                    <button type="button" class="btn-hud btn-run" onclick="toggleStatus(this, 'RUNNING')">
+                        <i class="bi bi-play-circle-fill"></i>
+                        <span>RUNNING</span>
+                    </button>
+                    <button type="button" class="btn-hud btn-stop" onclick="toggleStatus(this, 'STOP')">
+                        <i class="bi bi-stop-circle-fill"></i>
+                        <span>LINE STOP</span>
+                    </button>
+                    <button type="button" class="btn-hud btn-break" onclick="toggleStatus(this, 'BREAK')">
+                        <i class="bi bi-cup-hot-fill"></i>
+                        <span>BREAK</span>
+                    </button>
                 </div>
 
-                <div class="meta-tile">
-                    <div class="h-label">WINDOW TIMELINE</div>
-                    <div class="time-row justify-content-between mt-2">
-                        <input type="text" name="activities[@i].ActualStart" value="@act.ActualStart" class="time-inp" placeholder="00:00" style="width:90px;" />
-                        <div class="time-sep" style="font-weight:900;">➔</div>
-                        <input type="text" name="activities[@i].ActualEnd" value="@act.ActualEnd" class="time-inp" placeholder="00:00" style="width:90px;" />
-                    </div>
-                    <div class="meta-sub mt-2" style="font-size:.7rem;color:var(--muted);">SCH: @act.PlanStart – @act.PlanEnd</div>
-                </div>
                 <input type="hidden" name="activities[@i].PlanQty" value="@act.PlanQty" class="plan-qty-val" />
             </div>
         </div>
@@ -357,37 +526,11 @@ body {
 </div>
 
 
-<!-- ── ADD ACTIONS ── -->
-<div class="d-flex gap-4 mb-5 pb-5">
-    <button type="button" class="btn-add-part" onclick="openPartPicker()">
-        <i class="bi bi-search me-2"></i> PILIH DARI PART CODE
-    </button>
-    <button type="button" class="btn-add-part" style="color:rgba(255,255,255,0.2); border-color:rgba(255,255,255,0.05);" onclick="addCard()">
-        <i class="bi bi-plus-square-dotted me-2"></i> TAMBAH MANUAL
-    </button>
-</div>
+<!-- ── ADD ACTIONS (Hidden per user request, empty spacer to keep margin) ── -->
+<div class="mb-5 pb-5"></div>
 
 <!-- ── FIXED DOWNTIME FOOTER ── -->
-<div class="downtime-footer">
-    <div class="d-flex gap-4 align-items-end flex-grow-1">
-        <div>
-            <div class="h-label">START MESIN</div>
-            <input type="text" asp-for="StartMesin" class="time-inp" placeholder="00:00" />
-        </div>
-        <div>
-            <div class="h-label">STOP MESIN</div>
-            <input type="text" asp-for="FinishMesin" class="time-inp" placeholder="00:00" />
-        </div>
-        <div>
-            <div class="h-label" style="color:var(--ng);">LINE STOP (MN)</div>
-            <input type="number" asp-for="LineStopMinutes" class="time-inp" style="color:var(--ng);background:rgba(255,77,77,0.05);border-color:rgba(255,77,77,0.2);" placeholder="0" />
-        </div>
-        <div class="flex-grow-1">
-            <div class="h-label" style="color:var(--ng);">CATATAN KENDALA / DOWNTIME</div>
-            <textarea asp-for="LineStopNote" class="remarks-inp" style="background:rgba(255,77,77,0.03);border-color:rgba(255,77,77,0.1);" placeholder="Jelaskan kendala mesin..."></textarea>
-        </div>
-    </div>
-    
+<div class="downtime-footer" style="justify-content: flex-end;">
     <button type="submit" class="btn-save" style="width:300px;height:90px;padding:0;">
         <div class="d-flex align-items-center justify-content-center gap-3">
             <i class="bi bi-shield-check" style="font-size:2.4rem;"></i>
@@ -448,20 +591,34 @@ function addNG(idx) {
     if(!ngCounts[idx]) ngCounts[idx] = 0;
     ngCounts[idx]++;
     const el = document.getElementById(`ngnum-${idx}`);
-    const sh = document.getElementById(`shiftNG-${idx}`);
+    const tot = document.getElementById(`totng-${idx}`);
+    
     if(el) el.textContent = ngCounts[idx];
-    if(sh) { sh.textContent = ngCounts[idx]; sh.dataset.ng = ngCounts[idx]; }
+    if(tot) tot.textContent = ngCounts[idx];
+    
     updateCard(idx);
 }
 
 function updateCard(idx) {
     const qty  = getQty(idx);
     const plan = parseInt(document.querySelector(`#card-${idx} .plan-qty-val`)?.value || '0');
-    const pct  = plan > 0 ? Math.min(100, Math.round(qty*100/plan)) : 0;
+    let pctRaw = plan > 0 ? (qty * 100 / plan) : 0;
+    
+    let pctDisplay = Math.round(pctRaw);
+    let pctChart = pctDisplay;
+    if (pctChart > 0 && pctChart < 1) pctChart = 1; // Minimum 1% to show indicator visible
+    else if (pctChart > 100) pctChart = 100;
+    
     const fill = document.getElementById(`cpfill-${idx}`);
-    const shOK = document.getElementById(`shiftOK-${idx}`);
-    if(fill) fill.style.width = pct+'%';
-    if(shOK) shOK.textContent = qty;
+    const frac = document.getElementById(`frac-${idx}`);
+    const pctTxt = document.getElementById(`pcttxt-${idx}`);
+    const totOK = document.getElementById(`totok-${idx}`);
+    
+    if(fill) fill.style.width = pctChart + '%';
+    if(frac) frac.textContent = qty;
+    if(pctTxt) pctTxt.textContent = pctDisplay + '%';
+    if(totOK) totOK.textContent = qty;
+    
     refreshGlobal();
 }
 
@@ -484,23 +641,19 @@ function refreshGlobal() {
     });
 
     const pct = planProd > 0 ? Math.min(100, (actProd/planProd*100)) : 0;
-    document.getElementById('globalProgFill').style.width = pct.toFixed(1)+'%';
-    document.getElementById('globalPct').textContent = pct.toFixed(1)+'%';
-    document.getElementById('globalFrac').textContent = `${actProd} / ${planProd} pcs`;
-    document.getElementById('globalOK').textContent = actProd;
-    document.getElementById('globalNG').textContent = totalNg;
-    document.getElementById('globalDandori').textContent = actDand+' min';
-    document.getElementById('lblActProd').textContent = actProd;
-    document.getElementById('lblPlanProd').textContent = planProd;
-    document.getElementById('lblActDandori').textContent = actDand;
-    document.getElementById('lblAchieve').textContent = pct.toFixed(1)+'%';
-    document.getElementById('achieveFill').style.width = Math.min(pct,100)+'%';
-    document.getElementById('lblSessions').textContent = `${actProd} / ${planProd} pcs`;
+    
+    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-    const bl = document.getElementById('lblAchieve');
-    const bf = document.getElementById('achieveFill');
+    setStyle('globalProgFill', 'width', pct.toFixed(1)+'%');
+    setEl('globalPct',     pct.toFixed(1)+'%');
+    setEl('globalFrac',    `${actProd} / ${planProd} pcs`);
+    setEl('globalOK',      actProd);
+    setEl('globalNG',      totalNg);
+    setEl('globalDandori', actDand+' min');
+
     const color = pct >= 100 ? 'var(--ok)' : pct >= 80 ? 'var(--warn)' : 'var(--ng)';
-    bl.style.color = color; bf.style.background = color;
+    setStyle('globalPct', 'color', color);
 }
 
 // ─── Override modal ───
@@ -540,51 +693,82 @@ function addCard() {
                     <input type="hidden" name="activities[${idx}].Id" value="0" />
                 </div>
 
-                <div class="output-box">
-                    <div class="h-label" style="letter-spacing:4px;">OUTPUT (PLAN OK)</div>
-                    <div class="output-num" id="onum-${idx}" onclick="openModal(${idx})">0</div>
-                    <input type="hidden" name="activities[${idx}].ActualQty" id="qty-${idx}" value="0" />
-                    <div class="output-target" style="font-size:.85rem;color:var(--muted);margin-top:10px;">Target: — pcs | Shift OK: <b id="shiftOK-${idx}" style="color:var(--ok)">0</b> NG: <b id="shiftNG-${idx}" style="color:var(--ng)">0</b></div>
-                    
-                    <div class="ng-corner">
-                        <div class="h-label" style="color:var(--ng);letter-spacing:1px;font-size:0.5rem;">PLAN NG</div>
-                        <div class="ng-corner-num" id="ngnum-${idx}" style="font-size:2.2rem;">0</div>
+                <div class="hud-meters">
+                    <div class="lcd-meter w-100 cursor-pointer" onclick="openModal(${idx})" style="border-color: rgba(0,230,118, 0.15); border-left: 4px solid var(--ok); border-right: 4px solid var(--ng);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="lcd-label border-ok d-inline-block"><i class="bi bi-bullseye"></i> OUTPUT AKTUAL (OK)</div>
+                                <div class="d-flex align-items-baseline gap-3">
+                                    <div class="lcd-val ok-val" id="onum-${idx}">0</div>
+                                    <div style="font-size:1.8rem; color:rgba(255,255,255,0.3); font-weight:900;">/ 0 <span style="font-size:1rem;">pcs</span></div>
+                                </div>
+                            </div>
+                            <div class="text-center" style="min-width: 120px; display:flex; flex-direction:column; align-items:center;">
+                                <div class="lcd-val ng-val" id="ngnum-${idx}" style="font-size:2.8rem; line-height:1; text-shadow:0 0 15px var(--ng-glow);">0</div>
+                                <div class="lcd-label d-inline-block" style="border-top: 1px solid rgba(255,77,77,0.3); padding-top: 6px; padding-bottom: 0; margin-bottom: 0; margin-top: 6px;"><i class="bi bi-exclamation-triangle"></i> TOTAL NG</div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="activities[${idx}].ActualQty" id="qty-${idx}" value="0" />
+                        
+                        <div class="mt-4 pt-1">
+                            <div class="d-flex justify-content-between align-items-end mb-2" style="font-size:0.75rem; font-weight:800; color:#64748b; letter-spacing:1px;">
+                                <div>
+                                    <i class="bi bi-flag me-1"></i>
+                                    <span style="opacity:0.7;">Total OK:</span> <span id="totok-${idx}" style="color:var(--ok); font-size:0.85rem;">0</span> 
+                                    <span style="margin:0 5px; color:rgba(255,255,255,0.15);">|</span> 
+                                    <span style="opacity:0.7;">NG:</span> <span id="totng-${idx}" style="color:var(--ng); font-size:0.85rem;">0</span>
+                                </div>
+                                <div id="pcttxt-${idx}" style="color:var(--ok); font-size:0.9rem;">0%</div>
+                            </div>
+                            <div class="prog-track" style="height:8px; background:rgba(255,255,255,0.08); border-radius:6px; overflow:hidden;">
+                                <div class="prog-fill" id="cpfill-${idx}" style="width:0%; background:var(--ok); box-shadow:0 0 15px var(--ok-glow); border-radius:6px;"></div>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="card-prog-row px-4 mt-3">
-                        <div class="prog-track" style="height:6px;background:rgba(255,255,255,0.05);"><div class="prog-fill" id="cpfill-${idx}" style="width:0%;background:var(--ok);"></div></div>
-                    </div>
                 </div>
 
-                <div class="quick-btn-row">
-                    <button type="button" class="btn-ok-q" onclick="addOK(${idx})"><i class="bi bi-check2"></i> +1 OK</button>
-                    <button type="button" class="btn-ng-q" onclick="addNG(${idx})"><i class="bi bi-x"></i> +1 NG</button>
-                    <button type="button" class="btn-override-q" style="padding:0 20px;" onclick="openModal(${idx})"><i class="bi bi-pencil-square"></i> Override</button>
+                <div class="quick-btn-row mt-3 mb-2">
+                    <button type="button" class="btn-ok-q glossy" onclick="addOK(${idx})"><i class="bi bi-check2-circle"></i> +1 OK</button>
+                    <button type="button" class="btn-ng-q glossy" onclick="addNG(${idx})"><i class="bi bi-x-circle"></i> +1 NG</button>
+                    <button type="button" class="btn-override-q glossy ms-auto" style="padding:0 24px;" onclick="openModal(${idx})"><i class="bi bi-sliders"></i> Override</button>
                 </div>
-                
-                <div class="meta-tile mt-4 d-flex align-items-center gap-3" style="background:rgba(255,255,255,0.02);border-radius:18px;">
-                    <i class="bi bi-chat-square-dots-fill" style="color:var(--accent);font-size:1.2rem;margin-left:15px;"></i>
-                    <textarea name="activities[${idx}].Remarks" class="remarks-inp" style="background:transparent;border:none;" placeholder="Catatan kendala / status..."></textarea>
-                </div>
+                <input type="hidden" name="activities[${idx}].Remarks" value="" />
             </div>
 
             <div class="card-right">
+                <input type="hidden" class="run-status" value="STOPPED" />
                 <div class="meta-tile">
-                    <div class="h-label">WAKTU KERJA</div>
-                    <div class="d-flex align-items-baseline gap-2 mt-1">
-                        <input type="number" name="activities[${idx}].ActualDurationMinutes" class="meta-inp" placeholder="0" style="font-size:2rem;" />
-                        <span style="font-size:1rem;color:var(--muted);font-weight:700;">min</span>
+                    <div class="h-label" style="color:var(--cyan); text-shadow:0 0 10px var(--cyan-glow); font-size:0.65rem; letter-spacing:3px;"><i class="bi bi-clock-history"></i> WINDOW TIMELINE</div>
+                    <div class="time-row justify-content-between mt-3">
+                        <input type="text" name="activities[${idx}].ActualStart" class="time-inp act-start" placeholder="00:00" />
+                        <div class="time-sep" style="font-weight:900; color:var(--cyan); opacity:0.6; font-size:1.5rem;">➔</div>
+                        <input type="text" name="activities[${idx}].ActualEnd" class="time-inp act-end" placeholder="00:00" />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,242,254,0.1);">
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span style="font-size:0.75rem; color:var(--muted); font-weight:900; letter-spacing:1px; color:rgba(255,255,255,0.4);">PLAN:</span>
+                            <input type="number" name="activities[${idx}].ActualDurationMinutes" class="meta-inp text-end act-minutes" placeholder="0" style="font-size:1.7rem; width:75px; background:transparent !important; border:none; padding:0; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;" />
+                            <span style="font-size:1.2rem; color:rgba(255,255,255,0.3); font-weight:900;">/ 0 <span style="font-size:0.75rem;">min</span></span>
+                        </div>
+                        <div class="meta-sub" style="font-size:.75rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow);"><i class="bi bi-calendar3"></i> SCH: 00:00 – 00:00</div>
                     </div>
                 </div>
-
-                <div class="meta-tile">
-                    <div class="h-label">WINDOW TIMELINE</div>
-                    <div class="time-row justify-content-between mt-2">
-                        <input type="text" name="activities[${idx}].ActualStart" class="time-inp" placeholder="00:00" style="width:90px;" />
-                        <div class="time-sep" style="font-weight:900;">➔</div>
-                        <input type="text" name="activities[${idx}].ActualEnd" class="time-inp" placeholder="00:00" style="width:90px;" />
-                    </div>
+                
+                <div class="hud-actions">
+                    <button type="button" class="btn-hud btn-run" onclick="toggleStatus(this, 'RUNNING')">
+                        <i class="bi bi-play-circle-fill"></i>
+                        <span>RUNNING</span>
+                    </button>
+                    <button type="button" class="btn-hud btn-stop" onclick="toggleStatus(this, 'STOP')">
+                        <i class="bi bi-stop-circle-fill"></i>
+                        <span>LINE STOP</span>
+                    </button>
+                    <button type="button" class="btn-hud btn-break" onclick="toggleStatus(this, 'BREAK')">
+                        <i class="bi bi-cup-hot-fill"></i>
+                        <span>BREAK</span>
+                    </button>
                 </div>
+                
                 <input type="hidden" name="activities[${idx}].PlanQty" value="0" class="plan-qty-val" />
             </div>
         </div>
@@ -671,51 +855,83 @@ function addCardFromPart(part) {
                     <input type="hidden" name="activities[${idx}].Id" value="0" />
                 </div>
 
-                <div class="output-box">
-                    <div class="h-label" style="letter-spacing:4px;">OUTPUT (PLAN OK)</div>
-                    <div class="output-num" id="onum-${idx}" onclick="openModal(${idx})">0</div>
-                    <input type="hidden" name="activities[${idx}].ActualQty" id="qty-${idx}" value="0" />
-                    <div class="output-target" style="font-size:.85rem;color:var(--muted);margin-top:10px;">Target: — pcs | Shift OK: <b id="shiftOK-${idx}" style="color:var(--ok)">0</b> NG: <b id="shiftNG-${idx}" style="color:var(--ng)">0</b></div>
-                    
-                    <div class="ng-corner">
-                        <div class="h-label" style="color:var(--ng);letter-spacing:1px;font-size:0.5rem;">PLAN NG</div>
-                        <div class="ng-corner-num" id="ngnum-${idx}" style="font-size:2.2rem;">0</div>
+                <div class="hud-meters">
+                    <div class="lcd-meter w-100 cursor-pointer" onclick="openModal(${idx})" style="border-color: rgba(0,230,118, 0.15); border-left: 4px solid var(--ok); border-right: 4px solid var(--ng);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="lcd-label border-ok d-inline-block"><i class="bi bi-bullseye"></i> OUTPUT AKTUAL (OK)</div>
+                                <div class="d-flex align-items-baseline gap-3">
+                                    <div class="lcd-val ok-val" id="onum-${idx}">0</div>
+                                    <div style="font-size:1.8rem; color:rgba(255,255,255,0.3); font-weight:900;">/ 0 <span style="font-size:1rem;">pcs</span></div>
+                                </div>
+                            </div>
+                            <div class="text-center" style="min-width: 120px; display:flex; flex-direction:column; align-items:center;">
+                                <div class="lcd-val ng-val" id="ngnum-${idx}" style="font-size:2.8rem; line-height:1; text-shadow:0 0 15px var(--ng-glow);">0</div>
+                                <div class="lcd-label d-inline-block" style="border-top: 1px solid rgba(255,77,77,0.3); padding-top: 6px; padding-bottom: 0; margin-bottom: 0; margin-top: 6px;"><i class="bi bi-exclamation-triangle"></i> TOTAL NG</div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="activities[${idx}].ActualQty" id="qty-${idx}" value="0" />
+                        
+                        <div class="mt-4 pt-1">
+                            <div class="d-flex justify-content-between align-items-end mb-2" style="font-size:0.75rem; font-weight:800; color:#64748b; letter-spacing:1px;">
+                                <div>
+                                    <i class="bi bi-flag me-1"></i>
+                                    <span style="opacity:0.7;">Total OK:</span> <span id="totok-${idx}" style="color:var(--ok); font-size:0.85rem;">0</span> 
+                                    <span style="margin:0 5px; color:rgba(255,255,255,0.15);">|</span> 
+                                    <span style="opacity:0.7;">NG:</span> <span id="totng-${idx}" style="color:var(--ng); font-size:0.85rem;">0</span>
+                                </div>
+                                <div id="pcttxt-${idx}" style="color:var(--ok); font-size:0.9rem;">0%</div>
+                            </div>
+                            <!-- Mini embedded prog track -->
+                            <div class="prog-track" style="height:8px; background:rgba(255,255,255,0.08); border-radius:6px; overflow:hidden;">
+                                <div class="prog-fill" id="cpfill-${idx}" style="width:0%; background:var(--ok); box-shadow:0 0 15px var(--ok-glow); border-radius:6px;"></div>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="card-prog-row px-4 mt-3">
-                        <div class="prog-track" style="height:6px;background:rgba(255,255,255,0.05);"><div class="prog-fill" id="cpfill-${idx}" style="width:0%;background:var(--ok);"></div></div>
-                    </div>
                 </div>
 
-                <div class="quick-btn-row">
-                    <button type="button" class="btn-ok-q" onclick="addOK(${idx})"><i class="bi bi-check2"></i> +1 OK</button>
-                    <button type="button" class="btn-ng-q" onclick="addNG(${idx})"><i class="bi bi-x"></i> +1 NG</button>
-                    <button type="button" class="btn-override-q" style="padding:0 20px;" onclick="openModal(${idx})"><i class="bi bi-pencil-square"></i> Override</button>
+                <div class="quick-btn-row mt-3 mb-2">
+                    <button type="button" class="btn-ok-q glossy" onclick="addOK(${idx})"><i class="bi bi-check2-circle"></i> +1 OK</button>
+                    <button type="button" class="btn-ng-q glossy" onclick="addNG(${idx})"><i class="bi bi-x-circle"></i> +1 NG</button>
+                    <button type="button" class="btn-override-q glossy ms-auto" style="padding:0 24px;" onclick="openModal(${idx})"><i class="bi bi-sliders"></i> Override</button>
                 </div>
-                
-                <div class="meta-tile mt-4 d-flex align-items-center gap-3" style="background:rgba(255,255,255,0.02);border-radius:18px;">
-                    <i class="bi bi-chat-square-dots-fill" style="color:var(--accent);font-size:1.2rem;margin-left:15px;"></i>
-                    <textarea name="activities[${idx}].Remarks" class="remarks-inp" style="background:transparent;border:none;" placeholder="Catatan kendala / status..."></textarea>
-                </div>
+                <input type="hidden" name="activities[${idx}].Remarks" value="" />
             </div>
 
             <div class="card-right">
+                <input type="hidden" class="run-status" value="STOPPED" />
                 <div class="meta-tile">
-                    <div class="h-label">WAKTU KERJA</div>
-                    <div class="d-flex align-items-baseline gap-2 mt-1">
-                        <input type="number" name="activities[${idx}].ActualDurationMinutes" class="meta-inp" placeholder="0" style="font-size:2rem;" />
-                        <span style="font-size:1rem;color:var(--muted);font-weight:700;">min</span>
+                    <div class="h-label" style="color:var(--cyan); text-shadow:0 0 10px var(--cyan-glow); font-size:0.65rem; letter-spacing:3px;"><i class="bi bi-clock-history"></i> WINDOW TIMELINE</div>
+                    <div class="time-row justify-content-between mt-3">
+                        <input type="text" name="activities[${idx}].ActualStart" class="time-inp act-start" placeholder="00:00" />
+                        <div class="time-sep" style="font-weight:900; color:var(--cyan); opacity:0.6; font-size:1.5rem;">➔</div>
+                        <input type="text" name="activities[${idx}].ActualEnd" class="time-inp act-end" placeholder="00:00" />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,242,254,0.1);">
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span style="font-size:0.75rem; color:var(--muted); font-weight:900; letter-spacing:1px; color:rgba(255,255,255,0.4);">PLAN:</span>
+                            <input type="number" name="activities[${idx}].ActualDurationMinutes" class="meta-inp text-end act-minutes" placeholder="0" style="font-size:1.7rem; width:75px; background:transparent !important; border:none; padding:0; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;" />
+                            <span style="font-size:1.2rem; color:rgba(255,255,255,0.3); font-weight:900;">/ ${part.standardDurationMinutes || 0} <span style="font-size:0.75rem;">min</span></span>
+                        </div>
+                        <div class="meta-sub" style="font-size:.75rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow);"><i class="bi bi-calendar3"></i> SCH: 00:00 – 00:00</div>
                     </div>
                 </div>
-
-                <div class="meta-tile">
-                    <div class="h-label">WINDOW TIMELINE</div>
-                    <div class="time-row justify-content-between mt-2">
-                        <input type="text" name="activities[${idx}].ActualStart" class="time-inp" placeholder="00:00" style="width:90px;" />
-                        <div class="time-sep" style="font-weight:900;">➔</div>
-                        <input type="text" name="activities[${idx}].ActualEnd" class="time-inp" placeholder="00:00" style="width:90px;" />
-                    </div>
+                
+                <div class="hud-actions">
+                    <button type="button" class="btn-hud btn-run" onclick="toggleStatus(this, 'RUNNING')">
+                        <i class="bi bi-play-circle-fill"></i>
+                        <span>RUNNING</span>
+                    </button>
+                    <button type="button" class="btn-hud btn-stop" onclick="toggleStatus(this, 'STOP')">
+                        <i class="bi bi-stop-circle-fill"></i>
+                        <span>LINE STOP</span>
+                    </button>
+                    <button type="button" class="btn-hud btn-break" onclick="toggleStatus(this, 'BREAK')">
+                        <i class="bi bi-cup-hot-fill"></i>
+                        <span>BREAK</span>
+                    </button>
                 </div>
+                
                 <input type="hidden" name="activities[${idx}].PlanQty" value="0" class="plan-qty-val" />
             </div>
         </div>
@@ -725,6 +941,57 @@ function addCardFromPart(part) {
     setTimeout(() => document.getElementById(`card-manual-${idx}`)?.scrollIntoView({behavior:'smooth', block:'center'}), 100);
 }
 
+// ── HUD COMMAND ENGINE ──
+function toggleStatus(btn, status) {
+    const card = btn.closest('.act-card');
+    const metaTile = card.querySelector('.meta-tile');
+    const hiddenStatus = card.querySelector('.run-status');
+    const allBtns = card.querySelectorAll('.btn-hud');
+    
+    // Clear all active classes
+    allBtns.forEach(b => b.classList.remove('active-run', 'active-stop', 'active-break'));
+    metaTile.classList.remove('meta-running');
+    
+    if (hiddenStatus.value === status) {
+        hiddenStatus.value = 'STOPPED';
+    } else {
+        hiddenStatus.value = status;
+        if (status === 'RUNNING') {
+            btn.classList.add('active-run');
+            metaTile.classList.add('meta-running');
+            const startInp = card.querySelector('.act-start');
+            if (!startInp.value || startInp.value === '00:00' || startInp.value === '') {
+                const now = new Date();
+                startInp.value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            }
+        } else if (status === 'STOP') {
+            btn.classList.add('active-stop');
+        } else if (status === 'BREAK') {
+            btn.classList.add('active-break');
+        }
+    }
+    refreshGlobal();
+}
+
+// Global Timer Heartbeat (Increments RUNNING cards every 1 min)
+setInterval(() => {
+    document.querySelectorAll('.act-card').forEach(card => {
+        const status = card.querySelector('.run-status').value;
+        if (status === 'RUNNING') {
+            const minInp = card.querySelector('.act-minutes');
+            const endInp = card.querySelector('.act-end');
+            
+            // Increment
+            minInp.value = parseInt(minInp.value || 0) + 1;
+            
+            // Update End Time
+            const now = new Date();
+            endInp.value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            
+            refreshGlobal();
+        }
+    });
+}, 60000);
 
 </script>
 }
