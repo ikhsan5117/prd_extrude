@@ -356,21 +356,69 @@
                     <th width="35">Dimensi</th>
                     <th width="35">Visual</th>
                 </tr>
-                <tr>
-                    <td>@(Model.DimensionDisplay ?? Model.HoseType ?? "-")</td>
-                    <td>@(Model.VinCode ?? "-")</td>
-                    <td>@(string.IsNullOrEmpty(Model.StandardLength) || Model.StandardLength == "-" ? (master?.Dimensi ?? "-") : Model.StandardLength)</td>
-                    <td>@(Model.ActualLength ?? "-")</td>
-                    <td>@(Model.QtyTarget > 0 ? Model.QtyTarget.ToString() : "-")</td>
-                    <td>@Model.QtyOk</td>
-                    <td>@Model.NgDimension</td>
-                    <td>@Model.NgVisual</td>
-                    <td style="text-align: left; vertical-align: top; font-size: 8px;">@Model.Remark</td>
-                </tr>
-                @for(int i=0; i<12; i++) {
-                    <tr style="height: 18px;">
-                        <td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                @{
+                    // Read per-slot summary from measurements
+                    string GetSummaryVal(string rowName, int slotIdx) {
+                        var key = rowName;
+                        if (!measurements.ContainsKey(key)) return "-";
+                        var r = measurements[key];
+                        var prop = typeof(VelastoProductionSystem.Models.DimensionMeasurement).GetProperty("R" + slotIdx);
+                        var val = prop?.GetValue(r);
+                        return val != null ? val.ToString() : "-";
+                    }
+
+                    // Detect how many slots exist (up to 5)
+                    int slotCount = 0;
+                    for (int s = 1; s <= 5; s++) {
+                        var qtyRow = measurements.ContainsKey("Summary - QTY OK") ? measurements["Summary - QTY OK"] : null;
+                        var prop = typeof(VelastoProductionSystem.Models.DimensionMeasurement).GetProperty("R" + s);
+                        if (qtyRow != null && prop?.GetValue(qtyRow) != null) slotCount = s;
+                    }
+
+                    bool hasSlots = slotCount > 0;
+                    string partNum = Model.DimensionDisplay ?? Model.HoseType ?? "-";
+                    string stdPnjg = string.IsNullOrEmpty(Model.StandardLength) || Model.StandardLength == "-"
+                        ? (master?.Dimensi ?? "-") : Model.StandardLength;
+                }
+                @if (hasSlots) {
+                    @for (int s = 1; s <= slotCount; s++) {
+                        string vin     = GetSummaryVal("Summary - VIN Kode",    s);
+                        string actPnjg = GetSummaryVal("Summary - ACT Panjang", s);
+                        string qtyOk   = GetSummaryVal("Summary - QTY OK",      s);
+                        string ngDim   = GetSummaryVal("Summary - NG Dimensi",  s);
+                        string ngVis   = GetSummaryVal("Summary - NG Visual",   s);
+                        string remark  = GetSummaryVal("Summary - QTY Status",  s);
+                        <tr>
+                            <td>@partNum</td>
+                            <td>@(vin == "-" ? (Model.VinCode ?? "-") : vin)</td>
+                            <td>@stdPnjg</td>
+                            <td>@(actPnjg == "-" ? (Model.ActualLength ?? "-") : actPnjg)</td>
+                            <td>@(Model.QtyTarget > 0 ? Model.QtyTarget.ToString() : "-")</td>
+                            <td>@(qtyOk == "-" ? "" : qtyOk)</td>
+                            <td>@(ngDim == "-" ? "" : ngDim)</td>
+                            <td>@(ngVis == "-" ? "" : ngVis)</td>
+                            <td style="text-align:left;font-size:8px;">@(remark == "ok" ? "ALL OK" : remark == "ng" ? "CONTAINS NG" : "")</td>
+                        </tr>
+                    }
+                    @for (int i = slotCount; i < 13; i++) {
+                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    }
+                } else {
+                    // Fallback: show report header (legacy single-row)
+                    <tr>
+                        <td>@partNum</td>
+                        <td>@(Model.VinCode ?? "-")</td>
+                        <td>@stdPnjg</td>
+                        <td>@(Model.ActualLength ?? "-")</td>
+                        <td>@(Model.QtyTarget > 0 ? Model.QtyTarget.ToString() : "-")</td>
+                        <td>@Model.QtyOk</td>
+                        <td>@Model.NgDimension</td>
+                        <td>@Model.NgVisual</td>
+                        <td style="text-align:left;vertical-align:top;font-size:8px;">@Model.Remark</td>
                     </tr>
+                    @for (int i = 0; i < 12; i++) {
+                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    }
                 }
             </table>
         </div>

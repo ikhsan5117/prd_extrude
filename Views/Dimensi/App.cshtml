@@ -1091,6 +1091,11 @@
                 vStates[it] = ok ? 'ok' : (ng ? 'ng' : null);
             });
 
+            // Capture QTY Status
+            const qtyOkActive = document.getElementById('qty-ok')?.classList.contains('active-ok');
+            const qtyNgActive = document.getElementById('qty-ng')?.classList.contains('active-ng');
+            const qtySt = qtyOkActive ? 'ok' : (qtyNgActive ? 'ng' : null);
+
             current.data = {
                 innerDia: document.getElementById('val-inner-dia').value,
                 innerTx: document.getElementById('val-inner-tx').value,
@@ -1098,22 +1103,30 @@
                 totalTx: document.getElementById('val-total-tx').value,
                 totalTy: document.getElementById('val-total-ty').value,
                 spiral: document.getElementById('val-spiral').value,
-                visual: vStates
+                visual: vStates,
+                // === PER-SLOT PRODUCTION SUMMARY ===
+                vin:     document.getElementById('val-vin-kode')?.value || '',
+                actPnjg: document.getElementById('val-act-pnjg')?.value || '',
+                qtySt:   qtySt,
+                qtyOk:   document.getElementById('val-qty-ok')?.value || '',
+                ngDim:   document.getElementById('val-ng-dimensi')?.value || '',
+                ngVis:   document.getElementById('val-ng-visual')?.value || '',
+                remark:  document.getElementById('val-remark')?.value || ''
             };
 
-            const hasVal = Object.values(current.data).some(v => v !== "" && v !== "0" && v !== null && typeof v !== 'object') || 
+            const hasVal = ['innerDia','innerTx','innerTy','totalTx','totalTy','spiral'].some(k => current.data[k] !== '') ||
                            Object.values(vStates).some(v => v !== null);
 
             if (hasVal && !current.time) {
                 const now = new Date();
-                current.time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                current.time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
             }
         }
 
         function loadDataToUI() {
             const data = measurements[currentIndex].data || {};
             
-            // 1. Per-slot measurements
+            // 1. Per-slot measurements (always override, including empty to clear)
             document.getElementById('val-inner-dia').value = data.innerDia || '';
             document.getElementById('val-inner-tx').value = data.innerTx || '';
             document.getElementById('val-inner-ty').value = data.innerTy || '';
@@ -1133,25 +1146,35 @@
             });
             renderVisualStatus();
 
-            // 3. GLOBAL PRODUCTION DATA (Populate only if empty or first load)
-            if (data.vin) document.getElementById('val-vin-kode').value = data.vin;
-            if (data.actPnjg) document.getElementById('val-act-pnjg').value = data.actPnjg;
-            if (data.qtyOk !== undefined) document.getElementById('val-qty-ok').value = data.qtyOk;
-            if (data.ngDim !== undefined) document.getElementById('val-ng-dimensi').value = data.ngDim;
-            if (data.ngVis !== undefined) document.getElementById('val-ng-visual').value = data.ngVis;
-            if (data.remark) document.getElementById('val-remark').value = data.remark;
+            // 3. PER-SLOT PRODUCTION SUMMARY (always set — clears old values when switching)
+            document.getElementById('val-vin-kode').value    = data.vin     || '';
+            document.getElementById('val-act-pnjg').value   = data.actPnjg || '';
+            document.getElementById('val-qty-ok').value     = data.qtyOk   || '';
+            document.getElementById('val-ng-dimensi').value = data.ngDim   || '';
+            document.getElementById('val-ng-visual').value  = data.ngVis   || '';
+            document.getElementById('val-remark').value     = data.remark  || '';
+
+            // Restore QTY Status toggle
+            if (data.qtySt) setQtyStatus(data.qtySt);
+            else {
+                // Clear toggle if no status yet
+                document.getElementById('qty-ok')?.classList.remove('active-ok');
+                document.getElementById('qty-ng')?.classList.remove('active-ng');
+                document.getElementById('okPanel').style.display = 'none';
+                document.getElementById('ngPanel').style.display = 'none';
+            }
             
-            // 4. Header / Fixed Inputs (New ones from previous turn)
+            // 4. Header / Fixed Inputs (not cleared on slot switch)
             const stdPnjgInput = document.getElementById('disp-std-pnjg');
-            if (stdPnjgInput && (stdPnjgInput.value === "-" || stdPnjgInput.value === "")) {
-                stdPnjgInput.value = "@Model.StandardLength" || "-";
+            if (stdPnjgInput && (stdPnjgInput.value === '-' || stdPnjgInput.value === '')) {
+                stdPnjgInput.value = '@Model.StandardLength' || '-';
             }
             const targetInput = document.getElementById('disp-qty-target');
-            if (targetInput && (targetInput.value === "0" || targetInput.value === "")) {
-                targetInput.value = "@Model.QtyTarget" || "0";
+            if (targetInput && (targetInput.value === '0' || targetInput.value === '')) {
+                targetInput.value = '@Model.QtyTarget' || '0';
             }
 
-            // Run validation for all cards
+            // 5. Run validation for all cards
             ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
         }
 
@@ -1330,22 +1353,53 @@
                     aggregateReadings.push(vRow);
                 }
 
+                // === PER-SLOT PRODUCTION SUMMARY ROWS ===
+                const summaryFields = [
+                    { name: 'Summary - QTY OK',     key: 'qtyOk'   },
+                    { name: 'Summary - NG Dimensi',  key: 'ngDim'   },
+                    { name: 'Summary - NG Visual',   key: 'ngVis'   },
+                    { name: 'Summary - VIN Kode',    key: 'vin'     },
+                    { name: 'Summary - ACT Panjang', key: 'actPnjg' },
+                    { name: 'Summary - QTY Status',  key: 'qtySt'  }
+                ];
+                for (const sf of summaryFields) {
+                    const sRow = {
+                        PointName: sf.name, TimeSection: measurements[0]?.time || '',
+                        Frequency: '30m Sekali', StandardDimension: '-',
+                        Initial: '', Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '',
+                        Status: 'OK'
+                    };
+                    for (let idx = 0; idx < Math.min(measurements.length, 5); idx++) {
+                        const val = measurements[idx].data[sf.key];
+                        sRow[`Reading${idx + 1}`] = (val !== null && val !== undefined) ? String(val) : '';
+                    }
+                    aggregateReadings.push(sRow);
+                }
+
+                // Aggregate totals across all slots
+                const totalQtyOk  = measurements.reduce((s, m) => s + (parseInt(m.data.qtyOk)  || 0), 0);
+                const totalNgDim  = measurements.reduce((s, m) => s + (parseInt(m.data.ngDim)  || 0), 0);
+                const totalNgVis  = measurements.reduce((s, m) => s + (parseInt(m.data.ngVis)  || 0), 0);
+                const lastVin     = [...measurements].reverse().find(m => m.data.vin)?.data.vin     || document.getElementById('val-vin-kode')?.value  || '';
+                const lastActPnjg = [...measurements].reverse().find(m => m.data.actPnjg)?.data.actPnjg || document.getElementById('val-act-pnjg')?.value || '';
+                const lastRemark  = [...measurements].reverse().find(m => m.data.remark)?.data.remark   || document.getElementById('val-remark')?.value   || '';
+
                 const payload = {
                     ReportId: @Model.Id,
-                    DocumentNumber: document.getElementById('h-doc')?.innerText || "---",
-                    HoseType: document.getElementById('h-hose')?.innerText || "",
-                    CustomerName: document.getElementById('h-customer')?.innerText || "",
-                    DimensionDisplay: document.getElementById('disp-part-no')?.innerText || "",
-                    VinCode: document.getElementById('val-vin-kode')?.value || "",
-                    StandardLength: document.getElementById('disp-std-pnjg')?.value || "",
-                    ActualLength: document.getElementById('val-act-pnjg')?.value || "",
-                    QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || "0"),
-                    QtyOk: parseInt(document.getElementById('val-qty-ok')?.value || "0"),
-                    NgDimension: parseInt(document.getElementById('val-ng-dimensi')?.value || "0"),
-                    NgVisual: parseInt(document.getElementById('val-ng-visual')?.value || "0"),
-                    Remark: document.getElementById('val-remark')?.value || "",
-                    ByPass: document.getElementById('h-hose')?.innerText.split('|')[1]?.trim() || "",
-                    Shift: document.getElementById('h-shift')?.innerText || "",
+                    DocumentNumber: document.getElementById('h-doc')?.innerText || '---',
+                    HoseType: document.getElementById('h-hose')?.innerText || '',
+                    CustomerName: document.getElementById('h-customer')?.innerText || '',
+                    DimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
+                    VinCode: lastVin,
+                    StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                    ActualLength: lastActPnjg,
+                    QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
+                    QtyOk: totalQtyOk,
+                    NgDimension: totalNgDim,
+                    NgVisual: totalNgVis,
+                    Remark: lastRemark,
+                    ByPass: '',
+                    Shift: document.getElementById('h-shift')?.innerText || '',
                     DimensionReadings: aggregateReadings
                 };
 
