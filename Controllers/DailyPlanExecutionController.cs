@@ -21,6 +21,99 @@ namespace VelastoProductionSystem.Controllers
             return View();
         }
 
+        // ── API: Search Part Codes for picker modal ──────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> SearchPartCodes(string q)
+        {
+            var query = _context.PartMasters.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var qUp = q.ToUpper();
+                query = query.Where(p =>
+                    (p.PartCode != null && p.PartCode.ToUpper().Contains(qUp)) ||
+                    (p.PartNumber != null && p.PartNumber.ToUpper().Contains(qUp)) ||
+                    (p.Description != null && p.Description.ToUpper().Contains(qUp)));
+            }
+            var results = await query
+                .OrderBy(p => p.PartCode)
+                .Take(30)
+                .Select(p => new {
+                    p.PartCode,
+                    p.PartNumber,
+                    p.Description,
+                    p.Length,
+                    p.SecPerPcs,
+                    p.CtAwal
+                })
+                .ToListAsync();
+            return Json(results);
+        }
+
+        // ── API: Search Available Planning Batches for selection ───────────────
+        [HttpGet]
+        public async Task<IActionResult> GetAvailablePlanningBatches(DateTime d, string s, string m)
+        {
+            var culture = new System.Globalization.CultureInfo("id-ID");
+            var d1 = d.ToString("d MMMM yyyy", culture).ToUpper();
+            var d2 = d.ToString("dd MMMM yyyy", culture).ToUpper();
+            
+            var cleanShift = (s ?? "").ToUpper().Replace("SHIFT", "").Trim();
+            var target1 = $", {d1} SHIFT {cleanShift}"; 
+            var target2 = $", {d2} SHIFT {cleanShift}";
+
+            var matches = await _context.PlanningMasters
+                .Where(x => x.MachineName == m &&
+                            !string.IsNullOrEmpty(x.DateShiftString) &&
+                            (x.DateShiftString.ToUpper().Contains(target1) || x.DateShiftString.ToUpper().Contains(target2)))
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+
+            if (!matches.Any()) return Json(new List<object>());
+
+            // Group by CreatedAt (tolerance 10s)
+            var batches = new List<dynamic>();
+            DateTime? lastTime = null;
+            var currentBatch = new List<PlanningMaster>();
+
+            foreach (var item in matches.OrderBy(x => x.CreatedAt)) // Ascending for easier grouping
+            {
+                if (lastTime == null || Math.Abs((item.CreatedAt - lastTime.Value).TotalSeconds) <= 10)
+                {
+                    currentBatch.Add(item);
+                    if (lastTime == null) lastTime = item.CreatedAt;
+                }
+                else
+                {
+                    batches.Add(new { 
+                        Time = lastTime.Value.ToString("HH:mm"), 
+                        FullTime = lastTime.Value.ToString("o"),
+                        Count = currentBatch.Count,
+                        Items = currentBatch.Select(x => new { 
+                            Id = x.Id, 
+                            Text = (x.PartName1 ?? x.Kode) + (string.IsNullOrEmpty(x.PartName2) ? "" : " / " + x.PartName2) 
+                        }).ToList()
+                    });
+                    currentBatch = new List<PlanningMaster> { item };
+                    lastTime = item.CreatedAt;
+                }
+            }
+            if (currentBatch.Any())
+            {
+                batches.Add(new { 
+                    Time = lastTime.Value.ToString("HH:mm"), 
+                    FullTime = lastTime.Value.ToString("o"),
+                    Count = currentBatch.Count,
+                    Items = currentBatch.Select(x => new { 
+                        Id = x.Id, 
+                        Text = (x.PartName1 ?? x.Kode) + (string.IsNullOrEmpty(x.PartName2) ? "" : " / " + x.PartName2) 
+                    }).ToList()
+                });
+            }
+
+            return Json(batches.OrderByDescending(x => x.FullTime));
+        }
+
+
         public async Task<IActionResult> Index()
         {
             // Auto repair missing tables
@@ -76,7 +169,7 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateOrLoad(DateTime executionDate, string shift, string machineName, string groupName)
+        public async Task<IActionResult> CreateOrLoad(DateTime executionDate, string shift, string machineName, string groupName, DateTime? batchTime, int? planningId)
         {
             // 1. Cek apakah sudah ada
             var existing = await _context.DailyPlanExecutions
@@ -87,10 +180,19 @@ namespace VelastoProductionSystem.Controllers
 
             if (existing != null)
             {
-                // Jika sudah ada tapi activities kosong, regenerate dari planning
-                if (existing.Activities.Count == 0)
+                // Jika sudah ada tapi activities kosong, atau batchTime/planningId diberikan (force reload)
+                if (existing.Activities.Count == 0 || batchTime != null || planningId != null)
                 {
-                    await LoadActivitiesFromPlanning(existing, executionDate, shift, machineName);
+                    if (batchTime != null || planningId != null)
+                    {
+                        _context.DailyPlanActivities.RemoveRange(existing.Activities);
+                        await _context.SaveChangesAsync();
+                        await LoadActivitiesFromPlanning(existing, executionDate, shift, machineName, batchTime, planningId);
+                    }
+                    else if (existing.Activities.Count == 0)
+                    {
+                        await LoadActivitiesFromPlanning(existing, executionDate, shift, machineName, null, null);
+                    }
                 }
                 return RedirectToAction(nameof(Execution), new { id = existing.Id });
             }
@@ -108,14 +210,14 @@ namespace VelastoProductionSystem.Controllers
             _context.DailyPlanExecutions.Add(newExec);
             await _context.SaveChangesAsync();
 
-            await LoadActivitiesFromPlanning(newExec, executionDate, shift, machineName);
+            await LoadActivitiesFromPlanning(newExec, executionDate, shift, machineName, batchTime, planningId);
 
             TempData["SuccessMessage"] = "Data Planning berhasil di-generate!";
             return RedirectToAction(nameof(Execution), new { id = newExec.Id });
         }
 
         // ─── Helper: muat activities dari PlanningMasters ───────────────────
-        private async Task LoadActivitiesFromPlanning(DailyPlanExecution exec, DateTime executionDate, string shift, string machineName)
+        private async Task LoadActivitiesFromPlanning(DailyPlanExecution exec, DateTime executionDate, string shift, string machineName, DateTime? batchTime, int? planningId)
         {
             var culture = new System.Globalization.CultureInfo("id-ID");
             var d1 = executionDate.ToString("d MMMM yyyy", culture).ToUpper();
@@ -128,21 +230,31 @@ namespace VelastoProductionSystem.Controllers
             var target2 = $", {d2} SHIFT {cleanShift}";
 
             // 1. Cari semua yang cocok
-            var allMatching = await _context.PlanningMasters
+            var query = _context.PlanningMasters
                 .Where(x => x.MachineName == machineName &&
                             !string.IsNullOrEmpty(x.DateShiftString) &&
-                            (x.DateShiftString.ToUpper().Contains(target1) || x.DateShiftString.ToUpper().Contains(target2)))
-                .OrderByDescending(x => x.Id)
-                .ToListAsync();
+                            (x.DateShiftString.ToUpper().Contains(target1) || x.DateShiftString.ToUpper().Contains(target2)));
+
+            var allMatching = await query.OrderByDescending(x => x.Id).ToListAsync();
 
             if (!allMatching.Any()) return;
 
-            // 2. Ambil Batch Terakhir (Toleransi 10 detik agar aman)
-            var latestBatchTime = allMatching.First().CreatedAt;
-            var matchedPlans = allMatching
-                .Where(x => x.CreatedAt >= latestBatchTime.AddSeconds(-10)) 
-                .OrderBy(x => x.Id)
-                .ToList();
+            // 2. Filter (Satu Part tertentu ATAU Satu Batch tertentu)
+            List<PlanningMaster> matchedPlans;
+            if (planningId.HasValue)
+            {
+                matchedPlans = allMatching.Where(x => x.Id == planningId.Value).ToList();
+            }
+            else
+            {
+                var targetTime = batchTime ?? allMatching.First().CreatedAt;
+                matchedPlans = allMatching
+                    .Where(x => Math.Abs((x.CreatedAt - targetTime).TotalSeconds) <= 10) 
+                    .OrderBy(x => x.Id)
+                    .ToList();
+            }
+
+
 
             int order = 1;
             foreach (var p in matchedPlans)
@@ -188,7 +300,7 @@ namespace VelastoProductionSystem.Controllers
             await _context.SaveChangesAsync();
 
             // Reload dari planning
-            await LoadActivitiesFromPlanning(exec, exec.ExecutionDate, exec.Shift ?? "", exec.MachineName ?? "");
+            await LoadActivitiesFromPlanning(exec, exec.ExecutionDate, exec.Shift ?? "", exec.MachineName ?? "", null, null);
 
             TempData["SuccessMessage"] = "Data aktivitas berhasil di-reload dari Planning Master!";
             return RedirectToAction(nameof(Execution), new { id });
