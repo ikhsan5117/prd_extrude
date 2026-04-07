@@ -82,11 +82,15 @@ namespace VelastoProductionSystem.Controllers
             var standard = await _context.MasterlistSpsDoubleLayers
                 .FirstOrDefaultAsync(m => 
                     m.HoseType == hoseType || 
-                    m.ExcelId == hoseType || 
-                    m.DocumentNumber == hoseType || 
                     m.ItemList == hoseType ||
-                    (m.HoseType != null && m.HoseType.Contains(hoseType))
+                    m.ExcelId == hoseType || 
+                    m.DocumentNumber == hoseType
                 );
+
+            if (standard == null) {
+                standard = await _context.MasterlistSpsDoubleLayers
+                    .FirstOrDefaultAsync(m => (m.HoseType != null && m.HoseType.Contains(hoseType)));
+            }
             
             if (standard != null)
             {
@@ -106,6 +110,7 @@ namespace VelastoProductionSystem.Controllers
                         docNo = standard.DocumentNumber,
                         excelId = standard.ExcelId,
                         itemList = standard.ItemList,
+                        toleranceSpiralPitch = standard.ToleranceSpiralPitch,
                         bypass = "2.0 mm" 
                     }
                 });
@@ -113,22 +118,10 @@ namespace VelastoProductionSystem.Controllers
             return Json(new { success = false, message = "Standard not found in SPS Masterlist: " + hoseType });
         }
 
-        // GET: /Dimensi/App/5
-        public async Task<IActionResult> App(int? id)
+        // GET: /Dimensi/App
+        public IActionResult App()
         {
-            if (id == null) return RedirectToAction(nameof(Index));
-
-            var report = await _context.DimensionReports
-                .Include(r => r.Measurements)
-                .FirstOrDefaultAsync(r => r.Id == id);
-
-            if (report == null) return NotFound();
-
-            // Fetch Masterlist data for standards fallback
-            ViewBag.Masterlist = await _context.MasterlistSpsDoubleLayers
-                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType);
-
-            return View(report);
+            return View(new DimensionReport { Measurements = new List<DimensionMeasurement>() });
         }
 
         // GET: /Dimensi/History
@@ -162,9 +155,15 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: /Dimensi/Edit/5
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            return RedirectToAction(nameof(App), new { id });
+            var report = await _context.DimensionReports
+                .Include(r => r.Measurements)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (report == null) return NotFound();
+
+            return View("Edit", report);
         }
 
         // GET: /Dimensi/Create

@@ -318,18 +318,24 @@
                 </tr>
                 @{
                     string FmtV(decimal? val) => val == null ? "-" : (val == 1 ? "OK" : (val == 0 ? "NG" : val.Value.ToString("0.00")));
+                    var visualItems = new[] { "Burry", "Line", "Bubble", "Scratch" };
                 }
-                <tr>
-                    <td class="row-point">Visual Check</td>
-                    <td>@(visualRow?.Frequency ?? "30 Menit Sekali")</td>
-                    <td>@(visualRow?.StandardDimension ?? "No Burry, No Line, No Bubble, No Scratch")</td>
-                    <td>@(visualRow?.Initial ?? "-")</td>
-                    <td>@FmtV(visualRow?.R1)</td>
-                    <td>@FmtV(visualRow?.R2)</td>
-                    <td>@FmtV(visualRow?.R3)</td>
-                    <td>@FmtV(visualRow?.R4)</td>
-                    <td>@FmtV(visualRow?.R5)</td>
-                </tr>
+                @foreach(var vName in visualItems)
+                {
+                    var vPoint = $"Visual Check - {vName}";
+                    var vRow = measurements.ContainsKey(vPoint) ? measurements[vPoint] : null;
+                    <tr>
+                        <td class="row-point">Visual - @vName</td>
+                        <td>@(vRow?.Frequency ?? "30 Menit Sekali")</td>
+                        <td>NORMAL</td>
+                        <td>@(vRow?.Initial ?? "-")</td>
+                        <td>@FmtV(vRow?.R1)</td>
+                        <td>@FmtV(vRow?.R2)</td>
+                        <td>@FmtV(vRow?.R3)</td>
+                        <td>@FmtV(vRow?.R4)</td>
+                        <td>@FmtV(vRow?.R5)</td>
+                    </tr>
+                }
             </table>
         </div>
 

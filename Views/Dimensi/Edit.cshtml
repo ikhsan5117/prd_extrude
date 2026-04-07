@@ -216,8 +216,16 @@
             flex: 1; border: none; background: transparent; color: var(--text-dim);
             font-size: 10px; font-weight: 900; padding: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s;
         }
-        .seg-btn.active-ok { background: var(--accent-success); color: #000; }
-        .seg-btn.active-ng { background: var(--accent-danger); color: #fff; }
+        .seg-btn.active-ok { background: var(--accent-success); color: #000; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        .seg-btn.active-ng { background: var(--accent-danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+        .visual-item i { font-size: 20px; transition: 0.3s; }
+        .visual-item:hover i { transform: scale(1.2); filter: drop-shadow(0 0 10px var(--accent-glow)); }
+        .v-quick-ok {
+            background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-success); padding: 4px 12px; border-radius: 50px; font-size: 9px;
+            font-weight: 900; cursor: pointer; transition: 0.3s;
+        }
+        .v-quick-ok:hover { background: var(--accent-success); color: #000; }
 
         .section-title {
             font-size: 11px; font-weight: 900; color: var(--accent-glow);
@@ -239,15 +247,61 @@
         }
         .f-input { background: transparent; border: none; color: #fff; width: 100%; font-size: 14px; font-weight: 700; outline: none; }
         .qty-row { display: flex; gap: 10px; }
-        .qty-btn {
-            flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.03); color: var(--text-dim);
-            font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s;
-            border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;
+        .jam-nav { 
+            display: flex; gap: 10px; margin-bottom: 25px; 
+            overflow-x: auto; padding: 10px 5px; 
+            scrollbar-width: thin; scrollbar-color: var(--accent-glow) transparent;
         }
-        .qty-btn:hover { border-color: var(--accent-glow); color: #fff; }
-        .qty-btn.active-ok { border-color: var(--accent-success); color: var(--accent-success); background: rgba(16,185,129,0.05); }
-        .qty-btn.active-ng { border-color: var(--accent-danger); color: var(--accent-danger); background: rgba(239,68,68,0.05); }
+        .jam-nav::-webkit-scrollbar { height: 4px; }
+        .jam-nav::-webkit-scrollbar-thumb { background: var(--accent-glow); border-radius: 10px; }
+        .jam-btn { 
+            flex: 0 0 auto; 
+            min-width: 80px; height: 50px; 
+            background: rgba(30, 41, 59, 0.4); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 8px; color: var(--text-dim); 
+            font-weight: 800; font-size: 14px; 
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+
+        .qty-btn {
+            flex: 1; height: 50px; border-radius: 12px; border: 1px solid var(--glass-border);
+            background: rgba(30, 41, 59, 0.3); color: var(--text-dim);
+            font-size: 11px; font-weight: 900; letter-spacing: 1px; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+        }
+        .qty-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .qty-btn.active-ok { 
+            background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); 
+            color: var(--accent-success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); 
+        }
+        .qty-btn.active-ng { 
+            background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); 
+            color: var(--accent-danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); 
+        }
+
+        .finalize-action-hub {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #000; padding: 20px 40px; border: none; border-radius: 50px;
+            font-weight: 1000; font-size: 14px; cursor: pointer;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.3);
+            display: flex; align-items: center; gap: 15px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase; letter-spacing: 2px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+        .submit-btn:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.5);
+            background: #fff; color: #10b981;
+        }
+        .submit-btn i { font-size: 24px; }
+        .submit-btn:active { transform: scale(0.95); }
 
         .f-textarea {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
@@ -276,7 +330,7 @@
             <button class="cam-btn" title="Open Camera Scanner" onclick="openScanner()">
                 <i class="bi bi-qr-code-scan"></i>
             </button>
-            <input type="text" id="main-item-search" placeholder="MANUAL INPUT / SCAN ITEM LIST..." autocomplete="off" onkeypress="if(event.key === 'Enter') loadMaster()">
+            <input type="text" id="main-item-search" placeholder="MANUAL INPUT / SCAN ITEM LIST..." autocomplete="off" onkeypress="if(event.key === 'Enter') loadMaster()" value="@(Model.DimensionDisplay ?? Model.HoseType)">
             <button class="search-trigger-btn" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
                 <i class="bi bi-search"></i>
             </button>
@@ -324,9 +378,9 @@
             <span class="m-lbl"><i class="bi bi-cpu-fill m-icon"></i> CUSTOMER / SPEC</span>
             <div class="m-row">
                 <div id="h-row-hose" style="display: flex; align-items: center; gap: 8px;">
-                    <span class="m-val" id="h-customer">---</span>
+                    <span class="m-val" id="h-customer">@(Model.CustomerName ?? "---")</span>
                     <span class="m-divider"></span>
-                    <span class="m-val m-accent" id="h-hose" style="font-size: 11px;">---</span>
+                    <span class="m-val m-accent" id="h-hose" style="font-size: 11px;">@(Model.HoseType ?? "---")</span>
                 </div>
             </div>
         </div>
@@ -518,7 +572,10 @@
         <div class="dimensi-card" id="card-visual">
             <div class="card-header-flex">
                 <div class="card-point">VISUAL CHECK</div>
-                <i class="bi bi-eye-fill card-icon"></i>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="v-quick-ok" onclick="setAllVisualOK()">SET ALL OK</button>
+                    <i class="bi bi-eye-fill" style="color: var(--accent-glow); font-size: 20px;"></i>
+                </div>
             </div>
             <div class="visual-grid">
                 <div class="visual-item">
@@ -558,24 +615,17 @@
         </div>
     </div> <!-- END CARD GRID -->
 
-    <!-- FLOATING ACTION BUTTON -->
-    <div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000; display: flex; gap: 15px; align-items: center;">
-        <div id="save-status" style="color: #10b981; font-size: 11px; opacity: 0; transition: 0.5s; font-weight: 800;">
-            <i class="bi bi-check2-circle"></i> DATA SAVED TO HISTORY
+    <!-- FLOATING ACTION HUB -->
+    <div class="finalize-action-hub">
+        <div id="save-status" style="color: #10b981; font-size: 11px; opacity: 0; transition: 0.5s; font-weight: 800; background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 50px;">
+            <i class="bi bi-check2-circle"></i> AUTO_SAVING_ENABLED
         </div>
-        <button type="button" onclick="submitEntry()" class="submit-btn" style="
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white; padding: 18px 35px; border: none; border-radius: 50px;
-            font-weight: 800; font-size: 16px; cursor: pointer;
-            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.4);
-            display: flex; align-items: center; gap: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase; letter-spacing: 1px;
-            border: 2px solid rgba(255,255,255,0.1);
-        " onmouseover="this.style.transform='scale(1.05) translateY(-5px)'; this.style.boxShadow='0 15px 50px rgba(37, 99, 235, 0.6)';" 
-          onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.boxShadow='0 10px 40px rgba(37, 99, 235, 0.4)';">
-            <i class="bi bi-cloud-arrow-up-fill" style="font-size: 24px;"></i>
-            SUBMIT ENTRY
+        <button type="button" onclick="submitEntry()" class="submit-btn" title="Finalize and Sync Inspection">
+            <div class="d-flex flex-column align-items-start">
+                <span style="font-size: 8px; opacity: 0.7; letter-spacing: 1px;">PRODUCTION QUALITY HUB</span>
+                <span>UPDATE INSPECTION</span>
+            </div>
+            <i class="bi bi-shield-check"></i>
         </button>
     </div>
 
@@ -592,11 +642,11 @@
                 </div>
                 <div class="field-box">
                     <span class="field-label">STD PNJG</span>
-                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="-"></div>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="@Model.StandardLength"></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY TARGET</span>
-                    <div class="field-input-wrap"><input type="number" class="f-input" id="disp-qty-target" value="0"></div>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="disp-qty-target" value="@Model.QtyTarget"></div>
                 </div>
             </div>
             <div class="field-column">
@@ -655,41 +705,105 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        let measurements = @Html.Raw(Json.Serialize(Model.Measurements.GroupBy(m => m.TimeSection).Select(g => new {
-            time = g.Key,
-            data = new {
-                vin = Model.VinCode,
-                actPnjg = Model.ActualLength,
-                remark = Model.Remark,
-                qtySt = Model.Status == "COMPLETED" ? "ok" : "ng",
-                qtyOk = Model.QtyOk,
-                ngDim = Model.NgDimension,
-                ngVis = Model.NgVisual,
-                innerDia = g.FirstOrDefault(x => x.PointName == "Inner Diameter")?.R1,
-                innerTx = g.FirstOrDefault(x => x.PointName == "Inner Thick X")?.R1,
-                innerTy = g.FirstOrDefault(x => x.PointName == "Inner Thick Y")?.R1,
-                totalTx = g.FirstOrDefault(x => x.PointName == "Total Thick X")?.R1,
-                totalTy = g.FirstOrDefault(x => x.PointName == "Total Thick Y")?.R1,
-                spiral = g.FirstOrDefault(x => x.PointName == "Spiral Pitch")?.R1,
-                visual = new { 
-                    burry = "ok", line = "ok", bubble = "ok", scratch = "ok" 
-                } // Visual labels can be expanded as needed
-            }
+        // RENDER DATABASE DATAsafely by selecting only needed properties (BREAKS CYCLE)
+        const rawMeasurements = @Html.Raw(Json.Serialize(Model.Measurements.Select(m => new {
+            pointName = m.PointName,
+            r1 = m.R1,
+            r2 = m.R2,
+            r3 = m.R3,
+            r4 = m.R4,
+            r5 = m.R5,
+            timeSection = m.TimeSection,
+            status = m.Status
         })));
+        let measurements = [];
 
-        if (!measurements || measurements.length === 0) {
-            measurements = [ { time: null, data: { vin: "@Model.VinCode", actPnjg: "@Model.ActualLength", remark: "@Model.Remark", qtyOk: "@Model.QtyOk", ngDim: "@Model.NgDimension", ngVis: "@Model.NgVisual" } } ];
+        // Build 5 Slots (R1 to R5)
+        for (let i = 1; i <= 5; i++) {
+            const hasData = rawMeasurements.some(m => m[`r${i}`] !== null && m[`r${i}`] !== "");
+            if (hasData || i === 1) {
+                const getVal = (exactName) => {
+                    const search = exactName.toLowerCase().trim();
+                    const isInner = search.includes('inner');
+                    const isTotal = search.includes('total');
+                    const isThick = search.includes('thick');
+                    
+                    // Priority 1: Exact Match
+                    let row = rawMeasurements.find(m => (m.pointName || "").trim().toLowerCase() === search);
+                    
+                    // Priority 2: Smart Fuzzy (Distinguish Inner vs Total)
+                    if (!row && isThick) {
+                        row = rawMeasurements.find(m => {
+                            const dbName = (m.pointName || "").trim().toLowerCase();
+                            const dbIsInner = dbName.includes('inner');
+                            const dbIsTotal = dbName.includes('total');
+                            
+                            // Must match Inner/Total category
+                            if (isInner && !dbIsInner) return false;
+                            if (isTotal && !dbIsTotal) return false;
+                            
+                            // Check for thickness keyword and coordinate (x/y)
+                            const hasX = search.includes('(x)');
+                            const hasY = search.includes('(y)');
+                            if (hasX && !dbName.includes('(x)')) return false;
+                            if (hasY && !dbName.includes('(y)')) return false;
+                            
+                            return dbName.includes('thick');
+                        });
+                    }
+                    
+                    // Priority 3: Fallback to simple matching for Diameter/Spiral
+                    if (!row && !isThick) {
+                        row = rawMeasurements.find(m => 
+                            (m.pointName || "").trim().toLowerCase().includes(search.split(' ')[0])
+                        );
+                    }
+                    
+                    return row ? row[`r${i}`] : "";
+                };
+                
+                const getVState = (itemName) => {
+                    // Try specific match (new logic)
+                    let row = rawMeasurements.find(m => (m.pointName || "").includes(itemName));
+                    // Fallback to generic Visual Check (legacy logic)
+                    if (!row) row = rawMeasurements.find(m => (m.pointName || "").trim() === "Visual Check");
+                    
+                    const val = row ? row[`r${i}`] : null;
+                    return (val == 1) ? "ok" : (val == 0 && val !== null ? "ng" : null);
+                };
+
+                measurements.push({
+                    time: i === 1 ? "@Model.Measurements.FirstOrDefault()?.TimeSection" : "",
+                    data: {
+                        innerDia: getVal("Inner Diameter"),
+                        innerTx: getVal("Inner Thickness (x)"),
+                        innerTy: getVal("Inner Thickness (y)"),
+                        totalTx: getVal("Total Thickness (x)"),
+                        totalTy: getVal("Total Thickness (y)"),
+                        spiral: getVal("Spiral Pitch"),
+                        visual: { 
+                            burry: getVState("Burry"), 
+                            line: getVState("Line"), 
+                            bubble: getVState("Bubble"), 
+                            scratch: getVState("Scratch") 
+                        }
+                    }
+                });
+            }
         }
 
         let currentIndex = 0;
-        let activeStandards = {}; // Will be populated by loadMaster()
-
-        let html5QrCode;
+        let activeStandards = {};
 
         window.onload = () => {
-            loadMaster();
+            // Priority 1: Render existing data from measurements array
             renderTimeline();
             loadDataToUI();
+
+            // Priority 2: Load standards (Tolerances) from master, 
+            // but DO NOT overwrite current Summary values (Header info)
+            loadMaster(true); // 'true' means STANDARDS ONLY MODE
+            
             initSmartNext();
         };
 
@@ -1014,7 +1128,13 @@
 
         function addNewSlot() {
             saveCurrentData();
-            measurements.push({ time: null, data: {} });
+            // Default new slot to "OK" for visual check as it's the most common case
+            measurements.push({ 
+                time: null, 
+                data: { 
+                    visual: { burry: 'ok', line: 'ok', bubble: 'ok', scratch: 'ok' } 
+                } 
+            });
             switchSlot(measurements.length - 1);
         }
 
@@ -1066,11 +1186,34 @@
             let allOK = true, anyNG = false, anySelected = false;
 
             items.forEach(it => {
-                const isOK = document.getElementById(`v-${it}-ok`).classList.contains('active-ok');
-                const isNG = document.getElementById(`v-${it}-ng`).classList.contains('active-ng');
+                const okBtn = document.getElementById(`v-${it}-ok`);
+                const ngBtn = document.getElementById(`v-${it}-ng`);
+                if(!okBtn || !ngBtn) return;
+                
+                const isOK = okBtn.classList.contains('active-ok');
+                const isNG = ngBtn.classList.contains('active-ng');
+                
                 if (isOK || isNG) anySelected = true;
                 if (isNG) anyNG = true;
                 if (!isOK) allOK = false;
+                
+                // Update icon color and glow
+                const icon = okBtn.closest('.visual-item').querySelector('i');
+                if(icon) {
+                    if (isNG) {
+                        icon.style.color = "#ff4d4d";
+                        icon.style.filter = "drop-shadow(0 0 8px rgba(255, 77, 77, 0.6))";
+                        icon.style.opacity = "1";
+                    } else if (isOK) {
+                        icon.style.color = "#10b981";
+                        icon.style.filter = "drop-shadow(0 0 8px rgba(16, 185, 129, 0.6))";
+                        icon.style.opacity = "1";
+                    } else {
+                        icon.style.color = "var(--accent-glow)";
+                        icon.style.filter = "none";
+                        icon.style.opacity = "0.5";
+                    }
+                }
             });
 
             card.classList.remove('status-ok', 'status-ng');
@@ -1078,6 +1221,10 @@
                 if (anyNG) card.classList.add('status-ng');
                 else if (allOK) card.classList.add('status-ok');
             }
+        }
+        
+        function setAllVisualOK() {
+            ['burry', 'line', 'bubble', 'scratch'].forEach(it => toggleVisual(it, 'ok'));
         }
 
         function saveCurrentData() {
@@ -1114,12 +1261,13 @@
             const data = measurements[currentIndex].data || {};
             
             // 1. Per-slot measurements
-            document.getElementById('val-inner-dia').value = data.innerDia || '';
-            document.getElementById('val-inner-tx').value = data.innerTx || '';
-            document.getElementById('val-inner-ty').value = data.innerTy || '';
-            document.getElementById('val-total-tx').value = data.totalTx || '';
-            document.getElementById('val-total-ty').value = data.totalTy || '';
-            document.getElementById('val-spiral').value = data.spiral || '';
+            const fmt = (v) => (v !== null && v !== "" && !isNaN(v)) ? parseFloat(v).toFixed(2) : (v || '');
+            document.getElementById('val-inner-dia').value = fmt(data.innerDia);
+            document.getElementById('val-inner-tx').value = fmt(data.innerTx);
+            document.getElementById('val-inner-ty').value = fmt(data.innerTy);
+            document.getElementById('val-total-tx').value = fmt(data.totalTx);
+            document.getElementById('val-total-ty').value = fmt(data.totalTy);
+            document.getElementById('val-spiral').value = fmt(data.spiral);
 
             // 2. Per-slot Visual Check UI refresh
             const v = data.visual || {};
@@ -1133,92 +1281,112 @@
             });
             renderVisualStatus();
 
-            // 3. GLOBAL PRODUCTION DATA (Populate only if empty or first load)
-            if (data.vin) document.getElementById('val-vin-kode').value = data.vin;
-            if (data.actPnjg) document.getElementById('val-act-pnjg').value = data.actPnjg;
-            if (data.qtyOk !== undefined) document.getElementById('val-qty-ok').value = data.qtyOk;
-            if (data.ngDim !== undefined) document.getElementById('val-ng-dimensi').value = data.ngDim;
-            if (data.ngVis !== undefined) document.getElementById('val-ng-visual').value = data.ngVis;
-            if (data.remark) document.getElementById('val-remark').value = data.remark;
+            // 3. GLOBAL PRODUCTION DATA
+            document.getElementById('val-vin-kode').value = "@Model.VinCode" || "";
+            document.getElementById('val-act-pnjg').value = "@Model.ActualLength" || "";
+            document.getElementById('val-qty-ok').value = "@Model.QtyOk" || "0";
+            document.getElementById('val-ng-dimensi').value = "@Model.NgDimension" || "0";
+            document.getElementById('val-ng-visual').value = "@Model.NgVisual" || "0";
+            document.getElementById('val-remark').value = `@Html.Raw(Model.Remark)` || "";
             
-            // 4. Header / Fixed Inputs (New ones from previous turn)
+            // Auto Set Qty Status Panel
+            const hasNG = parseInt("@Model.NgDimension" || "0") > 0 || parseInt("@Model.NgVisual" || "0") > 0;
+            setQtyStatus(hasNG ? 'ng' : 'ok');
+            
+            // 4. Header / Fixed Inputs
             const stdPnjgInput = document.getElementById('disp-std-pnjg');
-            if (stdPnjgInput && (stdPnjgInput.value === "-" || stdPnjgInput.value === "")) {
-                stdPnjgInput.value = "@Model.StandardLength" || "-";
-            }
+            if (stdPnjgInput) stdPnjgInput.value = "@Model.StandardLength" || "-";
+            
             const targetInput = document.getElementById('disp-qty-target');
-            if (targetInput && (targetInput.value === "0" || targetInput.value === "")) {
-                targetInput.value = "@Model.QtyTarget" || "0";
-            }
+            if (targetInput) targetInput.value = "@Model.QtyTarget" || "0";
 
             // Run validation for all cards
             ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
         }
 
         function validateCard(id) {
-            const cleanId = id.toLowerCase().replace(/-/g, '');
-            const card = document.getElementById(`card-${id}`), std = activeStandards[cleanId], inp = document.getElementById(`val-${id}`);
+            // Map shorthand element IDs to activeStandards keys
+            const map = {
+                'inner-dia': 'innerdiameter',
+                'inner-tx': 'innerthicknessx',
+                'inner-ty': 'innerthicknessy',
+                'total-tx': 'totalthicknessx',
+                'total-ty': 'totalthicknessy',
+                'spiral': 'spiralpitch'
+            };
+            const cleanId = map[id] || id.toLowerCase().replace(/-/g, '');
+            const card = document.getElementById(`card-${id}`);
+            const std = activeStandards[cleanId];
+            const inp = document.getElementById(`val-${id}`);
+            
             if(!card || !inp) return;
             
-            // Clean local value for parsing
-            const raw = inp.value.toString().replace(/[+]/g, '').trim();
-            const val = parseFloat(raw);
             card.classList.remove('status-ok', 'status-ng');
             
-            if (!isNaN(val) && std && std.val !== 0) {
+            // Clean local value for parsing
+            const rawValue = inp.value.toString().replace(/[+]/g, '').trim();
+            if(!rawValue) return; // Silent if empty
+
+            const val = parseFloat(rawValue);
+            if (isNaN(val)) return;
+
+            // If we have a valid standard (val > 0), validate against it. 
+            // If std.val is 0 (No Data), we leave the card neutral (White).
+            if (std && std.val > 0) {
                 const min = std.val - std.tol;
                 const max = std.val + std.tol;
-                const isOK = (val >= (min - 0.001) && val <= (max + 0.001)); // Tolerance buffer
+                // Use a tiny buffer for precision
+                const isOK = (val >= (min - 0.005) && val <= (max + 0.005)); 
                 card.classList.add(isOK ? 'status-ok' : 'status-ng');
+            } else {
+                // No standard found or target is 0: remain neutral
+                card.classList.remove('status-ok', 'status-ng');
             }
         }
 
-        async function loadMaster() {
+        async function loadMaster(standardsOnly = false) {
             const code = document.getElementById('main-item-search').value;
             if(!code) return;
-            Swal.fire({ title: 'FETCHING MASTER...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            // Show loading overlay only if NOT in standards-only mode (prevent flicker on load)
+            if(!standardsOnly) {
+                Swal.fire({ title: 'FETCHING MASTER...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            }
+
             try {
                 const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}`);
                 const data = await res.json();
-                Swal.close();
+                
+                if(!standardsOnly) Swal.close();
+
                 if(data.success) {
                     const m = data.data;
                     
-                    // Update Refined Technical HUD Ribbon (v3 IDs)
-                    const lineEl = document.getElementById('h-line');
-                    const custEl = document.getElementById('h-customer');
-                    const hoseEl = document.getElementById('h-hose');
-                    const docEl = document.getElementById('h-doc');
+                    // ONLY UPDATE HEADER IF NOT IN STANDARDS-ONLY MODE
+                    if (!standardsOnly) {
+                        const lineEl = document.getElementById('h-line');
+                        const custEl = document.getElementById('h-customer');
+                        const hoseEl = document.getElementById('h-hose');
+                        const docEl = document.getElementById('h-doc');
 
-                    if(lineEl) lineEl.innerText = "DL01 ENGINE LINE"; 
-                    if(custEl) custEl.innerText = m.customer || "GENERAL";
-                    if(hoseEl) hoseEl.innerText = m.hoseType || "---";
-                    if(docEl) docEl.innerText = m.docNo || "---";
+                        if(lineEl) lineEl.innerText = "DL01 ENGINE LINE"; 
+                        if(custEl) custEl.innerText = m.customer || "GENERAL";
+                        if(hoseEl) hoseEl.innerText = m.hoseType || "---";
+                        if(docEl) docEl.innerText = m.docNo || "---";
 
-                    // Populate Data Summary
-                    const partEl = document.getElementById('disp-part-no');
-                    if(partEl) partEl.innerText = m.itemList || "---";
+                        const partEl = document.getElementById('disp-part-no');
+                        if(partEl) partEl.innerText = m.itemList || "---";
+                        
+                        const stdPnjgEl = document.getElementById('disp-std-pnjg');
+                        if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
+                        
+                        const qtyTargetInput = document.getElementById('disp-qty-target');
+                        if(qtyTargetInput && qtyTargetInput.value == "0") qtyTargetInput.value = "";
+                        
+                        document.getElementById('h-row-hose')?.classList.add('animate__animated', 'animate__pulse');
+                    }
                     
-                    const stdPnjgEl = document.getElementById('disp-std-pnjg');
-                    if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
-                    
-                    const qtyTargetInput = document.getElementById('disp-qty-target');
-                    if(qtyTargetInput && qtyTargetInput.value == "0") qtyTargetInput.value = ""; // Let user type easily
-
-                    document.getElementById('h-row-hose')?.classList.add('animate__animated', 'animate__pulse');
-                    
-                    // Update Status Indicator
-                    const dot = document.getElementById('scan-status-dot');
-                    const text = document.getElementById('scan-status-text');
-                    if (dot) { dot.style.background = '#10b981'; dot.style.boxShadow = '0 0 10px #10b981'; }
-                    if (text) { text.innerText = 'READY TO MEASURE'; text.style.color = '#10b981'; }
-
-                    const getF = (v) => { 
-                        if(!v) return 0;
-                        const match = v.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/);
-                        return match ? parseFloat(match[0]) : 0;
-                    };
-
+                    // ALWAYS UPDATE STANDARDS (Min/Max Tresholds) - DOES NOT TOUCH ACTUAL INPUTS
                     const parseV = (str, def = 0) => {
                         if(!str || str === '---') return def;
                         const m = str.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
@@ -1233,33 +1401,37 @@
                     };
 
                     const configs = [
-                        { id: 'innerdia', v: m.dimensi, t: m.toleranceInner, el: 'inner-dia', dt: 0.1 },
-                        { id: 'innertx', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                        { id: 'innerty', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
-                        { id: 'totaltx', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                        { id: 'totalty', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-ty', dt: 0.2 },
-                        { id: 'spiral', v: m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
+                        { id: 'innerdiameter', v: m.dimensi, t: m.toleranceInner, el: 'inner-dia', dt: 0.1 },
+                        { id: 'innerthicknessx', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                        { id: 'innerthicknessy', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                        { id: 'totalthicknessx', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                        { id: 'totalthicknessy', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                        { id: 'spiralpitch', v: m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                     ];
 
                     configs.forEach(p => {
                         const target = parseV(p.v);
                         const tol = parseT(p.t, p.dt);
-                        activeStandards[p.id] = { val: target, tol: tol };
+                        activeStandards[p.id] = { id: p.id, val: target, tol: tol };
                         
-                        document.getElementById(`std-${p.el}`).innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)} ± ${tol.toFixed(2)}`;
-                        document.getElementById(`limit-${p.el}-min`).innerText = target === 0 ? "---" : (target - tol).toFixed(2);
-                        document.getElementById(`limit-${p.el}-max`).innerText = target === 0 ? "---" : (target + tol).toFixed(2);
+                        const stdEl = document.getElementById(`std-${p.el}`);
+                        if (stdEl) {
+                            stdEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)} ± ${tol.toFixed(2)}`;
+                        }
+                        
+                        const minEl = document.getElementById(`limit-${p.el}-min`);
+                        const maxEl = document.getElementById(`limit-${p.el}-max`);
+                        if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
+                        if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
                     });
                     
-                    Swal.fire({ icon: 'success', title: 'MASTER LOADED', timer: 800, showConfirmButton: false });
+                    if(!standardsOnly) Swal.fire({ icon: 'success', title: 'MASTER LOADED', timer: 800, showConfirmButton: false });
                     
-                    // Auto-focus starting point
-                    document.getElementById('val-inner-dia')?.focus();
-                    loadDataToUI();
+                    // RE-VALIDATE COLORS ONLY (NOT VALUES)
+                    ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
                 }
             } catch (e) { }
         }
-
         async function submitEntry() {
             saveCurrentData();
             const btn = document.querySelector('.submit-btn');
@@ -1267,24 +1439,26 @@
 
             try {
                 const aggregateReadings = [];
+
+                // === MEASUREMENT POINTS ===
                 const pointMap = [
-                    { name: 'Inner Diameter',       key: 'innerDia', stdKey: 'innerdia'       },
-                    { name: 'Inner Thickness (x)',  key: 'innerTx',  stdKey: 'innertx'        },
-                    { name: 'Inner Thickness (y)',  key: 'innerTy',  stdKey: 'innerty'        },
-                    { name: 'Total Thickness (x)',  key: 'totalTx',  stdKey: 'totaltx'        },
-                    { name: 'Total Thickness (y)',  key: 'totalTy',  stdKey: 'totalty'        },
-                    { name: 'Spiral Pitch',         key: 'spiral',   stdKey: 'spiral'         }
+                    { name: 'Inner Diameter',       key: 'innerDia', stdKey: 'innerdiameter'  },
+                    { name: 'Inner Thickness (x)',  key: 'innerTx',  stdKey: 'innerthicknessx'},
+                    { name: 'Inner Thickness (y)',  key: 'innerTy',  stdKey: 'innerthicknessy'},
+                    { name: 'Total Thickness (x)',  key: 'totalTx',  stdKey: 'totalthicknessx'},
+                    { name: 'Total Thickness (y)',  key: 'totalTy',  stdKey: 'totalthicknessy'},
+                    { name: 'Spiral Pitch',         key: 'spiral',   stdKey: 'spiralpitch'    }
                 ];
 
                 for (const point of pointMap) {
                     const std = activeStandards[point.stdKey];
                     const stdText = (std && std.val > 0)
-                        ? (std.val.toFixed(2) + ' ± ' + std.tol.toFixed(2))
+                        ? (std.val.toFixed(2) + ' \u00b1 ' + std.tol.toFixed(2))
                         : '-';
 
                     const row = {
                         PointName: point.name,
-                        TimeSection: measurements[0]?.time || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                        TimeSection: measurements[0]?.time || '',
                         Frequency: '30m Sekali',
                         StandardDimension: stdText,
                         Initial: '',
@@ -1305,13 +1479,14 @@
                     aggregateReadings.push(row);
                 }
 
-                // Visual Check per item
+                // === VISUAL CHECK POINTS (per item) ===
                 const visualItems = [
                     { name: 'Visual Check - Burry',   key: 'burry'   },
                     { name: 'Visual Check - Line',    key: 'line'    },
                     { name: 'Visual Check - Bubble',  key: 'bubble'  },
                     { name: 'Visual Check - Scratch', key: 'scratch' }
                 ];
+
                 for (const vIt of visualItems) {
                     const vRow = {
                         PointName: vIt.name,
@@ -1330,22 +1505,23 @@
                     aggregateReadings.push(vRow);
                 }
 
+                // === PAYLOAD ===
                 const payload = {
                     ReportId: @Model.Id,
-                    DocumentNumber: document.getElementById('h-doc')?.innerText || "---",
-                    HoseType: document.getElementById('h-hose')?.innerText || "",
-                    CustomerName: document.getElementById('h-customer')?.innerText || "",
-                    DimensionDisplay: document.getElementById('disp-part-no')?.innerText || "",
-                    VinCode: document.getElementById('val-vin-kode')?.value || "",
-                    StandardLength: document.getElementById('disp-std-pnjg')?.value || "",
-                    ActualLength: document.getElementById('val-act-pnjg')?.value || "",
-                    QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || "0"),
-                    QtyOk: parseInt(document.getElementById('val-qty-ok')?.value || "0"),
-                    NgDimension: parseInt(document.getElementById('val-ng-dimensi')?.value || "0"),
-                    NgVisual: parseInt(document.getElementById('val-ng-visual')?.value || "0"),
-                    Remark: document.getElementById('val-remark')?.value || "",
-                    ByPass: document.getElementById('h-hose')?.innerText.split('|')[1]?.trim() || "",
-                    Shift: document.getElementById('h-shift')?.innerText || "",
+                    DocumentNumber: document.getElementById('h-doc')?.innerText || '---',
+                    HoseType: document.getElementById('h-hose')?.innerText || '',
+                    CustomerName: document.getElementById('h-customer')?.innerText || '',
+                    DimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
+                    VinCode: document.getElementById('val-vin-kode')?.value || '',
+                    StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                    ActualLength: document.getElementById('val-act-pnjg')?.value || '',
+                    QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
+                    QtyOk: parseInt(document.getElementById('val-qty-ok')?.value || '0'),
+                    NgDimension: parseInt(document.getElementById('val-ng-dimensi')?.value || '0'),
+                    NgVisual: parseInt(document.getElementById('val-ng-visual')?.value || '0'),
+                    Remark: document.getElementById('val-remark')?.value || '',
+                    ByPass: '',
+                    Shift: document.getElementById('h-shift')?.innerText || '',
                     DimensionReadings: aggregateReadings
                 };
 
@@ -1356,87 +1532,32 @@
                 });
 
                 const result = await response.json();
-                if(result.success) {
-                    // Flash success message
-                    const status = document.getElementById('save-status');
-                    status.style.opacity = '1';
-                    
-                    // Reset HUD
-                    resetHUD();
-                    
-                    setTimeout(() => { status.style.opacity = '0'; }, 3000);
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'UPDATE SUCCESSFUL', text: 'Data berhasil diperbarui.', timer: 1500, showConfirmButton: false });
+                    setTimeout(() => window.location.href = '/Dimensi/History', 1500);
                 } else {
-                    Swal.fire('Error', result.message || 'Failed to save', 'error');
+                    Swal.fire('Error', result.message || 'Gagal menyimpan', 'error');
                 }
             } catch (err) {
                 console.error(err);
-                Swal.fire('Error', 'Sistem Gagal Menyimpan', 'error');
+                Swal.fire('Error', 'Sistem Gagal Menyimpan: ' + err.message, 'error');
             } finally {
                 if(btn) btn.disabled = false;
             }
-        }
-
-        function resetHUD() {
-            // 1. Reset Global Data
-            measurements = [{ time: null, data: {} }];
-            currentIndex = 0;
-
-            // 2. Clear All Card Inputs
-            document.querySelectorAll('.c-input').forEach(inp => {
-                inp.value = "";
-                const id = inp.id.replace('val-', '');
-                validateCard(id);
-            });
-
-            // 3. Clear Summary Inputs
-            ['val-vin-kode', 'val-act-pnjg', 'val-qty-ok', 'val-ng-dimensi', 'val-ng-visual', 'val-remark'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.value = "";
-            });
-
-            // 4. Clear Static Labels
-            ['disp-part-no', 'disp-std-pnjg'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.innerText = "-";
-            });
-            const qtyTargetEl = document.getElementById('disp-qty-target');
-            if(qtyTargetEl) qtyTargetEl.value = "0";
-
-            // 5. Reset Visual Buttons & Status
-            document.querySelectorAll('.seg-btn').forEach(btn => btn.classList.remove('active-ok', 'active-ng'));
-            document.querySelectorAll('.qty-btn').forEach(btn => btn.classList.remove('active-ok', 'active-ng'));
-            document.getElementById('okPanel').style.display = 'none';
-            document.getElementById('ngPanel').style.display = 'none';
-
-            // 6. UI Update
-            renderTimeline();
-            loadDataToUI();
-
-            // 7. Notification (Toast)
-            Swal.fire({
-                icon: 'success',
-                title: 'DASHBOARD RESET',
-                text: 'Data tersimpan & Layar dikosongkan.',
-                timer: 1500,
-                showConfirmButton: false,
-                position: 'top-end',
-                toast: true
-            });
         }
 
         function finalize() {
             saveCurrentData();
             Swal.fire({
                 icon: 'question',
-                title: 'SUBMIT REPORT?',
-                text: 'Pastikan semua jam sudah terisi dengan benar.',
+                title: 'SUBMIT CHANGES?',
+                text: 'Setelah disubmit, perubahan akan muncul di laporan.',
                 showCancelButton: true,
-                confirmButtonText: 'YA, SUBMIT',
+                confirmButtonText: 'YA, UPDATE',
                 confirmButtonColor: '#10b981'
             }).then(r => {
                  if(r.isConfirmed) {
-                     Swal.fire({ icon: 'success', title: 'SYNC SUCCESS!', timer: 2000, showConfirmButton: false });
-                     setTimeout(() => window.location.href = '/Dimensi/Index', 2000);
+                     submitEntry();
                  }
             });
         }
