@@ -6,9 +6,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure Entity Framework Core with SQL Server
+// Configure Entity Framework Core with SQL Server (main DB)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure second DB context for ELWP_PRD (read-only, for planning sync)
+builder.Services.AddDbContext<ElwpDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ElwpConnection")));
 
 // Add session support for production tracking
 builder.Services.AddSession(options =>

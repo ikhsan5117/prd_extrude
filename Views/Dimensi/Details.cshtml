@@ -364,7 +364,7 @@
                         var r = measurements[key];
                         var prop = typeof(VelastoProductionSystem.Models.DimensionMeasurement).GetProperty("R" + slotIdx);
                         var val = prop?.GetValue(r);
-                        return val != null ? val.ToString() : "-";
+                        return val?.ToString() ?? "-";
                     }
 
                     // Detect how many slots exist (up to 5)

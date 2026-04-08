@@ -11,10 +11,106 @@ namespace VelastoProductionSystem.Controllers
     public class PlanningMasterController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ElwpDbContext _elwpContext;
 
-        public PlanningMasterController(ApplicationDbContext context)
+
+
+        public PlanningMasterController(ApplicationDbContext context, ElwpDbContext elwpContext)
         {
             _context = context;
+            _elwpContext = elwpContext;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DiagMachines()
+        {
+            try
+            {
+                var list = await _elwpContext.ElwpMachines.OrderBy(x => x.Id).ToListAsync();
+                return Json(list);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DiagMesinSchema()
+        {
+            try
+            {
+                var columns = new List<string>();
+                var conn = _elwpContext.Database.GetDbConnection();
+                await conn.OpenAsync();
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT COLUMN_NAME + ' (' + DATA_TYPE + ')'
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = 'produksi' AND TABLE_NAME = 'tb_elwp_produksi_mesins'
+                    ORDER BY ORDINAL_POSITION";
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                    columns.Add(reader.GetString(0));
+                await conn.CloseAsync();
+                return Json(columns);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DiagMesinToday()
+        {
+            try
+            {
+                var targetDate = DateTime.Today;
+                var dateStart = targetDate.Date;
+                var dateEnd = dateStart.AddDays(1);
+
+                var query = await _elwpContext.ElwpPlannings
+                    .Where(x => x.TanggalPlanning >= dateStart && x.TanggalPlanning < dateEnd)
+                    .GroupBy(x => x.MesinId)
+                    .Select(g => new { MesinId = g.Key, RowCount = g.Count() })
+                    .ToListAsync();
+
+                return Json(new { 
+                    date = targetDate.ToString("yyyy-MM-dd"),
+                    summary = query 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DiagAreaToday()
+        {
+            try
+            {
+                var targetDate = DateTime.Today;
+                var dateStart = targetDate.Date;
+                var dateEnd = dateStart.AddDays(1);
+
+                var query = await _elwpContext.ElwpPlannings
+                    .Where(x => x.TanggalPlanning >= dateStart && x.TanggalPlanning < dateEnd)
+                    .GroupBy(x => x.AreaId)
+                    .Select(g => new { AreaId = g.Key, RowCount = g.Count() })
+                    .ToListAsync();
+
+                return Json(new { 
+                    date = targetDate.ToString("yyyy-MM-dd"),
+                    summary = query 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
         }
 
         public async Task<IActionResult> Index()
@@ -81,6 +177,144 @@ namespace VelastoProductionSystem.Controllers
             _context.PlanningMasters.RemoveRange(_context.PlanningMasters);
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Semua data Planning telah dikosongkan.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ─── Sync dari ELWP_PRD: Ambil data hari ini ────────────────────────
+        [HttpPost]
+        public async Task<IActionResult> SyncFromElwp(string? syncDate)
+        {
+            try
+            {
+                // Tentukan tanggal yang akan diambil (default: hari ini)
+                var targetDate = DateTime.Today;
+                if (!string.IsNullOrWhiteSpace(syncDate) && DateTime.TryParse(syncDate, out var parsedDate))
+                    targetDate = parsedDate.Date;
+
+                var dateStart = new DateTime(targetDate.Year, targetDate.Month, targetDate.Day, 0, 0, 0);
+                var dateEnd   = dateStart.AddDays(1);
+
+                // Ambil dari ELWP_PRD
+                List<ElwpPlanning> elwpRows;
+                try
+                {
+                    elwpRows = await _elwpContext.ElwpPlannings
+                        .Where(x => x.TanggalPlanning >= dateStart && x.TanggalPlanning < dateEnd)
+                        .OrderBy(x => x.MesinId)
+                        .ThenBy(x => x.Shift)
+                        .ThenBy(x => x.Id)
+                        .ToListAsync();
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = "Gagal koneksi ke database ELWP: " + ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (!elwpRows.Any())
+                {
+                    TempData["ErrorMessage"] = $"Tidak ada data planning di ELWP untuk tanggal {targetDate:dd MMMM yyyy}.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Hapus data hari yang sama di lokal agar tidak duplikat
+                var culture = new System.Globalization.CultureInfo("id-ID");
+                var d1Str = targetDate.ToString("d MMMM yyyy", culture).ToUpper();
+                var d2Str = targetDate.ToString("dd MMMM yyyy", culture).ToUpper();
+
+                var existingToday = _context.PlanningMasters
+                    .Where(x => !string.IsNullOrEmpty(x.DateShiftString) &&
+                                (x.DateShiftString.ToUpper().Contains(d1Str) ||
+                                 x.DateShiftString.ToUpper().Contains(d2Str)))
+                    .ToList();
+
+                if (existingToday.Any())
+                    _context.PlanningMasters.RemoveRange(existingToday);
+
+                await _context.SaveChangesAsync();
+
+                // Ambil daftar nama mesin dari ELWP untuk lookup
+                var machinesMap = await _elwpContext.ElwpMachines
+                    .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
+
+                // Kelompokkan per Mesin + Shift lalu import
+                var grouped = elwpRows
+                    .GroupBy(x => new { x.MesinId, x.Shift })
+                    .OrderBy(g => g.Key.MesinId)
+                    .ThenBy(g => g.Key.Shift);
+
+                int insertedCount = 0;
+                var syncAt = DateTime.Now;
+
+                foreach (var grp in grouped)
+                {
+                    var machName = machinesMap.TryGetValue(grp.Key.MesinId ?? 0, out var mn)
+                        ? mn
+                        : $"Mesin-{grp.Key.MesinId}";
+
+                    // Format: SELASA, 8 APRIL 2026 SHIFT 1  (format tgl Indonesia)
+                    var tglFormatted = targetDate.ToString("dddd, d MMMM yyyy", culture).ToUpper();
+                    // Normalisasi shift: "Shift 1" -> "1"
+                    var shiftClean = (grp.Key.Shift ?? "1").ToUpper().Replace("SHIFT", "").Trim();
+                    var dateShiftStr = $"{tglFormatted} SHIFT {shiftClean}";
+
+                    // Cari data Part Master untuk kalkulasi jam & menit
+                    TimeSpan lastEnd = new TimeSpan(7, 30, 0);
+
+                    foreach (var row in grp.OrderBy(x => x.Id))
+                    {
+                        if (string.IsNullOrWhiteSpace(row.KodeItem)) continue;
+
+                        var pm = await _context.PartMasters
+                            .FirstOrDefaultAsync(x => x.PartCode == row.KodeItem.Trim());
+
+                        var planQty = row.QtyPlanning;
+                        // Hitung menit dari CT*Qty / 60, atau dari LoadingTimeHours kalau CT tidak ada
+                        int durationMins = 0;
+                        if (pm != null && planQty.HasValue && pm.CtAwal.HasValue)
+                            durationMins = (int)(planQty.Value * pm.CtAwal.Value / 60);
+                        else if (row.LoadingTimeHours.HasValue)
+                            durationMins = (int)(row.LoadingTimeHours.Value * 60);
+
+                        var startTime = lastEnd;
+                        var endTime   = startTime.Add(TimeSpan.FromMinutes(durationMins));
+                        lastEnd = endTime;
+
+                        var newPlan = new PlanningMaster
+                        {
+                            MachineName     = machName,
+                            DateShiftString = dateShiftStr,
+                            CreatedAt       = syncAt,
+                            PartName1       = row.KodeItem.Trim(),
+                            PartName2       = row.PartName ?? "",
+                            Kode            = row.PnSap ?? "",
+                            PlanTargetPcs   = planQty,
+                            Compound        = pm?.CompoundCombo ?? "",
+                            CompoundInner   = pm?.CompoundInner ?? "",
+                            CompoundOuter   = pm?.CompoundOuter ?? "",
+                            Length          = pm?.Length ?? "",
+                            CtAwal          = pm?.CtAwal?.ToString("G29") ?? "",
+                            CtMinus20       = pm?.CtMinus20?.ToString("G29") ?? "",
+                            NeedKgInner     = pm?.NeedKgInner?.ToString("G29") ?? "",
+                            NeedKgOuter     = pm?.NeedKgOuter?.ToString("G29") ?? "",
+                            Menit           = durationMins.ToString(),
+                            WaktuMulai      = startTime.ToString(@"hh\:mm"),
+                            WaktuSelesai    = endTime.ToString(@"hh\:mm")
+                        };
+
+                        _context.PlanningMasters.Add(newPlan);
+                        insertedCount++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"✅ Berhasil sinkronisasi {insertedCount} item planning dari ELWP untuk {targetDate:dd MMMM yyyy}!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error saat sync: " + (ex.InnerException?.Message ?? ex.Message);
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

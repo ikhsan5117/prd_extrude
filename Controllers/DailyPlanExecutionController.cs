@@ -54,28 +54,39 @@ namespace VelastoProductionSystem.Controllers
         public async Task<IActionResult> GetAvailablePlanningBatches(DateTime d, string s, string m)
         {
             var culture = new System.Globalization.CultureInfo("id-ID");
-            var d1 = d.ToString("d MMMM yyyy", culture).ToUpper();
-            var d2 = d.ToString("dd MMMM yyyy", culture).ToUpper();
             
+            // Komponen tanggal
+            var day1 = d.Day.ToString();
+            var day2 = d.Day.ToString("00");
+            var month = d.ToString("MMMM", culture).ToUpper();
+            var year = d.Year.ToString();
+            
+            // Komponen shift
             var cleanShift = (s ?? "").ToUpper().Replace("SHIFT", "").Trim();
-            var target1 = $", {d1} SHIFT {cleanShift}"; 
-            var target2 = $", {d2} SHIFT {cleanShift}";
-
+            
+            // Kita cari yang mengandung Bulan, Tahun, dan Shift. 
+            // Dan salah satu format hari (8 atau 08)
             var matches = await _context.PlanningMasters
-                .Where(x => x.MachineName == m &&
-                            !string.IsNullOrEmpty(x.DateShiftString) &&
-                            (x.DateShiftString.ToUpper().Contains(target1) || x.DateShiftString.ToUpper().Contains(target2)))
-                .OrderByDescending(x => x.CreatedAt)
+                .Where(x => x.MachineName.ToLower() == m.ToLower() &&
+                            !string.IsNullOrEmpty(x.DateShiftString))
                 .ToListAsync();
 
-            if (!matches.Any()) return Json(new List<object>());
+            // Filter manual di memory agar lebih fleksibel (atau gunakan multiple contains di EF)
+            var filtered = matches.Where(x => {
+                var val = x.DateShiftString.ToUpper();
+                bool hasDate = (val.Contains(day1 + " " + month) || val.Contains(day2 + " " + month)) && val.Contains(year);
+                bool hasShift = val.Contains("SHIFT " + cleanShift) || val.Contains("SHIFT " + cleanShift.PadLeft(2, '0'));
+                return hasDate && hasShift;
+            }).OrderByDescending(x => x.CreatedAt).ToList();
+
+            if (!filtered.Any()) return Json(new List<object>());
 
             // Group by CreatedAt (tolerance 10s)
             var batches = new List<dynamic>();
             DateTime? lastTime = null;
             var currentBatch = new List<PlanningMaster>();
 
-            foreach (var item in matches.OrderBy(x => x.CreatedAt)) // Ascending for easier grouping
+            foreach (var item in filtered.OrderBy(x => x.CreatedAt)) // Ascending for easier grouping
             {
                 if (lastTime == null || Math.Abs((item.CreatedAt - lastTime.Value).TotalSeconds) <= 10)
                 {
@@ -85,8 +96,8 @@ namespace VelastoProductionSystem.Controllers
                 else
                 {
                     batches.Add(new { 
-                        Time = lastTime.Value.ToString("HH:mm"), 
-                        FullTime = lastTime.Value.ToString("o"),
+                        Time = lastTime?.ToString("HH:mm") ?? "--:--", 
+                        FullTime = lastTime?.ToString("o") ?? "",
                         Count = currentBatch.Count,
                         Items = currentBatch.Select(x => new { 
                             Id = x.Id, 
@@ -100,8 +111,8 @@ namespace VelastoProductionSystem.Controllers
             if (currentBatch.Any())
             {
                 batches.Add(new { 
-                    Time = lastTime.Value.ToString("HH:mm"), 
-                    FullTime = lastTime.Value.ToString("o"),
+                    Time = lastTime?.ToString("HH:mm") ?? "--:--", 
+                    FullTime = lastTime?.ToString("o") ?? "",
                     Count = currentBatch.Count,
                     Items = currentBatch.Select(x => new { 
                         Id = x.Id, 
@@ -114,9 +125,8 @@ namespace VelastoProductionSystem.Controllers
         }
 
 
-        public async Task<IActionResult> Index()
+        private async Task EnsureTablesRepaired()
         {
-            // Auto repair missing tables
             await _context.Database.ExecuteSqlRawAsync(@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DailyPlanExecutions]') AND type in (N'U'))
             BEGIN
@@ -154,12 +164,25 @@ namespace VelastoProductionSystem.Controllers
                 [ActualStart] [nvarchar](max) NULL,
                 [ActualEnd] [nvarchar](max) NULL,
                 [Remarks] [nvarchar](max) NULL,
+                [StopReason] [nvarchar](max) NULL,
                 [OrderIndex] [int] NOT NULL,
              CONSTRAINT [PK_DailyPlanActivities] PRIMARY KEY CLUSTERED ([Id] ASC),
              CONSTRAINT [FK_DailyPlanActivities_DailyPlanExecutions_DailyPlanExecutionId] FOREIGN KEY([DailyPlanExecutionId]) REFERENCES [dbo].[DailyPlanExecutions] ([Id]) ON DELETE CASCADE
             )
             END
+            ELSE
+            BEGIN
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DailyPlanActivities]') AND name = 'StopReason')
+                BEGIN
+                    ALTER TABLE [dbo].[DailyPlanActivities] ADD [StopReason] [nvarchar](max) NULL;
+                END
+            END
             ");
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            await EnsureTablesRepaired();
 
             var data = await _context.DailyPlanExecutions
                 .OrderByDescending(x => x.ExecutionDate)
@@ -171,6 +194,7 @@ namespace VelastoProductionSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOrLoad(DateTime executionDate, string shift, string machineName, string groupName, DateTime? batchTime, int? planningId)
         {
+            await EnsureTablesRepaired();
             // 1. Cek apakah sudah ada
             var existing = await _context.DailyPlanExecutions
                 .Include(x => x.Activities)
@@ -289,6 +313,7 @@ namespace VelastoProductionSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> RegenerateActivities(int id)
         {
+            await EnsureTablesRepaired();
             var exec = await _context.DailyPlanExecutions
                 .Include(x => x.Activities)
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -308,6 +333,7 @@ namespace VelastoProductionSystem.Controllers
 
         public async Task<IActionResult> Execution(int id)
         {
+            await EnsureTablesRepaired();
             var data = await _context.DailyPlanExecutions
                 .Include(x => x.Activities)
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -321,6 +347,7 @@ namespace VelastoProductionSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveExecution(DailyPlanExecution model, List<DailyPlanActivity> activities)
         {
+            await EnsureTablesRepaired();
             var dbModel = await _context.DailyPlanExecutions
                 .Include(x => x.Activities)
                 .FirstOrDefaultAsync(x => x.Id == model.Id);
@@ -346,6 +373,7 @@ namespace VelastoProductionSystem.Controllers
                     dbAct.ActualStart   = act.ActualStart;
                     dbAct.ActualEnd     = act.ActualEnd;
                     dbAct.Remarks       = act.Remarks;
+                    dbAct.StopReason    = act.StopReason;
                 }
             }
 
@@ -357,6 +385,7 @@ namespace VelastoProductionSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
+            await EnsureTablesRepaired();
             var item = await _context.DailyPlanExecutions.FindAsync(id);
             if (item != null)
             {

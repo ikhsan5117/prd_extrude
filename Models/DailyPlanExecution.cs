@@ -65,6 +65,7 @@ namespace VelastoProductionSystem.Models
         public string? ActualEnd { get; set; }
         
         public string? Remarks { get; set; }
+        public string? StopReason { get; set; }
         public int OrderIndex { get; set; }
     }
 }

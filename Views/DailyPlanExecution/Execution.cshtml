@@ -33,23 +33,18 @@ body {
 
 /* HEADER PILLS */
 .exec-header { 
-    background: linear-gradient(180deg, rgba(10,20,38,0.9) 0%, rgba(5,10,20,0.95) 100%);
-    backdrop-filter: blur(40px); 
-    border-bottom: 1px solid var(--border); 
-    padding: 24px 40px; 
-    margin: -1rem -1rem 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    padding: 10px 0; 
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .h-pill { 
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(255,255,255,0.05);
-    padding: 12px 20px;
-    border-radius: 18px;
+    padding: 10px 18px;
+    border-radius: 14px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     transition: all 0.3s;
     box-shadow: inset 0 1px 5px rgba(255,255,255,0.02);
 }
@@ -105,10 +100,10 @@ body {
     display:flex; align-items:center; justify-content:center; 
     font-weight:1000; font-size:14px; color:var(--accent); 
 }
-.card-inner {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 32px;
+.card-inner { 
+    display: grid; 
+    grid-template-columns: 1fr 400px; 
+    gap: 32px; 
 }
 .card-left { display: flex; flex-direction: column; }
 .card-right { 
@@ -339,6 +334,48 @@ body {
     box-shadow: 0 0 25px rgba(250,204,21,0.3), inset 0 2px 5px rgba(250,204,21,0.5);
 }
 
+.hud-select {
+    background: rgba(10,15,25, 0.8);
+    border: 1px solid rgba(255,77,77,0.2);
+    border-radius: 8px;
+    color: rgba(255,77,77,0.6);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 4px;
+    margin-top: 4px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.btn-hud.active-stop .hud-select {
+    border-color: var(--ng);
+    color: #fff;
+    background: rgba(255,77,77,0.2);
+}
+
+.hud-4m-grid {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; width: 100%;
+}
+.m4-cell {
+    flex: 1 1 calc(50% - 2px);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 3px 0;
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.4);
+    font-weight: 900;
+    text-align: center;
+    transition: all 0.2s;
+}
+.btn-hud.active-stop .m4-cell { border-color: rgba(255,77,77,0.2); }
+.m4-cell.active {
+    background: var(--ng) !important;
+    border-color: var(--ng) !important;
+    color: #fff !important;
+    box-shadow: 0 0 10px rgba(255,77,77,0.4);
+}
+
 @@keyframes pulse-run { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
 @@media (max-width:1100px) { 
@@ -365,53 +402,32 @@ body {
 <form asp-action="SaveExecution" method="post" id="execForm" class="px-3 pb-5">
 <input type="hidden" asp-for="Id" />
 
-<!-- ── VIBRANT HUD HEADER ── -->
-<div class="exec-header mt-3">
-    <!-- Top Row: Line & Shift Sejajar -->
-    <div class="row g-4 mb-3">
-        <div class="col-6">
-            <div class="h-pill w-100" style="border-left: 3px solid var(--cyan);">
-                <span class="h-label"><i class="bi bi-cpu i-cyan"></i> PRODUCTION LINE</span>
-                <span class="h-val i-cyan">@Model.MachineName</span>
-            </div>
+<!-- ── VIBRANT HUD HEADER (Ultra Slim) ── -->
+<div class="exec-header mt-2 pb-3">
+    <!-- Top Row: Combined Info Bar -->
+    <div class="d-flex flex-wrap gap-3 mb-3">
+        <div class="h-pill flex-fill" style="border-left: 2px solid var(--cyan);">
+            <span class="h-label"><i class="bi bi-cpu i-cyan"></i> LINE</span>
+            <span class="h-val i-cyan" style="font-size:1.1rem;">@Model.MachineName</span>
         </div>
-        <div class="col-6">
-            <div class="h-pill w-100" style="border-left: 3px solid #d946ef;">
-                <span class="h-label"><i class="bi bi-clock-history i-mag"></i> CURRENT SHIFT</span>
-                <span class="h-val">SHIFT @(Model.Shift?.ToUpper().Replace("SHIFT", "").Trim()) <span class="h-val-sub" style="color:#d946ef;">@Model.GroupName</span></span>
-            </div>
+        <div class="h-pill flex-fill" style="border-left: 2px solid #d946ef;">
+            <span class="h-label"><i class="bi bi-clock-history i-mag"></i> SHIFT</span>
+            <span class="h-val" style="font-size:1.1rem;">SHIFT @(Model.Shift?.ToUpper().Replace("SHIFT", "").Trim()) <span class="h-val-sub" style="color:#d946ef;">@Model.GroupName</span></span>
         </div>
-    </div>
-
-    <!-- Middle Row: Reporting Date Full Width -->
-    <div class="row g-4 mb-3">
-        <div class="col-12">
-            <div class="h-pill w-100" style="border-left: 3px solid #facc15;">
-                <span class="h-label"><i class="bi bi-calendar3 i-gold"></i> REPORTING DATE</span>
-                <span class="h-val">@Model.ExecutionDate.ToString("dd MMMM yyyy")</span>
-            </div>
+        <div class="h-pill flex-fill" style="border-left: 2px solid #facc15;">
+            <span class="h-label"><i class="bi bi-calendar3 i-gold"></i> DATE</span>
+            <span class="h-val" style="font-size:1.1rem;">@Model.ExecutionDate.ToString("dd MMM yyyy")</span>
         </div>
     </div>
     
-    <!-- Bottom Row: PIC Sejajar -->
-    <div class="row g-4">
-        <div class="col-6">
-            <div class="h-pill w-100" style="background: rgba(0,242,254,0.03); border: 1px solid rgba(0,242,254,0.15);">
-                <span class="h-label" style="color:var(--cyan);"><i class="bi bi-person-badge"></i> OPERATOR PIC 1</span>
-                <input type="text" asp-for="Pic1" class="pic-input mt-1" style="font-size:1.3rem; border-color:rgba(0,242,254,0.2) !important;" placeholder="Ketik nama PIC 1..." />
-            </div>
-        </div>
-        <div class="col-6">
-            <div class="h-pill w-100" style="background: rgba(217,70,239,0.03); border: 1px solid rgba(217,70,239,0.15);">
-                <span class="h-label" style="color:#d946ef;"><i class="bi bi-person-badge"></i> OPERATOR PIC 2</span>
-                <input type="text" asp-for="Pic2" class="pic-input mt-1" style="font-size:1.3rem; border-color:rgba(217,70,239,0.2) !important;" placeholder="Ketik nama PIC 2..." />
-            </div>
+    <!-- Bottom Row: Unified Operator Input -->
+    <div class="h-pill" style="background: rgba(0,242,254,0.03); border: 1px solid rgba(0,242,254,0.12); padding: 8px 20px;">
+        <div class="d-flex align-items-center gap-4">
+            <span class="h-label" style="color:var(--cyan); white-space:nowrap; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 20px;"><i class="bi bi-person-badge"></i> PIC OPERATOR</span>
+            <input type="text" asp-for="Pic1" class="pic-input w-100" style="font-size:1.2rem; margin-top:0; border:none !important;" placeholder="Ketik nama penanggung jawab..." />
         </div>
     </div>
 </div>
-
-<!-- ── GLOBAL PROGRESS HUD (Moved to Dashboard) ── -->
-
 
 <!-- ── ACTIVITY CARDS ── -->
 <div class="sec-lbl"><i class="bi bi-layers-half"></i> Aktivitas Produksi</div>
@@ -432,7 +448,6 @@ body {
                         <input type="text" name="activities[@i].PartName1" value="@act.PartName1" class="part-input" style="font-size:1.8rem;" />
                         <div class="h-label" style="font-size:0.75rem;margin-top:2px;">@act.PartName2</div>
                     </div>
-                    <button type="button" class="btn-rm ms-auto" onclick="removeCard(this)"><i class="bi bi-x-circle-fill"></i></button>
                     <input type="hidden" name="activities[@i].PartName2" value="@act.PartName2" />
                     <input type="hidden" name="activities[@i].Id" value="@act.Id" />
                 </div>
@@ -494,12 +509,15 @@ body {
                         <input type="text" name="activities[@i].ActualEnd" value="@act.ActualEnd" class="time-inp act-end" placeholder="00:00" />
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,242,254,0.1);">
-                        <div class="d-flex align-items-baseline gap-2">
-                            <span style="font-size:0.75rem; color:var(--muted); font-weight:900; letter-spacing:1px; color:rgba(255,255,255,0.4);">PLAN:</span>
-                            <input type="number" name="activities[@i].ActualDurationMinutes" value="@act.ActualDurationMinutes" class="meta-inp text-end act-minutes" placeholder="0" style="font-size:1.7rem; width:75px; background:transparent !important; border:none; padding:0; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;" />
-                            <span style="font-size:1.2rem; color:rgba(255,255,255,0.3); font-weight:900;">/ @act.PlanDurationMinutes <span style="font-size:0.75rem;">min</span></span>
+                        <div class="d-flex align-items-baseline gap-2" style="white-space: nowrap;">
+                            <span style="font-size:0.7rem; color:rgba(255,255,255,0.4); font-weight:900; letter-spacing:1px;">PLAN:</span>
+                            <div class="d-flex align-items-baseline">
+                                <span class="act-minutes-disp" style="font-size:1.6rem; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;">@act.ActualDurationMinutes</span>
+                                <input type="hidden" name="activities[@i].ActualDurationMinutes" value="@act.ActualDurationMinutes" class="act-minutes-val" />
+                                <span style="font-size:1.1rem; color:rgba(255,255,255,0.3); font-weight:900; margin-left:6px;">/ @act.PlanDurationMinutes <span style="font-size:0.65rem;">min</span></span>
+                            </div>
                         </div>
-                        <div class="meta-sub" style="font-size:.75rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow);"><i class="bi bi-calendar3"></i> SCH: @act.PlanStart – @act.PlanEnd</div>
+                        <div class="meta-sub" style="font-size:.7rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow); white-space:nowrap;"><i class="bi bi-calendar3"></i> SCH: @act.PlanStart – @act.PlanEnd</div>
                     </div>
                 </div>
                 
@@ -511,6 +529,13 @@ body {
                     <button type="button" class="btn-hud btn-stop" onclick="toggleStatus(this, 'STOP')">
                         <i class="bi bi-stop-circle-fill"></i>
                         <span>LINE STOP</span>
+                        <div class="hud-4m-grid" onclick="event.stopPropagation()">
+                            <input type="hidden" name="activities[@i].StopReason" value="@act.StopReason" class="stop-reason-val" />
+                            <div class="m4-cell @(act.StopReason == "MAN" ? "active" : "")" onclick="select4M(this, 'MAN')">MAN</div>
+                            <div class="m4-cell @(act.StopReason == "MACHINE" ? "active" : "")" onclick="select4M(this, 'MACHINE')">MACH</div>
+                            <div class="m4-cell @(act.StopReason == "MATERIAL" ? "active" : "")" onclick="select4M(this, 'MATERIAL')">MAT</div>
+                            <div class="m4-cell @(act.StopReason == "METHOD" ? "active" : "")" onclick="select4M(this, 'METHOD')">METH</div>
+                        </div>
                     </button>
                     <button type="button" class="btn-hud btn-break" onclick="toggleStatus(this, 'BREAK')">
                         <i class="bi bi-cup-hot-fill"></i>
@@ -745,12 +770,15 @@ function addCard() {
                         <input type="text" name="activities[${idx}].ActualEnd" class="time-inp act-end" placeholder="00:00" />
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,242,254,0.1);">
-                        <div class="d-flex align-items-baseline gap-2">
-                            <span style="font-size:0.75rem; color:var(--muted); font-weight:900; letter-spacing:1px; color:rgba(255,255,255,0.4);">PLAN:</span>
-                            <input type="number" name="activities[${idx}].ActualDurationMinutes" class="meta-inp text-end act-minutes" placeholder="0" style="font-size:1.7rem; width:75px; background:transparent !important; border:none; padding:0; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;" />
-                            <span style="font-size:1.2rem; color:rgba(255,255,255,0.3); font-weight:900;">/ 0 <span style="font-size:0.75rem;">min</span></span>
+                        <div class="d-flex align-items-baseline gap-2" style="white-space: nowrap;">
+                            <span style="font-size:0.7rem; color:rgba(255,255,255,0.4); font-weight:900; letter-spacing:1px;">PLAN:</span>
+                            <div class="d-flex align-items-baseline">
+                                <span class="act-minutes-disp" style="font-size:1.6rem; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;">0</span>
+                                <input type="hidden" name="activities[${idx}].ActualDurationMinutes" value="0" class="act-minutes-val" />
+                                <span style="font-size:1.1rem; color:rgba(255,255,255,0.3); font-weight:900; margin-left:6px;">/ 0 <span style="font-size:0.65rem;">min</span></span>
+                            </div>
                         </div>
-                        <div class="meta-sub" style="font-size:.75rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow);"><i class="bi bi-calendar3"></i> SCH: 00:00 – 00:00</div>
+                        <div class="meta-sub" style="font-size:.7rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow); white-space:nowrap;"><i class="bi bi-calendar3"></i> SCH: 00:00 – 00:00</div>
                     </div>
                 </div>
                 
@@ -762,6 +790,13 @@ function addCard() {
                     <button type="button" class="btn-hud btn-stop" onclick="toggleStatus(this, 'STOP')">
                         <i class="bi bi-stop-circle-fill"></i>
                         <span>LINE STOP</span>
+                        <div class="hud-4m-grid" onclick="event.stopPropagation()">
+                            <input type="hidden" name="activities[${idx}].StopReason" value="" class="stop-reason-val" />
+                            <div class="m4-cell" onclick="select4M(this, 'MAN')">MAN</div>
+                            <div class="m4-cell" onclick="select4M(this, 'MACHINE')">MACH</div>
+                            <div class="m4-cell" onclick="select4M(this, 'MATERIAL')">MAT</div>
+                            <div class="m4-cell" onclick="select4M(this, 'METHOD')">METH</div>
+                        </div>
                     </button>
                     <button type="button" class="btn-hud btn-break" onclick="toggleStatus(this, 'BREAK')">
                         <i class="bi bi-cup-hot-fill"></i>
@@ -908,12 +943,15 @@ function addCardFromPart(part) {
                         <input type="text" name="activities[${idx}].ActualEnd" class="time-inp act-end" placeholder="00:00" />
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,242,254,0.1);">
-                        <div class="d-flex align-items-baseline gap-2">
-                            <span style="font-size:0.75rem; color:var(--muted); font-weight:900; letter-spacing:1px; color:rgba(255,255,255,0.4);">PLAN:</span>
-                            <input type="number" name="activities[${idx}].ActualDurationMinutes" class="meta-inp text-end act-minutes" placeholder="0" style="font-size:1.7rem; width:75px; background:transparent !important; border:none; padding:0; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;" />
-                            <span style="font-size:1.2rem; color:rgba(255,255,255,0.3); font-weight:900;">/ ${part.standardDurationMinutes || 0} <span style="font-size:0.75rem;">min</span></span>
+                        <div class="d-flex align-items-baseline gap-2" style="white-space: nowrap;">
+                            <span style="font-size:0.7rem; color:rgba(255,255,255,0.4); font-weight:900; letter-spacing:1px;">PLAN:</span>
+                            <div class="d-flex align-items-baseline">
+                                <span class="act-minutes-disp" style="font-size:1.6rem; color:var(--ok); text-shadow:0 0 20px var(--ok-glow); font-weight:1000;">0</span>
+                                <input type="hidden" name="activities[${idx}].ActualDurationMinutes" value="0" class="act-minutes-val" />
+                                <span style="font-size:1.1rem; color:rgba(255,255,255,0.3); font-weight:900; margin-left:6px;">/ ${part.standardDurationMinutes || 0} <span style="font-size:0.65rem;">min</span></span>
+                            </div>
                         </div>
-                        <div class="meta-sub" style="font-size:.75rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow);"><i class="bi bi-calendar3"></i> SCH: 00:00 – 00:00</div>
+                        <div class="meta-sub" style="font-size:.7rem; color:var(--cyan); opacity:0.8; letter-spacing:1px; font-weight:800; text-shadow:0 0 10px var(--cyan-glow); white-space:nowrap;"><i class="bi bi-calendar3"></i> SCH: 00:00 – 00:00</div>
                     </div>
                 </div>
                 
@@ -925,6 +963,13 @@ function addCardFromPart(part) {
                     <button type="button" class="btn-hud btn-stop" onclick="toggleStatus(this, 'STOP')">
                         <i class="bi bi-stop-circle-fill"></i>
                         <span>LINE STOP</span>
+                        <div class="hud-4m-grid" onclick="event.stopPropagation()">
+                            <input type="hidden" name="activities[${idx}].StopReason" value="" class="stop-reason-val" />
+                            <div class="m4-cell" onclick="select4M(this, 'MAN')">MAN</div>
+                            <div class="m4-cell" onclick="select4M(this, 'MACHINE')">MACH</div>
+                            <div class="m4-cell" onclick="select4M(this, 'MATERIAL')">MAT</div>
+                            <div class="m4-cell" onclick="select4M(this, 'METHOD')">METH</div>
+                        </div>
                     </button>
                     <button type="button" class="btn-hud btn-break" onclick="toggleStatus(this, 'BREAK')">
                         <i class="bi bi-cup-hot-fill"></i>
@@ -942,6 +987,15 @@ function addCardFromPart(part) {
 }
 
 // ── HUD COMMAND ENGINE ──
+function select4M(el, val) {
+    const grid = el.closest('.hud-4m-grid');
+    grid.querySelectorAll('.m4-cell').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    grid.querySelector('.stop-reason-val').value = val;
+    
+    // Auto toggle STOP status if not already active? No, let user click button first then choose.
+}
+
 function toggleStatus(btn, status) {
     const card = btn.closest('.act-card');
     const metaTile = card.querySelector('.meta-tile');
@@ -978,11 +1032,14 @@ setInterval(() => {
     document.querySelectorAll('.act-card').forEach(card => {
         const status = card.querySelector('.run-status').value;
         if (status === 'RUNNING') {
-            const minInp = card.querySelector('.act-minutes');
+            const minDisp = card.querySelector('.act-minutes-disp');
+            const minVal = card.querySelector('.act-minutes-val');
             const endInp = card.querySelector('.act-end');
             
             // Increment
-            minInp.value = parseInt(minInp.value || 0) + 1;
+            const newVal = parseInt(minVal.value || 0) + 1;
+            minVal.value = newVal;
+            minDisp.innerText = newVal;
             
             // Update End Time
             const now = new Date();
