@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
+using VelastoProductionSystem.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,9 +54,23 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseWebSockets();
 
 app.UseSession();
 app.UseAuthorization();
+
+app.Map("/ws/dashboard", async context =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+        await DashboardWebSocketHandler.HandleAsync(webSocket, context.RequestServices);
+    }
+    else
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+    }
+});
 
 app.MapControllerRoute(
     name: "default",

@@ -64,61 +64,23 @@
     </div>
 </div>
 
-<!-- ── GLOBAL PROGRESS HUD (Moved from Execution) ── -->
-<style>
-    /* execution variables ported for progress hud */
-    :root {
-        --hud-accent: #4f6ef7;
-        --hud-accent-glow: rgba(79,110,247,0.4);
-        --hud-ok: #00e676;
-        --hud-ng: #ff4d4d;
-        --hud-warn: #ffaa00;
-        --hud-muted: #4b6382;
-    }
-    .overview-bar { 
-        background: rgba(18,28,54,0.85); 
-        border: 1px solid rgba(255,255,255,0.06); 
-        border-radius: 24px; 
-        padding: 26px 36px; 
-        margin-bottom: 30px;
-        box-shadow: 0 30px 80px rgba(0,0,0,0.4);
-    }
-    .hud-h-pill { 
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        border-radius: 18px; 
-    }
-    .hud-h-label { font-size: 0.55rem; font-weight: 900; letter-spacing: 2px; color: var(--hud-muted); text-transform: uppercase; }
-    .hud-h-val { font-size: 1.1rem; font-weight: 1000; color: #fff; letter-spacing: -0.5px; }
-    .hud-prog-track { width:100%; height:8px; background:rgba(255,255,255,0.03); border-radius:99px; overflow:hidden; border: 1px solid rgba(255,255,255,0.02); }
-    .hud-prog-fill  { height:100%; border-radius:99px; background:linear-gradient(90deg, #4f6ef7, #9d7cfc); box-shadow:0 0 25px var(--hud-accent-glow); transition:width .7s cubic-bezier(.4,0,.2,1); width:0%; }
-</style>
-<div class="overview-bar animate-fadeInUp">
-    <div class="d-flex justify-content-between align-items-end mb-3">
-        <div>
-            <div class="hud-h-label"><i class="bi bi-activity"></i> ACTIVE PLAN PROGRESS</div>
-            <div id="dashGlobalPct" class="hud-h-val" style="font-size:2.2rem;color:var(--hud-accent);line-height:1;">0.0%</div>
-        </div>
-        <div style="text-align:right;">
-            <div class="hud-h-label">CUMULATIVE OUTPUT</div>
-            <div id="dashGlobalFrac" class="hud-h-val">0 / 0 pcs</div>
-        </div>
-    </div>
-    <div class="hud-prog-track"><div class="hud-prog-fill" id="dashGlobalProgFill"></div></div>
-    
-    <div class="d-flex gap-4 mt-4">
-        <div class="hud-h-pill" style="border:none;background:rgba(0,230,118,0.05);flex:1;padding:15px 20px;">
-            <span class="hud-h-label" style="color:var(--hud-ok);letter-spacing:2px;">TOTAL OK</span>
-            <span id="dashGlobalOK" class="hud-h-val" style="color:var(--hud-ok);font-size:1.6rem;">0</span>
-        </div>
-        <div class="hud-h-pill" style="border:none;background:rgba(255,77,77,0.05);flex:1;padding:15px 20px;">
-            <span class="hud-h-label" style="color:var(--hud-ng);letter-spacing:2px;">TOTAL NG</span>
-            <span id="dashGlobalNG" class="hud-h-val" style="color:var(--hud-ng);font-size:1.6rem;">0</span>
-        </div>
-        <div class="hud-h-pill" style="border:none;background:rgba(255,170,0,0.05);flex:1;padding:15px 20px;">
-            <span class="hud-h-label" style="color:var(--hud-warn);letter-spacing:2px;">DANDORI</span>
-            <span id="dashGlobalDandori" class="hud-h-val" style="color:var(--hud-warn);font-size:1.6rem;">0 min</span>
+<!-- Realtime websocket chart will update continuously -->
+<div class="row g-3 mb-3 animate-fadeInUp">
+    <div class="col-12">
+        <div class="card glass-panel overflow-hidden">
+            <div class="card-header border-bottom border-white border-opacity-10 p-3 bg-dark bg-opacity-50">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="mb-0 fw-bold fs-6">Realtime Production Trend</h5>
+                        <small class="text-white-50">Data updated through websocket</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4 bg-black bg-opacity-10">
+                <div class="chart-container" style="position: relative; height:320px; width:100%;">
+                    <canvas id="realtimeTrendChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -258,6 +220,94 @@
                     }
                 }
             });
+
+            const wsChartCtx = document.getElementById('realtimeTrendChart').getContext('2d');
+            const realtimeTrendChart = new Chart(wsChartCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Head Temp Inner',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59,130,246,0.15)',
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Hose Speed',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16,185,129,0.15)',
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'nearest', intersect: false },
+                    plugins: {
+                        legend: {
+                            labels: { color: 'rgba(255,255,255,0.8)' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: 'rgba(255,255,255,0.6)' }
+                        },
+                        y: {
+                            position: 'left',
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: 'rgba(255,255,255,0.6)' },
+                            title: { display: true, text: 'Temperature (°C)', color: '#93c5fd' }
+                        },
+                        y1: {
+                            position: 'right',
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.6)' },
+                            title: { display: true, text: 'Speed', color: '#6ee7b7' }
+                        }
+                    }
+                }
+            });
+
+            function connectDashboardWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const url = protocol + '//' + window.location.host + '/ws/dashboard';
+                const socket = new WebSocket(url);
+
+                socket.onopen = function() {
+                    console.log('Dashboard websocket connected:', url);
+                };
+
+                socket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    realtimeTrendChart.data.labels = data.labels || [];
+                    realtimeTrendChart.data.datasets[0].data = data.datasets[0].data || [];
+                    realtimeTrendChart.data.datasets[1].data = data.datasets[1].data || [];
+                    realtimeTrendChart.update();
+                };
+
+                socket.onclose = function() {
+                    console.log('Dashboard websocket closed, reconnecting in 3s');
+                    setTimeout(connectDashboardWebSocket, 3000);
+                };
+
+                socket.onerror = function(error) {
+                    console.warn('Dashboard websocket error', error);
+                    socket.close();
+                };
+            }
+
+            connectDashboardWebSocket();
 
             function loadSpcData() {
                 const product = $('#productFilter').val();
