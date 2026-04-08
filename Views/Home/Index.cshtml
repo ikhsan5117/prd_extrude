@@ -64,39 +64,19 @@
     </div>
 </div>
 
-<!-- Realtime websocket chart will update continuously -->
-<div class="row g-3 mb-3 animate-fadeInUp">
-    <div class="col-12">
-        <div class="card glass-panel overflow-hidden">
-            <div class="card-header border-bottom border-white border-opacity-10 p-3 bg-dark bg-opacity-50">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="mb-0 fw-bold fs-6">Realtime Production Trend</h5>
-                        <small class="text-white-50">Data updated through websocket</small>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body p-4 bg-black bg-opacity-10">
-                <div class="chart-container" style="position: relative; height:320px; width:100%;">
-                    <canvas id="realtimeTrendChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- SPC Filters -->
-<div class="px-3 pb-1 mb-3 bg-transparent animate-fadeInUp">
-    <div class="row g-3">
+<div class="px-0 pb-1 mb-4 bg-transparent animate-fadeInUp">
+    <div class="row g-2">
         <div class="col-md-4">
-            <label class="text-white-50 xsmall uppercase tracking-wider mb-1" style="font-size: 0.65rem;">Pilih Produk</label>
-            <select id="productFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white">
+            <label class="text-white-50 xsmall uppercase tracking-wider mb-1 ms-1" style="font-size: 0.6rem; font-weight: 800; opacity: 0.6;">PILIH PRODUK</label>
+            <select id="productFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white rounded-3 py-2">
                 <option value="">Semua Produk</option>
             </select>
         </div>
         <div class="col-md-4">
-            <label class="text-white-50 xsmall uppercase tracking-wider mb-1" style="font-size: 0.65rem;">Kriteria Dimensi</label>
-            <select id="criteriaFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white">
+            <label class="text-white-50 xsmall uppercase tracking-wider mb-1 ms-1" style="font-size: 0.6rem; font-weight: 800; opacity: 0.6;">KRITERIA DIMENSI</label>
+            <select id="criteriaFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white rounded-3 py-2">
                 <option value="InnerThickness">Thickness</option>
                 <option value="Diameter">Diameter</option>
                 <option value="TotalThickness">Total Thickness</option>
@@ -104,8 +84,8 @@
             </select>
         </div>
         <div class="col-md-4">
-            <label class="text-white-50 xsmall uppercase tracking-wider mb-1" style="font-size: 0.65rem;">Rentang Waktu</label>
-            <select id="rangeFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white">
+            <label class="text-white-50 xsmall uppercase tracking-wider mb-1 ms-1" style="font-size: 0.6rem; font-weight: 800; opacity: 0.6;">RENTANG WAKTU</label>
+            <select id="rangeFilter" class="form-select form-select-sm bg-dark border-white border-opacity-10 text-white rounded-3 py-2">
                 <option value="7">7 Hari Terakhir</option>
                 <option value="30" selected>30 Hari Terakhir</option>
                 <option value="90">90 Hari Terakhir</option>
@@ -155,23 +135,21 @@
 </div>
 
 <!-- Main Production Trend Chart (SPC Style) -->
-<div class="row g-3 mb-3">
+<div class="row g-3 mb-5">
     <div class="col-12 animate-fadeInUp delay-4">
-        <div class="card glass-panel overflow-hidden">
-            <div class="card-header border-bottom border-white border-opacity-10 p-3 bg-dark bg-opacity-50">
-                <div class="d-flex align-items-center justify-content-between">
-                    <h5 class="mb-0 fw-bold fs-6">Trend Dimensi: <span id="criteriaTitle">Thickness</span></h5>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill xsmall">
-                            <i class="bi bi-info-circle me-1"></i> Data-driven Output
-                        </span>
-                    </div>
-                </div>
+        <div class="card glass-panel overflow-hidden border-0 shadow-lg" style="background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(20px);">
+            <div class="card-header border-bottom border-white border-opacity-5 p-4 bg-transparent text-center">
+                <h5 class="mb-0 fw-bold fs-5 text-white" style="letter-spacing: -0.5px;">Trend Dimensi: <span id="criteriaTitle" class="text-info">Thickness</span> - <span id="sampleCount" class="text-white-50">0</span></h5>
             </div>
-            <div class="card-body p-4 bg-black bg-opacity-10">
-                <div class="chart-container" style="position: relative; height:450px; width:100%">
+            <div class="card-body p-4 bg-transparent">
+                <div class="chart-container" style="position: relative; height:480px; width:100%">
                     <canvas id="spcTrendChart"></canvas>
                 </div>
+            </div>
+            <div class="card-footer border-0 p-4 pt-0 text-center">
+                <p class="text-white-50 small mb-0" style="font-size: 0.85rem; font-weight: 300;">
+                    Report dimensi per bagian dan parameter mesin secara <span class="neon-text">periodik</span> dengan Cp Cpk & grafik trend
+                </p>
             </div>
         </div>
     </div>
@@ -221,93 +199,6 @@
                 }
             });
 
-            const wsChartCtx = document.getElementById('realtimeTrendChart').getContext('2d');
-            const realtimeTrendChart = new Chart(wsChartCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Head Temp Inner',
-                            data: [],
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59,130,246,0.15)',
-                            fill: true,
-                            tension: 0.35,
-                            pointRadius: 2,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Hose Speed',
-                            data: [],
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16,185,129,0.15)',
-                            fill: true,
-                            tension: 0.35,
-                            pointRadius: 2,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'nearest', intersect: false },
-                    plugins: {
-                        legend: {
-                            labels: { color: 'rgba(255,255,255,0.8)' }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: 'rgba(255,255,255,0.6)' }
-                        },
-                        y: {
-                            position: 'left',
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: 'rgba(255,255,255,0.6)' },
-                            title: { display: true, text: 'Temperature (°C)', color: '#93c5fd' }
-                        },
-                        y1: {
-                            position: 'right',
-                            grid: { display: false },
-                            ticks: { color: 'rgba(255,255,255,0.6)' },
-                            title: { display: true, text: 'Speed', color: '#6ee7b7' }
-                        }
-                    }
-                }
-            });
-
-            function connectDashboardWebSocket() {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const url = protocol + '//' + window.location.host + '/ws/dashboard';
-                const socket = new WebSocket(url);
-
-                socket.onopen = function() {
-                    console.log('Dashboard websocket connected:', url);
-                };
-
-                socket.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    realtimeTrendChart.data.labels = data.labels || [];
-                    realtimeTrendChart.data.datasets[0].data = data.datasets[0].data || [];
-                    realtimeTrendChart.data.datasets[1].data = data.datasets[1].data || [];
-                    realtimeTrendChart.update();
-                };
-
-                socket.onclose = function() {
-                    console.log('Dashboard websocket closed, reconnecting in 3s');
-                    setTimeout(connectDashboardWebSocket, 3000);
-                };
-
-                socket.onerror = function(error) {
-                    console.warn('Dashboard websocket error', error);
-                    socket.close();
-                };
-            }
-
-            connectDashboardWebSocket();
 
             function loadSpcData() {
                 const product = $('#productFilter').val();
@@ -336,16 +227,19 @@
                             $('#cpkValue').addClass('text-warning');
                         }
 
+                        $('#sampleCount').text(s.totalCount);
+
                         // Chart update
                         const datasets = [
                             {
                                 label: 'Actual Sisi A',
                                 data: data.chart.seriesA,
-                                borderColor: '#00d2ff',
+                                borderColor: '#00ccff',
                                 backgroundColor: 'transparent',
-                                tension: 0.4,
-                                pointRadius: 5,
-                                pointBackgroundColor: '#00d2ff',
+                                tension: 0.3,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#00ccff',
+                                borderWidth: 2,
                                 z: 10
                             }
                         ];
@@ -354,12 +248,13 @@
                             datasets.push({
                                 label: 'Actual Sisi B',
                                 data: data.chart.seriesB,
-                                borderColor: '#cc22ff',
+                                borderColor: '#ff00ff',
                                 backgroundColor: 'transparent',
-                                tension: 0.4,
-                                pointRadius: 5,
+                                tension: 0.3,
+                                pointRadius: 4,
                                 pointStyle: 'triangle',
-                                pointBackgroundColor: '#cc22ff',
+                                pointBackgroundColor: '#ff00ff',
+                                borderWidth: 2,
                                 z: 9
                             });
                         }
@@ -370,33 +265,40 @@
                         const targetData = new Array(data.chart.labels.length).fill(data.chart.targetLine);
 
                         datasets.push({
-                            label: 'Spec Max (USL)',
+                            label: 'Target (Sisi A)',
+                            data: targetData,
+                            borderColor: '#3b82f6',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: false,
+                            borderDash: [0, 0],
+                            z: 8
+                        });
+                        datasets.push({
+                            label: 'Spesifikasi Max (Sisi A)',
                             data: uslData,
                             borderColor: '#ef4444',
                             borderWidth: 2,
                             pointRadius: 0,
                             fill: false,
-                            borderDash: [5, 5]
+                            borderDash: [5, 5],
+                            z: 5
                         });
                         datasets.push({
-                            label: 'Spec Min (LSL)',
+                            label: 'Spesifikasi Min (Sisi A)',
                             data: lslData,
                             borderColor: '#ef4444',
                             borderWidth: 2,
                             pointRadius: 0,
                             fill: false,
-                            borderDash: [5, 5]
-                        });
-                        datasets.push({
-                            label: 'Target',
-                            data: targetData,
-                            borderColor: 'rgba(255,255,255,0.3)',
-                            borderWidth: 1,
-                            pointRadius: 0,
-                            fill: false
+                            borderDash: [5, 5],
+                            z: 5
                         });
 
-                        spcChart.data.labels = data.chart.labels;
+                        // Reformat labels to "idx (date)"
+                        const labels = data.chart.labels.map((l, i) => `${i+1} (${l.split(' ')[0]})`);
+
+                        spcChart.data.labels = labels;
                         spcChart.data.datasets = datasets;
                         spcChart.update();
                     } else {

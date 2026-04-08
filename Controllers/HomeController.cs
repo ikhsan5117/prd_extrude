@@ -32,74 +32,63 @@ namespace VelastoProductionSystem.Controllers
 
         public IActionResult SeedSpcData()
         {
-            // Ensure report with hose type DEMO exist
-            var report = _context.ProductionReports.FirstOrDefault(r => r.HoseType == "DEMO-PART");
+            // Pastikan report exist
+            var report = _context.DimensionReports.FirstOrDefault(r => r.HoseType == "NA2060");
             if (report == null)
             {
-                report = new ProductionReport {
-                    DocumentNumber = "DEMO-DOC-01",
-                    ProductionDate = DateTime.Today,
-                    HoseType = "DEMO-PART",
+                report = new DimensionReport {
+                    DocumentNumber = "DIM-NA2060-REF",
+                    ProductionDate = DateTime.Now,
+                    HoseType = "NA2060",
+                    DimensionDisplay = "Thickness",
                     CustomerName = "VELASTO CORP",
                     Status = "COMPLETED",
+                    CreatedDate = DateTime.Now,
+                    CreatedBy = "System Seed",
+                    Shift = "Shift 1",
                     QtyTarget = 100,
-                    QtyOk = 95,
-                    NgDimension = 3,
-                    NgVisual = 2
+                    QtyOk = 95
                 };
-                _context.ProductionReports.Add(report);
+                _context.DimensionReports.Add(report);
                 _context.SaveChanges();
             }
 
-            // Create SPS for demo if none
-            var sps = _context.StandardParameterSettings.FirstOrDefault(s => s.ProductCode == "DEMO-PART");
-            if (sps == null)
-            {
-                sps = new StandardParameterSetting {
-                    ProductCode = "DEMO-PART",
-                    ItemList = "DEMO-PART",
-                    TubeDie = 1.6m,
-                    Tol_TubeDie = 0.2m,
-                    OuterDie = 2.8m,
-                    Tol_OuterDie = 0.3m,
-                    InnerDie = 8.8m,
-                    ToleranceDie = 0.4m,
-                    SpiralPitch = 14.0m,
-                    Tol_SpiralPitch = 0.5m,
-                    EffectiveDate = DateTime.Today
-                };
-                _context.StandardParameterSettings.Add(sps);
-                _context.SaveChanges();
-            }
-
-            // Dates 1, 2, 3, 4, 5 and today
             var random = new Random();
-            var days = new[] { 1, 2, 3, 4, 5, DateTime.Today.Day };
             
-            foreach (var day in days)
+            // Buat data simulasi untuk beberapa kriteria sekaligus
+            var criteriaTypes = new[] { 
+                new { Name = "Inner Tube", Target = 3.6m },
+                new { Name = "Spiral Pitch", Target = 56.0m },
+                new { Name = "Tebal Total", Target = 5.2m }
+            };
+
+            // Hapus data lama agar tidak duplikat
+            var oldData = _context.DimensionMeasurements.Where(m => m.DimensionReportId == report.Id).ToList();
+            if (oldData.Any()) _context.DimensionMeasurements.RemoveRange(oldData);
+
+            foreach (var type in criteriaTypes)
             {
-                var dt = new DateTime(DateTime.Today.Year, DateTime.Today.Month, day, 10, 0, 0);
-                
-                // Add 2 random readings per day
-                for (int i = 0; i < 2; i++)
+                for (int i = 54; i >= 1; i--)
                 {
-                    var reading = new ProductionReading {
-                        ProductionReportId = report.Id,
-                        ReadingTime = dt.AddHours(i * 3),
-                        InnerDiameter = 8.0m + (decimal)(random.NextDouble() * 1.5),
-                        InnerThicknessX = 1.0m + (decimal)(random.NextDouble() * 0.8),
-                        InnerThicknessY = 1.0m + (decimal)(random.NextDouble() * 0.8),
-                        TotalThicknessX = 2.0m + (decimal)(random.NextDouble() * 1.2),
-                        TotalThicknessY = 2.0m + (decimal)(random.NextDouble() * 1.2),
-                        SpiralPitch = 10.0m + (decimal)(random.NextDouble() * 5.0),
-                        RecordedBy = "System Seed"
+                    var dt = DateTime.Now.AddMinutes(-i * 30);
+                    
+                    var reading = new DimensionMeasurement {
+                        DimensionReportId = report.Id,
+                        PointName = type.Name,
+                        TimeSection = dt.ToString("HH:mm"),
+                        Frequency = "30m Sekali",
+                        RecordedTime = dt,
+                        // Simulasi nilai yang fluktuasi sedikit
+                        R1 = type.Target + (decimal)((random.NextDouble() - 0.5) * (double)type.Target * 0.05),
+                        R2 = type.Target + (decimal)((random.NextDouble() - 0.5) * (double)type.Target * 0.05),
+                        Status = "OK"
                     };
-                    _context.ProductionReadings.Add(reading);
+                    _context.DimensionMeasurements.Add(reading);
                 }
             }
             
             _context.SaveChanges();
-            return Content("Data berhasil ditambahkan untuk 'DEMO-PART'. Silakan refresh dashboard dan pilih produk 'DEMO-PART' atau 'Semua Produk'.");
+            return Content("Data simulasi (Thickness, Diameter, & Spiral Pitch) untuk 'NA2060' berhasil ditambahkan! Silakan refresh dashboard.");
         }
 
         public IActionResult Privacy()
@@ -130,9 +119,9 @@ namespace VelastoProductionSystem.Controllers
             string pointNameFilter = criteria switch {
                 "InnerThickness" => "Inner Tube",
                 "TotalThickness" => "Tebal Total",
-                "Diameter" => "Inner Diameter", // Adjust based on your Input Dimensi point names
+                "Diameter" => "Inner Tube", // Seringkali diameter merefer ke inner tube
                 "SpiralPitch" => "Spiral Pitch",
-                "Thickness" => "Tebal",
+                "Thickness" => "Inner Tube",
                 _ => criteria
             };
 
@@ -211,7 +200,8 @@ namespace VelastoProductionSystem.Controllers
                     seriesB = valuesB,
                     uslLine = usl,
                     lslLine = lsl,
-                    targetLine = target
+                    targetLine = target,
+                    totalCount = allValues.Count
                 }
             });
         }
