@@ -32,7 +32,7 @@
                 <!-- NEW: SPS PROTOCOL SYNC -->
                 <div class="p-3 bg-primary bg-opacity-5 border-bottom border-white border-opacity-5 no-print">
                     <div class="row g-3 align-items-center">
-                        <div class="col-12">
+                        <div class="col-md-5">
                             <div class="hud-pill p-0 d-flex flex-row overflow-hidden shadow-glow-blue border-info border-opacity-40" style="min-height: 70px;">
                                 <div class="flex-grow-1 p-2 px-3 bg-dark d-flex flex-column justify-content-center">
                                     <label class="mb-1 text-info font-black" style="font-size: 0.70rem;"><i class="bi bi-keyboard me-2 text-info"></i>TYPE ITEM CODE (MANUAL)</label>
@@ -46,6 +46,22 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="col-md-7">
+                            <div class="hud-pill p-0 d-flex flex-row shadow-glow-blue border-success border-opacity-40" style="min-height: 70px; position: relative; border-radius: 8px;">
+                                <div class="flex-grow-1 p-2 px-3 bg-dark d-flex flex-column justify-content-center">
+                                    <label class="mb-1 text-success font-black" style="font-size: 0.70rem;"><i class="bi bi-list-check me-2 text-success"></i>SEARCH PLANNING MASTER</label>
+                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1.1rem; outline: none;" placeholder="TYPE ITEM CODE..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
+                                    
+                                    <!-- Results Container -->
+                                    <div id="planningResults" class="d-none" style="position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid rgba(16, 185, 129, 0.4); border-top: none; z-index: 1000; max-height: 300px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 0 0 12px 12px;">
+                                        <!-- Items will be injected here -->
+                                    </div>
+                                </div>
+                                <button type="button" onclick="refreshPlanningItems()" class="btn border-0 rounded-0 px-4 d-flex align-items-center justify-content-center border-start border-success border-opacity-25" style="min-width: 80px; background-color: #064e3b; color: #10b981; transition: all 0.2s;" title="Refresh Planning">
+                                    <i class="bi bi-arrow-clockwise fs-3"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="p-3 bg-black bg-opacity-30 border-bottom border-white border-opacity-5">
@@ -53,13 +69,13 @@
                         <div class="col-md-3">
                             <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
                                 <label><i class="bi bi-calendar-check me-2 text-primary"></i>SYSTEM DATE</label>
-                                <input type="date" asp-for="ProductionDate" class="hud-input font-monospace text-primary-glow" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                                <input type="date" asp-for="ProductionDate" id="ProductionDate" class="hud-input font-monospace text-primary-glow" value="@DateTime.Now.ToString("yyyy-MM-dd")" required onchange="refreshPlanningItems()" />
                             </div>
                         </div>
                         <div class="col-md-2">
                             <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
                                 <label><i class="bi bi-clock-history me-2 text-primary"></i>SHIFT</label>
-                                <select asp-for="Shift" class="hud-input font-black bg-transparent border-0" style="-webkit-appearance: none;">
+                                <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0" style="-webkit-appearance: none;" onchange="refreshPlanningItems()">
                                     <option value="I" class="bg-dark">SHIFT I</option>
                                     <option value="II" class="bg-dark" selected>SHIFT II</option>
                                     <option value="III" class="bg-dark">SHIFT III</option>
@@ -1131,8 +1147,182 @@
             drawers.forEach(d => isOpening ? d.classList.remove('d-none') : d.classList.add('d-none'));
             buttons.forEach(b => isOpening ? b.classList.add('active') : b.classList.remove('active'));
         }
+
+        // --- PLANNING SEARCH & REFRESH LOGIC ---
+        let planningItemsCache = [];
+        let planningResultItems = [];
+        let planningResultIndex = -1;
+
+        async function refreshPlanningItems() {
+            const date = document.getElementById('ProductionDate').value;
+            const shift = document.getElementById('Shift').value;
+            const searchInput = document.getElementById('planningSearch');
+            
+            if (!date || !shift) return;
+
+            searchInput.placeholder = "LOADING PLANNING...";
+            searchInput.disabled = true;
+            document.getElementById('planningResults').classList.add('d-none');
+
+            try {
+                const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shift)}`);
+                planningItemsCache = await res.json();
+                planningResultItems = [];
+                planningResultIndex = -1;
+                
+                searchInput.disabled = false;
+                if (planningItemsCache.length > 0) {
+                    searchInput.placeholder = `TYPE ITEM CODE (${planningItemsCache.length} ITEMS LOADED)`;
+                } else {
+                    searchInput.placeholder = "NO ITEMS IN PLAN FOR THIS DAY";
+                }
+                searchInput.value = "";
+                planningResultItems = planningItemsCache;
+                planningResultIndex = -1;
+                document.getElementById('planningResults').classList.add('d-none');
+            } catch (e) {
+                console.error("Failed to fetch planning items:", e);
+                searchInput.placeholder = "ERROR LOADING DATA";
+            }
+        }
+
+        function filterPlanningResults(query) {
+            const sanitizedQuery = query.trim().toUpperCase();
+            const results = sanitizedQuery.length === 0 ? planningItemsCache : planningItemsCache.filter(item => 
+                (item.itemCode && item.itemCode.toUpperCase().includes(sanitizedQuery)) || 
+                (item.itemName && item.itemName.toUpperCase().includes(sanitizedQuery))
+            );
+
+            planningResultItems = results;
+            planningResultIndex = -1;
+            renderResults(results, sanitizedQuery.length === 0);
+        }
+
+        function renderResults(items, showAll = false) {
+            const container = document.getElementById('planningResults');
+            container.innerHTML = "";
+            
+            if (items.length === 0) {
+                container.innerHTML = `<div class="p-3 text-white-50 super-small">--- NO MATCHES FOUND ---</div>`;
+                container.classList.remove('d-none');
+                return;
+            }
+
+            items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "p-3 border-bottom border-white border-opacity-5 hover-bg-success cursor-pointer transition-all planning-result-item";
+                div.style.background = "rgba(15, 23, 42, 0.98)";
+                div.dataset.index = index;
+                div.innerHTML = `
+                    <div class="d-flex flex-column gap-1">
+                        <span class="text-success fw-bold font-monospace">[${item.itemCode}]</span>
+                        <span class="text-white small opacity-75">${item.itemName}</span>
+                        ${item.dateShift ? `<span class="text-white-50 xsmall">${item.dateShift}</span>` : ''}
+                    </div>
+                `;
+                div.onclick = () => selectPlanningItem(item);
+                div.onmouseenter = () => highlightPlanningResult(index);
+                container.appendChild(div);
+            });
+
+            container.classList.remove('d-none');
+            planningResultIndex = -1;
+
+            if (showAll && items.length > 0) {
+                const firstOption = container.querySelector('.planning-result-item');
+                if (firstOption) {
+                    firstOption.classList.add('planning-result-highlight');
+                    planningResultIndex = 0;
+                }
+            }
+        }
+
+        function highlightPlanningResult(index) {
+            const container = document.getElementById('planningResults');
+            const options = Array.from(container.querySelectorAll('.planning-result-item'));
+            if (!options.length) return;
+
+            options.forEach(opt => opt.classList.remove('planning-result-highlight'));
+            const target = options[index];
+            if (!target) return;
+
+            target.classList.add('planning-result-highlight');
+            planningResultIndex = index;
+            target.scrollIntoView({ block: 'nearest' });
+        }
+
+        function movePlanningSelection(direction) {
+            if (!planningResultItems.length) return;
+
+            planningResultIndex += direction;
+            if (planningResultIndex < 0) planningResultIndex = 0;
+            if (planningResultIndex >= planningResultItems.length) planningResultIndex = planningResultItems.length - 1;
+            highlightPlanningResult(planningResultIndex);
+        }
+
+        function selectHighlightedPlanningItem() {
+            if (planningResultIndex < 0 || planningResultIndex >= planningResultItems.length) return;
+            selectPlanningItem(planningResultItems[planningResultIndex]);
+        }
+
+        function selectPlanningItem(item) {
+            document.getElementById('planningSearch').value = `[${item.itemCode}] ${item.itemName}`;
+            document.getElementById('planningResults').classList.add('d-none');
+            if (item.date) {
+                setPlanningDateAndShift(item.date, item.shift);
+            }
+            fetchSpsByItem(item.itemCode);
+        }
+
+        function setPlanningDateAndShift(dateValue, shiftValue) {
+            const dateInput = document.getElementById('ProductionDate');
+            const shiftInput = document.getElementById('Shift');
+            if (dateInput && dateValue) dateInput.value = dateValue;
+            if (shiftInput && shiftValue) shiftInput.value = shiftValue;
+        }
+
+        function showPlanningResults() {
+            const val = document.getElementById('planningSearch').value;
+            if (planningItemsCache.length > 0) {
+                filterPlanningResults(val.includes(']') ? "" : val);
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#planningSearch') && !e.target.closest('#planningResults')) {
+                document.getElementById('planningResults').classList.add('d-none');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('planningSearch');
+            refreshPlanningItems();
+
+            if (searchInput) {
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        movePlanningSelection(1);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        movePlanningSelection(-1);
+                    } else if (e.key === 'Enter') {
+                        if (planningResultIndex >= 0 && planningResultItems.length) {
+                            e.preventDefault();
+                            selectHighlightedPlanningItem();
+                        }
+                    } else if (e.key === 'Escape') {
+                        document.getElementById('planningResults').classList.add('d-none');
+                    }
+                });
+            }
+        });
     </script>
     <style>
+        .hover-bg-success:hover { background: rgba(16, 185, 129, 0.2) !important; color: white; }
+        .planning-result-highlight { background: rgba(16, 185, 129, 0.15) !important; border-color: rgba(16, 185, 129, 0.45) !important; }
+        .cursor-pointer { cursor: pointer; }
+        .transition-all { transition: all 0.2s ease; }
         .glow-success { border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important; }
         #reader__scan_region video { width: 100% !important; object-fit: cover !important; }
         #reader__dashboard_section_csr button { background: #0ea5e9; color: white; border: none; padding: 5px 15px; border-radius: 4px; margin: 5px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }

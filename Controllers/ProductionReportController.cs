@@ -179,6 +179,114 @@ namespace VelastoProductionSystem.Controllers
             return NotFound();
         }
 
+        // AJAX API: Get Planning Items by Date & Shift
+        [HttpGet]
+        public async Task<IActionResult> GetPlanningItems(DateTime date, string shift)
+        {
+            // Gunakan culture Indonesia
+            var culture = new System.Globalization.CultureInfo("id-ID");
+            
+            // Ambil bagian tanggalnya saja "8 APRIL 2026" (tanpa nama hari agar lebih fleksibel)
+            var datePart = date.ToString("d MMMM yyyy", culture).ToUpper();
+            
+            // Konversi Shift agar mendukung format SHIFT I/II/III dan SHIFT 1/2/3
+            var shiftRaw = (shift ?? "").Trim().ToUpper();
+            if (shiftRaw.StartsWith("SHIFT "))
+            {
+                shiftRaw = shiftRaw.Substring(6).Trim();
+            }
+
+            string shiftVariant1 = shiftRaw;
+            string shiftVariant2 = shiftRaw;
+            if (shiftRaw == "I") shiftVariant1 = "1";
+            else if (shiftRaw == "II") shiftVariant1 = "2";
+            else if (shiftRaw == "III") shiftVariant1 = "3";
+            else if (shiftRaw == "1") shiftVariant1 = "I";
+            else if (shiftRaw == "2") shiftVariant1 = "II";
+            else if (shiftRaw == "3") shiftVariant1 = "III";
+
+            var shiftSearch1 = "SHIFT " + shiftRaw;
+            var shiftSearch2 = "SHIFT " + shiftVariant1;
+
+            // Ambil data yang mengandung tanggal tersebut dan shift tersebut
+            var itemRows = await _context.PlanningMasters
+                .Where(p => p.DateShiftString != null &&
+                            p.DateShiftString.ToUpper().Contains(datePart) &&
+                            (p.DateShiftString.ToUpper().Contains(shiftSearch1) || p.DateShiftString.ToUpper().Contains(shiftSearch2)))
+                .Select(p => new { p.PartName1, p.PartName2, p.DateShiftString })
+                .ToListAsync();
+
+            if (!itemRows.Any())
+            {
+                // Jika tidak ada data untuk shift yang dipilih, fallback ke semua shift pada tanggal yang sama
+                itemRows = await _context.PlanningMasters
+                    .Where(p => p.DateShiftString != null && p.DateShiftString.ToUpper().Contains(datePart))
+                    .Select(p => new { p.PartName1, p.PartName2, p.DateShiftString })
+                    .ToListAsync();
+            }
+
+            var items = itemRows
+                .Select(p => {
+                    var parsed = ParseDateShiftString(p.DateShiftString);
+                    return new {
+                        itemCode = p.PartName1,
+                        itemName = p.PartName2,
+                        dateShift = p.DateShiftString,
+                        date = parsed.date,
+                        shift = parsed.shift
+                    };
+                })
+                .Distinct()
+                .ToList();
+
+            return Json(items);
+        }
+
+        private static (string date, string shift) ParseDateShiftString(string? dateShiftString)
+        {
+            if (string.IsNullOrWhiteSpace(dateShiftString)) return (string.Empty, string.Empty);
+
+            var normalized = dateShiftString.ToUpper().Trim();
+            var parts = normalized.Split(new[] { " SHIFT " }, StringSplitOptions.None);
+            if (parts.Length != 2) return (string.Empty, string.Empty);
+
+            var dayString = parts[0];
+            var shiftString = parts[1].Trim();
+
+            // Hapus hari nama di depan, contoh: "RABU, 8 APRIL 2026" -> "8 APRIL 2026"
+            var commaIndex = dayString.IndexOf(',');
+            if (commaIndex >= 0 && commaIndex + 1 < dayString.Length)
+            {
+                dayString = dayString.Substring(commaIndex + 1).Trim();
+            }
+
+            var dateParts = dayString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (dateParts.Length < 3) return (string.Empty, string.Empty);
+
+            var day = dateParts[0].PadLeft(2, '0');
+            var month = dateParts[1];
+            var year = dateParts[2];
+
+            var monthMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "JANUARI", "01" }, { "FEBRUARI", "02" }, { "MARET", "03" }, { "APRIL", "04" },
+                { "MEI", "05" }, { "JUNI", "06" }, { "JULI", "07" }, { "AGUSTUS", "08" },
+                { "SEPTEMBER", "09" }, { "OKTOBER", "10" }, { "NOVEMBER", "11" }, { "DESEMBER", "12" }
+            };
+
+            if (!monthMap.TryGetValue(month, out var monthNumber))
+                monthNumber = "01";
+
+            var formattedDate = $"{year}-{monthNumber}-{day}";
+
+            string normalizedShift = shiftString;
+            if (normalizedShift == "1") normalizedShift = "I";
+            else if (normalizedShift == "2") normalizedShift = "II";
+            else if (normalizedShift == "3") normalizedShift = "III";
+
+            return (formattedDate, normalizedShift);
+        }
+
         // GET: ProductionReport/Details/5 (The Monitoring Dashboard - Gambar 2 & 5)
         public async Task<IActionResult> Details(int? id)
         {
