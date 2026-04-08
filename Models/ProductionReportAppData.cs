@@ -11,10 +11,10 @@ namespace VelastoProductionSystem.Models
         public string? VinCode { get; set; }
         public string? StandardLength { get; set; }
         public string? ActualLength { get; set; }
-        public int QtyTarget { get; set; }
-        public int QtyOk { get; set; }
-        public int NgDimension { get; set; }
-        public int NgVisual { get; set; }
+        public int? QtyTarget { get; set; }
+        public int? QtyOk { get; set; }
+        public int? NgDimension { get; set; }
+        public int? NgVisual { get; set; }
         public string? Remark { get; set; }
         public string? ByPass { get; set; }
         public string? Shift { get; set; }
@@ -26,18 +26,18 @@ namespace VelastoProductionSystem.Models
 
     public class DimensionReadingData
     {
-        public string PointName { get; set; } = "";
-        public string TimeSection { get; set; } = "";
-        public string Frequency { get; set; } = "";
-        public string StandardDimension { get; set; } = "";
-        public string Initial { get; set; } = "";
-        public string Reading1 { get; set; } = "";
-        public string Reading2 { get; set; } = "";
-        public string Reading3 { get; set; } = "";
-        public string Reading4 { get; set; } = "";
-        public string Reading5 { get; set; } = "";
-        public string Status { get; set; } = "OK";
-        public decimal ScaleValue { get; set; }
+        public string? PointName { get; set; }
+        public string? TimeSection { get; set; }
+        public string? Frequency { get; set; }
+        public string? StandardDimension { get; set; }
+        public string? Initial { get; set; }
+        public string? Reading1 { get; set; }
+        public string? Reading2 { get; set; }
+        public string? Reading3 { get; set; }
+        public string? Reading4 { get; set; }
+        public string? Reading5 { get; set; }
+        public string? Status { get; set; }
+        public decimal? ScaleValue { get; set; }
     }
 
     public class ExtruderProducePayload

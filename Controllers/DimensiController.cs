@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Models;
+using System.Text.Json;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -17,7 +18,6 @@ namespace VelastoProductionSystem.Controllers
         // GET: /Dimensi/Index
         public IActionResult Index()
         {
-            // Just return a blank report view
             var report = new DimensionReport
             {
                 DocumentNumber = "",
@@ -30,55 +30,42 @@ namespace VelastoProductionSystem.Controllers
 
         private string GetCurrentShift()
         {
-            // Trying to sync with ShiftMaster if available, otherwise using the 07:30/19:30 logic from Management UI
-            var shifts = _context.ShiftMasters.ToList();
-            var now = DateTime.Now.TimeOfDay;
-
-            if (shifts.Any())
+            try
             {
-                var sortedShifts = shifts
-                    .Select(s => {
-                        TimeSpan.TryParse(s.StartTime, out var ts);
-                        return new { Name = s.ShiftName, Start = ts };
-                    })
-                    .OrderBy(s => s.Start)
-                    .ToList();
-
-                for (int i = 0; i < sortedShifts.Count; i++)
+                var shifts = _context.ShiftMasters.ToList();
+                if (shifts == null || !shifts.Any()) 
                 {
-                    var current = sortedShifts[i];
-                    var next = (i + 1 < sortedShifts.Count) ? sortedShifts[i + 1] : sortedShifts[0];
+                    return DateTime.Now.Hour >= 7 && DateTime.Now.Hour < 19 ? "Shift 1" : "Shift 2";
+                }
 
-                    if (current.Start < next.Start)
-                    {
+                var now = DateTime.Now.TimeOfDay;
+
+                var shiftInfos = shifts.Select(s => {
+                    TimeSpan.TryParse(s.StartTime ?? "07:30", out var start);
+                    return new { Name = s.ShiftName ?? "Shift", Start = start };
+                }).OrderBy(s => s.Start).ToList();
+
+                for (int i = 0; i < shiftInfos.Count; i++)
+                {
+                    var current = shiftInfos[i];
+                    var next = (i + 1 < shiftInfos.Count) ? shiftInfos[i + 1] : shiftInfos[0];
+
+                    if (current.Start < next.Start) {
                         if (now >= current.Start && now < next.Start) return current.Name;
-                    }
-                    else // Over midnight case
-                    {
+                    } else {
                         if (now >= current.Start || now < next.Start) return current.Name;
                     }
                 }
+                return shiftInfos.FirstOrDefault()?.Name ?? "Shift 1";
             }
-
-            // Fallback to the 07:30/19:30 configuration shown in the image
-            var hour = DateTime.Now.Hour;
-            var minute = DateTime.Now.Minute;
-            var totalMinutes = (hour * 60) + minute;
-
-            // Shift 1 start 07:30 (450 mins)
-            // Shift 2 start 19:30 (1170 mins)
-            if (totalMinutes >= 450 && totalMinutes < 1170) return "Shift 1";
-            return "Shift 2";
+            catch { return "Shift 1"; }
         }
-
-
 
         [HttpGet]
         public async Task<JsonResult> GetSpsStandard(string hoseType)
         {
             if (string.IsNullOrEmpty(hoseType)) return Json(new { success = false, message = "Input empty" });
 
-            // Search across multiple identifier fields
             var standard = await _context.MasterlistSpsDoubleLayers
                 .FirstOrDefaultAsync(m => 
                     m.HoseType == hoseType || 
@@ -115,16 +102,14 @@ namespace VelastoProductionSystem.Controllers
                     }
                 });
             }
-            return Json(new { success = false, message = "Standard not found in SPS Masterlist: " + hoseType });
+            return Json(new { success = false, message = "Standard not found: " + hoseType });
         }
 
-        // GET: /Dimensi/App
         public IActionResult App()
         {
             return View(new DimensionReport { Measurements = new List<DimensionMeasurement>() });
         }
 
-        // GET: /Dimensi/History
         public async Task<IActionResult> History()
         {
             var reports = await _context.DimensionReports
@@ -133,43 +118,29 @@ namespace VelastoProductionSystem.Controllers
             return View(reports);
         }
 
-        // GET: /Dimensi/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
                 .FirstOrDefaultAsync(r => r.Id == id);
-
             if (report == null) return NotFound();
 
-            // Fetch from BOTH tables to ensure we find the standard
             ViewBag.Sps = await _context.StandardParameterSettings
-                .FirstOrDefaultAsync(s => s.ProductCode == report.HoseType || (report.HoseType != null && s.ProductCode != null && s.ProductCode.Contains(report.HoseType)));
-            
+                .FirstOrDefaultAsync(s => s.ProductCode == report.HoseType);
             ViewBag.Master = await _context.MasterlistSpsDoubleLayers
-                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType || m.ItemList == report.HoseType || (report.HoseType != null && m.ItemList != null && m.ItemList.Contains(report.HoseType)));
+                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType || m.ItemList == report.HoseType);
 
             return View(report);
         }
 
-        // GET: /Dimensi/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
                 .FirstOrDefaultAsync(r => r.Id == id);
-
             if (report == null) return NotFound();
-
             return View("Edit", report);
-        }
-
-        // GET: /Dimensi/Create
-        public IActionResult Create()
-        {
-            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -178,34 +149,46 @@ namespace VelastoProductionSystem.Controllers
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
                 .FirstOrDefaultAsync(r => r.Id == id);
-
-            if (report == null) return NotFound();
-
-            if (report.Measurements != null)
+            if (report != null)
             {
-                _context.DimensionMeasurements.RemoveRange(report.Measurements);
+                if (report.Measurements != null) _context.DimensionMeasurements.RemoveRange(report.Measurements);
+                _context.DimensionReports.Remove(report);
+                await _context.SaveChangesAsync();
             }
-
-            _context.DimensionReports.Remove(report);
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(History));
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveData([FromBody] DimensionReportAppData data)
+        public async Task<IActionResult> SaveData()
+        {
+            try {
+                using var reader = new StreamReader(Request.Body);
+                var body = await reader.ReadToEndAsync();
+                var data = JsonSerializer.Deserialize<DimensionReportAppData>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                
+                if (data == null) return Json(new { success = false, message = "JSON Error" });
+                
+                var result = await ProcessSaveInternal(data);
+                return Json(result);
+            } catch (Exception ex) {
+                return Json(new { success = false, message = "System Error: " + ex.Message });
+            }
+        }
+
+        private async Task<object> ProcessSaveInternal(DimensionReportAppData data)
         {
             try
             {
-                DimensionReport? report;
+                DimensionReport? report = null;
                 if (data.ReportId > 0)
                 {
                     report = await _context.DimensionReports
                         .Include(r => r.Measurements)
                         .FirstOrDefaultAsync(r => r.Id == data.ReportId);
                 }
-                else
+
+                if (report == null)
                 {
-                    // Create new report if it doesn't exist
                     report = new DimensionReport
                     {
                         DocumentNumber = "DIM-" + DateTime.Now.ToString("yyyyMMdd-HHmm"),
@@ -213,48 +196,43 @@ namespace VelastoProductionSystem.Controllers
                         Status = "ACTIVE",
                         CreatedDate = DateTime.Now,
                         CreatedBy = "QC Operator",
-                        Shift = data.Shift ?? GetCurrentShift()
+                        Shift = !string.IsNullOrEmpty(data.Shift) ? data.Shift : GetCurrentShift()
                     };
                     _context.DimensionReports.Add(report);
                     await _context.SaveChangesAsync();
                 }
 
-                if (report == null) return Json(new { success = false, message = "Report not found" });
-
-                // Update Report fields
                 report.HoseType = data.HoseType ?? "";
                 report.DimensionDisplay = data.DimensionDisplay ?? "";
                 report.VinCode = data.VinCode ?? "";
                 report.StandardLength = data.StandardLength ?? "";
                 report.ActualLength = data.ActualLength ?? "";
-                report.QtyTarget = data.QtyTarget;
-                report.QtyOk = data.QtyOk;
-                report.NgDimension = data.NgDimension;
-                report.NgVisual = data.NgVisual;
+                report.QtyTarget = data.QtyTarget ?? 0;
+                report.QtyOk = data.QtyOk ?? 0;
+                report.NgDimension = data.NgDimension ?? 0;
+                report.NgVisual = data.NgVisual ?? 0;
                 report.Remark = data.Remark ?? "";
                 report.ByPass = data.ByPass ?? "";
                 report.CustomerName = data.CustomerName ?? "-";
                 report.Yarn = data.Yarn ?? "";
-                report.Shift = data.Shift ?? report.Shift ?? GetCurrentShift();
+                report.Shift = !string.IsNullOrEmpty(data.Shift) ? data.Shift : (report.Shift ?? GetCurrentShift());
 
-                // Clear and Re-add measurements for simplicity
-                if (report.Measurements != null)
-                {
-                    _context.DimensionMeasurements.RemoveRange(report.Measurements);
-                }
+                var existing = _context.DimensionMeasurements.Where(m => m.DimensionReportId == report.Id).ToList();
+                if (existing.Any()) _context.DimensionMeasurements.RemoveRange(existing);
                 
                 if (data.DimensionReadings != null)
                 {
                     foreach (var mData in data.DimensionReadings)
                     {
+                        if (mData == null) continue;
                         var reading = new DimensionMeasurement
                         {
                             DimensionReportId = report.Id,
-                            PointName = mData.PointName,
+                            PointName = mData.PointName ?? "Point",
                             TimeSection = string.IsNullOrWhiteSpace(mData.TimeSection) ? DateTime.Now.ToString("HH:mm") : mData.TimeSection,
                             Frequency = string.IsNullOrWhiteSpace(mData.Frequency) ? "30m Sekali" : mData.Frequency,
-                            StandardDimension = mData.StandardDimension,
-                            Initial = mData.Initial,
+                            StandardDimension = mData.StandardDimension ?? "-",
+                            Initial = mData.Initial ?? "",
                             R1 = decimal.TryParse(mData.Reading1, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r1) ? r1 : null,
                             R2 = decimal.TryParse(mData.Reading2, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r2) ? r2 : null,
                             R3 = decimal.TryParse(mData.Reading3, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r3) ? r3 : null,
@@ -268,34 +246,39 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, reportId = report.Id });
+                return new { success = true, reportId = report.Id };
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return new { success = false, message = "Internal Error: " + ex.Message };
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> SubmitReport([FromBody] DimensionReportAppData data)
+        public async Task<IActionResult> SubmitReport()
         {
-            // First save the latest data
-            var saveResult = await SaveData(data);
-            if (saveResult is JsonResult { Value: { } } jr && (bool)((dynamic)jr.Value).success) {
-                // success
-            } else {
-                return saveResult;
-            }
+            try {
+                using var reader = new StreamReader(Request.Body);
+                var body = await reader.ReadToEndAsync();
+                var data = JsonSerializer.Deserialize<DimensionReportAppData>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                
+                if (data == null) return Json(new { success = false, message = "JSON Error" });
 
-            // Then finalize status
-            var report = await _context.DimensionReports.FindAsync(data.ReportId);
-            if (report != null)
-            {
-                report.Status = "COMPLETED";
-                await _context.SaveChangesAsync();
+                var saveResult = await ProcessSaveInternal(data);
+                if (saveResult is { } sr && (bool)((dynamic)sr).success) 
+                {
+                    var report = await _context.DimensionReports.FindAsync(data.ReportId);
+                    if (report != null)
+                    {
+                        report.Status = "COMPLETED";
+                        await _context.SaveChangesAsync();
+                    }
+                    return Json(new { success = true, redirectUrl = "/Dimensi/Index" });
+                }
+                return Json(saveResult);
+            } catch (Exception ex) {
+                return Json(new { success = false, message = "Submit Error: " + ex.Message });
             }
-
-            return Json(new { success = true, redirectUrl = "/Dimensi/Index" });
         }
     }
 }

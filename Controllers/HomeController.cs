@@ -113,20 +113,33 @@ namespace VelastoProductionSystem.Controllers
                 query = query.Where(r => r.RecordedTime >= cutoff);
             }
 
-            // Filter criteria by PointName
-            // Note: criteria in dashboard are "InnerThickness", "Diameter", etc.
-            // In PointName they might be "Inner Tube", "Outer Cover", "Tebal Total", "Spiral Pitch"
-            string pointNameFilter = criteria switch {
-                "InnerThickness" => "Inner Tube",
-                "TotalThickness" => "Tebal Total",
-                "Diameter" => "Inner Tube", // Seringkali diameter merefer ke inner tube
-                "SpiralPitch" => "Spiral Pitch",
-                "Thickness" => "Inner Tube",
-                _ => criteria
-            };
+            string pointNameFilter = criteria;
+
+            // Jika tidak ada produk yang dipilih (Semua Produk), 
+            // kita ambil semua data tanpa mempedulikan kriteria agar grafik tidak kosong
+            if (string.IsNullOrEmpty(productCode)) {
+                // Jangan filter PointName jika ingin melihat tren umum
+            } 
+            else {
+                // Jika produk dipilih, baru kita filter kriterianya secara spesifik
+                if (criteria == "InnerThickness" || criteria == "Thickness") {
+                    pointNameFilter = "Inner Tube";
+                    query = query.Where(r => r.PointName.Contains("Thickness") || r.PointName.Contains("Inner") || r.PointName.Contains("Tebal"));
+                } else if (criteria == "Diameter") {
+                    pointNameFilter = "Inner Tube";
+                    query = query.Where(r => r.PointName.Contains("Diameter") || r.PointName.Contains("Inner Tube"));
+                } else if (criteria == "TotalThickness") {
+                    pointNameFilter = "Tebal Total";
+                    query = query.Where(r => r.PointName.Contains("Total") || r.PointName.Contains("Outer") || r.PointName.Contains("Tebal"));
+                } else if (criteria == "SpiralPitch") {
+                    pointNameFilter = "Spiral Pitch";
+                    query = query.Where(r => r.PointName.Contains("Spiral") || r.PointName.Contains("Pitch"));
+                } else {
+                    query = query.Where(r => r.PointName.Contains(criteria));
+                }
+            }
 
             var readings = query
-                .Where(r => r.PointName.Contains(pointNameFilter) || r.PointName == criteria)
                 .OrderBy(r => r.RecordedTime)
                 .ToList();
 
@@ -208,20 +221,13 @@ namespace VelastoProductionSystem.Controllers
 
         public IActionResult GetSpcProducts()
         {
-            // Ambil dari DimensionReports yang sudah pernah diinput
+            // Hanya ambil produk yang benar-benar sudah ada datanya di laporan dimensi
             var products = _context.DimensionReports
                 .Where(p => !string.IsNullOrEmpty(p.HoseType))
-                .Select(p => new { value = p.HoseType, text = p.HoseType + " (Data Masuk)" })
+                .Select(p => new { value = p.HoseType, text = p.HoseType })
                 .Distinct()
+                .OrderBy(p => p.text)
                 .ToList();
-
-            // Gabungkan dengan PartMaster jika list di atas kosong
-            if (!products.Any()) {
-                products = _context.PartMasters
-                    .Select(p => new { value = p.PartCode, text = p.PartCode + " - " + p.Description })
-                    .Distinct()
-                    .ToList();
-            }
 
             return Json(products);
         }

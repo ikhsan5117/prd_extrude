@@ -613,9 +613,9 @@ namespace VelastoProductionSystem.Controllers
                 // Update common dimension readings & production info
                 report.VinCode = data.VinCode;
                 report.ActualLength = data.ActualLength;
-                report.QtyOk = data.QtyOk;
-                report.NgDimension = data.NgDimension;
-                report.NgVisual = data.NgVisual;
+                report.QtyOk = data.QtyOk ?? 0;
+                report.NgDimension = data.NgDimension ?? 0;
+                report.NgVisual = data.NgVisual ?? 0;
                 report.Remark = data.Remark ?? "";
 
                 await _context.SaveChangesAsync();
@@ -637,9 +637,9 @@ namespace VelastoProductionSystem.Controllers
 
                 // Update all data
                 report.ActualLength = data.ActualLength;
-                report.QtyOk = data.QtyOk;
-                report.NgDimension = data.NgDimension;
-                report.NgVisual = data.NgVisual;
+                report.QtyOk = data.QtyOk ?? 0;
+                report.NgDimension = data.NgDimension ?? 0;
+                report.NgVisual = data.NgVisual ?? 0;
                 report.Remark = data.Remark ?? "";
                 
                 // Update status

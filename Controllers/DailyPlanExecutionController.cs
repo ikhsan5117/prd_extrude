@@ -67,13 +67,13 @@ namespace VelastoProductionSystem.Controllers
             // Kita cari yang mengandung Bulan, Tahun, dan Shift. 
             // Dan salah satu format hari (8 atau 08)
             var matches = await _context.PlanningMasters
-                .Where(x => x.MachineName.ToLower() == m.ToLower() &&
+                .Where(x => x.MachineName != null && m != null && x.MachineName.ToLower() == m.ToLower() &&
                             !string.IsNullOrEmpty(x.DateShiftString))
                 .ToListAsync();
 
             // Filter manual di memory agar lebih fleksibel (atau gunakan multiple contains di EF)
             var filtered = matches.Where(x => {
-                var val = x.DateShiftString.ToUpper();
+                var val = x.DateShiftString?.ToUpper() ?? "";
                 bool hasDate = (val.Contains(day1 + " " + month) || val.Contains(day2 + " " + month)) && val.Contains(year);
                 bool hasShift = val.Contains("SHIFT " + cleanShift) || val.Contains("SHIFT " + cleanShift.PadLeft(2, '0'));
                 return hasDate && hasShift;
