@@ -582,8 +582,49 @@
                 </style>
             </div>
 
-            <!-- SECTION: SMART PARAMETER CARDS (ULTRA-CLEAR HUD TILED MODE) -->
-            <div class="row g-4 mb-5">
+            <!-- SECTION: DYNAMIC PRODUCTION READINGS TABS (CENTERED) -->
+            <div class="d-flex flex-column align-items-center mb-5 mt-2">
+                <div class="text-info-glow opacity-40 super-small fw-black tracking-widest mb-3" style="font-size: 0.6rem;">DYNAMIC MEASUREMENT CONTROL</div>
+                <div class="d-flex align-items-center gap-4">
+                    <div id="readingsTabs" class="d-flex gap-2">
+                        <!-- P-1, P-2, etc. will be injected here -->
+                    </div>
+                    <div class="add-check-trigger d-flex align-items-center gap-2 cursor-pointer no-select" onclick="addReadingPoint()">
+                        <i class="bi bi-plus fs-2 text-white"></i>
+                        <span class="text-white fw-900 tracking-widest" style="font-size: 1.1rem;">ADD CHECK</span>
+                    </div>
+                </div>
+                <div class="mt-3 font-monospace super-small opacity-50 text-uppercase tracking-widest no-print d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle fs-6"></i> <span>SELECT RECORD TO VIEW/EDIT PARAMETERS</span>
+                </div>
+            </div>
+
+            <style>
+                .no-select { user-select: none; }
+                .add-check-trigger { opacity: 0.7; transition: all 0.2s; }
+                .add-check-trigger:hover { opacity: 1; transform: scale(1.05); }
+                .active-tab { 
+                    background: #0ea5e9 !important; 
+                    color: white !important; 
+                    box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4) !important; 
+                    border-color: white !important;
+                }
+                .reading-tab {
+                    min-width: 90px;
+                    text-align: center;
+                    font-weight: 900;
+                    letter-spacing: 1px;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 6px;
+                }
+                .reading-tab:hover { border-color: rgba(14, 165, 233, 0.5); }
+            </style>
+
+            <!-- SECTION: SMART PARAMETER CARDS (ACTIVE RECORD VIEW) -->
+            <div class="row g-4 mb-5" id="parameterCardsContainer">
                 @{
                     var monSections = new[] {
                         new { 
@@ -605,63 +646,39 @@
                     };
                 }
 
-                @foreach (var monSection in monSections) {
+                @foreach (var mSec in monSections) {
                     <div class="col-12 col-xxl-6">
                         <div class="hud-card h-100 shadow-hud mb-1 overflow-hidden" style="border: 1px solid rgba(255,255,255,0.08); background: rgba(10,15,25,0.4);">
-                            <div class="hud-card-header d-flex justify-content-between align-items-center py-3 px-4" style="cursor: pointer; background: rgba(255,255,255,0.03)" data-bs-toggle="collapse" data-bs-target="#body_@monSection.ID">
+                            <div class="hud-card-header d-flex justify-content-between align-items-center py-3 px-4" style="background: rgba(255,255,255,0.03)">
                                 <div class="d-flex align-items-center gap-3">
-                                    <i class="bi @monSection.Icon fs-4" style="color: @monSection.Color"></i>
-                                    <span class="hud-card-title tracking-widest text-white fw-900" style="font-size: 1rem">@monSection.Title</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-3 no-print">
-                                    <button type="button" class="btn btn-sm btn-outline-info p-1 px-4 super-small fw-bold" style="border-radius: 20px" onclick="event.stopPropagation(); toggleAllDetails('@monSection.ID')">TRIAL MODE</button>
-                                    <i class="bi bi-chevron-down opacity-50"></i>
+                                    <i class="bi @mSec.Icon fs-4" style="color: @mSec.Color"></i>
+                                    <span class="hud-card-title tracking-widest text-white fw-900" style="font-size: 1rem">@mSec.Title</span>
                                 </div>
                             </div>
                             
-                            <div class="p-3 collapse show" id="body_@monSection.ID">
+                            <div class="p-3">
                                 <div class="row g-3">
-                                    @for (int r = 0; r < monSection.Rows.GetLength(0); r++) {
-                                        var label = monSection.Rows[r, 0];
-                                        var unit = monSection.Rows[r, 1];
-                                        var key = monSection.Rows[r, 2];
+                                    @for (int r = 0; r < mSec.Rows.GetLength(0); r++) {
+                                        var key = mSec.Rows[r, 2];
                                         
                                         <div class="col-6">
                                             <div class="param-row-hud rounded-3 p-3 text-center h-100 d-flex flex-column justify-content-between shadow-sm">
-                                                <!-- TOP: LABEL & ICON -->
                                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <span class="text-white opacity-40 super-small fw-bold tracking-widest">@label.ToUpper()</span>
-                                                    <button type="button" class="btn-detail-toggle p-0" onclick="toggleSingleDetail('@key')">
-                                                        <i class="bi bi-info-circle opacity-25" id="icon_@key"></i>
-                                                    </button>
+                                                    <span class="text-white opacity-40 super-small fw-bold tracking-widest">@(mSec.Rows[r, 0].ToUpper())</span>
+                                                    <span class="super-small text-info-glow fw-bold">@mSec.Rows[r, 1]</span>
                                                 </div>
                                                 
-                                                <!-- MID: STANDARD (CENTER & LARGE) -->
-                                                <div class="std-zone py-2">
-                                                    <div class="super-small text-info opacity-40 mb-0">STANDARD (@unit)</div>
-                                                    <div class="font-monospace fw-black text-info-glow" id="spec_@key" style="font-size: 1.25rem; letter-spacing: 1px;">--</div>
+                                                <div class="std-zone py-1">
+                                                    <div class="font-monospace fw-black text-info-glow" id="spec_@key" style="font-size: 0.9rem; letter-spacing: 1px; opacity: 0.6;">--</div>
                                                 </div>
                                                 
-                                                <!-- BTM: INPUT (LARGE) -->
                                                 <div class="input-zone mt-2">
-                                                    <input name="Init@(key)" 
+                                                    <input id="input_@key"
+                                                           onchange="updateReadingData('@key', this.value)"
+                                                           oninput="validateParam(this, 'spec_@key')"
                                                            class="hud-input-underlined text-center fw-black font-monospace w-100" 
                                                            placeholder="0.00" 
-                                                           style="font-size: 1.6rem; height: 60px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2)"
-                                                           oninput="validateParam(this, 'spec_@key')"
-                                                           onchange="validateParam(this, 'spec_@key')" />
-                                                </div>
-
-                                                <!-- TRIAL DETAILS (IN TILE) -->
-                                                <div class="detail-drawer d-none bg-black bg-opacity-80 p-2 mt-3 rounded-3 border border-white border-opacity-10" id="detail_@key">
-                                                    <div class="row g-2">
-                                                        @for(int h=1; h<=7; h++) {
-                                                            <div class="col-4">
-                                                                <div class="super-small opacity-50 font-monospace" style="font-size: 0.6rem">HR @h</div>
-                                                                <input name="C@(h)_@key" class="hud-input-underlined text-center super-small py-1 w-100" placeholder="-" oninput="validateParam(this, 'spec_@key')" />
-                                                            </div>
-                                                        }
-                                                    </div>
+                                                           style="font-size: 1.6rem; height: 60px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2)" />
                                                 </div>
                                             </div>
                                         </div>
@@ -806,7 +823,7 @@
                                 <button type="button" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold small d-flex align-items-center justify-content-center gap-2" style="border-width: 1px;" onclick="location.reload()">
                                     <i class="bi bi-trash3-fill"></i> RESET
                                 </button>
-                                <button type="submit" class="btn btn-hud-primary flex-grow-3 py-3 fw-900 tracking-widest shadow-glow-primary border-0 rounded-1 d-flex align-items-center justify-content-center gap-2" style="font-size: 1.1rem;">
+                                <button type="button" class="btn btn-hud-primary flex-grow-3 py-3 fw-900 tracking-widest shadow-glow-primary border-0 rounded-1 d-flex align-items-center justify-content-center gap-2" style="font-size: 1.1rem;" onclick="submitReportWithReadings()">
                                     <i class="bi bi-cloud-arrow-up-fill fs-5"></i> SAVE REPORT
                                 </button>
                              </div>
@@ -1148,7 +1165,150 @@
             buttons.forEach(b => isOpening ? b.classList.add('active') : b.classList.remove('active'));
         }
 
-        // --- PLANNING SEARCH & REFRESH LOGIC ---
+        // --- DYNAMIC READINGS MANAGEMENT (MODERNIZED) ---
+        let currentReadingIndex = 0;
+        let pReadings = [
+            { id: 0, label: 'P-1', time: new Date().getHours().toString().padStart(2, '0') + ':' + new Date().getMinutes().toString().padStart(2, '0'), data: {} }
+        ];
+
+        function addReadingPoint() {
+            saveCurrentInputsToMemory();
+
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const nextId = pReadings.length;
+            
+            pReadings.push({
+                id: nextId,
+                label: `P-${nextId + 1}`,
+                time: timeStr,
+                data: {}
+            });
+            
+            switchReadingTab(nextId);
+        }
+
+        function switchReadingTab(index) {
+            saveCurrentInputsToMemory();
+            currentReadingIndex = index;
+            renderTabs();
+            loadCurrentDataFromMemory();
+        }
+
+        function saveCurrentInputsToMemory() {
+            if (currentReadingIndex === -1) return;
+            const activeData = pReadings[currentReadingIndex].data;
+            const inputElements = document.querySelectorAll('#parameterCardsContainer input[id^="input_"]');
+            inputElements.forEach(inp => {
+                const key = inp.id.replace('input_', '');
+                activeData[key] = inp.value;
+            });
+        }
+
+        function loadCurrentDataFromMemory() {
+            if (currentReadingIndex === -1) return;
+            const activeData = pReadings[currentReadingIndex].data;
+            const inputElements = document.querySelectorAll('#parameterCardsContainer input[id^="input_"]');
+            inputElements.forEach(inp => {
+                const key = inp.id.replace('input_', '');
+                inp.value = activeData[key] || '';
+                validateParam(inp, 'spec_' + key);
+            });
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('readingsTabs');
+            if(!container) return;
+            container.innerHTML = pReadings.map((p, idx) => `
+                <div class="btn btn-hud-outline reading-tab py-1 px-3 d-flex flex-column align-items-center rounded ${idx === currentReadingIndex ? 'active-tab' : ''}" onclick="switchReadingTab(${idx})">
+                    <span style="font-size: 0.6rem; opacity: 0.6;">${p.label}</span>
+                    <span class="small fw-bold">${p.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateReadingData(key, value) {
+            if (pReadings[currentReadingIndex]) {
+                pReadings[currentReadingIndex].data[key] = value;
+            }
+        }
+
+        async function submitReportWithReadings() {
+            saveCurrentInputsToMemory();
+
+            const confirm = await Swal.fire({
+                title: 'SAVE PRODUCTION REPORT?',
+                text: `Transmiting ${pReadings.length} measurement records to the mainframe.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0ea5e9',
+                confirmButtonText: 'YES, TRANSMIT',
+                background: '#020617',
+                color: '#fff'
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            Swal.fire({ title: 'UPLOADING DATASET...', didOpen: () => Swal.showLoading(), background: '#020617', color: '#0ea5e9' });
+
+            const payload = {
+                DocumentNumber: document.getElementById('DocNo').value,
+                RevisionNumber: parseInt(document.getElementById('RevNo').value) || 0,
+                ProductionDate: document.getElementById('ProductionDate').value,
+                Shift: document.getElementById('Shift').value,
+                CustomerName: document.getElementById('CustomerName').value,
+                HoseType: document.getElementById('HoseType').value,
+                
+                InnerMaterial: document.getElementById('InnerMaterial').value,
+                InnerMaterialActual: document.getElementById('InnerMaterialActual').value,
+                InnerMaterialLotNo: document.getElementById('InnerMaterialLotNo').value,
+                
+                OuterMaterial: document.getElementById('OuterMaterial').value,
+                OuterMaterialActual: document.getElementById('OuterMaterialActual').value,
+                OuterMaterialLotNo: document.getElementById('OuterMaterialLotNo').value,
+                
+                Yarn: document.getElementById('Yarn').value,
+                YarnActual: document.getElementById('YarnActual').value,
+                YarnLotNo: document.getElementById('YarnLotNo').value,
+
+                DAI_Awal: document.getElementById('DAI_Awal').value,
+                DAI_Akhir: document.getElementById('DAI_Akhir').value,
+                DAC_Awal: document.getElementById('DAC_Awal').value,
+                DAC_Akhir: document.getElementById('DAC_Akhir').value,
+                DRAI_Awal: document.getElementById('DRAI_Awal').value,
+                DRAI_Akhir: document.getElementById('DRAI_Akhir').value,
+                DRAC_Awal: document.getElementById('DRAC_Awal').value,
+                DRAC_Akhir: document.getElementById('DRAC_Akhir').value,
+
+                CreatedBy: document.getElementById('CreatedBy').value,
+                
+                Readings: pReadings.map(p => ({
+                    ReadingTime: new Date().toISOString(),
+                    RecordedBy: document.getElementById('CreatedBy').value || 'Operator',
+                    ...p.data
+                }))
+            };
+
+            try {
+                const res = await fetch('/ProductionReport/SaveWithReadings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire('UPLOAD COMPLETE', 'Report archived successfully in the digital vault.', 'success')
+                        .then(() => window.location.href = '/ProductionReport/Index');
+                } else {
+                    Swal.fire('TRANSMISSION ERROR', result.message || 'The server rejected the dataset.', 'error');
+                }
+            } catch (e) {
+                Swal.fire('SYSTEM CRITICAL', e.message, 'error');
+            }
+        }
+
+        // --- PLANNING SEARCH & REFRESH LOGIC (RESTORED) ---
         let planningItemsCache = [];
         let planningResultItems = [];
         let planningResultIndex = -1;
@@ -1167,8 +1327,6 @@
             try {
                 const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shift)}`);
                 planningItemsCache = await res.json();
-                planningResultItems = [];
-                planningResultIndex = -1;
                 
                 searchInput.disabled = false;
                 if (planningItemsCache.length > 0) {
@@ -1179,7 +1337,6 @@
                 searchInput.value = "";
                 planningResultItems = planningItemsCache;
                 planningResultIndex = -1;
-                document.getElementById('planningResults').classList.add('d-none');
             } catch (e) {
                 console.error("Failed to fetch planning items:", e);
                 searchInput.placeholder = "ERROR LOADING DATA";
@@ -1217,7 +1374,6 @@
                     <div class="d-flex flex-column gap-1">
                         <span class="text-success fw-bold font-monospace">[${item.itemCode}]</span>
                         <span class="text-white small opacity-75">${item.itemName}</span>
-                        ${item.dateShift ? `<span class="text-white-50 xsmall">${item.dateShift}</span>` : ''}
                     </div>
                 `;
                 div.onclick = () => selectPlanningItem(item);
@@ -1226,95 +1382,107 @@
             });
 
             container.classList.remove('d-none');
-            planningResultIndex = -1;
-
-            if (showAll && items.length > 0) {
-                const firstOption = container.querySelector('.planning-result-item');
-                if (firstOption) {
-                    firstOption.classList.add('planning-result-highlight');
-                    planningResultIndex = 0;
-                }
-            }
         }
 
         function highlightPlanningResult(index) {
             const container = document.getElementById('planningResults');
             const options = Array.from(container.querySelectorAll('.planning-result-item'));
             if (!options.length) return;
-
             options.forEach(opt => opt.classList.remove('planning-result-highlight'));
             const target = options[index];
-            if (!target) return;
-
-            target.classList.add('planning-result-highlight');
-            planningResultIndex = index;
-            target.scrollIntoView({ block: 'nearest' });
-        }
-
-        function movePlanningSelection(direction) {
-            if (!planningResultItems.length) return;
-
-            planningResultIndex += direction;
-            if (planningResultIndex < 0) planningResultIndex = 0;
-            if (planningResultIndex >= planningResultItems.length) planningResultIndex = planningResultItems.length - 1;
-            highlightPlanningResult(planningResultIndex);
-        }
-
-        function selectHighlightedPlanningItem() {
-            if (planningResultIndex < 0 || planningResultIndex >= planningResultItems.length) return;
-            selectPlanningItem(planningResultItems[planningResultIndex]);
+            if (target) {
+                target.classList.add('planning-result-highlight');
+                planningResultIndex = index;
+                target.scrollIntoView({ block: 'nearest' });
+            }
         }
 
         function selectPlanningItem(item) {
             document.getElementById('planningSearch').value = `[${item.itemCode}] ${item.itemName}`;
             document.getElementById('planningResults').classList.add('d-none');
-            if (item.date) {
-                setPlanningDateAndShift(item.date, item.shift);
-            }
             fetchSpsByItem(item.itemCode);
         }
 
-        function setPlanningDateAndShift(dateValue, shiftValue) {
-            const dateInput = document.getElementById('ProductionDate');
-            const shiftInput = document.getElementById('Shift');
-            if (dateInput && dateValue) dateInput.value = dateValue;
-            if (shiftInput && shiftValue) shiftInput.value = shiftValue;
-        }
-
-        function showPlanningResults() {
-            const val = document.getElementById('planningSearch').value;
-            if (planningItemsCache.length > 0) {
-                filterPlanningResults(val.includes(']') ? "" : val);
+        // --- SPS SYNC LOGIC (RESTORED) ---
+        async function fetchSpsByItem(code) {
+            try {
+                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
+                if (!res.ok) throw new Error('PROTOCOL NOT FOUND');
+                const data = await res.json();
+                applySpsToForm(data);
+            } catch (e) {
+                console.error(e);
             }
         }
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#planningSearch') && !e.target.closest('#planningResults')) {
-                document.getElementById('planningResults').classList.add('d-none');
+        function applySpsToForm(sps) {
+            document.getElementById('DocNo').value = sps.documentNumber || '---';
+            document.getElementById('RevNo').value = sps.revisionNumber || '0';
+            document.getElementById('HoseType').value = sps.hoseType || '';
+            document.getElementById('CustomerName').value = sps.customerName || '';
+            document.getElementById('InnerMaterial').value = sps.innerMaterial || '';
+            document.getElementById('OuterMaterial').value = sps.outerMaterial || '';
+            document.getElementById('Yarn').value = sps.yarnType || '';
+
+            const formatVal = (val, prefix = '', suffix = '') => {
+                if (val === undefined || val === null || val === '') return '---';
+                return `${prefix}${val}${suffix}`;
+            };
+
+            const specMappings = {
+                'HeadTempInner': formatVal(sps.headTempInner, '', ' ± 5'),
+                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner, '', ' ± 5'),
+                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner, '', ' ± 5'),
+                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner, '', ' ± 5'),
+                'ScrewTempInner': formatVal(sps.screwTempInner, '', ' ± 5'),
+                'ScrewSpeedInner': formatVal(sps.screwSpeedInner, '', ' ± 2'),
+                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner, 'Max '),
+                'PressureInner': formatVal(sps.pressureInner, 'Max '),
+                'HeadTempOuter': formatVal(sps.headTempOuter, '', ' ± 5'),
+                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter, '', ' ± 5'),
+                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter, '', ' ± 5'),
+                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter, '', ' ± 5'),
+                'ScrewTempOuter': formatVal(sps.screwTempOuter, '', ' ± 5'),
+                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter, '', ' ± 2'),
+                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter, 'Max '),
+                'PressureOuter': formatVal(sps.pressureOuter, 'Max '),
+                'SpiralSpeed': formatVal(sps.spiralSpeed, '', ' ± 20'),
+                'SpiralPitchSetting': formatVal(sps.spiralPitch, '', ' ± 5'),
+                'SpiralPitchDisplay': formatVal(sps.spiralPitchDisplay, '', ' ± 5'),
+                'PresetValue': formatVal(sps.presetValve, '', ' ± 0.5'),
+                'ControlValue': formatVal(sps.controlValue),
+                'HoseSpeed': formatVal(sps.hoseSpeed),
+                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed),
+                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed),
+                'ConveyorRatio': formatVal(sps.conveyorRatio),
+                'UnsmoothSurface': formatVal(sps.unsmoothSurface),
+                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp),
+                'CaterpillarGap': formatVal(sps.caterpillarGap),
+                'NippleDie': formatVal(sps.innerDie, '', ' ± 0.1'),
+                'TubeDie': formatVal(sps.tubeDie, '', ' ± 0.1'),
+                'MiddleDie': formatVal(sps.middleDie, '', ' ± 0.1'),
+                'CoverDie': formatVal(sps.coverDie, '', ' ± 0.1'),
+                'SpacerDie': formatVal(sps.spacerDie, '', ' ± 0.1'),
+                'ToleranceDie': formatVal(sps.toleranceDie, '', ' ± 0.1')
+            };
+
+            for (const [key, val] of Object.entries(specMappings)) {
+                const el = document.getElementById('spec_' + key);
+                if (el) {
+                    el.innerText = val;
+                    el.classList.add('blink-once');
+                }
             }
-        });
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('planningSearch');
+            renderTabs();
             refreshPlanningItems();
-
+            
+            const searchInput = document.getElementById('planningSearch');
             if (searchInput) {
-                searchInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        movePlanningSelection(1);
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        movePlanningSelection(-1);
-                    } else if (e.key === 'Enter') {
-                        if (planningResultIndex >= 0 && planningResultItems.length) {
-                            e.preventDefault();
-                            selectHighlightedPlanningItem();
-                        }
-                    } else if (e.key === 'Escape') {
-                        document.getElementById('planningResults').classList.add('d-none');
-                    }
-                });
+                searchInput.addEventListener('input', (e) => filterPlanningResults(e.target.value));
+                searchInput.addEventListener('focus', () => document.getElementById('planningResults').classList.remove('d-none'));
             }
         });
     </script>

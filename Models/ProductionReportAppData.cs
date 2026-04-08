@@ -60,4 +60,67 @@ namespace VelastoProductionSystem.Models
         public DateTime? ProductionStart { get; set; }
         public bool SPVCheck { get; set; }
     }
+
+    public class ProductionReportSaveDto
+    {
+        public string? DocumentNumber { get; set; }
+        public int RevisionNumber { get; set; }
+        public string? ProductionDate { get; set; }
+        public string? Shift { get; set; }
+        public string? CustomerName { get; set; }
+        public string? HoseType { get; set; }
+        public string? InnerMaterial { get; set; }
+        public string? InnerMaterialActual { get; set; }
+        public string? InnerMaterialLotNo { get; set; }
+        public string? OuterMaterial { get; set; }
+        public string? OuterMaterialActual { get; set; }
+        public string? OuterMaterialLotNo { get; set; }
+        public string? Yarn { get; set; }
+        public string? YarnActual { get; set; }
+        public string? YarnLotNo { get; set; }
+        public string? DAI_Awal { get; set; }
+        public string? DAI_Akhir { get; set; }
+        public string? DAC_Awal { get; set; }
+        public string? DAC_Akhir { get; set; }
+        public string? DRAI_Awal { get; set; }
+        public string? DRAI_Akhir { get; set; }
+        public string? DRAC_Awal { get; set; }
+        public string? DRAC_Akhir { get; set; }
+        public string? CreatedBy { get; set; }
+        public List<ProductionReadingSaveDto> Readings { get; set; } = new List<ProductionReadingSaveDto>();
+    }
+
+    public class ProductionReadingSaveDto
+    {
+        public string? ReadingTime { get; set; }
+        public string? RecordedBy { get; set; }
+        public string? HeadTempInner { get; set; }
+        public string? Cylinder1TempInner { get; set; }
+        public string? Cylinder2TempInner { get; set; }
+        public string? Cylinder3TempInner { get; set; }
+        public string? ScrewTempInner { get; set; }
+        public string? ScrewSpeedInner { get; set; }
+        public string? FeedRollRatioInner { get; set; }
+        public string? PressureInner { get; set; }
+        public string? HeadTempOuter { get; set; }
+        public string? Cylinder1TempOuter { get; set; }
+        public string? Cylinder2TempOuter { get; set; }
+        public string? Cylinder3TempOuter { get; set; }
+        public string? ScrewTempOuter { get; set; }
+        public string? ScrewSpeedOuter { get; set; }
+        public string? FeedRollRatioOuter { get; set; }
+        public string? PressureOuter { get; set; }
+        public string? SpiralSpeed { get; set; }
+        public string? SpiralPitchSetting { get; set; }
+        public string? SpiralPitchDisplay { get; set; }
+        public string? PresetValue { get; set; }
+        public string? ControlValue { get; set; }
+        public string? HoseSpeed { get; set; }
+        public string? TakeupConveyorSpeed { get; set; }
+        public string? CoolConveyorSpeed { get; set; }
+        public string? ConveyorRatio { get; set; }
+        public string? UnsmoothSurface { get; set; }
+        public string? ChillerWaterTemp { get; set; }
+        public string? CaterpillarGap { get; set; }
+    }
 }

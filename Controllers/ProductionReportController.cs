@@ -288,6 +288,109 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: ProductionReport/Details/5 (The Monitoring Dashboard - Gambar 2 & 5)
+        [HttpPost]
+        public async Task<IActionResult> SaveWithReadings([FromBody] ProductionReportSaveDto dto)
+        {
+            if (dto == null) return Json(new { success = false, message = "Invalid data payload" });
+
+            try
+            {
+                var report = new ProductionReport
+                {
+                    DocumentNumber = dto.DocumentNumber ?? "AUTO",
+                    RevisionNumber = dto.RevisionNumber,
+                    ProductionDate = DateTime.TryParse(dto.ProductionDate, out var dt) ? dt : DateTime.Now,
+                    Shift = dto.Shift,
+                    CustomerName = dto.CustomerName,
+                    HoseType = dto.HoseType,
+                    InnerMaterial = dto.InnerMaterial,
+                    InnerMaterialActual = dto.InnerMaterialActual,
+                    InnerMaterialLotNo = dto.InnerMaterialLotNo,
+                    OuterMaterial = dto.OuterMaterial,
+                    OuterMaterialActual = dto.OuterMaterialActual,
+                    OuterMaterialLotNo = dto.OuterMaterialLotNo,
+                    Yarn = dto.Yarn,
+                    YarnActual = dto.YarnActual,
+                    YarnLotNo = dto.YarnLotNo,
+                    DAI_Awal = dto.DAI_Awal,
+                    DAI_Akhir = dto.DAI_Akhir,
+                    DAC_Awal = dto.DAC_Awal,
+                    DAC_Akhir = dto.DAC_Akhir,
+                    DRAI_Awal = dto.DRAI_Awal,
+                    DRAI_Akhir = dto.DRAI_Akhir,
+                    DRAC_Awal = dto.DRAC_Awal,
+                    DRAC_Akhir = dto.DRAC_Akhir,
+                    CreatedBy = dto.CreatedBy ?? "Operator",
+                    CreatedDate = DateTime.Now,
+                    Status = "COMPLETED"
+                };
+
+                _context.ProductionReports.Add(report);
+                await _context.SaveChangesAsync(); // Save to get the ID
+
+                // Process Readings
+                if (dto.Readings != null && dto.Readings.Count > 0)
+                {
+                    foreach (var r in dto.Readings)
+                    {
+                        var reading = new ProductionReading
+                        {
+                            ProductionReportId = report.Id,
+                            ReadingTime = DateTime.TryParse(r.ReadingTime, out var rt) ? rt : DateTime.Now,
+                            RecordedBy = r.RecordedBy ?? report.CreatedBy,
+                            
+                            HeadTempInner = int.TryParse(r.HeadTempInner, out var hti) ? hti : (int?)null,
+                            Cylinder1TempInner = int.TryParse(r.Cylinder1TempInner, out var c1i) ? c1i : (int?)null,
+                            Cylinder2TempInner = int.TryParse(r.Cylinder2TempInner, out var c2i) ? c2i : (int?)null,
+                            Cylinder3TempInner = int.TryParse(r.Cylinder3TempInner, out var c3i) ? c3i : (int?)null,
+                            ScrewTempInner = int.TryParse(r.ScrewTempInner, out var sti) ? sti : (int?)null,
+                            ScrewSpeedInner = ParseDecimal(r.ScrewSpeedInner),
+                            FeedRollRatioInner = int.TryParse(r.FeedRollRatioInner, out var fri) ? fri : (int?)null,
+                            PressureInner = ParseDecimal(r.PressureInner),
+
+                            HeadTempOuter = int.TryParse(r.HeadTempOuter, out var hto) ? hto : (int?)null,
+                            Cylinder1TempOuter = int.TryParse(r.Cylinder1TempOuter, out var c1o) ? c1o : (int?)null,
+                            Cylinder2TempOuter = int.TryParse(r.Cylinder2TempOuter, out var c2o) ? c2o : (int?)null,
+                            Cylinder3TempOuter = int.TryParse(r.Cylinder3TempOuter, out var c3o) ? c3o : (int?)null,
+                            ScrewTempOuter = int.TryParse(r.ScrewTempOuter, out var sto) ? sto : (int?)null,
+                            ScrewSpeedOuter = ParseDecimal(r.ScrewSpeedOuter),
+                            FeedRollRatioOuter = int.TryParse(r.FeedRollRatioOuter, out var fro) ? fro : (int?)null,
+                            PressureOuter = ParseDecimal(r.PressureOuter),
+
+                            SpiralSpeed = ParseDecimal(r.SpiralSpeed),
+                            SpiralPitchSetting = ParseDecimal(r.SpiralPitchSetting),
+                            SpiralPitchDisplay = ParseDecimal(r.SpiralPitchDisplay),
+                            PresetValue = ParseDecimal(r.PresetValue),
+                            ControlValue = ParseDecimal(r.ControlValue),
+                            HoseSpeed = ParseDecimal(r.HoseSpeed),
+                            TakeupConveyorSpeed = ParseDecimal(r.TakeupConveyorSpeed),
+                            CoolConveyorSpeed = ParseDecimal(r.CoolConveyorSpeed),
+                            ConveyorRatio = r.ConveyorRatio,
+                            UnsmoothSurface = ParseDecimal(r.UnsmoothSurface),
+                            ChillerWaterTemp = ParseDecimal(r.ChillerWaterTemp),
+                            CaterpillarGap = ParseDecimal(r.CaterpillarGap)
+                        };
+
+                        _context.ProductionReadings.Add(reading);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                return Json(new { success = true, id = report.Id });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        private decimal? ParseDecimal(string? val)
+        {
+            if (string.IsNullOrEmpty(val)) return null;
+            if (decimal.TryParse(val.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var res)) return res;
+            return null;
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
