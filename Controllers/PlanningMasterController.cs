@@ -113,62 +113,109 @@ namespace VelastoProductionSystem.Controllers
             }
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(DateTime? filterDate, string? query)
         {
-            // Auto-repair missing table just in case EF Migrations failed to create it
-            await _context.Database.ExecuteSqlRawAsync(@"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND type in (N'U'))
-            BEGIN
-            CREATE TABLE [dbo].[PlanningMasters](
-                [Id] [int] IDENTITY(1,1) NOT NULL,
-                [MachineName] [nvarchar](max) NULL,
-                [DateShiftString] [nvarchar](max) NULL,
-                [PartName1] [nvarchar](max) NULL,
-                [PartName2] [nvarchar](max) NULL,
-                [Compound] [nvarchar](max) NULL,
-                [CompoundInner] [nvarchar](max) NULL,
-                [CompoundOuter] [nvarchar](max) NULL,
-                [CompoundCombo] [nvarchar](max) NULL,
-                [Length] [nvarchar](max) NULL,
-                [Kode] [nvarchar](max) NULL,
-                [PlanTargetPcs] [int] NULL,
-                [Menit] [nvarchar](max) NULL,
-                [WaktuMulai] [nvarchar](max) NULL,
-                [WaktuSelesai] [nvarchar](max) NULL,
-                [CtAwal] [nvarchar](max) NULL,
-                [CtMinus20] [nvarchar](max) NULL,
-                [NeedKgInner] [nvarchar](max) NULL,
-                [NeedKgOuter] [nvarchar](max) NULL,
-                [CreatedAt] [datetime2](7) NOT NULL,
-             CONSTRAINT [PK_PlanningMasters] PRIMARY KEY CLUSTERED ([Id] ASC)
-            )
-            END
+            var machinesMap = await _elwpContext.ElwpMachines
+                .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
 
-            -- Add missing columns if they don't exist
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'CtAwal')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [CtAwal] [nvarchar](max) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'CtMinus20')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [CtMinus20] [nvarchar](max) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'NeedKgInner')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [NeedKgInner] [nvarchar](max) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'NeedKgOuter')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [NeedKgOuter] [nvarchar](max) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'CompoundInner')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [CompoundInner] [nvarchar](max) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'CompoundOuter')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [CompoundOuter] [nvarchar](max) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'CompoundCombo')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [CompoundCombo] [nvarchar](max) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[PlanningMasters]') AND name = 'Length')
-                ALTER TABLE [dbo].[PlanningMasters] ADD [Length] [nvarchar](max) NULL;
-            ");
+            var elwpQuery = _elwpContext.ElwpPlannings.AsQueryable();
 
-            // Load Dynamic Config from DB
-            ViewBag.Machines = await _context.Machines.Select(m => m.MachineName).Distinct().ToListAsync();
-            ViewBag.Shifts   = await _context.ShiftMasters.OrderBy(x => x.ShiftName).ToListAsync();
+            if (filterDate.HasValue)
+            {
+                var start = filterDate.Value.Date;
+                var end = start.AddDays(1);
+                elwpQuery = elwpQuery.Where(x => x.TanggalPlanning >= start && x.TanggalPlanning < end);
+            }
 
-            var data = await _context.PlanningMasters.OrderByDescending(x => x.Id).ToListAsync();
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var normalizedQuery = query.Trim().ToLower();
+                elwpQuery = elwpQuery.Where(x =>
+                    (x.KodeItem != null && x.KodeItem.ToLower().Contains(normalizedQuery)) ||
+                    (x.PartName != null && x.PartName.ToLower().Contains(normalizedQuery)) ||
+                    (x.PnSap != null && x.PnSap.ToLower().Contains(normalizedQuery)) ||
+                    (x.Shift != null && x.Shift.ToLower().Contains(normalizedQuery)) ||
+                    (x.MesinId != null && x.MesinId.ToString().Contains(normalizedQuery)));
+            }
+
+            var elwpRows = await elwpQuery
+                .OrderByDescending(x => x.TanggalPlanning)
+                .ThenBy(x => x.MesinId)
+                .ThenBy(x => x.Shift)
+                .ThenBy(x => x.Id)
+                .ToListAsync();
+
+            var data = elwpRows.Select(x => new ElwpPlanningDisplay
+            {
+                Id = x.Id,
+                DateValue = x.TanggalPlanning,
+                DateString = x.TanggalPlanning.HasValue ? x.TanggalPlanning.Value.ToString("dddd, d MMMM yyyy") : "",
+                MachineName = x.MesinId.HasValue && machinesMap.TryGetValue(x.MesinId.Value, out var name) ? name : x.MesinId?.ToString() ?? "-",
+                Shift = x.Shift ?? "-",
+                KodeItem = x.KodeItem,
+                PartName = x.PartName,
+                PnSap = x.PnSap,
+                QtyPlanning = x.QtyPlanning
+            }).ToList();
+
+            ViewBag.FilterDate = filterDate;
+            ViewBag.Query = query;
+            ViewBag.RecordCount = data.Count;
+
             return View(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportCsv(DateTime? filterDate, string? query)
+        {
+            var machinesMap = await _elwpContext.ElwpMachines
+                .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
+
+            var elwpQuery = _elwpContext.ElwpPlannings.AsQueryable();
+
+            if (filterDate.HasValue)
+            {
+                var start = filterDate.Value.Date;
+                var end = start.AddDays(1);
+                elwpQuery = elwpQuery.Where(x => x.TanggalPlanning >= start && x.TanggalPlanning < end);
+            }
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var normalizedQuery = query.Trim().ToLower();
+                elwpQuery = elwpQuery.Where(x =>
+                    (x.KodeItem != null && x.KodeItem.ToLower().Contains(normalizedQuery)) ||
+                    (x.PartName != null && x.PartName.ToLower().Contains(normalizedQuery)) ||
+                    (x.PnSap != null && x.PnSap.ToLower().Contains(normalizedQuery)) ||
+                    (x.Shift != null && x.Shift.ToLower().Contains(normalizedQuery)) ||
+                    (x.MesinId != null && x.MesinId.ToString().Contains(normalizedQuery)));
+            }
+
+            var elwpRows = await elwpQuery
+                .OrderByDescending(x => x.TanggalPlanning)
+                .ThenBy(x => x.MesinId)
+                .ThenBy(x => x.Shift)
+                .ThenBy(x => x.Id)
+                .ToListAsync();
+
+            var csvBuilder = new System.Text.StringBuilder();
+            csvBuilder.AppendLine("Tanggal,Mesin,Shift,Kode Item,Part Name,PN SAP,Target (pcs)");
+
+            foreach (var row in elwpRows)
+            {
+                var date = row.TanggalPlanning.HasValue ? row.TanggalPlanning.Value.ToString("yyyy-MM-dd") : "";
+                var machine = row.MesinId.HasValue && machinesMap.TryGetValue(row.MesinId.Value, out var name) ? name : row.MesinId?.ToString() ?? "-";
+                var shift = row.Shift?.Replace(",", " ") ?? "";
+                var kodeItem = row.KodeItem?.Replace(",", " ") ?? "";
+                var partName = row.PartName?.Replace(",", " ") ?? "";
+                var pnSap = row.PnSap?.Replace(",", " ") ?? "";
+                var qty = row.QtyPlanning?.ToString() ?? "";
+                csvBuilder.AppendLine($"{date},{machine},{shift},{kodeItem},{partName},{pnSap},{qty}");
+            }
+
+            var fileName = $"ELWP_Planning_{DateTime.Now:yyyyMMddHHmmss}.csv";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString());
+            return File(bytes, "text/csv", fileName);
         }
 
         [HttpPost]

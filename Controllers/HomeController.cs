@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Models;
 using System.Diagnostics;
@@ -106,79 +107,83 @@ namespace VelastoProductionSystem.Controllers
             return View();
         }
 
-        public IActionResult GetSpcData(string productCode = "", string criteria = "InnerThickness", string timeRange = "30")
+        public IActionResult GetSpcData(string productCode = "", string criteria = "Thickness", string timeRange = "30")
         {
-            // Ambil data untuk dimensi yang dipilih
-            // Filter berdasarkan produk jika produk dipilih (NA2060 dll)
-            var query = _context.ProductionReadings.AsQueryable();
+            // Update to use DimensionMeasurements instead of ProductionReadings
+            var query = _context.DimensionMeasurements
+                .Include(r => r.DimensionReport)
+                .AsQueryable();
             
             if (!string.IsNullOrEmpty(productCode)) {
-                query = query.Where(r => r.ProductionReport != null && (r.ProductionReport.HoseType == productCode || r.ProductionReport.VinCode == productCode));
+                query = query.Where(r => r.DimensionReport != null && (r.DimensionReport.HoseType == productCode || r.DimensionReport.VinCode == productCode));
             }
 
             // Batas waktu
             if (int.TryParse(timeRange, out int days)) {
                 var cutoff = DateTime.Now.AddDays(-days);
-                query = query.Where(r => r.ReadingTime >= cutoff);
+                query = query.Where(r => r.RecordedTime >= cutoff);
             }
 
-            var readings = query.OrderBy(r => r.ReadingTime).ToList();
+            // Filter criteria by PointName
+            // Note: criteria in dashboard are "InnerThickness", "Diameter", etc.
+            // In PointName they might be "Inner Tube", "Outer Cover", "Tebal Total", "Spiral Pitch"
+            string pointNameFilter = criteria switch {
+                "InnerThickness" => "Inner Tube",
+                "TotalThickness" => "Tebal Total",
+                "Diameter" => "Inner Diameter", // Adjust based on your Input Dimensi point names
+                "SpiralPitch" => "Spiral Pitch",
+                "Thickness" => "Tebal",
+                _ => criteria
+            };
 
-            // Ekstrak nilai berdasarkan kriteria
+            var readings = query
+                .Where(r => r.PointName.Contains(pointNameFilter) || r.PointName == criteria)
+                .OrderBy(r => r.RecordedTime)
+                .ToList();
+
+            // Ekstrak nilai berdasarkan kriteria (R1 to R5)
             List<decimal> valuesA = new List<decimal>();
             List<decimal> valuesB = new List<decimal>();
             
             foreach (var r in readings) {
-                if (criteria == "InnerThickness") {
-                    if (r.InnerThicknessX.HasValue) valuesA.Add(r.InnerThicknessX.Value);
-                    if (r.InnerThicknessY.HasValue) valuesB.Add(r.InnerThicknessY.Value);
-                } else if (criteria == "TotalThickness") {
-                    if (r.TotalThicknessX.HasValue) valuesA.Add(r.TotalThicknessX.Value);
-                    if (r.TotalThicknessY.HasValue) valuesB.Add(r.TotalThicknessY.Value);
-                } else if (criteria == "Diameter") {
-                    if (r.InnerDiameter.HasValue) valuesA.Add(r.InnerDiameter.Value);
-                } else if (criteria == "SpiralPitch") {
-                   if (r.SpiralPitch.HasValue) valuesA.Add(r.SpiralPitch.Value);
-                }
+                // Dimensi usually has R1-R5. For SPC we can take R1 as main series
+                if (r.R1.HasValue) valuesA.Add(r.R1.Value);
+                if (r.R2.HasValue) valuesB.Add(r.R2.Value);
             }
 
             var allValues = valuesA.Concat(valuesB).ToList();
             if (!allValues.Any()) {
-                // Return empty if no data
-                return Json(new { success = false, message = "No data available for criteria" });
+                // Jika tidak ada R1/R2, coba cek R1 saja
+                if (valuesA.Any()) allValues = valuesA;
+                else return Json(new { success = false, message = "No data available for criteria: " + pointNameFilter });
             }
 
             // Kalkulasi Statistik
             double avg = (double)allValues.Average();
             double sumOfSquares = allValues.Sum(v => Math.Pow((double)v - avg, 2));
-            double stdDev = Math.Sqrt(sumOfSquares / allValues.Count);
+            double stdDev = Math.Sqrt(sumOfSquares / (allValues.Count > 1 ? allValues.Count - 1 : 1));
             if (stdDev == 0) stdDev = 0.001; 
 
-            // Ambil data SPS untuk toleransi asli
-            var sps = _context.StandardParameterSettings
-                .FirstOrDefault(s => s.ProductCode == productCode || s.ItemList == productCode);
+            // Ambil data SPS untuk toleransi (MasterlistSpsDoubleLayers)
+            var sps = _context.MasterlistSpsDoubleLayers
+                .FirstOrDefault(s => s.HoseType == productCode || s.ItemList == productCode);
 
             double target = avg;
             double usl = target + 0.4;
             double lsl = target - 0.4;
 
             if (sps != null) {
-                if (criteria == "InnerThickness") {
-                    target = (double)sps.TubeDie;
-                    usl = target + (double)sps.Tol_TubeDie;
-                    lsl = target - (double)sps.Tol_TubeDie;
-                } else if (criteria == "TotalThickness") {
-                    target = (double)sps.OuterDie;
-                    usl = target + (double)sps.Tol_OuterDie;
-                    lsl = target - (double)sps.Tol_OuterDie;
-                } else if (criteria == "Diameter") {
-                    target = (double)sps.InnerDie;
-                    usl = target + (double)sps.ToleranceDie;
-                    lsl = target - (double)sps.ToleranceDie;
+                if (criteria == "InnerThickness" || pointNameFilter == "Inner Tube") {
+                    if (decimal.TryParse(sps.TebalInner, out var t)) target = (double)t;
+                    if (decimal.TryParse(sps.ToleranceInner, out var tol)) { usl = target + (double)tol; lsl = target - (double)tol; }
+                } else if (criteria == "TotalThickness" || pointNameFilter == "Tebal Total") {
+                    if (decimal.TryParse(sps.TebalTotal, out var t)) target = (double)t;
+                    if (decimal.TryParse(sps.ToleranceOuter, out var tol)) { usl = target + (double)tol; lsl = target - (double)tol; }
+                } else if (criteria == "Diameter" || pointNameFilter == "Inner Diameter") {
+                    if (decimal.TryParse(sps.InnerTube, out var t)) target = (double)t;
+                    if (decimal.TryParse(sps.ToleranceInner, out var tol)) { usl = target + (double)tol; lsl = target - (double)tol; }
                 } else if (criteria == "SpiralPitch") {
-                    target = (double)(sps.SpiralPitch);
-                    usl = target + (double)sps.Tol_SpiralPitch;
-                    lsl = target - (double)sps.Tol_SpiralPitch;
+                    // Spiral pitch logic
                 }
             }
 
@@ -201,7 +206,7 @@ namespace VelastoProductionSystem.Controllers
                     statusText = cpk > 1.33 ? "Excellent" : (cpk > 1.0 ? "Capable" : "Not Capable")
                 },
                 chart = new {
-                    labels = readings.Select(r => r.ReadingTime.ToString("dd/MM HH:mm")),
+                    labels = readings.Select(r => r.RecordedTime.ToString("dd/MM HH:mm")),
                     seriesA = valuesA,
                     seriesB = valuesB,
                     uslLine = usl,
@@ -213,10 +218,21 @@ namespace VelastoProductionSystem.Controllers
 
         public IActionResult GetSpcProducts()
         {
-            var products = _context.PartMasters
-                .Select(p => new { value = p.PartCode, text = p.PartCode + " - " + p.Description })
+            // Ambil dari DimensionReports yang sudah pernah diinput
+            var products = _context.DimensionReports
+                .Where(p => !string.IsNullOrEmpty(p.HoseType))
+                .Select(p => new { value = p.HoseType, text = p.HoseType + " (Data Masuk)" })
                 .Distinct()
                 .ToList();
+
+            // Gabungkan dengan PartMaster jika list di atas kosong
+            if (!products.Any()) {
+                products = _context.PartMasters
+                    .Select(p => new { value = p.PartCode, text = p.PartCode + " - " + p.Description })
+                    .Distinct()
+                    .ToList();
+            }
+
             return Json(products);
         }
 

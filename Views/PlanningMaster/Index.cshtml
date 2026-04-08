@@ -1,4 +1,4 @@
-@model IEnumerable<VelastoProductionSystem.Models.PlanningMaster>
+@model IEnumerable<VelastoProductionSystem.Models.ElwpPlanningDisplay>
 @{
     ViewData["Title"] = "Planning Master";
 }
@@ -78,13 +78,31 @@
 
     .glow-border { border: 1px solid rgba(0, 255, 136, 0.3) !important; }
     .neon-text { color: var(--neon-green); text-shadow: 0 0 5px rgba(0, 255, 136, 0.3); }
+    
+    .breadcrumb-item + .breadcrumb-item::before { color: rgba(255,255,255,0.3); }
+    .fw-black { font-weight: 900; }
 </style>
 
 <div class="fade-in">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+    <!-- ═══ TOP NAVBAR & ACTIONS ═══ -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <h2 class="text-white fw-bold mb-1"><i class="bi bi-calendar-week text-warning me-2"></i> Planning Master</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
+                    <li class="breadcrumb-item"><a href="/" class="text-white-50 text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active neon-text fw-bold" aria-current="page">Planning Master</li>
+                </ol>
+            </nav>
+            <h2 class="text-white fw-bold mb-0" style="letter-spacing: -1px;">
+                <i class="bi bi-calendar-week text-warning me-2"></i> Planning Master
+                @{
+                    var filterDate = ViewBag.FilterDate as DateTime?;
+                    if (filterDate.HasValue)
+                    {
+                        <span class="ms-2 opacity-50" style="font-size: 1.1rem; font-weight: 300;">— @filterDate.Value.ToString("dd MMM yyyy")</span>
+                    }
+                }
+            </h2>
             <p class="text-white-50 small mb-0">Sinkronisasi jadwal harian langsung dari <strong class="neon-text">ELWP Production System</strong></p>
         </div>
         <div class="d-flex gap-2">
@@ -99,78 +117,105 @@
         </div>
     </div>
 
-    <!-- ═══ ELWP SYNC CARD ═══ -->
+    <!-- ═══ CONTROL PANEL CARD ═══ -->
     <div class="plan-builder shadow-lg mb-5" style="background: linear-gradient(145deg, #13171e, #0a0d12); border: 1px solid rgba(0,255,136,0.25);">
         <div class="plan-header" style="border-bottom: 1px solid rgba(0,255,136,0.1);">
-            <div class="d-flex align-items-center gap-3 mb-4">
-                <div style="width:52px;height:52px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 10px rgba(0,255,136,0.1);">
-                    <i class="bi bi-lightning-charge-fill" style="font-size:1.6rem;color:var(--neon-green);filter:drop-shadow(0 0 5px rgba(0,255,136,0.5));"></i>
-                </div>
-                <div>
-                    <div style="font-size:0.7rem;font-weight:900;letter-spacing:4px;color:var(--neon-green);text-transform:uppercase;opacity:0.8;">Primary Sync Engine</div>
-                    <div style="font-size:1.3rem;font-weight:800;color:#fff;letter-spacing:-0.5px;">ELWP Production Synchronizer</div>
-                </div>
-                <div class="ms-auto d-none d-md-block">
-                    <span class="badge" style="background:rgba(0,255,136,0.1);color:var(--neon-green);border:1px solid rgba(0,255,136,0.2);font-size:0.65rem;padding:8px 16px;border-radius:50px;letter-spacing:1px;font-weight:800;box-shadow:var(--neon-glow);">
-                        <i class="bi bi-broadcast me-1"></i> LIVE DATABASE ACCESS
-                    </span>
-                </div>
-            </div>
-
-            <form asp-action="SyncFromElwp" method="post" id="syncElwpForm">
-                <div class="row g-4 align-items-end">
-                    <div class="col-md-3">
-                        <label class="col-lbl d-block mb-2">Pilih Tanggal Produksi</label>
-                        <input type="date" name="syncDate" id="syncDate" class="form-control-dark w-100"
-                               value="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                    </div>
-                    <div class="col-md-4">
-                        <button type="submit" id="btnSyncElwp"
-                                class="neon-btn w-100 shadow-lg"
-                                onclick="this.disabled=true;this.innerHTML='<span class=spinner-border spinner-border-sm me-2></span> Menyambungkan...';this.form.submit();">
-                            <i class="bi bi-cloud-download-fill me-2"></i> Sinkronisasi Data ELWP
-                        </button>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="p-3 rounded-4" style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.03);">
-                            <p class="text-white-50 small mb-0" style="font-size:0.7rem;line-height:1.5;">
-                                <i class="bi bi-info-circle-fill me-1" style="color:var(--neon-green);"></i>
-                                Menarik data dari tabel <span class="badge bg-dark text-success border border-success border-opacity-25">tb_elwp_produksi_plannings</span>. 
-                                Seluruh data lokal pada tanggal yang dipilih akan diperbarui secara otomatis.
-                            </p>
+            <div class="row align-items-center g-4">
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:52px;height:52px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 10px rgba(0,255,136,0.1);">
+                            <i class="bi bi-cpu" style="font-size:1.6rem;color:var(--neon-green);filter:drop-shadow(0 0 5px rgba(0,255,136,0.5));"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:0.65rem;font-weight:900;letter-spacing:3px;color:var(--neon-green);text-transform:uppercase;opacity:0.7;">System Link</div>
+                            <div style="font-size:1.2rem;font-weight:800;color:#fff;letter-spacing:-0.5px;">ELWP Production Gateway</div>
                         </div>
                     </div>
                 </div>
-            </form>
+                <div class="col-lg-8">
+                    <form method="get" class="row g-2 justify-content-end">
+                        <div class="col-md-3">
+                            <label class="col-lbl ms-2 mb-1 d-block">Filter Date</label>
+                            <input type="date" name="filterDate" value="@(ViewBag.FilterDate?.ToString("yyyy-MM-dd"))" class="form-control form-control-dark form-control-sm w-100" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="col-lbl ms-2 mb-1 d-block">Search Keyword</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-transparent border-0 pe-0" style="z-index: 5;"><i class="bi bi-search text-white-50"></i></span>
+                                <input type="text" name="query" value="@ViewBag.Query" placeholder="Part code, machine, shift..." class="form-control form-control-dark border-0 ms-n3" style="padding-left: 40px;" />
+                            </div>
+                        </div>
+                        <div class="col-md-auto d-flex align-items-end">
+                            <button type="submit" class="btn btn-sm neon-btn py-2 px-4 shadow-sm h-100" style="min-height: 38px;">
+                                <i class="bi bi-filter me-1"></i> APPLY FILTER
+                            </button>
+                            @if (ViewBag.FilterDate != null || !string.IsNullOrEmpty(ViewBag.Query))
+                            {
+                                <a asp-action="Index" class="btn btn-sm btn-link text-white-50 text-decoration-none ms-2 pb-2">Reset</a>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ QUICK STATS ═══ -->
+        <div class="p-4" style="background: rgba(0,0,0,0.15);">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="p-3 rounded-4 h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="text-white-50 small text-uppercase mb-1 fw-bold" style="font-size:0.6rem; letter-spacing:1px;">Total Items</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="h3 mb-0 fw-black text-white">@Model.Count()</div>
+                            <div class="badge rounded-pill bg-success bg-opacity-10 text-success" style="font-size:0.6rem; border:1px solid rgba(0,255,136,0.2);">ACTIVE</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded-4 h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="text-white-50 small text-uppercase mb-1 fw-bold" style="font-size:0.6rem; letter-spacing:1px;">Total Target (pcs)</div>
+                        <div class="h3 mb-0 fw-black neon-text">@Model.Sum(x => x.QtyPlanning ?? 0).ToString("N0")</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded-4 h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="text-white-50 small text-uppercase mb-1 fw-bold" style="font-size:0.6rem; letter-spacing:1px;">Unique Machines</div>
+                        <div class="h3 mb-0 fw-black text-white">@Model.Select(x => x.MachineName).Distinct().Count()</div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <!-- Action Buttons in Card -->
+                    <div class="d-flex h-100 gap-2">
+                        <a asp-action="ExportCsv" asp-route-filterDate="@(ViewBag.FilterDate?.ToString("yyyy-MM-dd"))" asp-route-query="@ViewBag.Query" class="btn btn-outline-info flex-grow-1 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1" style="border-style: dashed; background: rgba(0, 150, 255, 0.05);">
+                            <i class="bi bi-file-earmark-spreadsheet fs-5"></i>
+                            <span style="font-size: 0.65rem; font-weight: 800;">EXPORT CSV</span>
+                        </a>
+                        <button type="button" class="btn btn-outline-warning flex-grow-1 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1" style="border-style: dashed; background: rgba(255, 193, 7, 0.05);" data-bs-toggle="modal" data-bs-target="#syncModal">
+                            <i class="bi bi-arrow-repeat fs-5"></i>
+                            <span style="font-size: 0.65rem; font-weight: 800;">SYNC DATA</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
-    { <div class="alert alert-success rounded-4 border-0 mb-4 py-3 shadow-lg" style="background:rgba(0,255,136,0.15);color:var(--neon-green);border:1px solid rgba(0,255,136,0.2) !important;"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div> }
+    { <div class="alert alert-success rounded-4 border-0 mb-4 py-3 shadow-lg fade-in" style="background:rgba(0,255,136,0.15);color:var(--neon-green);border:1px solid rgba(0,255,136,0.2) !important;"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div> }
     @if (TempData["ErrorMessage"] != null)
-    { <div class="alert alert-danger rounded-4 border-0 mb-4 py-3 shadow-lg"><i class="bi bi-x-circle-fill me-2"></i>@TempData["ErrorMessage"]</div> }
+    { <div class="alert alert-danger rounded-4 border-0 mb-4 py-3 shadow-lg fade-in"><i class="bi bi-x-circle-fill me-2"></i>@TempData["ErrorMessage"]</div> }
 
-    <!-- ═══ SAVED DATA ═══ -->
+    <!-- ═══ DATA TABLE ═══ -->
     <div class="mb-5">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center gap-3">
-                <h6 class="text-white text-uppercase fw-bold mb-0 shadow-text" style="letter-spacing:2px;font-size:0.85rem;">
-                    <i class="bi bi-grid-3x3-gap-fill me-2" style="color:var(--neon-green);"></i> Jadwal Planning Tersimpan
-                </h6>
-                <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);"></div>
-                <span class="text-white-50 small">@Model.Count() records found</span>
-            </div>
-        </div>
-
         <div style="background:var(--card-bg);border-radius:24px;border:1px solid rgba(255,255,255,0.05);overflow:hidden;box-shadow:0 15px 35px rgba(0,0,0,0.4);">
             @if (!Model.Any())
             {
-                <div class="text-center py-5 text-white-50">
+                <div class="text-center py-5 text-white-50" style="background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px);">
                     <div class="mb-3" style="opacity:0.2;">
-                        <i class="bi bi-folder2-open" style="font-size:4rem;color:var(--neon-green);"></i>
+                        <i class="bi bi-search" style="font-size:4rem;color:var(--neon-green);"></i>
                     </div>
-                    <div class="fw-bold mb-1">Database Kosong</div>
-                    <div style="font-size:0.75rem;">Silakan lakukan sinkronisasi untuk menampilkan data ELWP.</div>
+                    <div class="fw-bold mb-1 fs-5">No Records Found</div>
+                    <div style="font-size:0.75rem; max-width: 400px; margin: 0 auto;">Try adjusting your filters or use the <strong>Sync Data</strong> button to fetch the latest planning from the ELWP server.</div>
                 </div>
             }
             else
@@ -181,7 +226,7 @@
                             <tr>
                                 <th style="width:180px;">Tanggal</th>
                                 <th>Mesin</th>
-                                <th>Shift</th>
+                                <th style="width:100px;">Shift</th>
                                 <th>Kode Item</th>
                                 <th>Part Name</th>
                                 <th>PN SAP</th>
@@ -191,15 +236,15 @@
                         <tbody>
                             @{
                                 var sortedData = Model
-                                    .OrderByDescending(x => x.DateShiftString)
+                                    .OrderByDescending(x => x.DateValue)
                                     .ThenBy(x => x.MachineName)
-                                    .ThenBy(x => x.WaktuMulai);
+                                    .ThenBy(x => x.Shift);
                             }
                             @foreach (var item in sortedData)
                             {
                                 <tr style="border-left:4px solid var(--neon-green);">
                                     <td class="text-white-50 fw-bold" style="font-size:0.7rem;">
-                                        @item.DateShiftString?.Split(" SHIFT ").FirstOrDefault()
+                                        @item.DateString
                                     </td>
                                     <td>
                                         <div style="color:var(--neon-green);font-weight:800;letter-spacing:-0.2px;">
@@ -208,17 +253,17 @@
                                     </td>
                                     <td>
                                         <div class="badge rounded-pill" style="background:rgba(0, 255, 136, 0.1);color:var(--neon-green);border:1px solid rgba(0, 255, 136, 0.2);padding:6px 14px;font-size:0.65rem;font-weight:900;">
-                                            SHIFT @(item.DateShiftString?.Split("SHIFT ").LastOrDefault()?.Trim() ?? "1")
+                                            @item.Shift
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="text-info fw-bold" style="font-family:'Courier New', Courier, monospace;font-size:0.85rem;">@item.PartName1</span>
+                                        <span class="text-info fw-bold" style="font-family:'Courier New', Courier, monospace;font-size:0.85rem;">@item.KodeItem</span>
                                     </td>
-                                    <td class="text-white-50 small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;">@item.PartName2</td>
-                                    <td class="text-white-50 small" style="font-family:monospace;letter-spacing:0.5px;">@item.Kode</td>
+                                    <td class="text-white-50 small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;">@item.PartName</td>
+                                    <td class="text-white-50 small" style="font-family:monospace;letter-spacing:0.5px;">@item.PnSap</td>
                                     <td class="text-center">
                                         <span class="px-3 py-1 rounded-pill fw-bold text-white" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:0.85rem;">
-                                            @(item.PlanTargetPcs.HasValue ? item.PlanTargetPcs.Value.ToString("N0") : "-")
+                                            @(item.QtyPlanning.HasValue ? item.QtyPlanning.Value.ToString("N0") : "-")
                                         </span>
                                     </td>
                                 </tr>
@@ -230,5 +275,47 @@
         </div>
     </div>
 </div>
+
+<!-- ═══ SYNC MODAL ═══ -->
+<div class="modal fade" id="syncModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid rgba(0,255,136,0.3); border-radius: 20px; box-shadow: 0 0 30px rgba(0,255,136,0.1);">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title text-white fw-bold"><i class="bi bi-arrow-repeat text-warning me-2"></i> Sync from ELWP System</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="SyncFromElwp" method="post">
+                <div class="modal-body py-4 px-4">
+                    <div class="p-3 rounded-4 mb-3" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05);">
+                        <label class="col-lbl mb-2 d-block text-white-50">Select Target Planning Date</label>
+                        <input type="date" name="syncDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control form-control-dark" required />
+                        <p class="small text-white-50 mt-3 mb-0" style="font-size: 0.7rem; line-height: 1.4;">
+                            <i class="bi bi-info-circle-fill text-info me-1"></i> 
+                            Data yang sudah ada di lokal untuk tanggal & shift yang sama akan <strong>ditimpa (overwrite)</strong> dengan data terbaru dari server ELWP.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 pt-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm neon-btn px-4">
+                        <i class="bi bi-cloud-download me-1"></i> START SYNC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-focus search input if query exists
+        const qInput = document.querySelector('input[name="query"]');
+        if (qInput && qInput.value) { 
+            qInput.focus(); 
+            qInput.setSelectionRange(qInput.value.length, qInput.value.length); 
+        }
+    });
+</script>
+
 
 
