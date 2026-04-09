@@ -289,10 +289,11 @@ body {
 }
 
 .nav-item:hover i,
-.nav-item.active i {
-    color: #00d2ff !important;
-    transform: scale(1.2) rotate(5deg);
-    filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.5));
+.nav-item:hover svg,
+.nav-item.active i,
+.nav-item.active svg {
+    transform: scale(1.15) rotate(3deg);
+    filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.8));
 }
 
 .nav-item:hover::before,
@@ -309,6 +310,18 @@ body {
     font-size: 1.2rem;
     width: 24px;
     text-align: center;
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+}
+
+.nav-item svg {
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    fill: url(#nav-icon-gradient);
 }
 
 /* Sidebar Footer */
