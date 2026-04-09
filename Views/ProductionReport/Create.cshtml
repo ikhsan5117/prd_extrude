@@ -30,68 +30,68 @@
                 </div>
 
                 <!-- NEW: SPS PROTOCOL SYNC -->
-                <div class="p-3 bg-primary bg-opacity-5 border-bottom border-white border-opacity-5 no-print">
+                <div class="p-3 bg-black bg-opacity-20 border-bottom border-white border-opacity-5 no-print">
                     <div class="row g-3 align-items-center">
                         <div class="col-md-5">
-                            <div class="hud-pill p-0 d-flex flex-row overflow-hidden shadow-glow-blue border-info border-opacity-40" style="min-height: 70px;">
-                                <div class="flex-grow-1 p-2 px-3 bg-dark d-flex flex-column justify-content-center">
-                                    <label class="mb-1 text-info font-black" style="font-size: 0.70rem;"><i class="bi bi-keyboard me-2 text-info"></i>TYPE ITEM CODE (MANUAL)</label>
-                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1.1rem; outline: none;" placeholder="EX: VHFUNC-..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
+                            <div class="hud-pill p-0 d-flex flex-row overflow-hidden border border-info border-opacity-50" style="min-height: 60px; background: #0f172a; border-radius: 8px;">
+                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
+                                    <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-keyboard me-2"></i>MANUAL PROTOCOL</label>
+                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="ITEM CODE..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
                                 </div>
-                                <button type="button" onclick="let v = document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-4 d-flex align-items-center justify-content-center border-start border-info border-opacity-25" style="min-width: 80px; background-color: #0c4a6e; color: #38bdf8; transition: all 0.2s;" title="Manual Search">
-                                    <i class="bi bi-search fs-3"></i>
+                                <button type="button" onclick="let v = document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Search">
+                                    <i class="bi bi-search fs-4"></i>
                                 </button>
-                                <button type="button" onclick="startSpsScanner()" class="btn btn-hud-primary border-0 rounded-0 px-4 d-flex align-items-center justify-content-center border-start border-white border-opacity-25" style="min-width: 100px; transition: all 0.2s;" title="Scan Barcode">
-                                    <i class="bi bi-qr-code-scan fs-2"></i>
+                                <button type="button" onclick="startSpsScanner()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 70px; background: rgba(14, 165, 233, 0.2); color: #38bdf8;" title="Scan Barcode">
+                                    <i class="bi bi-qr-code-scan fs-3"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-7">
-                            <div class="hud-pill p-0 d-flex flex-row shadow-glow-blue border-success border-opacity-40" style="min-height: 70px; position: relative; border-radius: 8px;">
-                                <div class="flex-grow-1 p-2 px-3 bg-dark d-flex flex-column justify-content-center">
-                                    <label class="mb-1 text-success font-black" style="font-size: 0.70rem;"><i class="bi bi-list-check me-2 text-success"></i>SEARCH PLANNING MASTER</label>
-                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1.1rem; outline: none;" placeholder="TYPE ITEM CODE..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
+                            <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height: 60px; position: relative; background: #0f172a; border-radius: 8px;">
+                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
+                                    <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-list-check me-2"></i>PLANNING MASTER</label>
+                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH PLANNING..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
                                     
                                     <!-- Results Container -->
-                                    <div id="planningResults" class="d-none" style="position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid rgba(16, 185, 129, 0.4); border-top: none; z-index: 1000; max-height: 300px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 0 0 12px 12px;">
+                                    <div id="planningResults" class="d-none custom-tactical-scroll" style="position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid #0ea5e9; border-top: none; z-index: 1000; max-height: 350px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.8); border-radius: 0 0 12px 12px;">
                                         <!-- Items will be injected here -->
                                     </div>
                                 </div>
-                                <button type="button" onclick="refreshPlanningItems()" class="btn border-0 rounded-0 px-4 d-flex align-items-center justify-content-center border-start border-success border-opacity-25" style="min-width: 80px; background-color: #064e3b; color: #10b981; transition: all 0.2s;" title="Refresh Planning">
-                                    <i class="bi bi-arrow-clockwise fs-3"></i>
+                                <button type="button" onclick="refreshPlanningItems()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Refresh Planning">
+                                    <i class="bi bi-arrow-clockwise fs-4"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="p-3 bg-black bg-opacity-30 border-bottom border-white border-opacity-5">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
-                                <label><i class="bi bi-calendar-check me-2 text-primary"></i>SYSTEM DATE</label>
+                <div class="p-2 bg-black bg-opacity-10">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
+                                <label><i class="bi bi-calendar-check me-2 text-info"></i>SYSTEM DATE</label>
                                 <input type="date" asp-for="ProductionDate" id="ProductionDate" class="hud-input font-monospace text-primary-glow" value="@DateTime.Now.ToString("yyyy-MM-dd")" required onchange="refreshPlanningItems()" />
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
-                                <label><i class="bi bi-clock-history me-2 text-primary"></i>SHIFT</label>
-                                <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0" style="-webkit-appearance: none;" onchange="refreshPlanningItems()">
-                                    <option value="I" class="bg-dark">SHIFT I</option>
-                                    <option value="II" class="bg-dark" selected>SHIFT II</option>
-                                    <option value="III" class="bg-dark">SHIFT III</option>
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
+                                <label><i class="bi bi-clock-history me-2 text-info"></i>SHIFT MONITORING</label>
+                                <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0 text-white" style="-webkit-appearance: none;" onchange="refreshPlanningItems()">
+                                    <option value="I" class="bg-dark">SHIFT I (SIANG)</option>
+                                    <option value="II" class="bg-dark" selected>SHIFT II (SORE)</option>
+                                    <option value="III" class="bg-dark">SHIFT III (MALAM)</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
-                                <label><i class="bi bi-building me-2 text-primary"></i>CUSTOMER ENTITY</label>
-                                <input asp-for="CustomerName" id="CustomerName" class="hud-input small text-white-50 font-black" placeholder="PT. ADM" />
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
+                                <label><i class="bi bi-building me-2 text-info"></i>CUSTOMER ENTITY</label>
+                                <input asp-for="CustomerName" id="CustomerName" class="hud-input small text-white font-black" placeholder="PT. ADM" />
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="hud-pill-integrated shadow-glow-blue border-white border-opacity-5">
-                                <label><i class="bi bi-cpu me-2 text-primary"></i>HOSE SPECIFICATION TYPE</label>
-                                <input asp-for="HoseType" id="HoseType" class="hud-input small font-monospace text-white-50" placeholder="Extrusion Spec Name..." />
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
+                                <label><i class="bi bi-cpu me-2 text-info"></i>HOSE SPECIFICATION TYPE</label>
+                                <input asp-for="HoseType" id="HoseType" class="hud-input small font-monospace text-white" placeholder="Extrusion Spec Name..." />
                             </div>
                         </div>
                     </div>
@@ -1393,6 +1393,22 @@
             }
         }
 
+        function showPlanningResults() {
+            const container = document.getElementById('planningResults');
+            if (planningResultItems.length > 0) {
+                container.classList.remove('d-none');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('planningResults');
+            const searchInput = document.getElementById('planningSearch');
+            if (container && !container.contains(e.target) && e.target !== searchInput) {
+                container.classList.add('d-none');
+            }
+        });
+
         function filterPlanningResults(query) {
             const sanitizedQuery = query.trim().toUpperCase();
             const results = sanitizedQuery.length === 0 ? planningItemsCache : planningItemsCache.filter(item => 
@@ -1410,20 +1426,28 @@
             container.innerHTML = "";
             
             if (items.length === 0) {
-                container.innerHTML = `<div class="p-3 text-white-50 super-small">--- NO MATCHES FOUND ---</div>`;
+                container.innerHTML = `<div class="p-3 text-white-50 super-small font-monospace">--- NO TACTICAL MATCH FOUND ---</div>`;
                 container.classList.remove('d-none');
                 return;
             }
 
             items.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.className = "p-3 border-bottom border-white border-opacity-5 hover-bg-success cursor-pointer transition-all planning-result-item";
+                div.className = "p-3 border-bottom border-white border-opacity-5 cursor-pointer transition-all planning-result-item";
                 div.style.background = "rgba(15, 23, 42, 0.98)";
                 div.dataset.index = index;
                 div.innerHTML = `
-                    <div class="d-flex flex-column gap-1">
-                        <span class="text-success fw-bold font-monospace">[${item.itemCode}]</span>
-                        <span class="text-white small opacity-75">${item.itemName}</span>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-column gap-1">
+                            <span class="text-info-glow fw-900 font-monospace" style="font-size: 1.1rem; letter-spacing: 1px;">[${item.itemCode}]</span>
+                            <span class="text-white small opacity-80 fw-bold">${item.itemName}</span>
+                        </div>
+                        <div class="text-end">
+                            <div class="super-small text-info opacity-50 fw-black tracking-widest mb-1">PLANNING SCHEDULE</div>
+                            <div class="badge bg-info bg-opacity-10 border border-info border-opacity-20 text-info fw-bold font-monospace" style="font-size: 0.65rem;">
+                                ${item.dateShift ? item.dateShift : 'NO DATE'}
+                            </div>
+                        </div>
                     </div>
                 `;
                 div.onclick = () => selectPlanningItem(item);
@@ -1448,20 +1472,52 @@
         }
 
         function selectPlanningItem(item) {
+            console.log("SELECTED ITEM DATA:", item); // Debugging
+            
             document.getElementById('planningSearch').value = `[${item.itemCode}] ${item.itemName}`;
             document.getElementById('planningResults').classList.add('d-none');
+            
+            // Auto-sync Date
+            if (item.DateProduction) {
+                const pDate = item.DateProduction.split('T')[0];
+                document.getElementById('ProductionDate').value = pDate;
+            } else if (item.date) {
+                document.getElementById('ProductionDate').value = item.date;
+            }
+
+            // Auto-sync Shift (Robust Mapping)
+            if (item.Shift || item.shift) {
+                let rawShift = (item.Shift || item.shift).toString().toUpperCase();
+                console.log("RAW SHIFT FROM DB:", rawShift);
+
+                if (rawShift.includes('1') || rawShift === 'I' || rawShift.includes('SIANG') || rawShift.includes('ONE')) {
+                    document.getElementById('Shift').value = 'I';
+                } else if (rawShift.includes('2') || rawShift === 'II' || rawShift.includes('SORE') || rawShift.includes('TWO')) {
+                    document.getElementById('Shift').value = 'II';
+                } else if (rawShift.includes('3') || rawShift === 'III' || rawShift.includes('MALAM') || rawShift.includes('THREE')) {
+                    document.getElementById('Shift').value = 'III';
+                }
+            }
+
             fetchSpsByItem(item.itemCode);
         }
 
-        // --- SPS SYNC LOGIC (RESTORED) ---
         async function fetchSpsByItem(code) {
             try {
                 const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
-                if (!res.ok) throw new Error('PROTOCOL NOT FOUND');
                 const data = await res.json();
+                if (data.success === false) throw new Error('PROTOCOL NOT FOUND');
                 applySpsToForm(data);
             } catch (e) {
-                console.error(e);
+                console.warn(e.message);
+                Swal.fire({
+                    title: 'PROTOCOL UNKNOWN',
+                    text: `Warning: SPS Masterlist for [${code}] is missing or not registered.`,
+                    icon: 'warning',
+                    background: '#020617',
+                    color: '#0ea5e9',
+                    confirmButtonColor: '#0ea5e9'
+                });
             }
         }
 
@@ -1538,7 +1594,7 @@
     </script>
     <style>
         .hover-bg-success:hover { background: rgba(16, 185, 129, 0.2) !important; color: white; }
-        .planning-result-highlight { background: rgba(16, 185, 129, 0.15) !important; border-color: rgba(16, 185, 129, 0.45) !important; }
+        .planning-result-highlight { background: rgba(14, 165, 233, 0.15) !important; border-color: rgba(14, 165, 233, 0.45) !important; }
         .cursor-pointer { cursor: pointer; }
         .transition-all { transition: all 0.2s ease; }
         .glow-success { border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important; }
@@ -1546,7 +1602,12 @@
         #reader__dashboard_section_csr button { background: #0ea5e9; color: white; border: none; padding: 5px 15px; border-radius: 4px; margin: 5px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
         .swal2-close { color: #ef4444 !important; }
         .valid-success { box-shadow: inset 0 -3px 0 #10b981 !important; }
-        .valid-error { box-shadow: inset 0 -3px 0 #ef4444 !important; animation: shake 0.3s; }
-        @@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+        .valid-error { box-shadow: inset 0 -3px 0 #ef4444 !important; animation: shake-hud-input 0.3s; }
+        @@keyframes shake-hud-input { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+
+        .custom-tactical-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-tactical-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.9); }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 10px; border: 2px solid rgba(15, 23, 42, 0.9); }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
     </style>
 }

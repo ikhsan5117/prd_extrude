@@ -178,7 +178,7 @@ namespace VelastoProductionSystem.Controllers
                 });
             }
 
-            return NotFound();
+            return Json(new { success = false, message = "Protocol Not Found" });
         }
 
         [HttpGet]
@@ -236,7 +236,7 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             var filtered = itemRows.Where(p => {
-                var ds = p.DateShiftString.ToUpper();
+                var ds = (p.DateShiftString ?? "").ToUpper();
                 bool hasDayMatch = ds.Contains(dayStr1) || ds.Contains(dayStr2);
                 bool hasMonthMatch = months.Any(m => ds.Contains(m));
                 bool hasYearMatch = ds.Contains(yearFull) || ds.Contains(yearShort);
