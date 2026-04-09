@@ -20,6 +20,7 @@
         background-image: 
             radial-gradient(circle at 0% 0%, rgba(0, 102, 255, 0.03) 0%, transparent 50%),
             radial-gradient(circle at 100% 100%, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
+        min-height: 100vh;
     }
 
     .fade-in { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
@@ -31,7 +32,7 @@
     /* ─── HEADER HUD ─── */
     .page-header {
         display: flex; justify-content: space-between; align-items: flex-end;
-        margin-bottom: 50px; border-bottom: 1px solid var(--border); padding-bottom: 30px;
+        margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 30px;
     }
     .page-title { font-size: 3.5rem; font-weight: 1000; letter-spacing: -3px; color: #fff; line-height: 0.9; }
     .page-subtitle { color: #8b949e; font-size: 0.9rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; }
@@ -42,18 +43,114 @@
     }
     .btn-action.prm { background: var(--accent); color: #fff; box-shadow: 0 10px 40px var(--accent-glow); }
     .btn-action.sec { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #8b949e; }
-    .btn-action:hover { transform: translateY(-3px) scale(1.05); }
+    .btn-action:hover { transform: translateY(-3px) scale(1.05); color: #fff; }
 
-    /* ─── SEARCH / FILTER ─── */
-    .search-hub {
-        margin-bottom: 40px; position: relative;
+    /* ─── CONTROL HUB (UNIFIED TACTICAL LOOK) ─── */
+    .control-hub {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px;
+        margin-bottom: 35px;
     }
+
+    .control-item {
+        position: relative; display: flex; align-items: center;
+        background: rgba(10, 15, 25, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 3px solid var(--accent);
+        border-radius: 0px; 
+        padding: 0 18px; height: 50px;
+        transition: all 0.3s ease;
+    }
+    .control-item:focus-within {
+        border-color: var(--accent);
+        background: rgba(15, 25, 40, 0.95);
+        box-shadow: 0 0 20px rgba(0, 102, 255, 0.1);
+    }
+    
+    .control-item i { 
+        color: var(--accent); font-size: 1.1rem; 
+        margin-right: 15px; flex-shrink: 0;
+    }
+
+    .control-item input, .control-item select {
+        background: transparent; border: none; color: #fff;
+        width: 100%; height: 100%; font-size: 0.85rem;
+        font-weight: 600; outline: none;
+        text-transform: uppercase; letter-spacing: 1px;
+    }
+    .control-item select { cursor: pointer; color: #8b949e; }
+    .control-item select:focus { color: #fff; }
+    .control-item select option { background: #0d1117; color: #fff; }
+
+    /* Custom Date Icon handling */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) brightness(0.5) sepia(1) saturate(5) hue-rotate(190deg);
+        cursor: pointer;
+    }
+
+    /* ─── INTELLIGENCE TILES (COMPACT CARDS) ─── */
+    .intel-hub {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .intel-card { 
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 15px 25px;
+        background: linear-gradient(145deg, rgba(21, 27, 38, 0.7), rgba(1, 4, 9, 0.8));
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        border-radius: 2px; /* MATCHING SHARP THEME */
+        backdrop-filter: blur(20px);
+        transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+    .intel-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    
+    .intel-card.cyan { border-color: rgba(0, 102, 255, 0.2); }
+    .intel-card.green { border-color: rgba(0, 255, 136, 0.15); }
+    .intel-card.red { border-color: rgba(255, 77, 77, 0.15); }
+
+    .intel-data { display: flex; flex-direction: column; }
+    .intel-val { 
+        font-size: 2.22rem; font-weight: 1000; line-height: 1; 
+        letter-spacing: -2px;
+    }
+    .intel-lbl { font-size: 0.55rem; font-weight: 800; color: #484f58; text-transform: uppercase; margin-top: 3px; letter-spacing: 1.5px; }
+    
+    .intel-val.cyan { background: linear-gradient(135deg, #0066ff, #00ccff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .intel-val.green { background: linear-gradient(135deg, #00ff88, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .intel-val.red { background: linear-gradient(135deg, #ff4d4d, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .intel-ico {
+        width: 42px; height: 42px; border-radius: 12px; 
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.02);
+    }
+    .intel-ico.cyan { color: #00ccff; }
+    .intel-ico.green { color: #00ff88; }
+    .intel-ico.red { color: #ff4d4d; }
+
+    /* ─── CONTROL HUB (SEARCH & FILTERS) ─── */
+    .control-hub {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px;
+        margin-bottom: 40px;
+    }
+    .search-box { position: relative; }
     .search-input {
         background: rgba(21, 27, 38, 0.5); border: 1px solid var(--border);
-        border-radius: 16px; padding: 20px 20px 20px 60px; width: 100%;
-        color: #fff; font-size: 1.1rem; font-weight: 600; outline: none; transition: 0.3s;
+        border-radius: 16px; padding: 18px 20px 18px 60px; width: 100%;
+        color: #fff; font-size: 1rem; font-weight: 600; outline: none; transition: 0.3s;
     }
-    .search-input:focus { border-color: var(--accent); background: rgba(0, 102, 255, 0.05); }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+    .search-icon { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 1.2rem; }
+
+    .filter-input {
+        background: rgba(21, 27, 38, 0.5); border: 1px solid var(--border);
+        border-radius: 16px; padding: 15px 20px; width: 100%;
+        color: #fff; font-weight: 700; outline: none; transition: 0.3s;
+        font-size: 0.85rem; appearance: none;
+    }
+    .filter-input:focus { border-color: var(--accent); }
 
     /* ─── MASONRY GRID ─── */
     .history-grid {
@@ -67,13 +164,9 @@
         display: flex; flex-direction: column; gap: 25px; overflow: hidden;
     }
     .hist-tile:hover { 
-        transform: translateY(-15px) rotateX(2deg); 
+        transform: translateY(-15px); 
         border-color: rgba(255,255,255,0.1);
-        box-shadow: 0 50px 100px rgba(0,0,0,0.4);
-    }
-    .hist-tile::after {
-        content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 150px;
-        background: radial-gradient(circle at top right, rgba(0, 102, 255, 0.1), transparent 70%);
+        box-shadow: 0 40px 80px rgba(0,0,0,0.4);
     }
 
     .tile-header { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -89,10 +182,10 @@
         background: rgba(0,0,0,0.2); border-radius: 20px; padding: 20px;
         text-align: center; border: 1px solid rgba(255,255,255,0.02);
     }
-    .stat-val { font-size: 2.2rem; font-weight: 1000; line-height: 1; }
+    .stat-val { font-size: 2.22rem; font-weight: 1000; line-height: 1; }
     .stat-val.ok { color: var(--success); }
     .stat-val.ng { color: var(--danger); }
-    .stat-lbl { font-size: 0.65rem; font-weight: 900; color: #484f58; text-transform: uppercase; margin-top: 8px; letter-spacing: 2px; }
+    .stat-lbl { font-size: 0.6rem; font-weight: 950; color: #484f58; text-transform: uppercase; margin-top: 8px; letter-spacing: 2px; }
 
     .trace-info { display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid var(--border); }
     .trace-item { display: flex; flex-direction: column; gap: 4px; }
@@ -107,8 +200,7 @@
         color: #fff; font-size: 1.2rem; transition: 0.3s; text-decoration: none;
     }
     .btn-circle:hover { background: var(--accent); border-color: var(--accent); transform: scale(1.05); color: #fff; }
-    .btn-circle.edit:hover { background: #fbbf24; border-color: #fbbf24; color: #000; }
-    .btn-circle.del:hover { background: #ff4d4d; border-color: #ff4d4d; }
+    .btn-circle.del:hover { background: var(--danger); border-color: var(--danger); }
 
     .status-badge {
         position: absolute; top: 0; left: 0; padding: 6px 15px;
@@ -118,12 +210,12 @@
     .st-comp { background: rgba(0, 255, 136, 0.15); color: var(--success); }
     .st-active { background: rgba(0, 102, 255, 0.15); color: var(--accent); }
 
+    .no-results { grid-column: 1 / -1; text-align: center; padding: 100px; color: #484f58; font-weight: 900; font-size: 1.5rem; border: 1px dashed var(--border); border-radius: 32px; }
+
     @@media (max-width: 900px) {
-        .history-grid { grid-template-columns: 1fr; }
+        .control-hub { grid-template-columns: 1fr; }
         .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
     }
-</style>
-</style>
 </style>
 
 <div class="history-page">
@@ -144,23 +236,70 @@
             </div>
         </div>
 
-        <!-- ── SEARCH HUD ── -->
-        <div class="search-hub fade-in" style="animation-delay: 0.1s;">
-            <i class="bi bi-search" style="position: absolute; left: 25px; top: 22px; color: var(--accent); font-size: 1.2rem;"></i>
-            <input type="text" class="search-input" placeholder="SEARCH_BY_VIN_OR_DOC_NUMBER..." />
+        <!-- ── CONTROL HUB ── -->
+        <div class="control-hub fade-in" style="animation-delay: 0.1s;">
+            <div class="control-item">
+                <i class="bi bi-search"></i>
+                <input type="text" id="globalSearch" placeholder="SEARCH_BY_VIN_OR_DOC..." onkeyup="filterHistory()" />
+            </div>
+            <div class="control-item">
+                <i class="bi bi-calendar3"></i>
+                <input type="date" id="dateFilter" onchange="filterHistory()" />
+            </div>
+            <div class="control-item">
+                <i class="bi bi-cpu"></i>
+                <select id="typeFilter" onchange="filterHistory()">
+                    <option value="ALL">ALL TYPES</option>
+                    @foreach (var type in Model.Select(x => x.HoseType).Distinct().OrderBy(x => x))
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- ── INTELLIGENCE SUMMARY (TOTAL INPUT) ── -->
+        <div class="intel-hub fade-in" style="animation-delay: 0.15s;">
+            <div class="intel-card cyan">
+                <div class="intel-data">
+                    <span class="intel-val cyan" id="totalReports">0</span>
+                    <span class="intel-lbl">Total Reports</span>
+                </div>
+                <div class="intel-ico cyan"><i class="bi bi-layers-half"></i></div>
+            </div>
+            <div class="intel-card green">
+                <div class="intel-data">
+                    <span class="intel-val green" id="totalOk">0</span>
+                    <span class="intel-lbl">Unit Passed</span>
+                </div>
+                <div class="intel-ico green"><i class="bi bi-check2-all"></i></div>
+            </div>
+            <div class="intel-card red">
+                <div class="intel-data">
+                    <span class="intel-val red" id="totalNg">0</span>
+                    <span class="intel-lbl">Unit Failed</span>
+                </div>
+                <div class="intel-ico red"><i class="bi bi-exclamation-triangle"></i></div>
+            </div>
         </div>
 
         <!-- ── MASONRY TILES ── -->
-        <div class="history-grid">
+        <div class="history-grid" id="historyGrid">
             @foreach (var item in Model.OrderByDescending(x => x.CreatedDate))
             {
-                <div class="hist-tile fade-in" style="animation-delay: 0.2s;">
+                <div class="hist-tile record-item fade-in" 
+                     data-date="@item.CreatedDate.ToString("yyyy-MM-dd")"
+                     data-type="@item.HoseType"
+                     data-ok="@item.QtyOk"
+                     data-ng="@item.NgDimension"
+                     style="animation-delay: 0.2s;">
+                    
                     <span class="status-badge @(item.Status == "COMPLETED" ? "st-comp" : "st-active")">
                         @(item.Status == "COMPLETED" ? "SYNCED" : "PENDING")
                     </span>
 
                     <div class="tile-header">
-                        <div class="doc-num">@item.DocumentNumber</div>
+                        <div class="doc-num">#@item.DocumentNumber</div>
                         <div class="date-stamp">@item.CreatedDate.ToString("dd MMM yyyy, HH:mm")</div>
                     </div>
 
@@ -192,21 +331,58 @@
                     </div>
 
                     <div class="actions-row">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-circle" title="View Dossier">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-circle edit" title="Edit Dossier">
-                            <i class="bi bi-sliders"></i>
-                        </a>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-circle" title="View"><i class="bi bi-eye"></i></a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-circle" title="Edit"><i class="bi bi-sliders"></i></a>
                         <form asp-action="Delete" method="post" onsubmit="return confirm('ERASE DOSSIER?');" style="flex:1; display:flex;">
                             <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn-circle del" style="width:100%; border:none;" title="Delete Dossier">
+                            <button type="submit" class="btn-circle del" style="width:100%; border:none;" title="Delete">
                                 <i class="bi bi-trash3"></i>
                             </button>
                         </form>
                     </div>
                 </div>
             }
+            <div id="noResults" class="no-results" style="display: none;">NO MATCHING RECORDS FOUND</div>
         </div>
     </div>
 </div>
+
+<script>
+    function filterHistory() {
+        const query = document.getElementById('globalSearch').value.toUpperCase();
+        const dateVal = document.getElementById('dateFilter').value;
+        const typeVal = document.getElementById('typeFilter').value;
+        
+        const items = document.querySelectorAll('.record-item');
+        let visibleCount = 0;
+        let totalOk = 0;
+        let totalNg = 0;
+
+        items.forEach(item => {
+            const content = item.innerText.toUpperCase();
+            const date = item.getAttribute('data-date');
+            const type = item.getAttribute('data-type');
+
+            const matchesSearch = content.includes(query);
+            const matchesDate = !dateVal || date === dateVal;
+            const matchesType = typeVal === 'ALL' || type === typeVal;
+
+            if (matchesSearch && matchesDate && matchesType) {
+                item.style.display = 'flex';
+                visibleCount++;
+                totalOk += parseInt(item.getAttribute('data-ok') || 0);
+                totalNg += parseInt(item.getAttribute('data-ng') || 0);
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        document.getElementById('totalReports').innerText = visibleCount;
+        document.getElementById('totalOk').innerText = totalOk;
+        document.getElementById('totalNg').innerText = totalNg;
+        document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    // Initial run
+    window.addEventListener('load', filterHistory);
+</script>
