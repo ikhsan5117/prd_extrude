@@ -8,19 +8,20 @@
 @section Styles {
     <style>
         :root {
-            --bg-deep: #0b1120;
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(56, 189, 248, 0.15);
+            --bg-deep: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(56, 189, 248, 0.2);
             --accent-glow: #38bdf8;
             --accent-success: #10b981;
-            --accent-warning: #fbbf24;
+            --accent-warning: #f59e0b;
             --accent-danger: #ef4444;
-            --text-white: #f8fafc;
+            --text-white: #f1f5f9;
             --text-dim: #94a3b8;
+            --hud-glow: 0 0 15px rgba(56, 189, 248, 0.2);
         }
 
         body {
-            background: radial-gradient(circle at top right, #1e293b, #0b1120);
+            background: radial-gradient(circle at 50% 0%, #1e293b, #0b1120);
             color: var(--text-white);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
@@ -28,19 +29,33 @@
             letter-spacing: -0.01em;
         }
 
-        /* --- Search & Control Bar --- */
+        /* --- Header & Layout --- */
         .search-action-bar {
             display: flex; align-items: center; justify-content: center; gap: 15px;
-            flex-wrap: wrap;
+            flex-wrap: wrap; margin-bottom: 30px;
+        }
+        .header-title-main {
+            font-size: 26px; font-weight: 800; color: #fff; text-align: center;
+            letter-spacing: 6px; text-transform: uppercase; margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .header-subtitle {
+            font-size: 11px; font-weight: 700; color: var(--text-dim); text-align: center;
+            letter-spacing: 5px; text-transform: uppercase; margin-bottom: 40px;
+        }
+
+        /* --- Search Console --- */
+        .search-container {
             max-width: 1200px; margin: 0 auto 25px auto; width: 100%; padding: 0 15px;
         }
         .search-input-group {
-            flex: 1 1 380px; max-width: 800px; display: flex; align-items: stretch; background: rgba(30, 41, 59, 0.55);
+            flex: 1 1 380px; max-width: 800px; display: flex; align-items: stretch; 
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(15, 23, 42, 0.8) 25%, #020617 85%);
             border: 1px solid var(--glass-border); border-left: 5px solid var(--accent-glow);
-            border-radius: 4px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            transition: all 0.3s; height: 48px;
+            border-radius: 4px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            transition: all 0.3s; height: 52px;
         }
-        .search-input-group:focus-within { border-color: var(--accent-glow); box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+        .search-input-group:focus-within { border-color: var(--accent-glow); box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); }
 
         .planning-search-panel {
             width: 360px; min-width: 260px; max-width: 100%; position: relative;
@@ -159,10 +174,16 @@
         .search-trigger-btn:hover { background: #fff; box-shadow: 0 0 15px var(--accent-glow); }
         
         .bt-icon-btn {
-            width: 48px; height: 48px; border-radius: 50%; background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: #94a3b8; cursor: pointer; transition: all 0.4s; position: relative;
+            width: 48px; height: 48px; border-radius: 50%;
         }
+        .info-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 30%, #020617 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; padding: 18px 25px; transition: all 0.4s;
+            display: flex; flex-direction: column; gap: 8px; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(15px);
+        }
+        .info-card:hover { border-color: var(--accent-glow); transform: translateY(-2px); }
         .bt-icon-btn.active {
             color: var(--accent-success); border-color: var(--accent-success);
             box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
@@ -234,65 +255,92 @@
         }
         .jam-btn.active {
             background: var(--accent-glow); color: #000; border-color: transparent;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); transform: scale(1.05);
+            box-shadow: var(--hud-glow), 0 0 30px rgba(0, 242, 254, 0.3); transform: scale(1.05);
         }
-        .add-btn { background: rgba(56, 189, 248, 0.05); border-style: dashed; }
+        .add-btn { background: rgba(0, 242, 254, 0.05); border-style: dashed; }
         .slot-delete-btn {
-            position: absolute; top: -10px; right: -10px; width: 20px; height: 20px;
+            position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
             border-radius: 50%; background: var(--accent-danger); border: 2px solid var(--bg-deep);
             display: flex; align-items: center; justify-content: center; font-size: 10px;
             color: #fff; opacity: 0; transition: 0.3s; z-index: 5;
+            box-shadow: 0 0 10px var(--accent-danger);
         }
         .jam-btn:hover .slot-delete-btn { opacity: 1; }
 
         /* --- Card Styles --- */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
         .dimensi-card {
-            background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(56, 189, 248, 0.18);
-            border-radius: 12px; padding: 25px; transition: all 0.4s;
-            backdrop-filter: blur(18px); position: relative; overflow: hidden;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.5) 0%, rgba(30, 64, 175, 0.4) 30%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px; padding: 25px; transition: all 0.4s;
+            backdrop-filter: blur(20px); position: relative; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+        }
+        .dimensi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+        .dimensi-card:hover { 
+            border-color: var(--accent-glow); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            transform: translateY(-4px);
         }
         .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .card-point { font-weight: 800; font-size: 14px; color: #fff; letter-spacing: 2px; }
-        .card-icon { font-size: 20px; color: var(--accent-glow); opacity: 0.5; }
-        
+        .card-point { font-weight: 800; font-size: 14px; color: #fff; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .card-icon { font-size: 20px; color: var(--accent-glow); opacity: 0.8; filter: drop-shadow(0 0 5px var(--accent-glow)); }
+
         .std-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-        .std-label { font-size: 9px; color: var(--text-dim); font-weight: 900; letter-spacing: 1.5px; opacity: 0.6; }
-        .std-value { font-size: 16px; color: var(--accent-glow); font-weight: 900; }
+        .std-label { font-size: 10px; color: #64748b; font-weight: 900; letter-spacing: 2px; opacity: 0.8; margin-bottom: 4px; }
+        .std-value { 
+            font-size: 18px; color: var(--accent-glow); font-weight: 950; 
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.5); 
+            letter-spacing: 1px;
+        }
+        .std-container::after {
+            content: ''; width: 40px; height: 2px; background: var(--accent-glow);
+            margin-top: 8px; border-radius: 2px; box-shadow: 0 0 10px var(--accent-glow);
+        }
 
         .limit-row { display: flex; gap: 12px; margin-bottom: 20px; }
         .limit-pill { 
-            flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
-            padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; justify-content: space-between;
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08);
+            padding: 10px 15px; border-radius: 50px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
         }
-        .limit-label { font-size: 9px; color: var(--text-dim); font-weight: 900; }
-        .limit-val { font-size: 14px; font-weight: 900; }
-        .limit-val.min { color: var(--accent-success); }
-        .limit-val.max { color: var(--accent-warning); }
+        .limit-label { font-size: 10px; color: #94a3b8; font-weight: 900; letter-spacing: 1px; }
+        .limit-val { font-size: 15px; font-weight: 950; }
+        .limit-val.min { color: var(--accent-success); text-shadow: 0 0 12px rgba(0, 255, 157, 0.5); }
+        .limit-val.max { color: var(--accent-warning); text-shadow: 0 0 12px rgba(255, 234, 0, 0.5); }
 
         .input-group-custom { display: flex; flex-direction: column; gap: 10px; }
-        .input-group-custom label { font-size: 10px; color: var(--text-dim); font-weight: 900; text-align: center; }
+        .input-group-custom label { font-size: 11px; color: #64748b; font-weight: 900; text-align: center; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
         .c-input {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px;
-            color: #f8fafc; padding: 15px; font-size: 28px; font-weight: 900; text-align: center; outline: none;
-            box-shadow: inset 0 2px 15px rgba(0,0,0,0.18); width: 100%; transition: all 0.3s;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
+            color: #fff; padding: 18px; font-size: 32px; font-weight: 800; text-align: center; outline: none;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); width: 100%; transition: all 0.3s;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0px;
         }
-        .c-input::placeholder { color: rgba(248,250,252,0.55); }
+        .c-input:focus { border-color: var(--accent-glow); box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+        .c-input::placeholder { color: rgba(248,250,252,0.3); }
         .status-badge { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.4s; }
-        .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 20px var(--accent-success); }
+        .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 25px var(--accent-success); }
         .status-ok .c-input { 
-            color: #10b981 !important; 
-            border-color: rgba(16, 185, 129, 0.5) !important;
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); 
-            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.1);
+            color: var(--accent-success) !important; 
+            border-color: var(--accent-success) !important;
+            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); 
+            box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.1), var(--hud-glow);
         }
-        .status-ng .status-badge { background: #ff4d4d; box-shadow: 0 0 25px #ff4d4d; }
+        .status-ng .status-badge { background: var(--accent-danger); box-shadow: 0 0 30px var(--accent-danger); }
         .status-ng .c-input { 
-            color: #ff4d4d !important; 
-            background: rgba(255, 77, 77, 0.15) !important;
-            border-color: rgba(255, 77, 77, 0.6) !important;
-            text-shadow: 0 0 15px rgba(255, 77, 77, 0.5); 
-            box-shadow: inset 0 0 25px rgba(255, 77, 77, 0.2), 0 0 15px rgba(255, 77, 77, 0.2);
+            color: var(--accent-danger) !important; 
+            background: rgba(255, 0, 85, 0.1) !important;
+            border-color: var(--accent-danger) !important;
+            text-shadow: 0 0 20px rgba(255, 0, 85, 0.7); 
+            box-shadow: inset 0 0 30px rgba(255, 0, 85, 0.2), 0 0 20px rgba(255, 0, 85, 0.3);
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
         
@@ -315,28 +363,32 @@
             flex: 1; border: none; background: transparent; color: var(--text-dim);
             font-size: 10px; font-weight: 900; padding: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s;
         }
-        .seg-btn.active-ok { background: var(--accent-success); color: #000; }
-        .seg-btn.active-ng { background: var(--accent-danger); color: #fff; }
+        .seg-btn.active-ok { background: var(--accent-success); color: #000; box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
+        .seg-btn.active-ng { background: var(--accent-danger); color: #fff; box-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
 
         .section-title {
-            font-size: 11px; font-weight: 900; color: var(--accent-glow);
-            letter-spacing: 2px; display: flex; align-items: center; gap: 10px;
-            margin: 40px 0 20px 0; padding-left: 15px; border-left: 4px solid var(--accent-glow);
+            font-size: 12px; font-weight: 800; color: var(--text-dim);
+            letter-spacing: 3px; display: flex; align-items: center; gap: 12px;
+            margin: 50px 0 25px 0; padding-left: 15px; border-left: 4px solid var(--text-dim);
             text-transform: uppercase;
         }
         .prod-data-container {
-            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(56, 189, 248, 0.1);
-            border-radius: 12px; padding: 25px; backdrop-filter: blur(15px);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 35px; backdrop-filter: blur(20px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7);
         }
         .prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         .field-column { display: flex; flex-direction: column; gap: 20px; }
         .field-box { display: flex; flex-direction: column; gap: 8px; }
         .field-label { font-size: 9px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
         .field-input-wrap {
-            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16);
-            border-radius: 10px; padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; padding: 16px 20px; transition: 0.3s;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
         }
-        .f-input { background: transparent; border: none; color: #fff; width: 100%; font-size: 14px; font-weight: 700; outline: none; }
+        .field-input-wrap:focus-within { border-color: var(--accent-glow); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); background: #000; }
+        .f-input { background: transparent; border: none; color: #fff; width: 100%; font-size: 15px; font-weight: 700; outline: none; }
         .qty-row { display: flex; gap: 10px; }
         .qty-btn {
             flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1);
@@ -411,7 +463,7 @@
         <div class="header-cluster">
             <span class="m-lbl"><i class="bi bi-clock-fill m-icon"></i> TIME / SHIFT</span>
             <div class="m-row">
-                <span class="m-val" id="h-date" style="font-size: 11px;">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
+                <span class="m-val" id="h-date" onclick="selectHUDDate()" style="font-size: 11px; cursor: pointer;" title="CLICK TO CHANGE DATE">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
                 <span class="m-divider"></span>
                 <span class="m-val m-accent" id="h-shift" onclick="toggleShift()" style="cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
             </div>
@@ -990,6 +1042,20 @@
             const month = monthNames[date.getMonth()];
             const year = date.getFullYear();
             return `${day} ${month} ${year}`;
+        }
+
+        async function selectHUDDate() {
+            const { value: date } = await Swal.fire({
+                title: 'SELECT PRODUCTION DATE',
+                input: 'date',
+                inputValue: parseDisplayDate(document.getElementById('h-date').innerText),
+                confirmButtonColor: '#38bdf8'
+            });
+            if (date) {
+                const formatted = formatDisplayDate(date);
+                document.getElementById('h-date').innerText = formatted;
+                refreshPlanningItems();
+            }
         }
 
         function setPlanningDateAndShift(dateValue, shiftValue) {

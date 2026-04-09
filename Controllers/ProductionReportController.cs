@@ -9,10 +9,12 @@ namespace VelastoProductionSystem.Controllers
     public class ProductionReportController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ElwpDbContext _elwpContext;
 
-        public ProductionReportController(ApplicationDbContext context)
+        public ProductionReportController(ApplicationDbContext context, ElwpDbContext elwpContext)
         {
             _context = context;
+            _elwpContext = elwpContext;
         }
 
         // GET: ProductionReport (Monitoring List)
@@ -179,67 +181,81 @@ namespace VelastoProductionSystem.Controllers
             return NotFound();
         }
 
-        // AJAX API: Get Planning Items by Date & Shift
         [HttpGet]
         public async Task<IActionResult> GetPlanningItems(DateTime date, string shift)
         {
-            // Gunakan culture Indonesia
-            var culture = new System.Globalization.CultureInfo("id-ID");
+            var cultureID = new System.Globalization.CultureInfo("id-ID");
+            var cultureEN = new System.Globalization.CultureInfo("en-US");
             
-            // Ambil bagian tanggalnya saja "8 APRIL 2026" (tanpa nama hari agar lebih fleksibel)
-            var datePart = date.ToString("d MMMM yyyy", culture).ToUpper();
-            
-            // Konversi Shift agar mendukung format SHIFT I/II/III dan SHIFT 1/2/3
-            var shiftRaw = (shift ?? "").Trim().ToUpper();
-            if (shiftRaw.StartsWith("SHIFT "))
-            {
-                shiftRaw = shiftRaw.Substring(6).Trim();
-            }
+            // 1. PRIORITAS: Ambil Live dari ELWP_PRD (Source of Truth Utama)
+            var start = date.Date;
+            var end = start.AddDays(1);
 
-            string shiftVariant1 = shiftRaw;
-            string shiftVariant2 = shiftRaw;
-            if (shiftRaw == "I") shiftVariant1 = "1";
-            else if (shiftRaw == "II") shiftVariant1 = "2";
-            else if (shiftRaw == "III") shiftVariant1 = "3";
-            else if (shiftRaw == "1") shiftVariant1 = "I";
-            else if (shiftRaw == "2") shiftVariant1 = "II";
-            else if (shiftRaw == "3") shiftVariant1 = "III";
-
-            var shiftSearch1 = "SHIFT " + shiftRaw;
-            var shiftSearch2 = "SHIFT " + shiftVariant1;
-
-            // Ambil data yang mengandung tanggal tersebut dan shift tersebut
-            var itemRows = await _context.PlanningMasters
-                .Where(p => p.DateShiftString != null &&
-                            p.DateShiftString.ToUpper().Contains(datePart) &&
-                            (p.DateShiftString.ToUpper().Contains(shiftSearch1) || p.DateShiftString.ToUpper().Contains(shiftSearch2)))
-                .Select(p => new { p.PartName1, p.PartName2, p.DateShiftString })
+            var elwpRows = await _elwpContext.ElwpPlannings
+                .Where(p => p.TanggalPlanning >= start && p.TanggalPlanning < end)
                 .ToListAsync();
 
-            if (!itemRows.Any())
+            if (elwpRows.Any())
             {
-                // Jika tidak ada data untuk shift yang dipilih, fallback ke semua shift pada tanggal yang sama
-                itemRows = await _context.PlanningMasters
-                    .Where(p => p.DateShiftString != null && p.DateShiftString.ToUpper().Contains(datePart))
-                    .Select(p => new { p.PartName1, p.PartName2, p.DateShiftString })
-                    .ToListAsync();
+                var shiftRaw = (shift ?? "").Trim().ToUpper();
+                if (shiftRaw.StartsWith("SHIFT ")) shiftRaw = shiftRaw.Substring(6).Trim();
+                
+                // Filter berdasarkan shift
+                var matchedShift = elwpRows.Where(x => (x.Shift ?? "").ToUpper().Contains(shiftRaw)).ToList();
+                if (matchedShift.Any()) elwpRows = matchedShift;
+
+                var items = elwpRows.Select(p => new {
+                    itemCode = p.KodeItem,
+                    itemName = (p.PartName ?? "#N/A") + (string.IsNullOrEmpty(p.PnSap) ? "" : " | " + p.PnSap),
+                    dateShift = $"{(p.TanggalPlanning?.ToString("dddd, d MMMM yyyy", cultureID) ?? "").ToUpper()} SHIFT {p.Shift}",
+                    date = p.TanggalPlanning?.ToString("yyyy-MM-dd"),
+                    shift = p.Shift
+                }).OrderBy(p => p.itemName).ToList();
+
+                return Json(items);
             }
 
-            var items = itemRows
-                .Select(p => {
-                    var parsed = ParseDateShiftString(p.DateShiftString);
-                    return new {
-                        itemCode = p.PartName1,
-                        itemName = p.PartName2,
-                        dateShift = p.DateShiftString,
-                        date = parsed.date,
-                        shift = parsed.shift
-                    };
-                })
-                .Distinct()
-                .ToList();
+            // 2. FALLBACK: Jika di ELWP kosong (data manual/lama), ambil dari Cache Lokal
+            var dayStr1 = date.Day.ToString();
+            var dayStr2 = date.Day.ToString("00");
+            var months = new List<string> {
+                date.ToString("MMMM", cultureID).ToUpper(), date.ToString("MMM", cultureID).ToUpper(),
+                date.ToString("MMMM", cultureEN).ToUpper(), date.ToString("MMM", cultureEN).ToUpper()
+            }.Distinct().ToList();
 
-            return Json(items);
+            var yearFull = date.Year.ToString();
+            var yearShort = date.ToString("yy");
+
+            var itemRows = await _context.PlanningMasters
+                .Where(p => p.DateShiftString != null)
+                .Select(p => new { p.Id, p.PartName1, p.PartName2, p.Kode, p.DateShiftString })
+                .ToListAsync();
+
+            var filtered = itemRows.Where(p => {
+                var ds = p.DateShiftString.ToUpper();
+                bool hasDayMatch = ds.Contains(dayStr1) || ds.Contains(dayStr2);
+                bool hasMonthMatch = months.Any(m => ds.Contains(m));
+                bool hasYearMatch = ds.Contains(yearFull) || ds.Contains(yearShort);
+                return hasDayMatch && hasMonthMatch && hasYearMatch;
+            }).OrderByDescending(x => x.Id).ToList();
+
+            if (!filtered.Any())
+            {
+                filtered = itemRows.OrderByDescending(x => x.Id).Take(50).ToList();
+            }
+
+            var result = filtered.Select(p => {
+                var parsed = ParseDateShiftString(p.DateShiftString);
+                return new {
+                    itemCode = p.PartName1, 
+                    itemName = (p.PartName2 ?? "") + (string.IsNullOrEmpty(p.Kode) ? "" : " | " + p.Kode),
+                    dateShift = p.DateShiftString,
+                    date = parsed.date,
+                    shift = parsed.shift
+                };
+            }).Distinct().OrderBy(p => p.itemName).ToList();
+
+            return Json(result);
         }
 
         private static (string date, string shift) ParseDateShiftString(string? dateShiftString)
