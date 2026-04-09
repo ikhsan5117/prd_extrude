@@ -601,26 +601,41 @@
 
             <style>
                 .no-select { user-select: none; }
-                .add-check-trigger { opacity: 0.7; transition: all 0.2s; }
-                .add-check-trigger:hover { opacity: 1; transform: scale(1.05); }
+                .add-check-trigger { 
+                    opacity: 0.6; 
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                }
+                .add-check-trigger:hover { 
+                    opacity: 1; 
+                    background: rgba(255,255,255,0.05);
+                    transform: translateX(5px);
+                }
                 .active-tab { 
-                    background: #0ea5e9 !important; 
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; 
                     color: white !important; 
-                    box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4) !important; 
-                    border-color: white !important;
+                    box-shadow: 0 0 25px rgba(14, 165, 233, 0.6) !important; 
+                    border-color: #7dd3fc !important;
+                    transform: translateY(-3px);
                 }
                 .reading-tab {
-                    min-width: 90px;
+                    min-width: 95px;
                     text-align: center;
                     font-weight: 900;
                     letter-spacing: 1px;
                     cursor: pointer;
-                    transition: all 0.3s;
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    background: rgba(255, 255, 255, 0.05);
-                    border-radius: 6px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 2px solid rgba(255, 255, 255, 0.12);
+                    background: rgba(15, 23, 42, 0.8);
+                    border-radius: 10px;
+                    backdrop-filter: blur(5px);
                 }
-                .reading-tab:hover { border-color: rgba(14, 165, 233, 0.5); }
+                .reading-tab:hover:not(.active-tab) { 
+                    border-color: rgba(14, 165, 233, 0.6);
+                    background: rgba(14, 165, 233, 0.1);
+                    transform: translateY(-2px);
+                }
             </style>
 
             <!-- SECTION: SMART PARAMETER CARDS (ACTIVE RECORD VIEW) -->
@@ -648,37 +663,44 @@
 
                 @foreach (var mSec in monSections) {
                     <div class="col-12 col-xxl-6">
-                        <div class="hud-card h-100 shadow-hud mb-1 overflow-hidden" style="border: 1px solid rgba(255,255,255,0.08); background: rgba(10,15,25,0.4);">
-                            <div class="hud-card-header d-flex justify-content-between align-items-center py-3 px-4" style="background: rgba(255,255,255,0.03)">
+                        <div class="hud-card h-100 shadow-hud mb-1 overflow-hidden" 
+                             style="border: 1px solid @(mSec.Color)44; background: rgba(15, 23, 42, 0.6); box-shadow: 0 0 20px @(mSec.Color)11;">
+                            
+                            <div class="hud-card-header d-flex justify-content-between align-items-center py-3 px-4" 
+                                 style="background: linear-gradient(90deg, @(mSec.Color)33 0%, transparent 100%); border-bottom: 2px solid @(mSec.Color)66;">
                                 <div class="d-flex align-items-center gap-3">
-                                    <i class="bi @mSec.Icon fs-4" style="color: @mSec.Color"></i>
-                                    <span class="hud-card-title tracking-widest text-white fw-900" style="font-size: 1rem">@mSec.Title</span>
+                                    <div class="p-2 rounded-3" style="background: @(mSec.Color)22; border: 1px solid @(mSec.Color)44;">
+                                        <i class="bi @mSec.Icon fs-4" style="color: @mSec.Color"></i>
+                                    </div>
+                                    <span class="hud-card-title tracking-widest text-white fw-900" style="font-size: 1.1rem; text-shadow: 0 0 10px @(mSec.Color)66;">@mSec.Title</span>
                                 </div>
                             </div>
                             
-                            <div class="p-3">
-                                <div class="row g-3">
+                            <div class="p-4 bg-black bg-opacity-20">
+                                <div class="row g-4">
                                     @for (int r = 0; r < mSec.Rows.GetLength(0); r++) {
                                         var key = mSec.Rows[r, 2];
-                                        
                                         <div class="col-6">
-                                            <div class="param-row-hud rounded-3 p-3 text-center h-100 d-flex flex-column justify-content-between shadow-sm">
+                                            <div class="param-tile-modern rounded-3 p-3 text-center h-100 d-flex flex-column justify-content-between"
+                                                 style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; position: relative; overflow: hidden;">
+                                                
                                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <span class="text-white opacity-40 super-small fw-bold tracking-widest">@(mSec.Rows[r, 0].ToUpper())</span>
-                                                    <span class="super-small text-info-glow fw-bold">@mSec.Rows[r, 1]</span>
+                                                    <span class="text-white opacity-60 super-small fw-black tracking-widest">@(mSec.Rows[r, 0].ToUpper())</span>
+                                                    <span class="badge rounded-pill super-small" style="background: @(mSec.Color)22; color: @mSec.Color; border: 1px solid @(mSec.Color)44;">@mSec.Rows[r, 1]</span>
                                                 </div>
                                                 
-                                                <div class="std-zone py-1">
-                                                    <div class="font-monospace fw-black text-info-glow" id="spec_@key" style="font-size: 0.9rem; letter-spacing: 1px; opacity: 0.6;">--</div>
+                                                <div class="std-zone py-2 mb-2 rounded-2" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
+                                                    <div class="super-small opacity-40 text-uppercase mb-1" style="font-size: 0.55rem;">Standard Target</div>
+                                                    <div class="font-monospace fw-black" id="spec_@key" style="font-size: 1.1rem; color: @mSec.Color; filter: drop-shadow(0 0 5px @(mSec.Color)44);">--</div>
                                                 </div>
                                                 
-                                                <div class="input-zone mt-2">
+                                                <div class="input-zone">
                                                     <input id="input_@key"
                                                            onchange="updateReadingData('@key', this.value)"
                                                            oninput="validateParam(this, 'spec_@key')"
-                                                           class="hud-input-underlined text-center fw-black font-monospace w-100" 
+                                                           class="vibrant-hud-input w-100" 
                                                            placeholder="0.00" 
-                                                           style="font-size: 1.6rem; height: 60px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2)" />
+                                                           style="--theme-color: @mSec.Color;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -689,6 +711,34 @@
                     </div>
                 }
             </div>
+
+            <style>
+                .vibrant-hud-input {
+                    background: rgba(255,255,255,0.05);
+                    border: 2px solid rgba(255,255,255,0.1);
+                    border-radius: 8px;
+                    color: white;
+                    text-align: center;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-weight: 900;
+                    font-size: 1.8rem;
+                    height: 65px;
+                    width: 100%;
+                    outline: none;
+                    transition: all 0.3s;
+                }
+                .vibrant-hud-input:focus {
+                    background: rgba(255,255,255,0.1);
+                    border-color: var(--theme-color);
+                    box-shadow: 0 0 20px var(--theme-color);
+                    transform: translateY(-2px);
+                }
+                .param-tile-modern:hover {
+                    background: rgba(255,255,255,0.07) !important;
+                    border-color: rgba(255,255,255,0.2) !important;
+                    transform: translateY(-5px);
+                }
+            </style>
 
             <!-- SECTION: WASTE & FOOTER HUD -->
             <div class="row g-3">
