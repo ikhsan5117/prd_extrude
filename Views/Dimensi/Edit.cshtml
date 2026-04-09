@@ -718,7 +718,10 @@
         })));
         let measurements = [];
 
-        // Build 5 Slots (R1 to R5)
+        // Build slots with independent times
+        const timeHeader = "@(Model.Measurements.FirstOrDefault()?.TimeSection ?? "")";
+        const timeParts = timeHeader.split(',').map(s => s.trim());
+
         for (let i = 1; i <= 5; i++) {
             const hasData = rawMeasurements.some(m => m[`r${i}`] !== null && m[`r${i}`] !== "");
             if (hasData || i === 1) {
@@ -728,52 +731,36 @@
                     const isTotal = search.includes('total');
                     const isThick = search.includes('thick');
                     
-                    // Priority 1: Exact Match
                     let row = rawMeasurements.find(m => (m.pointName || "").trim().toLowerCase() === search);
-                    
-                    // Priority 2: Smart Fuzzy (Distinguish Inner vs Total)
                     if (!row && isThick) {
                         row = rawMeasurements.find(m => {
                             const dbName = (m.pointName || "").trim().toLowerCase();
                             const dbIsInner = dbName.includes('inner');
                             const dbIsTotal = dbName.includes('total');
-                            
-                            // Must match Inner/Total category
-                            if (isInner && !dbIsInner) return false;
-                            if (isTotal && !dbIsTotal) return false;
-                            
-                            // Check for thickness keyword and coordinate (x/y)
                             const hasX = search.includes('(x)');
                             const hasY = search.includes('(y)');
+                            if (isInner && !dbIsInner) return false;
+                            if (isTotal && !dbIsTotal) return false;
                             if (hasX && !dbName.includes('(x)')) return false;
                             if (hasY && !dbName.includes('(y)')) return false;
-                            
                             return dbName.includes('thick');
                         });
                     }
-                    
-                    // Priority 3: Fallback to simple matching for Diameter/Spiral
                     if (!row && !isThick) {
-                        row = rawMeasurements.find(m => 
-                            (m.pointName || "").trim().toLowerCase().includes(search.split(' ')[0])
-                        );
+                        row = rawMeasurements.find(m => (m.pointName || "").trim().toLowerCase().includes(search.split(' ')[0]));
                     }
-                    
                     return row ? row[`r${i}`] : "";
                 };
                 
                 const getVState = (itemName) => {
-                    // Try specific match (new logic)
                     let row = rawMeasurements.find(m => (m.pointName || "").includes(itemName));
-                    // Fallback to generic Visual Check (legacy logic)
                     if (!row) row = rawMeasurements.find(m => (m.pointName || "").trim() === "Visual Check");
-                    
                     const val = row ? row[`r${i}`] : null;
                     return (val == 1) ? "ok" : (val == 0 && val !== null ? "ng" : null);
                 };
 
                 measurements.push({
-                    time: i === 1 ? "@Model.Measurements.FirstOrDefault()?.TimeSection" : "",
+                    time: timeParts[i-1] || "",
                     data: {
                         innerDia: getVal("Inner Diameter"),
                         innerTx: getVal("Inner Thickness (x)"),
@@ -1456,9 +1443,10 @@
                         ? (std.val.toFixed(2) + ' \u00b1 ' + std.tol.toFixed(2))
                         : '-';
 
+                    const allTimes = measurements.map(m => m.time || '').join(',');
                     const row = {
                         PointName: point.name,
-                        TimeSection: measurements[0]?.time || '',
+                        TimeSection: allTimes,
                         Frequency: '30m Sekali',
                         StandardDimension: stdText,
                         Initial: '',
@@ -1488,9 +1476,10 @@
                 ];
 
                 for (const vIt of visualItems) {
+                    const allTimes = measurements.map(m => m.time || '').join(',');
                     const vRow = {
                         PointName: vIt.name,
-                        TimeSection: measurements[0]?.time || '',
+                        TimeSection: allTimes,
                         Frequency: '30m Sekali',
                         StandardDimension: 'NORMAL',
                         Initial: 'OK',

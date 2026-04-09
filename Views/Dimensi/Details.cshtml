@@ -157,9 +157,19 @@
         <!-- LEFT: MEASUREMENT MATRIX -->
         <div class="left-matrix">
             <table class="data-table">
+                @{
+                    var timeHeaderStr = Model.Measurements?.FirstOrDefault()?.TimeSection ?? "";
+                    var timePartsArray = timeHeaderStr.Split(',').Select(s => s.Trim()).ToArray();
+                }
                 <tr class="jam-row">
                     <td colspan="3" style="border-right: none;"></td>
-                    <td colspan="6" style="border-left: none; font-weight: bold;">PUKUL / JAM</td>
+                    <td style="border-left: none; font-weight: bold;">PUKUL / JAM</td>
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <td style="font-weight: bold; font-family: 'Consolas', monospace;">
+                            @(timePartsArray.Length > i && !string.IsNullOrEmpty(timePartsArray[i]) ? timePartsArray[i] : "-")
+                        </td>
+                    }
                 </tr>
                 <tr>
                     <th width="120">POINT</th>

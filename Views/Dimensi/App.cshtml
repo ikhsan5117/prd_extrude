@@ -1007,6 +1007,15 @@
             const planningInput = document.getElementById('planningSearch');
             if (planningInput) planningInput.value = `[${item.itemCode}] ${item.itemName}`;
             document.getElementById('planningResults')?.classList.add('d-none');
+            
+            // Update Machine / Line dynamically from Planning
+            const lineEl = document.getElementById('h-line');
+            if (lineEl && item.machineName) {
+                lineEl.innerText = item.machineName;
+                lineEl.classList.add('animate__animated', 'animate__flash');
+                setTimeout(() => lineEl.classList.remove('animate__flash'), 1000);
+            }
+
             if (item.date) {
                 setPlanningDateAndShift(item.date, item.shift);
             }
@@ -1555,12 +1564,10 @@
                     const m = data.data;
                     
                     // Update Refined Technical HUD Ribbon (v3 IDs)
-                    const lineEl = document.getElementById('h-line');
                     const custEl = document.getElementById('h-customer');
                     const hoseEl = document.getElementById('h-hose');
                     const docEl = document.getElementById('h-doc');
 
-                    if(lineEl) lineEl.innerText = "DL01 ENGINE LINE"; 
                     if(custEl) custEl.innerText = m.customer || "GENERAL";
                     if(hoseEl) hoseEl.innerText = m.hoseType || "---";
                     if(docEl) docEl.innerText = m.docNo || "---";
@@ -1652,9 +1659,10 @@
                         ? (std.val.toFixed(2) + ' ± ' + std.tol.toFixed(2))
                         : '-';
 
+                    const allTimes = measurements.map(m => m.time || '').join(',');
                     const row = {
                         PointName: point.name,
-                        TimeSection: measurements[0]?.time || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                        TimeSection: allTimes,
                         Frequency: '30m Sekali',
                         StandardDimension: stdText,
                         Initial: '',
@@ -1683,9 +1691,10 @@
                     { name: 'Visual Check - Scratch', key: 'scratch' }
                 ];
                 for (const vIt of visualItems) {
+                    const allTimes = measurements.map(m => m.time || '').join(',');
                     const vRow = {
                         PointName: vIt.name,
-                        TimeSection: measurements[0]?.time || '',
+                        TimeSection: allTimes,
                         Frequency: '30m Sekali',
                         StandardDimension: 'NORMAL',
                         Initial: 'OK',
@@ -1710,8 +1719,9 @@
                     { name: 'Summary - QTY Status',  key: 'qtySt'  }
                 ];
                 for (const sf of summaryFields) {
+                    const allTimes = measurements.map(m => m.time || '').join(',');
                     const sRow = {
-                        PointName: sf.name, TimeSection: measurements[0]?.time || '',
+                        PointName: sf.name, TimeSection: allTimes,
                         Frequency: '30m Sekali', StandardDimension: '-',
                         Initial: '', Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '',
                         Status: 'OK'

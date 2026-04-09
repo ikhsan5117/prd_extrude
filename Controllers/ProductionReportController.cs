@@ -191,9 +191,12 @@ namespace VelastoProductionSystem.Controllers
             var start = date.Date;
             var end = start.AddDays(1);
 
-            var elwpRows = await _elwpContext.ElwpPlannings
-                .Where(p => p.TanggalPlanning >= start && p.TanggalPlanning < end)
-                .ToListAsync();
+            var elwpRows = await (from p in _elwpContext.ElwpPlannings
+                                 join m in _elwpContext.ElwpMachines on p.MesinId equals m.Id into machineJoin
+                                 from m in machineJoin.DefaultIfEmpty()
+                                 where p.TanggalPlanning >= start && p.TanggalPlanning < end
+                                 select new { p, MachineName = m != null ? m.NamaMesin : "UNKNOWN" })
+                                 .ToListAsync();
 
             if (elwpRows.Any())
             {
@@ -201,15 +204,16 @@ namespace VelastoProductionSystem.Controllers
                 if (shiftRaw.StartsWith("SHIFT ")) shiftRaw = shiftRaw.Substring(6).Trim();
                 
                 // Filter berdasarkan shift
-                var matchedShift = elwpRows.Where(x => (x.Shift ?? "").ToUpper().Contains(shiftRaw)).ToList();
+                var matchedShift = elwpRows.Where(x => (x.p.Shift ?? "").ToUpper().Contains(shiftRaw)).ToList();
                 if (matchedShift.Any()) elwpRows = matchedShift;
 
-                var items = elwpRows.Select(p => new {
-                    itemCode = p.KodeItem,
-                    itemName = (p.PartName ?? "#N/A") + (string.IsNullOrEmpty(p.PnSap) ? "" : " | " + p.PnSap),
-                    dateShift = $"{(p.TanggalPlanning?.ToString("dddd, d MMMM yyyy", cultureID) ?? "").ToUpper()} SHIFT {p.Shift}",
-                    date = p.TanggalPlanning?.ToString("yyyy-MM-dd"),
-                    shift = p.Shift
+                var items = elwpRows.Select(x => new {
+                    itemCode = x.p.KodeItem,
+                    itemName = (x.p.PartName ?? "#N/A") + (string.IsNullOrEmpty(x.p.PnSap) ? "" : " | " + x.p.PnSap),
+                    machineName = x.MachineName,
+                    dateShift = $"{(x.p.TanggalPlanning?.ToString("dddd, d MMMM yyyy", cultureID) ?? "").ToUpper()} SHIFT {x.p.Shift}",
+                    date = x.p.TanggalPlanning?.ToString("yyyy-MM-dd"),
+                    shift = x.p.Shift
                 }).OrderBy(p => p.itemName).ToList();
 
                 return Json(items);
