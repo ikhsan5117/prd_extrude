@@ -21,7 +21,7 @@
         min-height: 210mm;
         background: var(--white);
         margin: 0 auto;
-        padding: 10mm;
+        padding: 8mm; /* Slightly more space */
         box-shadow: 0 0 40px rgba(0,0,0,0.2);
         color: #000;
         box-sizing: border-box;
@@ -82,10 +82,10 @@
     .row-point { text-align: left !important; font-weight: normal !important; }
     
     /* Measurement sub-lines (the 5 lines per point) */
-    .sub-matrix-td { padding: 0 !important; }
-    .sub-matrix-inner { width: 100%; height: 100%; border-collapse: collapse; }
-    .sub-matrix-inner td { border: none; border-bottom: 0.1px solid #777; height: 12px; font-size: 7px; color: #555; }
-    .sub-matrix-inner tr:last-child td { border-bottom: none; }
+    .sub-matrix-td { padding: 0 !important; vertical-align: top; }
+    .sub-matrix-inner { width: 100%; height: 100%; border-collapse: collapse; border: none !important; }
+    .sub-matrix-inner td { border: none !important; border-bottom: 1px solid var(--grid) !important; height: 18px; font-size: 8px; color: #000; font-family: 'Consolas', monospace; }
+    .sub-matrix-inner tr:last-child td { border-bottom: none !important; }
 
     .footer-area {
         display: flex;
@@ -254,25 +254,25 @@
                     <tr>
                         <td class="row-point">@point</td>
                         <td>@(row?.Frequency ?? "30 Menit Sekali")</td>
-                        <td style="padding: 0 !important; background: #fff; vertical-align: middle; border: 1px solid #ccc;">
+                        <td style="padding: 0 !important; background: #fff; vertical-align: middle; border: 1px solid var(--grid);">
                             @if (spsVal != null) {
                                 var v = spsVal.Value;
-                                <table style="width: 100%; border-collapse: collapse; min-height: 85px; border: none !important; margin: 0;">
+                                <table style="width: 100%; border-collapse: collapse; min-height: 90px; border: none !important; margin: 0;">
                                     <tr>
-                                        <td rowspan="5" style="padding-left: 15px; vertical-align: middle; text-align: left; border: none !important;">
-                                            <div style="font-weight: 800; font-size: 12px; color: #333; white-space: nowrap;">
-                                                @v.t.ToString("0.00").Replace(".", ",") ± @v.tol.ToString("0.0").Replace(".", ",")
+                                        <td rowspan="5" style="padding-left: 10px; vertical-align: middle; text-align: left; border: none !important; border-right: 1px solid var(--grid) !important;">
+                                            <div style="font-weight: 800; font-size: 13px; color: #000; white-space: nowrap;">
+                                                @v.t.ToString("G29").Replace(".", ",") ± @v.tol.ToString("G29").Replace(".", ",")
                                             </div>
                                         </td>
-                                        <td style="width: 45px; height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #bbb; text-align: right; padding-right: 8px; border: none !important; vertical-align: top;">@F(v.t + v.tol)</td>
+                                        <td style="width: 40px; height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #777; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle;">@F(v.t + v.tol)</td>
                                     </tr>
-                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 8px; border: none !important; vertical-align: middle;">@F(v.t + v.tol/2)</td></tr>
-                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #999; text-align: right; padding-right: 8px; border: none !important; vertical-align: middle; font-weight: bold;">@F(v.t)</td></tr>
-                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 8px; border: none !important; vertical-align: middle;">@F(v.t - v.tol/2)</td></tr>
-                                    <tr><td style="height: 17px; font-size: 8px; font-family: 'Consolas', monospace; color: #bbb; text-align: right; padding-right: 8px; border: none !important; vertical-align: bottom;">@F(v.t - v.tol)</td></tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle;">@F(v.t + v.tol/2)</td></tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #555; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle; font-weight: bold;">@F(v.t)</td></tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle;">@F(v.t - v.tol/2)</td></tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #777; text-align: right; padding-right: 5px; border: none !important; vertical-align: middle;">@F(v.t - v.tol)</td></tr>
                                 </table>
                             } else {
-                                <div style="font-size: 10px; color: #ccc; text-align: center; padding: 10px;">@(row?.StandardDimension ?? "-")</div>
+                                <div style="font-size: 10px; color: #000; text-align: center; padding: 10px;">@(row?.StandardDimension ?? "-")</div>
                             }
                         </td>
                         <!-- INITIAL & 1-5 Sub Matrix -->
@@ -364,7 +364,9 @@
                         var r = measurements[key];
                         var prop = typeof(VelastoProductionSystem.Models.DimensionMeasurement).GetProperty("R" + slotIdx);
                         var val = prop?.GetValue(r);
-                        return val?.ToString() ?? "-";
+                        if (val == null) return "-";
+                        if (decimal.TryParse(val.ToString(), out decimal d)) return d.ToString("G29");
+                        return val.ToString() ?? "-";
                     }
 
                     // Detect how many slots exist (up to 5)
@@ -411,9 +413,9 @@
                         <td>@stdPnjg</td>
                         <td>@(Model.ActualLength ?? "-")</td>
                         <td>@(Model.QtyTarget > 0 ? Model.QtyTarget.ToString() : "-")</td>
-                        <td>@Model.QtyOk</td>
-                        <td>@Model.NgDimension</td>
-                        <td>@Model.NgVisual</td>
+                        <td>@Model.QtyOk.ToString("G29")</td>
+                        <td>@Model.NgDimension.ToString("G29")</td>
+                        <td>@Model.NgVisual.ToString("G29")</td>
                         <td style="text-align:left;vertical-align:top;font-size:8px;">@Model.Remark</td>
                     </tr>
                     @for (int i = 0; i < 12; i++) {

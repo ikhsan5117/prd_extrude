@@ -310,11 +310,11 @@
 
                     <div class="telemetry-row">
                         <div class="stat-box">
-                            <div class="stat-val ok">@item.QtyOk</div>
+                            <div class="stat-val ok">@item.QtyOk.ToString("G29")</div>
                             <div class="stat-lbl">PASSED</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-val ng">@item.NgDimension</div>
+                            <div class="stat-val ng">@item.NgDimension.ToString("G29")</div>
                             <div class="stat-lbl">FAILED</div>
                         </div>
                     </div>
