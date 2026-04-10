@@ -4,243 +4,1036 @@
     ViewData["Title"] = "Edit Production Report";
 }
 
-<div class="row animate-fadeInUp">
-    <div class="col-md-11 mx-auto">
-        <form asp-action="Edit" id="mainForm">
-            <input type="hidden" asp-for="Id" />
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 mb-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171;"></div>
+<div class="production-blueprint pb-5">
+    <div class="container-fluid p-1 p-md-2">
 
-            <!-- DIGITAL PAPER SHEET HEADER (SYNCED WITH CREATE) -->
-            <div class="production-report-sheet mb-4 p-5 rounded-0 shadow-lg" style="background: rgba(18, 22, 38, 0.85); border: 2px solid rgba(255, 255, 255, 0.15);">
-                <div class="row align-items-start">
-                    <div class="col-md-5">
-                        <div class="d-flex align-items-center mb-4">
-                            <i class="bi bi-vimeo fs-1 text-primary me-2"></i>
-                            <h3 class="m-0 fw-black text-white" style="letter-spacing: 1px;">VELASTO<span class="text-white-50 ms-2 fw-light fs-5">INDONESIA</span></h3>
+        <!-- HEADER HUD -->
+        <div class="mb-5 py-2">
+            <div class="text-center">
+                <h1 class="m-0 fw-black text-white letter-spacing-2" style="font-size: 1.6rem;">EDIT PRODUCTION REPORT</h1>
+                <div class="text-warning fw-bold tracking-widest" style="font-size: 0.95rem;">(PARAMETER CORRECTION)</div>
+            </div>
+        </div>
+
+        <form asp-action="Edit" id="editForm">
+            <input type="hidden" asp-for="Id" />
+            @* Preserve immutable fields *@
+            <input type="hidden" asp-for="CreatedDate" />
+            <input type="hidden" asp-for="Status" />
+            <input type="hidden" id="StandardParameterSettingId" name="StandardParameterSettingId" value="@Model?.StandardParameterSettingId" />
+            <div asp-validation-summary="ModelOnly" class="alert mb-4" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:10px;"></div>
+
+            <!-- SECTION 1: COMMAND CONSOLE (HEADER) -->
+            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                <div class="hud-card-header d-flex justify-content-between align-items-center py-2 px-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-terminal-fill hud-card-icon fs-6"></i>
+                        <span class="hud-card-title small tracking-widest font-monospace">PRODUCTION COMMAND CONSOLE</span>
+                    </div>
+                    <div class="d-flex gap-3 super-small font-black opacity-40 text-uppercase letter-spacing-2">
+                        <span><i class="bi bi-file-text me-1"></i>DOC: <input asp-for="DocumentNumber" id="DocNo" class="bg-transparent border-0 text-white-50 w-auto" placeholder="AUTO" /></span>
+                        <span><i class="bi bi-activity me-1"></i>REV: <input asp-for="RevisionNumber" id="RevNo" class="bg-transparent border-0 text-white-50 w-auto" placeholder="0" /></span>
+                    </div>
+                </div>
+
+                <!-- SPS PROTOCOL SYNC ROW -->
+                <div class="p-3 bg-black bg-opacity-20 border-bottom border-white border-opacity-5">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-5">
+                            <div class="hud-pill p-0 d-flex flex-row overflow-hidden border border-info border-opacity-50" style="min-height:60px;background:#0f172a;border-radius:8px;">
+                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
+                                    <label class="mb-0 text-info font-black" style="font-size:0.65rem;letter-spacing:1px;"><i class="bi bi-keyboard me-2"></i>MANUAL PROTOCOL</label>
+                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size:1rem;outline:none;" placeholder="ITEM CODE..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
+                                </div>
+                                <button type="button" onclick="let v=document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width:60px;background:rgba(14,165,233,0.1);color:#0ea5e9;" title="Search">
+                                    <i class="bi bi-search fs-4"></i>
+                                </button>
+                                <button type="button" onclick="startSpsScanner()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width:70px;background:rgba(14,165,233,0.2);color:#38bdf8;" title="Scan Barcode">
+                                    <i class="bi bi-qr-code-scan fs-3"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="metadata-entry-grid">
-                            <div class="meta-entry">
-                                <span class="label">No Doc.</span>
-                                <input asp-for="DocumentNumber" class="meta-input" />
+                        <div class="col-md-7">
+                            <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height:60px;position:relative;background:#0f172a;border-radius:8px;">
+                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
+                                    <label class="mb-0 text-info font-black" style="font-size:0.65rem;letter-spacing:1px;"><i class="bi bi-link-45deg me-2"></i>SPS REFERENCE LINKED &nbsp;<span id="spsLinkedLabel" class="@(Model?.StandardParameterSettingId != null ? "text-success" : "text-white-50")" style="font-size:0.7rem;">@(Model?.StandardParameterSettingId != null ? "✓ LINKED" : "— NONE —")</span></label>
+                                    <div class="font-monospace fw-bold" id="spsLinkedDisplay" style="font-size:0.9rem;opacity:0.8;">
+                                        @if (Model?.StandardParameterSetting != null) {
+                                            <span class="text-success">[@Model.StandardParameterSetting.ItemList] @Model.StandardParameterSetting.HoseType</span>
+                                        } else {
+                                            <span class="text-white-50">Type item code or scan to link SPS protocol...</span>
+                                        }
+                                    </div>
+                                </div>
+                                <button type="button" onclick="clearSpsLink()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width:60px;background:rgba(239,68,68,0.08);color:#f87171;" title="Clear SPS Link">
+                                    <i class="bi bi-x-circle fs-4"></i>
+                                </button>
                             </div>
-                            <div class="meta-entry">
-                                <span class="label">Date</span>
-                                <input asp-for="ProductionDate" type="date" class="meta-input" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4-PILL ROW -->
+                <div class="p-2 bg-black bg-opacity-10">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background:rgba(15,23,42,0.8);">
+                                <label><i class="bi bi-calendar-check me-2 text-info"></i>SYSTEM DATE</label>
+                                <input type="date" asp-for="ProductionDate" id="ProductionDate" class="hud-input font-monospace text-primary-glow" required />
                             </div>
-                            <div class="meta-entry">
-                                <span class="label">Revisi</span>
-                                <input asp-for="RevisionNumber" class="meta-input" />
-                            </div>
-                            <div class="meta-entry">
-                                <span class="label">Shift</span>
-                                <select asp-for="Shift" class="meta-input">
-                                    <option value="Shift 1">Shift 1</option>
-                                    <option value="Shift 2">Shift 2</option>
-                                    <option value="Shift 3">Shift 3</option>
+                        </div>
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background:rgba(15,23,42,0.8);">
+                                <label><i class="bi bi-clock-history me-2 text-info"></i>SHIFT MONITORING</label>
+                                <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0 text-white" style="-webkit-appearance:none;">
+                                    <option value="I" class="bg-dark">SHIFT I (SIANG)</option>
+                                    <option value="II" class="bg-dark">SHIFT II (SORE)</option>
+                                    <option value="III" class="bg-dark">SHIFT III (MALAM)</option>
                                 </select>
                             </div>
-                            <div class="meta-entry">
-                                <span class="label">Customer</span>
-                                <input asp-for="CustomerName" class="meta-input" />
+                        </div>
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background:rgba(15,23,42,0.8);">
+                                <label><i class="bi bi-building me-2 text-info"></i>CUSTOMER ENTITY</label>
+                                <input asp-for="CustomerName" id="CustomerName" class="hud-input small text-white font-black" placeholder="PT. ADM" />
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 text-center pt-5">
-                        <h2 class="text-white fw-bold mt-3 mb-0">Edit Production Report</h2>
-                        <div class="text-white-50 fs-5">(Dimension)</div>
-                        
-                        <div class="mt-4 p-3 border border-info border-opacity-20 rounded-3 bg-info bg-opacity-5">
-                            <div class="d-flex flex-column gap-2 text-start">
-                                <div class="form-group">
-                                    <label class="extra-small text-info fw-bold mb-1">HOSE TYPE</label>
-                                    <input asp-for="HoseType" class="form-control form-control-sm bg-dark border-secondary text-white" />
-                                </div>
-                                <div class="form-group">
-                                    <label class="extra-small text-warning fw-bold mb-1">REFERENCE SPS</label>
-                                    <select asp-for="StandardParameterSettingId" class="form-select form-select-sm bg-dark border-warning text-warning fw-bold" asp-items="ViewBag.StandardParameterSettings">
-                                        <option value="">-- Pilih Rujukan SPS --</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="signature-section-grid shadow-sm" style="height: 140px; border: 1px solid rgba(255,255,255,0.2);">
-                            <div class="sig-column">
-                                <div class="sig-header">PREPARED</div>
-                                <div class="sig-body text-info">@Model?.CreatedBy?.Split(' ')[0]</div>
-                            </div>
-                            <div class="sig-column">
-                                <div class="sig-header">CHECKED</div>
-                                <div class="sig-body">@(Model?.CheckedBy?.Split(' ')[0] ?? "-")</div>
-                            </div>
-                            <div class="sig-column">
-                                <div class="sig-header">APPROVED</div>
-                                <div class="sig-body">@(Model?.ApprovedBy?.Split(' ')[0] ?? "-")</div>
+                        <div class="col-6">
+                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background:rgba(15,23,42,0.8);">
+                                <label><i class="bi bi-cpu me-2 text-info"></i>HOSE SPECIFICATION TYPE</label>
+                                <input asp-for="HoseType" id="HoseType" class="hud-input small font-monospace text-white" placeholder="Extrusion Spec Name..." />
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
-            <!-- FORM SECTIONS -->
-            <div class="row g-4 mb-4">
-                <div class="col-lg-6">
-                    <div class="card tactical-glass h-100 border-0 shadow-lg">
-                        <div class="tactical-header-bar material">
-                            <i class="bi bi-pencil-fill"></i>
-                            <span>EDIT MATERIAL (ACTUAL)</span>
-                        </div>
-                        <div class="card-body p-4 pt-1">
-                            <div class="tactical-input-group mb-3">
-                                <label class="text-info fw-bold extra-small mb-2 d-block">INNER MATERIAL</label>
-                                <div class="row g-2">
-                                    <div class="col-5"><input asp-for="InnerMaterialActual" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
-                                    <div class="col-4"><input asp-for="InnerMaterialLotNo" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
-                                    <div class="col-3"><input asp-for="InnerMaterialSG" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
-                                </div>
-                            </div>
-                            <div class="tactical-input-group mb-3">
-                                <label class="text-warning fw-bold extra-small mb-2 d-block">OUTER MATERIAL</label>
-                                <div class="row g-2">
-                                    <div class="col-5"><input asp-for="OuterMaterialActual" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
-                                    <div class="col-4"><input asp-for="OuterMaterialLotNo" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
-                                    <div class="col-3"><input asp-for="OuterMaterialSG" class="form-control bg-dark border-secondary text-white py-1 fs-7" /></div>
-                                </div>
-                            </div>
-                            <div class="info-chip-tactical">
-                                <label class="data-label-tactical">YARN ACTUAL</label>
-                                <input asp-for="YarnActual" class="form-control" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="col-lg-6">
-                    <div class="card tactical-glass h-100 border-0 shadow-lg">
-                        <div class="tactical-header-bar die">
-                            <i class="bi bi-check2-circle"></i>
-                            <span>DIE VERIFICATION</span>
+            <!-- SECTION 2: MATERIAL & MESH CHECKING -->
+            <div class="row g-4 mb-4 align-items-start">
+                <!-- CARD: MATERIAL TRACKING -->
+                <div class="col-lg-7">
+                    <div class="hud-card shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                        <div class="hud-card-header">
+                            <i class="bi bi-box-seam hud-card-icon"></i>
+                            <span class="hud-card-title">MATERIAL & LOT TRACKING</span>
                         </div>
-                        <div class="card-body p-4 pt-1">
-                            <div class="row g-3">
-                                @foreach(var die in new[] { ("NippleDieOK", "Nipple Die"), ("TubeDieOK", "Tube Die"), ("MiddleDieOK", "Middle Die"), ("CoverDieOK", "Cover Die"), ("SpacerDieOK", "Spacer Die"), ("ToleranceDieOK", "Tolerance Die") })
-                                {
-                                    <div class="col-md-6">
-                                        <div class="tactical-switch-container">
-                                            <span class="text-white small fw-bold">@die.Item2 OK</span>
-                                            <div class="form-check form-switch m-0 p-0">
-                                                <input class="form-check-input bg-success border-success" type="checkbox" id="@die.Item1" name="@die.Item1" value="true" @(typeof(VelastoProductionSystem.Models.ProductionReport).GetProperty(die.Item1)?.GetValue(Model) as bool? == true ? "checked" : "") style="width: 32px; height: 16px;">
-                                            </div>
+                        <table class="table-hud-unified">
+                            <thead>
+                                <tr class="bg-black bg-opacity-20 text-center">
+                                    <th class="ps-4 text-start">DESCRIPTION</th>
+                                    <th width="22%">STANDARD</th>
+                                    <th width="22%">ACTUAL</th>
+                                    <th width="32%" class="hud-th-scan text-info border-start border-white border-opacity-10">NO. LOT (SCAN)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="ps-4"><div class="label-stack"><span class="label-sub">INNER (MATERIAL)</span><span class="label-main">COMPOUND</span></div></td>
+                                    <td><input asp-for="InnerMaterial" class="hud-input-underlined text-center" placeholder="---" /></td>
+                                    <td><input asp-for="InnerMaterialActual" class="hud-input-underlined text-center" placeholder="---" /></td>
+                                    <td class="hud-td-scan border-start border-white border-opacity-10">
+                                        <div class="hud-scan-group">
+                                            <input asp-for="InnerMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
+                                            <button type="button" class="hud-scan-btn" onclick="openScanner('InnerMaterialLotNo')"><i class="bi bi-upc-scan"></i></button>
                                         </div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-4"><div class="label-stack"><span class="label-sub">OUTER (MATERIAL)</span><span class="label-main">COMPOUND</span></div></td>
+                                    <td><input asp-for="OuterMaterial" class="hud-input-underlined text-center" placeholder="---" /></td>
+                                    <td><input asp-for="OuterMaterialActual" class="hud-input-underlined text-center" placeholder="---" /></td>
+                                    <td class="hud-td-scan border-start border-white border-opacity-10">
+                                        <div class="hud-scan-group">
+                                            <input asp-for="OuterMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
+                                            <button type="button" class="hud-scan-btn" onclick="openScanner('OuterMaterialLotNo')"><i class="bi bi-upc-scan"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-4"><div class="label-stack"><span class="label-sub">YARN (SUPPORT)</span><span class="label-main">POLYESTER</span></div></td>
+                                    <td><input asp-for="Yarn" class="hud-input-underlined text-center" placeholder="---" /></td>
+                                    <td><input asp-for="YarnActual" class="hud-input-underlined text-center" placeholder="---" /></td>
+                                    <td class="hud-td-scan border-start border-white border-opacity-10">
+                                        <div class="hud-scan-group">
+                                            <input asp-for="YarnLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
+                                            <button type="button" class="hud-scan-btn" onclick="openScanner('YarnLotNo')"><i class="bi bi-upc-scan"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
 
-            <!-- RESULTS -->
-            <div class="card mb-4 tactical-glass border-0 shadow-lg">
-                <div class="tactical-header-bar result">
-                    <i class="bi bi-bullseye"></i>
-                    <span>PRODUCTION SUMMARY (ACTUAL)</span>
-                </div>
-                <div class="card-body p-4 pt-0">
-                    <div class="row g-4 pt-2">
-                        <div class="col-md-4 border-end border-white border-opacity-10">
-                            <div class="info-chip-tactical mb-3">
-                                <label class="data-label-tactical">VIN KODE</label>
-                                <input asp-for="VinCode" class="form-control fs-4 fw-bold text-white" />
-                            </div>
-                            <div class="row g-2">
-                                <div class="col-12"><label class="extra-small text-white-50">Std. Panjang (mm)</label><input asp-for="StandardLength" class="form-control bg-dark border-secondary text-white" /></div>
-                                <div class="col-12"><label class="extra-small text-white-50">Actual Panjang (mm)</label><input asp-for="ActualLength" class="form-control bg-dark border-warning text-warning" /></div>
-                            </div>
+                <!-- CARD: MESH & EMBOSS -->
+                <div class="col-lg-5">
+                    <div class="hud-card shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                        <div class="hud-card-header">
+                            <i class="bi bi-patch-check hud-card-icon"></i>
+                            <span class="hud-card-title">MESH & EMBOSS QUALITY</span>
                         </div>
-
-                        <div class="col-md-8">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="stat-card-tactical primary">
-                                        <label class="stat-label-tactical">Qty Target</label>
-                                        <input asp-for="QtyTarget" class="w-100 text-center bg-transparent border-0 text-primary fw-bold fs-3" style="outline:none;" />
-                                        <div class="stat-unit-tactical">pcs</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="stat-card-tactical success">
-                                        <label class="stat-label-tactical">Qty Actual (OK)</label>
-                                        <input asp-for="QtyOk" class="w-100 text-center bg-transparent border-0 text-success fw-bold fs-3" style="outline:none;" />
-                                        <div class="stat-unit-tactical">pcs</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="stat-card-tactical danger p-2">
-                                        <label class="stat-label-tactical mb-2">Quantities (NG)</label>
+                        <table class="table-hud-unified compact-hud instrument-style">
+                            <thead>
+                                <tr class="bg-black bg-opacity-40 text-center">
+                                    <th class="ps-3 text-start py-2 font-monospace tracking-widest text-primary-glow">CATEGORIES</th>
+                                    <th width="32%" class="py-2 border-start border-white border-opacity-5">Ø96 #10</th>
+                                    <th width="32%" class="py-2 border-start border-white border-opacity-5">Ø96 #40</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="group-lane">
+                                    <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub">TIPE MESH</span><span class="label-main small">INNER (BEFORE)</span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div></td>
+                                </tr>
+                                <tr class="group-lane border-bottom border-white border-opacity-10">
+                                    <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (BEFORE)</span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div></td>
+                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div></td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">MESH CHECK</span><span class="label-main small">INNER (AFTER)</span></div></td>
+                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
+                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshInnerCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshInnerCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshInnerCheck" value="ASING"></label></div>
+                                    </td>
+                                </tr>
+                                <tr class="border-bottom border-white border-opacity-10">
+                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (AFTER)</span></div></td>
+                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
+                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshOuterCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshOuterCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshOuterCheck" value="ASING"></label></div>
+                                    </td>
+                                </tr>
+                                <tr class="group-lane border-bottom border-white border-opacity-10">
+                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">EMBOSSING</span><span class="label-main small">MARK DATA</span></div></td>
+                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-7"><input asp-for="EmbossMarkContent" class="hud-input-underlined py-1 text-center font-monospace small" placeholder="CONTENT" /></div>
+                                            <div class="col-5"><input type="date" asp-for="EmbossMarkDate" class="hud-input-underlined py-1 text-center font-monospace small" /></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">QC DETAILS</span><span class="label-main small">FINAL CHECK</span></div></td>
+                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
                                         <div class="d-flex flex-column gap-2">
-                                            <div class="input-group input-group-sm">
-                                                <span class="input-group-text bg-dark border-danger text-danger extra-small">DIM</span>
-                                                <input asp-for="NgDimension" class="form-control bg-dark border-danger text-danger text-end fw-bold" />
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="label-sub font-black text-white-50" style="min-width:40px">COND</span>
+                                                <div class="hud-pill-group sm"><label class="hud-pill-item">BERSIH<input type="radio" asp-for="QcCond" value="BERSIH"></label><label class="hud-pill-item red">KOTOR<input type="radio" asp-for="QcCond" value="KOTOR"></label></div>
                                             </div>
-                                            <div class="input-group input-group-sm">
-                                                <span class="input-group-text bg-dark border-danger text-danger extra-small">VIS</span>
-                                                <input asp-for="NgVisual" class="form-control bg-dark border-danger text-danger text-end fw-bold" />
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="label-sub font-black text-white-50" style="min-width:40px">SURF</span>
+                                                <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="QcSurf" value="OK"></label><label class="hud-pill-item red">SCRATCH<input type="radio" asp-for="QcSurf" value="SCRATCH"></label></div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="label-sub font-black text-white-50" style="min-width:40px">RES</span>
+                                                <div class="hud-pill-group sm"><label class="hud-pill-item">READ<input type="radio" asp-for="QcRes" value="READ"></label><label class="hud-pill-item red">UNREAD<input type="radio" asp-for="QcRes" value="UNREAD"></label></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: DIES DIMENSION - REDESIGNED AS CARDS -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                <div class="hud-card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-rulers hud-card-icon"></i>
+                        <span class="hud-card-title">DIES DIMENSION MEASUREMENTS</span>
+                    </div>
+                </div>
+                
+                <div class="p-3">
+                    <div class="row g-3">
+                        @{
+                            var diesList = new[] { 
+                                new { Name = "Nipple Die", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal", OK = Model!.NippleDieOK, InitVal = Model!.NippleDieInitial, FinalVal = Model!.NippleDieFinal },
+                                new { Name = "Tube Die", Field = "TubeDieOK", SpecKey = "TubeDie", InitName = "TubeDieInitial", FinalName = "TubeDieFinal", OK = Model!.TubeDieOK, InitVal = Model!.TubeDieInitial, FinalVal = Model!.TubeDieFinal },
+                                new { Name = "Middle Die", Field = "MiddleDieOK", SpecKey = "MiddleDie", InitName = "MiddleDieInitial", FinalName = "MiddleDieFinal", OK = Model!.MiddleDieOK, InitVal = Model!.MiddleDieInitial, FinalVal = Model!.MiddleDieFinal },
+                                new { Name = "Cover Die", Field = "CoverDieOK", SpecKey = "CoverDie", InitName = "CoverDieInitial", FinalName = "CoverDieFinal", OK = Model!.CoverDieOK, InitVal = Model!.CoverDieInitial, FinalVal = Model!.CoverDieFinal },
+                                new { Name = "Spacer Die", Field = "SpacerDieOK", SpecKey = "SpacerDie", InitName = "SpacerDieInitial", FinalName = "SpacerDieFinal", OK = Model!.SpacerDieOK, InitVal = Model!.SpacerDieInitial, FinalVal = Model!.SpacerDieFinal },
+                                new { Name = "A Distance", Field = "ToleranceDieOK", SpecKey = "ToleranceDie", InitName = "ToleranceInitial", FinalName = "ToleranceFinal", OK = Model!.ToleranceDieOK, InitVal = Model!.ToleranceInitial, FinalVal = Model!.ToleranceFinal }
+                            };
+                        }
+
+                        @foreach(var die in diesList) {
+                            <div class="col-md-6 col-xl-4">
+                                <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="label-stack">
+                                            <span class="label-sub">INSTRUMENT</span>
+                                            <span class="label-main fs-6">@die.Name</span>
+                                        </div>
+                                        <div class="hud-pill-group sm" style="width: 100px;">
+                                            <label class="hud-pill-item">OK<input type="radio" name="@die.Field" value="true" @(die.OK == true ? "checked" : "")></label>
+                                            <label class="hud-pill-item red">NG<input type="radio" name="@die.Field" value="false" @(die.OK == false ? "checked" : "")></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 align-items-end mt-auto">
+                                        <div class="col-4">
+                                            <div class="text-center">
+                                                <label class="lbl-small mb-1 text-info-glow" style="font-size: 0.55rem;">STANDARD</label>
+                                                <div class="hud-input-underlined py-1 text-info-glow bg-dark bg-opacity-50 rounded-2 border-0" id="spec_@die.SpecKey" style="font-size: 0.9rem; min-height: 35px;">--</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-center">
+                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">BEFORE</label>
+                                                <input name="@die.InitName" value="@die.InitVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-center">
+                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">AFTER</label>
+                                                <input name="@die.FinalName" value="@die.FinalVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-12 mt-3">
-                                    <div class="info-chip-tactical">
-                                        <label class="data-label-tactical">REMARKS / NOTES</label>
-                                        <textarea asp-for="Remark" class="form-control bg-transparent border-0 text-white p-0 fs-7" rows="2"></textarea>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+            <!-- SECTION: DYNAMIC PRODUCTION READINGS TABS (CENTERED) -->
+            <div class="d-flex flex-column align-items-center mb-5 mt-2">
+                <div class="text-info-glow opacity-40 super-small fw-black tracking-widest mb-3" style="font-size: 0.6rem;">DYNAMIC MEASUREMENT CONTROL</div>
+                <div class="d-flex align-items-center gap-4">
+                    <div id="readingsTabs" class="d-flex gap-2">
+                        <!-- P-1, P-2, etc. will be injected here -->
+                    </div>
+                    <div class="add-check-trigger d-flex align-items-center gap-2 cursor-pointer no-select" onclick="addReadingPoint()">
+                        <i class="bi bi-plus fs-2 text-white"></i>
+                        <span class="text-white fw-900 tracking-widest" style="font-size: 1.1rem;">ADD CHECK</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: SMART PARAMETER CARDS (ACTIVE RECORD VIEW) -->
+            <div class="row g-4 mb-5" id="parameterCardsContainer">
+                @{
+                    var monSections = new[] {
+                        new { 
+                            Title = "SECTION 01: INNER (TUBE 1)", Icon="bi-gear-fill", Color = "#3b82f6", ID="inner",
+                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempInner" }, { "Cylinder 1", "°C", "Cylinder1TempInner" }, { "Cylinder 2", "°C", "Cylinder2TempInner" }, { "Cylinder 3", "°C", "Cylinder3TempInner" }, { "Screw Temp.", "°C", "ScrewTempInner" }, { "Screw Speed", "rpm", "ScrewSpeedInner" }, { "Feed Roll Ratio", "%", "FeedRollRatioInner" }, { "Pressure", "MPa", "PressureInner" } }
+                        },
+                        new { 
+                            Title = "SECTION 02: OUTER (COVER)", Icon="bi-shield-shaded", Color = "#f59e0b", ID="outer",
+                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempOuter" }, { "Cylinder 1", "°C", "Cylinder1TempOuter" }, { "Cylinder 2", "°C", "Cylinder2TempOuter" }, { "Cylinder 3", "°C", "Cylinder3TempOuter" }, { "Screw Temp.", "°C", "ScrewTempOuter" }, { "Screw Speed", "rpm", "ScrewSpeedOuter" }, { "Feed Roll Ratio", "%", "FeedRollRatioOuter" }, { "Pressure", "MPa", "PressureOuter" } }
+                        },
+                        new { 
+                            Title = "SECTION 03: SPIRAL MECHANISM", Icon="bi-sync", Color = "#10b981", ID="spiral",
+                            Rows = new[,] { { "Spiral Speed", "rpm", "SpiralSpeed" }, { "Spiral Pitch (Set)", "mm", "SpiralPitchSetting" }, { "Spiral Pitch (Disp)", "mm", "SpiralPitchDisplay" } } 
+                        },
+                        new { 
+                            Title = "SECTION 04: INFRA & UTILITY", Icon="bi-water", Color = "#0ea5e9", ID="other",
+                            Rows = new[,] { { "Preset Value", "Ø mm", "PresetValue" }, { "Control Value", "Ø mm", "ControlValue" }, { "Hose Speed", "m/min", "HoseSpeed" }, { "Take-up Speed", "", "TakeupConveyorSpeed" }, { "Cool Speed", "", "CoolConveyorSpeed" }, { "Conveyor Ratio", "", "ConveyorRatio" }, { "Surface Condition", "", "UnsmoothSurface" }, { "Chiller Temp", "°C", "ChillerWaterTemp" }, { "Caterpillar Gap", "mm", "CaterpillarGap" } } 
+                        }
+                    };
+                }
+
+                @foreach (var mSec in monSections) {
+                    <div class="col-12 col-xxl-6">
+                        <div class="hud-card h-100 shadow-hud mb-1 overflow-hidden" 
+                             style="border: 1px solid @(mSec.Color)44; background: rgba(15, 23, 42, 0.6); box-shadow: 0 0 20px @(mSec.Color)11;">
+                            
+                            <div class="hud-card-header d-flex justify-content-between align-items-center py-3 px-4" 
+                                 style="background: linear-gradient(90deg, @(mSec.Color)33 0%, transparent 100%); border-bottom: 2px solid @(mSec.Color)66;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="p-2 rounded-3" style="background: @(mSec.Color)22; border: 1px solid @(mSec.Color)44;">
+                                        <i class="bi @mSec.Icon fs-4" style="color: @mSec.Color"></i>
+                                    </div>
+                                    <span class="hud-card-title tracking-widest text-white fw-900" style="font-size: 1.1rem; text-shadow: 0 0 10px @(mSec.Color)66;">@mSec.Title</span>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 bg-black bg-opacity-20">
+                                <div class="row g-4">
+                                    @for (int r = 0; r < mSec.Rows.GetLength(0); r++) {
+                                        var key = mSec.Rows[r, 2];
+                                        <div class="col-6">
+                                            <div class="param-tile-modern rounded-3 p-3 text-center h-100 d-flex flex-column justify-content-between"
+                                                 style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; position: relative; overflow: hidden;">
+                                                
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <span class="text-white opacity-60 super-small fw-black tracking-widest">@(mSec.Rows[r, 0].ToUpper())</span>
+                                                    <span class="badge rounded-pill super-small" style="background: @(mSec.Color)22; color: @mSec.Color; border: 1px solid @(mSec.Color)44;">@mSec.Rows[r, 1]</span>
+                                                </div>
+                                                
+                                                <div class="std-zone py-2 mb-2 rounded-2" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
+                                                    <div class="super-small opacity-40 text-uppercase mb-1" style="font-size: 0.55rem;">Standard Target</div>
+                                                    <div class="font-monospace fw-black" id="spec_@key" style="font-size: 1.1rem; color: @mSec.Color; filter: drop-shadow(0 0 5px @(mSec.Color)44);">--</div>
+                                                </div>
+                                                
+                                                <div class="input-zone">
+                                                    <input id="input_@key"
+                                                           onchange="updateReadingData('@key', this.value)"
+                                                           class="vibrant-hud-input w-100" 
+                                                           placeholder="0.00" 
+                                                           style="--theme-color: @mSec.Color;" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- SECTION 4: WASTE & SIGN-OFF -->
+            <div class="row g-3 mb-4 align-items-start">
+                <!-- WASTE / DANDORI -->
+                <div class="col-lg-7">
+                    <div class="hud-card shadow-hud-blue border-white border-opacity-10 p-3 bg-black bg-opacity-40">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-trash text-info fs-5 me-2"></i>
+                            <div class="text-info-glow tracking-widest fw-black">WASTE PERFORMANCE (KG)</div>
+                        </div>
+                        <div class="row g-3">
+                            <!-- DANDORI AWAL -->
+                            <div class="col-md-6">
+                                <div class="border border-white border-opacity-10 rounded-2 p-2 bg-black bg-opacity-20">
+                                    <div class="text-white opacity-50 super-small fw-bold tracking-widest mb-2 border-bottom border-info border-opacity-25 pb-1">DANDORI AWAL (CLEANING)</div>
+                                    <div class="d-flex flex-column gap-2 mt-2">
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-info super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>INNER TUBE</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DAI_Awal" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DAI_Akhir" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-warning super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>COVER</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DAC_Awal" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow:0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DAC_Akhir" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow:0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- DANDORI AKHIR -->
+                            <div class="col-md-6">
+                                <div class="border border-white border-opacity-10 rounded-2 p-2 bg-black bg-opacity-20">
+                                    <div class="text-white opacity-50 super-small fw-bold tracking-widest mb-2 border-bottom border-warning border-opacity-25 pb-1">DANDORI AKHIR (REMAIN)</div>
+                                    <div class="d-flex flex-column gap-2 mt-2">
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-info super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>INNER TUBE</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DRAI_Awal" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DRAI_Akhir" class="hud-input text-end text-primary-glow fw-bold font-monospace pe-2 h-100" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="hud-pill-integrated border-white border-opacity-5 bg-black bg-opacity-40 p-2 rounded-1">
+                                            <div class="mb-1"><label class="text-warning super-small fw-bold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>COVER</label></div>
+                                            <div class="d-flex gap-2 bg-dark bg-opacity-50 rounded border border-white border-opacity-10 p-1">
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AWAL</span>
+                                                    <input asp-for="DRAC_Awal" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow:0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                                <div class="border-start border-white border-opacity-10"></div>
+                                                <div class="flex-grow-1 position-relative">
+                                                    <span class="position-absolute top-50 start-0 translate-middle-y ms-2 super-small opacity-50">AKHIR</span>
+                                                    <input asp-for="DRAC_Akhir" class="hud-input text-end text-warning fw-bold font-monospace pe-2 h-100" style="text-shadow:0 0 8px rgba(250,204,21,0.4);" placeholder="-" />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- RIGHT COLUMN: PROTOCOL + COMMANDS -->
+                <div class="col-lg-5">
+                    <div class="d-flex flex-column h-100 gap-3">
+
+                        <!-- SYSTEM PROTOCOL ALERT -->
+                        <div class="hud-card border-danger border-opacity-40 bg-danger bg-opacity-10 shadow-hud-red p-3 d-flex align-items-center gap-3">
+                            <div class="hud-status-led led-red blink"></div>
+                            <div>
+                                <div class="text-danger fw-900 super-small tracking-widest mb-1"><i class="bi bi-shield-lock-fill me-1"></i>SYSTEM PROTOCOL</div>
+                                <p class="text-white font-monospace super-small m-0 opacity-90 fw-bold">VERIFIKASI PARAMETER: AWAL / TENGAH / AKHIR PROSES.</p>
+                            </div>
+                        </div>
+
+                        <!-- FINAL COMMANDS -->
+                        <div class="hud-card p-3 flex-grow-1 d-flex flex-column bg-black bg-opacity-40 border-white border-opacity-10 shadow-hud-blue">
+                            <div class="text-info-glow super-small fw-black mb-3 tracking-widest ps-1"><i class="bi bi-terminal-fill me-2"></i>FINAL COMMANDS</div>
+                            
+                            <div class="hud-pill-integrated border-white border-opacity-5 mb-3">
+                                <label>OPERATOR (AUTHORIZED BY)</label>
+                                <input asp-for="CreatedBy" id="CreatedBy" class="hud-input text-primary-glow font-black h-auto py-1" placeholder="ENTER NAME..." />
+                            </div>
+
+                            <div class="mt-auto d-flex gap-2">
+                                <a asp-action="ParameterHistory" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold small d-flex align-items-center justify-content-center gap-2" style="border-width:1px;">
+                                    <i class="bi bi-x-lg"></i> CANCEL
+                                </a>
+                                <button type="button" class="btn btn-hud-primary flex-grow-3 py-3 fw-900 tracking-widest shadow-glow-primary border-0 rounded-1 d-flex align-items-center justify-content-center gap-2" style="font-size:1.1rem;" onclick="submitUpdateReport()">
+                                    <i class="bi bi-cloud-arrow-up-fill fs-5"></i> UPDATE RECORD
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="d-flex justify-content-end gap-3 mt-4 mb-5">
-                <a asp-action="Details" asp-route-id="@Model?.Id" class="btn btn-dark rounded-0 px-5 border border-white border-opacity-25 bg-opacity-25">
-                    <i class="bi bi-x me-1 fs-5"></i> Batal
-                </a>
-                <button type="submit" class="btn btn-info rounded-0 px-5 py-2 fw-bold shadow-lg">
-                    <i class="bi bi-check-lg me-2 fs-5"></i> Perbarui Laporan Produksi
-                </button>
-            </div>
-        </form>
+            </form>
     </div>
 </div>
 
+<style>
+    :root {
+        --hud-primary: #0ea5e9;
+        --hud-glow: #38bdf8;
+        --hud-dark: #020617;
+        --hud-card: rgba(15, 23, 42, 0.85);
+        --hud-border: rgba(14, 165, 233, 0.3);
+    }
+    .production-blueprint { min-height: 100vh; background: var(--hud-dark); color: #f1f5f9; font-family: 'Inter', sans-serif; }
+    .hud-pill { background: rgba(30,41,59,0.6); border: 1px solid var(--hud-border); border-radius: 8px; padding: 6px 16px; display: flex; flex-direction: column; transition: all 0.3s; }
+    .hud-pill:focus-within { border-color: var(--hud-glow); box-shadow: 0 0 15px rgba(14,165,233,0.3); }
+    .hud-pill label { font-size: 0.65rem; font-weight: 800; color: var(--hud-primary); letter-spacing: 1px; margin-bottom: 2px; }
+    .hud-input { background: transparent; border: none; color: white; font-size: 0.95rem; padding: 0; outline: none; width: 100%; }
+    .hud-card { background: var(--hud-card); border: 1px solid var(--hud-border); border-radius: 10px; overflow: hidden; backdrop-filter: blur(15px); }
+    .hud-card-header { background: linear-gradient(90deg, rgba(14,165,233,0.15) 0%, transparent 100%); border-bottom: 1px solid rgba(14,165,233,0.3); padding: 10px 20px; display: flex; align-items: center; gap: 12px; }
+    .hud-card-title { font-size: 0.85rem; font-weight: 900; letter-spacing: 2px; color: #0ea5e9; text-transform: uppercase; }
+    .hud-card-icon { color: #0ea5e9; font-size: 1.1rem; }
+    .die-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+    .die-card:hover { background: rgba(14, 165, 233, 0.08) !important; border-color: rgba(14, 165, 233, 0.4) !important; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .die-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: rgba(255,255,255,0.05); transition: all 0.3s; }
+    .die-card:hover::before { background: var(--hud-primary); box-shadow: 0 0 10px var(--hud-primary); }
+
+    .param-tile-modern { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(14, 165, 233, 0.2); }
+    .hud-pill-integrated { background: rgba(30,41,59,0.4); border: 1px solid rgba(14,165,233,0.2); border-radius: 6px; padding: 8px 12px; display: flex; flex-direction: column; transition: all 0.3s; }
+    .hud-pill-integrated:focus-within { border-color: #0ea5e9; background: rgba(14,165,233,0.1); box-shadow: 0 0 15px rgba(14,165,233,0.2); }
+    .hud-pill-integrated label { font-size: 0.6rem; font-weight: 800; color: #38bdf8; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+    .hud-pill-integrated .hud-input { font-size: 0.85rem; background: transparent; border: none; color: white; padding: 0; width: 100%; outline: none; }
+    .table-hud-unified { width: 100%; border-collapse: collapse; }
+    .table-hud-unified th { padding: 12px; font-size: 0.65rem; font-weight: 800; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .table-hud-unified td { padding: 12px; vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .label-stack { display: flex; flex-direction: column; gap: 2px; }
+    .label-main { font-size: 0.85rem; font-weight: 900; color: white; line-height: 1; }
+    .label-sub { font-size: 0.6rem; font-weight: 700; color: #60a5fa; text-transform: uppercase; opacity: 0.8; }
+    .hud-th-scan { background: rgba(14,165,233,0.05); color: #0ea5e9 !important; font-weight: 900 !important; }
+    .hud-td-scan { background: rgba(0,0,0,0.2); padding: 8px 12px !important; }
+    .hud-scan-group { display: flex; align-items: center; background: rgba(15,23,42,0.6); border: 1px solid rgba(14,165,233,0.2); border-radius: 6px; padding: 2px 4px; transition: all 0.3s; }
+    .hud-scan-group:focus-within { border-color: #0ea5e9; box-shadow: 0 0 15px rgba(14,165,233,0.2); background: rgba(14,165,233,0.05); }
+    .hud-input-scan { background: transparent; border: none; color: #0ea5e9; font-weight: 900; font-size: 0.85rem; padding: 8px; width: 100%; outline: none; letter-spacing: 1px; }
+    .hud-scan-btn { background: rgba(14,165,233,0.1); border: none; color: #0ea5e9; padding: 6px 10px; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+    .hud-scan-btn:hover { background: #0ea5e9; color: white; }
+    .hud-input-underlined { background: transparent; border: none; border-bottom: 2px solid rgba(255,255,255,0.05); color: white; font-weight: 900; width: 100%; padding: 8px 0; text-align: center; transition: all 0.3s; font-size: 1.1rem; min-height: 46px; font-family: 'JetBrains Mono', monospace; }
+    .hud-input-underlined:focus { outline: none; border-bottom-color: #3b82f6; background: rgba(59,130,246,0.05); }
+
+    .vibrant-hud-input { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 1.8rem; height: 65px; width: 100%; outline: none; transition: all 0.3s; }
+    .vibrant-hud-input:focus { background: rgba(255,255,255,0.1); border-color: var(--theme-color); box-shadow: 0 0 20px var(--theme-color); transform: translateY(-2px); }
+    .param-tile-modern:hover { background: rgba(255,255,255,0.07) !important; border-color: rgba(255,255,255,0.2) !important; transform: translateY(-5px); }
+    
+    .active-tab { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; color: white !important; box-shadow: 0 0 25px rgba(14, 165, 233, 0.6) !important; border-color: #7dd3fc !important; transform: translateY(-3px); }
+    .reading-tab { min-width: 95px; text-align: center; font-weight: 900; letter-spacing: 1px; cursor: pointer; transition: all 0.3s; border: 2px solid rgba(255, 255, 255, 0.12); background: rgba(15, 23, 42, 0.8); border-radius: 10px; backdrop-filter: blur(5px); }
+    .reading-tab:hover:not(.active-tab) { border-color: rgba(14, 165, 233, 0.6); background: rgba(14, 165, 233, 0.1); transform: translateY(-2px); }
+
+    .no-select { user-select: none; }
+    .add-check-trigger { opacity: 0.6; transition: all 0.3s; padding: 8px 15px; border-radius: 8px; }
+    .add-check-trigger:hover { opacity: 1; background: rgba(255,255,255,0.05); transform: translateX(5px); }
+
+    .compact-hud td { padding: 4px 1px !important; }
+    .compact-hud th { padding: 6px 1px !important; }
+    .instrument-style { font-family: 'JetBrains Mono','Roboto Mono',monospace; }
+    .group-lane { background: rgba(14,165,233,0.03); }
+    .font-black { font-weight: 900 !important; font-size: 0.6rem !important; }
+    .hud-check-box { position: relative; width: 32px; height: 32px; margin: 0 auto; cursor: pointer; }
+    .hud-check-box input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; margin: 0; }
+    .hud-check-box span { position: absolute; top: 0; left: 0; height: 32px; width: 32px; background-color: rgba(15,23,42,0.6); border: 2px solid rgba(14,165,233,0.2); border-radius: 8px; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); z-index: 1; }
+    .hud-check-box:hover input ~ span { border-color: #0ea5e9; background: rgba(14,165,233,0.1); }
+    .hud-check-box input:checked ~ span { background-color: #0ea5e9; border-color: white; box-shadow: 0 0 20px rgba(14,165,233,0.6); }
+    .hud-check-box span:after { content: ""; position: absolute; display: none; left: 11px; top: 5px; width: 8px; height: 16px; border: solid white; border-width: 0 4px 4px 0; transform: rotate(45deg); }
+    .hud-check-box input:checked ~ span:after { display: block; }
+    .hud-pill-group { display: inline-flex; background: rgba(15,23,42,0.6); padding: 4px; border-radius: 8px; border: 1px solid rgba(14,165,233,0.2); width: 100%; gap: 4px; }
+    .hud-pill-item { flex: 1; padding: 8px 4px; font-size: 0.75rem; font-weight: 900; color: rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); text-transform: uppercase; text-align: center; border: 1px solid transparent; }
+    .hud-pill-item input { display: none; }
+    .hud-pill-item:has(input:checked) { background: #10b981; color: white; box-shadow: 0 0 15px rgba(16,185,129,0.5); border-color: rgba(255,255,255,0.2); }
+    .hud-pill-item.red:has(input:checked) { background: #ef4444; box-shadow: 0 0 15px rgba(239,68,68,0.5); }
+    .hud-pill-item.orange:has(input:checked) { background: #f59e0b; box-shadow: 0 0 15px rgba(245,158,11,0.5); }
+    .hud-pill-group.sm { border-radius: 6px; padding: 4px; }
+    .hud-pill-group.sm .hud-pill-item { padding: 8px 2px; font-size: 0.7rem; border-radius: 4px; }
+    .die-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden; }
+    .die-card:hover { background: rgba(14,165,233,0.08) !important; border-color: rgba(14,165,233,0.4) !important; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .die-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: rgba(255,255,255,0.05); transition: all 0.3s; }
+    .die-card:hover::before { background: var(--hud-primary); box-shadow: 0 0 10px var(--hud-primary); }
+    .btn-hud-primary { background: var(--hud-primary); color: white; border: none; border-radius: 6px; }
+    .btn-hud-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(14,165,233,0.5); color: white; }
+    .btn-hud-outline { background: transparent; border: 1px solid rgba(14,165,233,0.3); color: #94a3b8; border-radius: 6px; }
+    .text-primary-glow { color: var(--hud-glow); text-shadow: 0 0 10px rgba(56,189,248,0.4); }
+    .text-info-glow { color: #38bdf8; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
+    .super-small { font-size: 0.7rem; }
+    .tracking-widest { letter-spacing: 2.5px; }
+    .shadow-hud-blue { box-shadow: 0 0 40px rgba(14,165,233,0.06); }
+    .shadow-hud-red { box-shadow: 0 0 30px rgba(239,68,68,0.1); }
+    .hud-status-led { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .led-red { background: #ef4444; box-shadow: 0 0 15px rgba(239,68,68,0.6); }
+    .blink { animation: hud-blink 1.5s infinite; }
+    @@keyframes hud-blink {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .flex-grow-3 { flex-grow: 3; }
+    input[type="date"] { color-scheme: dark; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+</style>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <style>
-        input[type="date"] { color-scheme: dark; }
-        .extra-small { font-size: 0.65rem; }
-        .fs-7 { font-size: 0.82rem; }
-        
-        /* SYNCED THEME WITH PAPER FORM SHARD WITH CREATE */
-        .metadata-entry-grid { display: flex; flex-direction: column; gap: 8px; }
-        .meta-entry { display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; }
-        .meta-entry .label { width: 100px; color: rgba(255,255,255,0.4); font-size: 0.8rem; font-weight: bold; }
-        .meta-input { background: transparent; border: none; color: #fff; font-weight: 700; flex: 1; padding: 0; outline: none; }
-        .meta-input:focus { color: #0dcaf0; }
+    <script>
+        let html5QrCode;
 
-        .signature-section-grid { display: flex; border: 1px solid rgba(255,255,255,0.2); }
-        .sig-column { flex: 1; border-right: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; }
-        .sig-column:last-child { border-right: none; }
-        .sig-header { background: rgba(255,255,255,0.05); text-align: center; font-size: 0.65rem; font-weight: 900; padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sig-body { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; text-transform: uppercase; }
+        async function openScanner(targetId) {
+            Swal.fire({
+                title: 'SCANNING MATERIAL LOT',
+                html: `
+                    <div id="reader-container" style="width:100%;min-height:250px;background:#000;border-radius:8px;overflow:hidden;border:2px solid #0ea5e9;">
+                        <div id="reader"></div>
+                    </div>
+                    <div class="mt-3 small fw-bold" style="color:#0ea5e9;letter-spacing:2px;">POSITION BARCODE WITHIN FRAME</div>
+                `,
+                background: '#020617',
+                color: '#0ea5e9',
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: '90%',
+                didOpen: () => {
+                    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+                    html5QrCode = new Html5Qrcode("reader");
+                    html5QrCode.start(
+                        { facingMode: "environment" }, config,
+                        (decodedText) => {
+                            const el = document.getElementById(targetId);
+                            if (el) { el.value = decodedText; el.dispatchEvent(new Event('input')); }
+                            html5QrCode.stop().then(() => {
+                                Swal.close();
+                                if (window.navigator.vibrate) window.navigator.vibrate(100);
+                                Swal.fire({ icon: 'success', title: 'SCANNED!', text: decodedText, toast: true, position: 'top-end', timer: 2500, showConfirmButton: false, background: '#0f172a', color: '#38bdf8' });
+                            });
+                        },
+                        (err) => {}
+                    ).catch(err => {
+                        document.getElementById('reader').innerHTML = `<div class="p-4 text-danger small">CAMERA ERROR: ${err}</div>`;
+                    });
+                },
+                willClose: () => {
+                    if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop();
+                }
+            });
+        }
 
-        .tactical-glass { background: rgba(18, 22, 38, 0.75) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; backdrop-filter: blur(20px); border-radius: 0 !important; }
-        .tactical-header-bar { background: rgba(43, 49, 71, 0.8) !important; border-radius: 0 !important; padding: 12px 20px !important; }
-        .info-chip-tactical { background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; }
+        // ══ SPS SYNC FUNCTIONS ══
+        async function startSpsScanner() {
+            Swal.fire({
+                title: '<div class="font-monospace small" style="color:#38bdf8;">SPS OPTICAL SCANNER</div>',
+                html: `
+                    <div id="sps-reader-container" style="width:100%;min-height:250px;background:#000;border-radius:8px;overflow:hidden;border:2px solid #0ea5e9;">
+                        <div id="sps-reader"></div>
+                    </div>
+                    <div class="mt-2 small fw-bold" style="color:#0ea5e9;letter-spacing:2px;">SCAN ITEM BARCODE TO LOAD SPS</div>
+                `,
+                background: '#020617',
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: '90%',
+                didOpen: () => {
+                    const scanQrCode = new Html5Qrcode("sps-reader");
+                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                    scanQrCode.start({ facingMode: "environment" }, config, async (decodedText) => {
+                        await scanQrCode.stop();
+                        Swal.close();
+                        document.getElementById('manualItemSearch').value = decodedText;
+                        fetchSpsByItem(decodedText);
+                    });
+                }
+            });
+        }
 
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-    </style>
+        async function fetchSpsByItem(code) {
+            Swal.fire({
+                title: 'SEARCHING PROTOCOL...',
+                text: `VALIDATING: ${code.trim().toUpperCase()}`,
+                allowOutsideClick: false,
+                background: '#020617', color: '#38bdf8',
+                didOpen: () => { Swal.showLoading(); }
+            });
+            try {
+                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
+                if (!res.ok) throw new Error('NOT FOUND');
+                const data = await res.json();
+                if (data.success === false) throw new Error(data.message || 'NOT FOUND');
+                Swal.close();
+                applySpsToForm(data);
+            } catch (e) {
+                Swal.fire({
+                    title: 'SYNC ERROR',
+                    text: `Kode '${code}' tidak ditemukan di Database SPS!`,
+                    icon: 'warning',
+                    confirmButtonColor: '#0ea5e9',
+                    background: '#0f172a', color: '#fff'
+                });
+            }
+        }
+
+        function applySpsToForm(sps) {
+            if (!sps) return;
+            // Update hidden SPS ID
+            const spsIdEl = document.getElementById('StandardParameterSettingId');
+            if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
+
+            // Update linked display
+            const label = document.getElementById('spsLinkedLabel');
+            const display = document.getElementById('spsLinkedDisplay');
+            if (label) { label.textContent = '✓ LINKED'; label.className = 'text-success'; label.style.fontSize = '0.7rem'; }
+            if (display) display.innerHTML = `<span class="text-success">[${sps.itemList || sps.ItemList || '---'}] ${sps.hoseType || sps.HoseType || '---'}</span>`;
+
+            // Populate header inputs
+            const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+            set('DocNo',        sps.documentNumber || sps.DocumentNumber);
+            set('RevNo',        sps.revisionNumber || sps.RevisionNumber);
+            set('HoseType',     sps.hoseType || sps.HoseType);
+            set('CustomerName', sps.customerName || sps.CustomerName);
+
+            // Populate material standards (readonly column)
+            const setName = (name, val) => { const el = document.querySelector(`[name="${name}"]`); if (el && val) el.value = val; };
+            setName('InnerMaterial', sps.innerMaterial || sps.InnerMaterial);
+            setName('OuterMaterial', sps.outerMaterial || sps.OuterMaterial);
+            setName('Yarn',          sps.yarnType || sps.Yarn);
+
+            // Populate parameter standards
+            const setSpec = (id, val) => {
+                const el = document.getElementById('spec_' + id);
+                if (el) el.textContent = val || '--';
+            };
+            
+            // Map SPS fields to spec labels
+            setSpec('HeadTempInner', sps.headTempInner);
+            setSpec('Cylinder1TempInner', sps.cylinder1TempInner);
+            setSpec('Cylinder2TempInner', sps.cylinder2TempInner);
+            setSpec('Cylinder3TempInner', sps.cylinder3TempInner);
+            setSpec('ScrewTempInner', sps.screwTempInner);
+            setSpec('ScrewSpeedInner', sps.screwSpeedInner);
+            setSpec('FeedRollRatioInner', sps.feedRollRatioInner);
+            setSpec('PressureInner', sps.pressureInner);
+
+            setSpec('HeadTempOuter', sps.headTempOuter);
+            setSpec('Cylinder1TempOuter', sps.cylinder1TempOuter);
+            setSpec('Cylinder2TempOuter', sps.cylinder2TempOuter);
+            setSpec('Cylinder3TempOuter', sps.cylinder3TempOuter);
+            setSpec('ScrewTempOuter', sps.screwTempOuter);
+            setSpec('ScrewSpeedOuter', sps.screwSpeedOuter);
+            setSpec('FeedRollRatioOuter', sps.feedRollRatioOuter);
+            setSpec('PressureOuter', sps.pressureOuter);
+
+            setSpec('SpiralSpeed', sps.spiralSpeed);
+            setSpec('SpiralPitchSetting', sps.spiralPitch);
+            setSpec('HoseSpeed', sps.hoseSpeed);
+            setSpec('ConveyorRatio', sps.conveyorRatio);
+
+            Swal.fire({
+                icon: 'success', title: 'SPS SYNC SUCCESS',
+                text: `Protokol ${sps.hoseType || sps.HoseType || ''} berhasil dimuat!`,
+                toast: true, position: 'top-end', timer: 3000,
+                showConfirmButton: false, background: '#0f172a', color: '#38bdf8'
+            });
+        }
+
+        // ══ DYNAMIC READINGS LOGIC ══
+        let pReadings = [];
+        let activeTabIndex = 0;
+
+        // Load existing readings from Model
+        const initialReadings = @Html.Raw(Json.Serialize((Model.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).Select(r => new {
+            data = new Dictionary<string, string> {
+                { "HeadTempInner", r.HeadTempInner?.ToString() },
+                { "Cylinder1TempInner", r.Cylinder1TempInner?.ToString() },
+                { "Cylinder2TempInner", r.Cylinder2TempInner?.ToString() },
+                { "Cylinder3TempInner", r.Cylinder3TempInner?.ToString() },
+                { "ScrewTempInner", r.ScrewTempInner?.ToString() },
+                { "ScrewSpeedInner", r.ScrewSpeedInner?.ToString() },
+                { "FeedRollRatioInner", r.FeedRollRatioInner?.ToString() },
+                { "PressureInner", r.PressureInner?.ToString() },
+                { "HeadTempOuter", r.HeadTempOuter?.ToString() },
+                { "Cylinder1TempOuter", r.Cylinder1TempOuter?.ToString() },
+                { "Cylinder2TempOuter", r.Cylinder2TempOuter?.ToString() },
+                { "Cylinder3TempOuter", r.Cylinder3TempOuter?.ToString() },
+                { "ScrewTempOuter", r.ScrewTempOuter?.ToString() },
+                { "ScrewSpeedOuter", r.ScrewSpeedOuter?.ToString() },
+                { "FeedRollRatioOuter", r.FeedRollRatioOuter?.ToString() },
+                { "PressureOuter", r.PressureOuter?.ToString() },
+                { "SpiralSpeed", r.SpiralSpeed?.ToString() },
+                { "SpiralPitchSetting", r.SpiralPitchSetting?.ToString() },
+                { "SpiralPitchDisplay", r.SpiralPitchDisplay?.ToString() },
+                { "PresetValue", r.PresetValue?.ToString() },
+                { "ControlValue", r.ControlValue?.ToString() },
+                { "HoseSpeed", r.HoseSpeed?.ToString() },
+                { "TakeupConveyorSpeed", r.TakeupConveyorSpeed?.ToString() },
+                { "CoolConveyorSpeed", r.CoolConveyorSpeed?.ToString() },
+                { "ConveyorRatio", r.ConveyorRatio?.ToString() },
+                { "UnsmoothSurface", r.UnsmoothSurface?.ToString() },
+                { "ChillerWaterTemp", r.ChillerWaterTemp?.ToString() },
+                { "CaterpillarGap", r.CaterpillarGap?.ToString() },
+                { "ReadingTime", r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss") }
+            }
+        })));
+
+        pReadings = initialReadings.length > 0 ? initialReadings : [{ data: {} }];
+
+        function renderTabs() {
+            const container = document.getElementById('readingsTabs');
+            container.innerHTML = '';
+            pReadings.forEach((p, idx) => {
+                const btn = document.createElement('div');
+                btn.className = `reading-tab d-flex flex-column align-items-center justify-content-center ${idx === activeTabIndex ? 'active-tab shadow-glow-primary' : ''}`;
+                btn.style.minWidth = "80px";
+                btn.style.height = "55px";
+                btn.style.borderRadius = "8px";
+                btn.style.cursor = "pointer";
+                btn.style.transition = "all 0.3s";
+                
+                let timeStr = "--:--";
+                const rt = p.data ? (p.data.ReadingTime || p.data.readingTime) : null;
+                if (rt) {
+                    try {
+                        const d = new Date(rt);
+                        if (!isNaN(d.getTime())) {
+                            timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+                        }
+                    } catch(e) {}
+                }
+                
+                btn.innerHTML = `
+                    <div style="font-size:0.55rem; font-weight:bold; opacity:0.8; letter-spacing:1px; margin-bottom: 2px;">P-${idx + 1}</div>
+                    <div style="font-size:1.1rem; font-weight:900; line-height:1;">${timeStr}</div>
+                `;
+                btn.onclick = () => switchTab(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function switchTab(idx) {
+            activeTabIndex = idx;
+            renderTabs();
+            loadCurrentReadingToInputs();
+        }
+
+        function loadCurrentReadingToInputs() {
+            const data = pReadings[activeTabIndex].data;
+            const inputs = document.querySelectorAll('.vibrant-hud-input');
+            inputs.forEach(input => {
+                const key = input.id.replace('input_', '');
+                let val = data[key];
+                if (val === undefined) {
+                    const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+                    val = data[camelKey];
+                }
+                
+                if (val !== undefined && val !== null && val !== '') {
+                    // C# decimal serialization might keep trailing zeros (e.g. "6,1000" or "12.0000")
+                    if (typeof val === 'string' && /^-?\d+([.,]\d+)?$/.test(val)) {
+                        val = val.replace(/([.,]\d*?[1-9])0+$/, '$1').replace(/[.,]0+$/, '');
+                    }
+                }
+                
+                input.value = (val !== undefined && val !== null) ? val : '';
+            });
+        }
+
+        function updateReadingData(key, val) {
+            const data = pReadings[activeTabIndex].data;
+            const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+            if (data[camelKey] !== undefined) {
+                data[camelKey] = val;
+            } else {
+                data[key] = val;
+            }
+        }
+
+        function addReadingPoint() {
+            const now = new Date();
+            const timeFormatted = now.toISOString(); // yyyy-MM-ddTHH:mm:ss.sssZ
+            pReadings.push({ data: { ReadingTime: timeFormatted } });
+            switchTab(pReadings.length - 1);
+            Swal.fire({ icon: 'info', title: 'NEW CHECK ADDED', text: `Point P-${pReadings.length} initialized at ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}.`, toast: true, position: 'top-end', timer: 2000, showConfirmButton: false, background: '#0f172a', color: '#38bdf8' });
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTabs();
+            loadCurrentReadingToInputs();
+            @if (Model.StandardParameterSetting != null) {
+                <text>applySpsToForm(@Html.Raw(Json.Serialize(Model.StandardParameterSetting)));</text>
+            }
+        });
+
+        async function submitUpdateReport() {
+            const payload = {
+                Id: document.querySelector('input[name="Id"]').value,
+                DocumentNumber: document.getElementById('DocNo').value,
+                RevisionNumber: parseInt(document.getElementById('RevNo').value) || 0,
+                ProductionDate: document.getElementById('ProductionDate').value,
+                Shift: document.getElementById('Shift').value,
+                CustomerName: document.getElementById('CustomerName').value,
+                HoseType: document.getElementById('HoseType').value,
+                StandardParameterSettingId: parseInt(document.getElementById('StandardParameterSettingId').value) || null,
+
+                InnerMaterial: document.querySelector('input[name="InnerMaterial"]').value,
+                InnerMaterialActual: document.querySelector('input[name="InnerMaterialActual"]').value,
+                InnerMaterialLotNo: document.querySelector('input[name="InnerMaterialLotNo"]').value,
+                OuterMaterial: document.querySelector('input[name="OuterMaterial"]').value,
+                OuterMaterialActual: document.querySelector('input[name="OuterMaterialActual"]').value,
+                OuterMaterialLotNo: document.querySelector('input[name="OuterMaterialLotNo"]').value,
+                Yarn: document.querySelector('input[name="Yarn"]').value,
+                YarnActual: document.querySelector('input[name="YarnActual"]').value,
+                YarnLotNo: document.querySelector('input[name="YarnLotNo"]').value,
+
+                NippleDieOK: document.querySelector('input[name="NippleDieOK"]:checked')?.value === 'true',
+                NippleDieInitial: document.querySelector('input[name="NippleDieInitial"]').value,
+                NippleDieFinal: document.querySelector('input[name="NippleDieFinal"]').value,
+                TubeDieOK: document.querySelector('input[name="TubeDieOK"]:checked')?.value === 'true',
+                TubeDieInitial: document.querySelector('input[name="TubeDieInitial"]').value,
+                TubeDieFinal: document.querySelector('input[name="TubeDieFinal"]').value,
+                MiddleDieOK: document.querySelector('input[name="MiddleDieOK"]:checked')?.value === 'true',
+                MiddleDieInitial: document.querySelector('input[name="MiddleDieInitial"]').value,
+                MiddleDieFinal: document.querySelector('input[name="MiddleDieFinal"]').value,
+                CoverDieOK: document.querySelector('input[name="CoverDieOK"]:checked')?.value === 'true',
+                CoverDieInitial: document.querySelector('input[name="CoverDieInitial"]').value,
+                CoverDieFinal: document.querySelector('input[name="CoverDieFinal"]').value,
+                SpacerDieOK: document.querySelector('input[name="SpacerDieOK"]:checked')?.value === 'true',
+                SpacerDieInitial: document.querySelector('input[name="SpacerDieInitial"]').value,
+                SpacerDieFinal: document.querySelector('input[name="SpacerDieFinal"]').value,
+                ToleranceDieOK: document.querySelector('input[name="ToleranceDieOK"]:checked')?.value === 'true',
+                ToleranceInitial: document.querySelector('input[name="ToleranceInitial"]').value,
+                ToleranceFinal: document.querySelector('input[name="ToleranceFinal"]').value,
+
+                MeshInner10Before: document.querySelector('input[name="MeshInner10Before"]:checked')?.value === 'true',
+                MeshInner40Before: document.querySelector('input[name="MeshInner40Before"]:checked')?.value === 'true',
+                MeshOuter10Before: document.querySelector('input[name="MeshOuter10Before"]:checked')?.value === 'true',
+                MeshOuter40Before: document.querySelector('input[name="MeshOuter40Before"]:checked')?.value === 'true',
+                MeshInnerCheck: document.querySelector('input[name="MeshInnerCheck"]:checked')?.value,
+                MeshOuterCheck: document.querySelector('input[name="MeshOuterCheck"]:checked')?.value,
+                EmbossMarkContent: document.getElementById('EmbossMarkContent').value,
+                EmbossMarkDate: document.getElementById('EmbossMarkDate').value,
+                QcCond: document.querySelector('input[name="QcCond"]:checked')?.value,
+                QcSurf: document.querySelector('input[name="QcSurf"]:checked')?.value,
+                QcRes: document.querySelector('input[name="QcRes"]:checked')?.value,
+
+                DAI_Awal: document.querySelector('input[name="DAI_Awal"]').value,
+                DAI_Akhir: document.querySelector('input[name="DAI_Akhir"]').value,
+                DAC_Awal: document.querySelector('input[name="DAC_Awal"]').value,
+                DAC_Akhir: document.querySelector('input[name="DAC_Akhir"]').value,
+                DRAI_Awal: document.querySelector('input[name="DRAI_Awal"]').value,
+                DRAI_Akhir: document.querySelector('input[name="DRAI_Akhir"]').value,
+                DRAC_Awal: document.querySelector('input[name="DRAC_Awal"]').value,
+                DRAC_Akhir: document.querySelector('input[name="DRAC_Akhir"]').value,
+
+                Readings: pReadings.map(p => ({
+                    ReadingTime: p.data.ReadingTime || new Date().toISOString(),
+                    ...p.data
+                }))
+            };
+
+            Swal.fire({
+                title: 'UPDATING DATA...',
+                text: 'Please wait while we record the changes.',
+                allowOutsideClick: false,
+                background: '#020617', color: '#38bdf8',
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const res = await fetch('/ProductionReport/UpdateWithReadings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'UPDATED!', text: 'Report successfully updated in the database.', background: '#0f172a', color: '#38bdf8' })
+                        .then(() => window.location.href = '/ProductionReport/ParameterHistory');
+                } else {
+                    Swal.fire({ icon: 'error', title: 'FAILED', text: result.message || 'Server error occurred.', background: '#0f172a', color: '#f87171' });
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'SYSTEM ERROR', text: e.message, background: '#0f172a', color: '#f87171' });
+            }
+        }
+
+        function clearSpsLink() {
+            document.getElementById('StandardParameterSettingId').value = '';
+            document.getElementById('manualItemSearch').value = '';
+            const label = document.getElementById('spsLinkedLabel');
+            const display = document.getElementById('spsLinkedDisplay');
+            if (label) { label.textContent = '— NONE —'; label.className = 'text-white-50'; }
+            if (display) display.innerHTML = '<span class="text-white-50">Type item code or scan to link SPS protocol...</span>';
+        }
+
+        // Confirm before submit
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const result = await Swal.fire({
+                title: '<span style="color:#fbbf24">UPDATE RECORD?</span>',
+                html: '<span style="color:rgba(255,255,255,0.6)">Simpan perubahan data produksi ini ke database?</span>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonColor: '#334155',
+                confirmButtonText: 'YES, UPDATE',
+                cancelButtonText: 'CANCEL',
+                background: '#0f172a',
+                color: '#fff'
+            });
+            if (result.isConfirmed) this.submit();
+        });
+
+        @if (TempData["ErrorMessage"] != null) {
+            <text>Swal.fire({icon:'error',title:'ERROR',text:'@TempData["ErrorMessage"]',background:'#0f172a',color:'#f87171',confirmButtonColor:'#ef4444'});</text>
+        }
+        @if (TempData["SuccessMessage"] != null) {
+            <text>Swal.fire({icon:'success',title:'UPDATED!',text:'@TempData["SuccessMessage"]',toast:true,position:'top-end',timer:3000,showConfirmButton:false,background:'#0f172a',color:'#38bdf8'});</text>
+        }
+    </script>
 }

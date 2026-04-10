@@ -446,6 +446,147 @@ namespace VelastoProductionSystem.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> UpdateWithReadings([FromBody] ProductionReportSaveDto dto)
+        {
+            if (dto == null || dto.Id == 0) return Json(new { success = false, message = "Invalid data payload" });
+
+            try
+            {
+                var report = await _context.ProductionReports
+                    .Include(p => p.ProductionReadings)
+                    .FirstOrDefaultAsync(m => m.Id == dto.Id);
+
+                if (report == null) return Json(new { success = false, message = "Report not found" });
+
+                // Update common fields
+                report.DocumentNumber = dto.DocumentNumber ?? report.DocumentNumber;
+                report.RevisionNumber = dto.RevisionNumber;
+                if (DateTime.TryParse(dto.ProductionDate, out var dt)) report.ProductionDate = dt;
+                report.Shift = dto.Shift;
+                report.CustomerName = dto.CustomerName;
+                report.HoseType = dto.HoseType;
+                report.StandardParameterSettingId = dto.StandardParameterSettingId;
+
+                report.InnerMaterial = dto.InnerMaterial;
+                report.InnerMaterialActual = dto.InnerMaterialActual;
+                report.InnerMaterialLotNo = dto.InnerMaterialLotNo;
+                report.OuterMaterial = dto.OuterMaterial;
+                report.OuterMaterialActual = dto.OuterMaterialActual;
+                report.OuterMaterialLotNo = dto.OuterMaterialLotNo;
+                report.Yarn = dto.Yarn;
+                report.YarnActual = dto.YarnActual;
+                report.YarnLotNo = dto.YarnLotNo;
+
+                report.DAI_Awal = dto.DAI_Awal;
+                report.DAI_Akhir = dto.DAI_Akhir;
+                report.DAC_Awal = dto.DAC_Awal;
+                report.DAC_Akhir = dto.DAC_Akhir;
+                report.DRAI_Awal = dto.DRAI_Awal;
+                report.DRAI_Akhir = dto.DRAI_Akhir;
+                report.DRAC_Awal = dto.DRAC_Awal;
+                report.DRAC_Akhir = dto.DRAC_Akhir;
+
+                report.NippleDieOK = dto.NippleDieOK; report.NippleDieInitial = dto.NippleDieInitial; report.NippleDieFinal = dto.NippleDieFinal;
+                report.TubeDieOK = dto.TubeDieOK; report.TubeDieInitial = dto.TubeDieInitial; report.TubeDieFinal = dto.TubeDieFinal;
+                report.MiddleDieOK = dto.MiddleDieOK; report.MiddleDieInitial = dto.MiddleDieInitial; report.MiddleDieFinal = dto.MiddleDieFinal;
+                report.CoverDieOK = dto.CoverDieOK; report.CoverDieInitial = dto.CoverDieInitial; report.CoverDieFinal = dto.CoverDieFinal;
+                report.SpacerDieOK = dto.SpacerDieOK; report.SpacerDieInitial = dto.SpacerDieInitial; report.SpacerDieFinal = dto.SpacerDieFinal;
+                report.ToleranceDieOK = dto.ToleranceDieOK; report.ToleranceInitial = dto.ToleranceInitial; report.ToleranceFinal = dto.ToleranceFinal;
+
+                report.MeshInner10Before = dto.MeshInner10Before; report.MeshInner40Before = dto.MeshInner40Before;
+                report.MeshOuter10Before = dto.MeshOuter10Before; report.MeshOuter40Before = dto.MeshOuter40Before;
+                report.MeshInnerCheck = dto.MeshInnerCheck; report.MeshOuterCheck = dto.MeshOuterCheck;
+                report.EmbossMarkContent = dto.EmbossMarkContent;
+                if (DateTime.TryParse(dto.EmbossMarkDate, out var ed)) report.EmbossMarkDate = ed;
+                report.QcCond = dto.QcCond; report.QcSurf = dto.QcSurf; report.QcRes = dto.QcRes;
+
+                // Sync Initial instrument parameters from the first reading if they are empty
+                if (dto.Readings != null && dto.Readings.Count > 0)
+                {
+                    var r0 = dto.Readings[0];
+                    report.InitHeadTempInner = decimal.TryParse(r0.HeadTempInner, out var it1) ? it1 : report.InitHeadTempInner;
+                    report.InitCylinder1TempInner = decimal.TryParse(r0.Cylinder1TempInner, out var it2) ? it2 : report.InitCylinder1TempInner;
+                    report.InitCylinder2TempInner = decimal.TryParse(r0.Cylinder2TempInner, out var it3) ? it3 : report.InitCylinder2TempInner;
+                    report.InitCylinder3TempInner = decimal.TryParse(r0.Cylinder3TempInner, out var it4) ? it4 : report.InitCylinder3TempInner;
+                    report.InitScrewTempInner = decimal.TryParse(r0.ScrewTempInner, out var it5) ? it5 : report.InitScrewTempInner;
+                    report.InitScrewSpeedInner = decimal.TryParse(r0.ScrewSpeedInner, out var it6) ? it6 : report.InitScrewSpeedInner;
+                    report.InitFeedRollRatioInner = decimal.TryParse(r0.FeedRollRatioInner, out var it7) ? it7 : report.InitFeedRollRatioInner;
+                    report.InitPressureInner = decimal.TryParse(r0.PressureInner, out var it8) ? it8 : report.InitPressureInner;
+
+                    report.InitHeadTempOuter = decimal.TryParse(r0.HeadTempOuter, out var ot1) ? ot1 : report.InitHeadTempOuter;
+                    report.InitCylinder1TempOuter = decimal.TryParse(r0.Cylinder1TempOuter, out var ot2) ? ot2 : report.InitCylinder1TempOuter;
+                    report.InitCylinder2TempOuter = decimal.TryParse(r0.Cylinder2TempOuter, out var ot3) ? ot3 : report.InitCylinder2TempOuter;
+                    report.InitCylinder3TempOuter = decimal.TryParse(r0.Cylinder3TempOuter, out var ot4) ? ot4 : report.InitCylinder3TempOuter;
+                    report.InitScrewTempOuter = decimal.TryParse(r0.ScrewTempOuter, out var ot5) ? ot5 : report.InitScrewTempOuter;
+                    report.InitScrewSpeedOuter = decimal.TryParse(r0.ScrewSpeedOuter, out var ot6) ? ot6 : report.InitScrewSpeedOuter;
+                    report.InitFeedRollRatioOuter = decimal.TryParse(r0.FeedRollRatioOuter, out var ot7) ? ot7 : report.InitFeedRollRatioOuter;
+                    report.InitPressureOuter = decimal.TryParse(r0.PressureOuter, out var ot8) ? ot8 : report.InitPressureOuter;
+
+                    report.InitSpiralSpeed = decimal.TryParse(r0.SpiralSpeed, out var m1) ? m1 : report.InitSpiralSpeed;
+                    report.InitSpiralPitchSetting = decimal.TryParse(r0.SpiralPitchSetting, out var m2) ? m2 : report.InitSpiralPitchSetting;
+                    report.InitHoseSpeed = decimal.TryParse(r0.HoseSpeed, out var m3) ? m3 : report.InitHoseSpeed;
+                    report.InitConveyorRatio = decimal.TryParse(r0.ConveyorRatio, out var m4) ? m4 : report.InitConveyorRatio;
+                }
+
+                // Update Readings: Remove old and add new (simplest for Edit)
+                // Alternatively, match IDs if complexity is needed, but for 1-5 readings, clear & reload is safer
+                _context.ProductionReadings.RemoveRange(report.ProductionReadings);
+
+                if (dto.Readings != null)
+                {
+                    foreach (var r in dto.Readings)
+                    {
+                        var reading = new ProductionReading
+                        {
+                            ProductionReportId = report.Id,
+                            ReadingTime = DateTime.TryParse(r.ReadingTime, out var rt) ? rt : DateTime.Now,
+                            RecordedBy = r.RecordedBy ?? report.CreatedBy ?? "Operator",
+                            
+                            HeadTempInner = int.TryParse(r.HeadTempInner, out var hti) ? hti : (int?)null,
+                            Cylinder1TempInner = int.TryParse(r.Cylinder1TempInner, out var c1i) ? c1i : (int?)null,
+                            Cylinder2TempInner = int.TryParse(r.Cylinder2TempInner, out var c2i) ? c2i : (int?)null,
+                            Cylinder3TempInner = int.TryParse(r.Cylinder3TempInner, out var c3i) ? c3i : (int?)null,
+                            ScrewTempInner = int.TryParse(r.ScrewTempInner, out var sti) ? sti : (int?)null,
+                            ScrewSpeedInner = ParseDecimal(r.ScrewSpeedInner),
+                            FeedRollRatioInner = int.TryParse(r.FeedRollRatioInner, out var fri) ? fri : (int?)null,
+                            PressureInner = ParseDecimal(r.PressureInner),
+
+                            HeadTempOuter = int.TryParse(r.HeadTempOuter, out var hto) ? hto : (int?)null,
+                            Cylinder1TempOuter = int.TryParse(r.Cylinder1TempOuter, out var c1o) ? c1o : (int?)null,
+                            Cylinder2TempOuter = int.TryParse(r.Cylinder2TempOuter, out var c2o) ? c2o : (int?)null,
+                            Cylinder3TempOuter = int.TryParse(r.Cylinder3TempOuter, out var c3o) ? c3o : (int?)null,
+                            ScrewTempOuter = int.TryParse(r.ScrewTempOuter, out var sto) ? sto : (int?)null,
+                            ScrewSpeedOuter = ParseDecimal(r.ScrewSpeedOuter),
+                            FeedRollRatioOuter = int.TryParse(r.FeedRollRatioOuter, out var fro) ? fro : (int?)null,
+                            PressureOuter = ParseDecimal(r.PressureOuter),
+
+                            SpiralSpeed = ParseDecimal(r.SpiralSpeed),
+                            SpiralPitchSetting = ParseDecimal(r.SpiralPitchSetting),
+                            SpiralPitchDisplay = ParseDecimal(r.SpiralPitchDisplay),
+                            PresetValue = ParseDecimal(r.PresetValue),
+                            ControlValue = ParseDecimal(r.ControlValue),
+                            HoseSpeed = ParseDecimal(r.HoseSpeed),
+                            TakeupConveyorSpeed = ParseDecimal(r.TakeupConveyorSpeed),
+                            CoolConveyorSpeed = ParseDecimal(r.CoolConveyorSpeed),
+                            ConveyorRatio = r.ConveyorRatio,
+                            UnsmoothSurface = ParseDecimal(r.UnsmoothSurface),
+                            ChillerWaterTemp = ParseDecimal(r.ChillerWaterTemp),
+                            CaterpillarGap = ParseDecimal(r.CaterpillarGap)
+                        };
+                        _context.ProductionReadings.Add(reading);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         private decimal? ParseDecimal(string? val)
         {
             if (string.IsNullOrEmpty(val)) return null;
@@ -560,10 +701,18 @@ namespace VelastoProductionSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var report = await _context.ProductionReports.FindAsync(id);
+            var report = await _context.ProductionReports
+                .Include(p => p.StandardParameterSetting)
+                .Include(p => p.ProductionReadings)
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (report == null) return NotFound();
 
-            ViewBag.StandardParameterSettings = new SelectList(_context.StandardParameterSettings.OrderByDescending(s => s.CreatedDate), "Id", "DocumentNumber", report.StandardParameterSettingId);
+            ViewBag.StandardParameterSettings = new SelectList(
+                await _context.StandardParameterSettings.Where(s => s.IsActive)
+                    .Select(s => new { Id = s.Id, Display = "[" + s.ItemList + "] - " + s.HoseType })
+                    .ToListAsync(),
+                "Id", "Display", report.StandardParameterSettingId
+            );
 
             return View(report);
         }
@@ -576,12 +725,102 @@ namespace VelastoProductionSystem.Controllers
             if (id != report.Id) return NotFound();
 
             ModelState.Remove("CreatedBy");
-            
+            ModelState.Remove("CreatedDate");
+            ModelState.Remove("Status");
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(report);
+                    // Load existing from DB to preserve immutable fields
+                    var existing = await _context.ProductionReports.FindAsync(id);
+                    if (existing == null) return NotFound();
+
+                    // === EDITABLE FIELDS ONLY ===
+                    // Header
+                    existing.DocumentNumber = report.DocumentNumber;
+                    existing.ProductionDate = report.ProductionDate;
+                    existing.RevisionNumber = report.RevisionNumber;
+                    existing.Shift = report.Shift;
+                    existing.CustomerName = report.CustomerName;
+                    existing.HoseType = report.HoseType;
+                    existing.Dimension = report.Dimension;
+                    existing.StandardParameterSettingId = report.StandardParameterSettingId;
+
+                    // Standards (from SPS)
+                    existing.InnerMaterial = report.InnerMaterial;
+                    existing.OuterMaterial = report.OuterMaterial;
+                    existing.Yarn = report.Yarn;
+
+                    // Material Actual + Lot
+                    existing.InnerMaterialActual = report.InnerMaterialActual;
+                    existing.InnerMaterialLotNo = report.InnerMaterialLotNo;
+                    existing.InnerMaterialSG = report.InnerMaterialSG;
+                    existing.OuterMaterialActual = report.OuterMaterialActual;
+                    existing.OuterMaterialLotNo = report.OuterMaterialLotNo;
+                    existing.OuterMaterialSG = report.OuterMaterialSG;
+                    existing.YarnActual = report.YarnActual;
+                    existing.YarnLotNo = report.YarnLotNo;
+
+                    // Die Verification
+                    existing.NippleDieOK = report.NippleDieOK;
+                    existing.NippleDieInitial = report.NippleDieInitial;
+                    existing.NippleDieFinal = report.NippleDieFinal;
+                    existing.TubeDieOK = report.TubeDieOK;
+                    existing.TubeDieInitial = report.TubeDieInitial;
+                    existing.TubeDieFinal = report.TubeDieFinal;
+                    existing.MiddleDieOK = report.MiddleDieOK;
+                    existing.MiddleDieInitial = report.MiddleDieInitial;
+                    existing.MiddleDieFinal = report.MiddleDieFinal;
+                    existing.CoverDieOK = report.CoverDieOK;
+                    existing.CoverDieInitial = report.CoverDieInitial;
+                    existing.CoverDieFinal = report.CoverDieFinal;
+                    existing.SpacerDieOK = report.SpacerDieOK;
+                    existing.SpacerDieInitial = report.SpacerDieInitial;
+                    existing.SpacerDieFinal = report.SpacerDieFinal;
+                    existing.ToleranceDieOK = report.ToleranceDieOK;
+                    existing.ToleranceInitial = report.ToleranceInitial;
+                    existing.ToleranceFinal = report.ToleranceFinal;
+
+                    // Mesh & Emboss
+                    existing.MeshInner10Before = report.MeshInner10Before;
+                    existing.MeshInner40Before = report.MeshInner40Before;
+                    existing.MeshOuter10Before = report.MeshOuter10Before;
+                    existing.MeshOuter40Before = report.MeshOuter40Before;
+                    existing.MeshInnerCheck = report.MeshInnerCheck;
+                    existing.MeshOuterCheck = report.MeshOuterCheck;
+                    existing.EmbossMarkContent = report.EmbossMarkContent;
+                    existing.EmbossMarkDate = report.EmbossMarkDate;
+
+                    // QC
+                    existing.QcCond = report.QcCond;
+                    existing.QcSurf = report.QcSurf;
+                    existing.QcRes = report.QcRes;
+
+                    // Waste / Dandori
+                    existing.DAI_Awal = report.DAI_Awal;
+                    existing.DAI_Akhir = report.DAI_Akhir;
+                    existing.DAC_Awal = report.DAC_Awal;
+                    existing.DAC_Akhir = report.DAC_Akhir;
+                    existing.DRAI_Awal = report.DRAI_Awal;
+                    existing.DRAI_Akhir = report.DRAI_Akhir;
+                    existing.DRAC_Awal = report.DRAC_Awal;
+                    existing.DRAC_Akhir = report.DRAC_Akhir;
+
+                    // Production Summary
+                    existing.QtyTarget = report.QtyTarget;
+                    existing.QtyOk = report.QtyOk;
+                    existing.NgDimension = report.NgDimension;
+                    existing.NgVisual = report.NgVisual;
+                    existing.VinCode = report.VinCode;
+                    existing.StandardLength = report.StandardLength;
+                    existing.ActualLength = report.ActualLength;
+                    existing.Remark = report.Remark;
+
+                    // Operator (allow update)
+                    if (!string.IsNullOrWhiteSpace(report.CreatedBy))
+                        existing.CreatedBy = report.CreatedBy;
+
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Data berhasil diupdate!";
                     return RedirectToAction(nameof(ParameterHistory));
@@ -593,7 +832,12 @@ namespace VelastoProductionSystem.Controllers
                 }
             }
 
-            ViewBag.StandardParameterSettings = new SelectList(_context.StandardParameterSettings.OrderByDescending(s => s.CreatedDate), "Id", "DocumentNumber", report.StandardParameterSettingId);
+            ViewBag.StandardParameterSettings = new SelectList(
+                await _context.StandardParameterSettings.Where(s => s.IsActive)
+                    .Select(s => new { Id = s.Id, Display = "[" + s.ItemList + "] - " + s.HoseType })
+                    .ToListAsync(),
+                "Id", "Display", report.StandardParameterSettingId
+            );
             return View(report);
         }
 

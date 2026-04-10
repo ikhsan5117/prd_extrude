@@ -63,6 +63,7 @@ namespace VelastoProductionSystem.Models
 
     public class ProductionReportSaveDto
     {
+        public int Id { get; set; }
         public string? DocumentNumber { get; set; }
         public int RevisionNumber { get; set; }
         public string? ProductionDate { get; set; }
