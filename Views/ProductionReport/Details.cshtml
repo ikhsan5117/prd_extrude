@@ -9,30 +9,35 @@
 }
 
 <div class="production-dashboard-sapphire fade-in">
-    <!-- PORTAL SELECTION / TOGGLE (No Print) -->
-    <div class="d-flex justify-content-center gap-3 mb-4 no-print header-sapphire-glass p-3">
-        <a href="?portal=parameter" class="portal-btn @(currentPortal == "parameter" || string.IsNullOrEmpty(currentPortal) ? "active" : "")">
-            <i class="bi bi-gear-wide-connected fs-4"></i>
-            <div>
-                <span class="small fw-bold d-block text-white-50">OPERATOR 1</span>
-                <span class="fw-black">PARAMETER SETTING</span>
+    <!-- PREMUIM ACTION TOOLBAR (No Print) -->
+    <div class="no-print sticky-top mb-4 p-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px);">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <a asp-action="ParameterHistory" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
+                    <i class="bi bi-arrow-left me-2"></i> BACK TO HISTORY
+                </a>
+                <div class="vr bg-white opacity-25" style="height: 24px;"></div>
+                <div class="d-flex align-items-center">
+                    <div class="hud-status-dot me-2 animate-pulse-green"></div>
+                    <span class="text-white-50 small fw-bold tracking-widest text-uppercase">MONITORING DASHBOARD - @Model.Status</span>
+                </div>
             </div>
-        </a>
-        <a href="/Dimensi/App?id=@Model.Id" class="portal-btn">
-            <i class="bi bi-rulers fs-4"></i>
-            <div>
-                <span class="small fw-bold d-block text-white-50">OPERATOR 2</span>
-                <span class="fw-black">DIMENSION REPORT</span>
+
+            <div class="d-flex gap-2">
+                <button onclick="downloadPDF()" class="btn btn-outline-info btn-sm px-4 rounded-pill fw-bold neon-glow-info">
+                    <i class="bi bi-file-earmark-pdf me-2"></i> DOWNLOAD PDF
+                </button>
+                <button onclick="window.print()" class="btn btn-outline-primary btn-sm px-4 rounded-pill fw-bold">
+                    <i class="bi bi-printer me-2"></i> PRINT REPORT
+                </button>
+                <div class="vr bg-white opacity-25 mx-2" style="height: 32px;"></div>
+                <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning-glass btn-sm px-4 rounded-pill fw-bold">
+                    <i class="bi bi-pencil-square me-2"></i> EDIT SYNC
+                </a>
+                <button type="button" class="btn btn-danger-glass btn-sm px-4 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#finishProductionModal">
+                    <i class="bi bi-flag-fill me-2"></i> FINISH
+                </button>
             </div>
-        </a>
-        
-        <div class="ms-auto d-flex align-items-center gap-2">
-            <button onclick="window.print()" class="btn btn-outline-glass btn-sm">
-                <i class="bi bi-printer me-1"></i> PRINT
-            </button>
-            <button type="button" class="btn btn-danger-glass btn-sm" data-bs-toggle="modal" data-bs-target="#finishProductionModal">
-                <i class="bi bi-flag-fill me-1"></i> FINISH
-            </button>
         </div>
     </div>
 
@@ -195,9 +200,6 @@
 
             <!-- ACTIONS -->
             <div class="no-print d-flex justify-content-center gap-3 mt-2 mb-4">
-                <button type="button" class="btn btn-primary px-4 rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#addDimModal">
-                    <i class="bi bi-plus-circle me-2"></i> INPUT DATA QUALITY JAM @(readings.Count + 1)
-                </button>
                 <button onclick="window.print()" class="btn btn-outline-info px-4 rounded-pill">
                     <i class="bi bi-printer me-2"></i> PRINT REPORT
                 </button>
@@ -222,13 +224,7 @@
                     <div class="row g-0 border-bottom-form-bold">
                         <!-- Logo -->
                         <div class="col-3 border-end-form p-2 d-flex align-items-center justify-content-center">
-                             <div class="d-flex align-items-center mb-1">
-                                <h4 class="fw-black text-secondary mb-0 me-2" style="font-family: Arial Black, sans-serif; letter-spacing: -1px; font-size: 32px; transform: scaleX(1.2);">V</h4>
-                                <div>
-                                    <h5 class="fw-black text-secondary mb-0" style="letter-spacing: 2px; font-size: 20px; line-height: 1;">VELASTO</h5>
-                                    <div class="super-small fw-bold text-secondary" style="letter-spacing: 4px; font-size: 7px;">I N D O N E S I A</div>
-                                </div>
-                             </div>
+                             <img src="~/images/velasto-logo-e1700056160273.png" alt="Velasto Logo" style="height: 45px; object-fit: contain;" />
                         </div>
                         <!-- Title -->
                         <div class="col-5 border-end-form p-2 d-flex flex-column justify-content-center align-items-center text-center">
@@ -352,19 +348,19 @@
                             <tr>
                                 <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
                                 <td class="text-center">@(Model.InnerMaterial ?? "-")</td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.InnerMaterialLotNo == "0" ? "" : Model.InnerMaterialLotNo)" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">OUTER(MATERIAL)</td>
                                 <td class="text-center">@(Model.OuterMaterial ?? "-")</td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.OuterMaterialLotNo == "0" ? "" : Model.OuterMaterialLotNo)" placeholder="" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">YARN</td>
                                 <td class="text-center">ARAMID</td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-primary" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
                                 <td class="p-0 border-end-0 bg-light"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.YarnLotNo == "0" ? "" : Model.YarnLotNo)" placeholder="" /></td>
                             </tr>
                             
@@ -524,7 +520,7 @@
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Date</td>
-                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" value="@Model.EmbossMarkDate?.ToString("dd.MM.yy")" placeholder="~" /></td>
+                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" value="@(Model.EmbossMarkDate?.ToString("dd.MM.yy") ?? Model.ProductionDate.ToString("dd.MM.yy"))" placeholder="~" /></td>
                             </tr>
                             <tr>
                                 <td class="text-start ps-2">Condition</td>
@@ -565,7 +561,7 @@
                             <tr class="bg-light">
                                 <th colspan="2" width="220" class="text-start ps-2 py-2">INSTRUMENT PARAMETER</th>
                                 <th width="100">STANDARD</th>
-                                <th width="100" class="bg-info bg-opacity-10 text-primary">INITIAL</th>
+                                <th width="100" class="bg-light text-dark">INITIAL</th>
                                 @for(int i=1; i<=7; i++) { <th width="9%">#@i</th> }
                             </tr>
                         </thead>
@@ -613,7 +609,7 @@
                                     @if(r == 0) { <td rowspan="@innerRows.Length" class="hud-vertical-label">INNER TUBE</td> }
                                     <td class="text-start ps-2 pe-1 py-1 fw-bold">@innerRows[r].L @(string.IsNullOrEmpty(innerRows[r].U) ? "" : $"({innerRows[r].U})")</td>
                                     <td class="small opacity-50 fw-bold">@innerRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + innerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()), innerRows[r].U)" /></td>
+                                    <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + innerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()), innerRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
                                             <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), innerRows[r].U)" />
@@ -641,7 +637,7 @@
                                     @if(r == 0) { <td rowspan="@outerRows.Length" class="hud-vertical-label">OUTER COVER</td> }
                                     <td class="text-start ps-2 pe-1 py-1 fw-bold">@outerRows[r].L @(string.IsNullOrEmpty(outerRows[r].U) ? "" : $"({outerRows[r].U})")</td>
                                     <td class="small opacity-50 fw-bold">@outerRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + outerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()), outerRows[r].U)" /></td>
+                                    <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + outerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()), outerRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
                                             <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), outerRows[r].U)" />
@@ -665,7 +661,7 @@
                                     @if(r == 0) { <td rowspan="@otherRows.Length" class="hud-vertical-label">MISC</td> }
                                     <td class="text-start ps-2 pe-1 py-1 fw-bold">@otherRows[r].L @(string.IsNullOrEmpty(otherRows[r].U) ? "" : $"({otherRows[r].U})")</td>
                                     <td class="small opacity-50 fw-bold">@otherRows[r].S</td>
-                                    <td class="p-0 bg-info bg-opacity-10"><input type="text" class="input-transparent text-primary fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + otherRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()), otherRows[r].U)" /></td>
+                                    <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + otherRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()), otherRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
                                             <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), otherRows[r].U)" />
@@ -730,11 +726,10 @@
                     </div>
                 </div>
 
-                <!-- SCANNER TRIGGER ELIMINATED -->
                 <div class="mt-4 no-print d-flex justify-content-center gap-3">
-                    <button type="button" id="btnInput" class="btn btn-primary px-4 rounded-pill" data-bs-toggle="modal" data-bs-target="#addReadingModal">
-                        <i class="bi bi-plus-circle-fill me-2"></i> INPUT DATA PARAMETER (JAM KE-@(readings.Count))
-                    </button>
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning-glass px-5 rounded-pill fw-bold">
+                        <i class="bi bi-pencil-square me-2"></i> EDIT & SYNC DATA
+                    </a>
                 </div>
             </div>
         </div>
@@ -747,213 +742,10 @@
 <!-- MODALS FOR INPUT & SCANNER                    -->
 <!-- ============================================= -->
 
-<!-- SCANNER MODAL FOR VERIFICATION -->
-<div class="modal fade no-print" id="scannerVerifyModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content scanner-modal-glass border-0">
-            <div class="modal-header border-bottom border-info border-opacity-25 pb-2">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-shield-check text-info me-2 fs-4"></i>
-                    <h5 class="modal-title text-white fw-bold tracking-widest">SPS ITEM VERIFICATION</h5>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopScanner()"></button>
-            </div>
-            <div class="modal-body p-0 position-relative border-0 bg-black">
-                <div class="hud-scanner-overlay" style="aspect-ratio:4/3; overflow:hidden; position:relative;">
-                    <div id="reader-verify" style="width:100%;"></div>
-                    <div style="position: absolute; top:50%; left:0; width:100%; height:2px; background:linear-gradient(to right, transparent, #0dcaf0, transparent); box-shadow: 0 0 15px #0dcaf0; z-index:10; transform: translateY(-50%);"></div>
-                </div>
-            </div>
-            <div class="modal-footer border-top border-info border-opacity-25 py-2 bg-hud-navy">
-                <div class="d-flex w-100 justify-content-between align-items-center px-2">
-                    <span class="text-info extra-small tracking-widest"><i class="bi bi-broadcast pulse-info me-1"></i> AWAITING ITEM BARCODE...</span>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-info btn-sm px-4" onclick="switchCamera()">
-                            <i class="bi bi-camera-rotate me-1"></i> SWITCH
-                        </button>
-                        <button type="button" class="btn btn-danger btn-sm px-4" data-bs-dismiss="modal" onclick="stopScanner()">
-                            CLOSE
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- (Scanner Modal Removed per user decision, kept exclusively for Create & Edit) -->
 
-<!-- MODAL OPERATOR 1 (FULL PARAMETER HUD) -->
-<div class="modal fade no-print" id="addReadingModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content scanner-modal-glass border-0">
-            <div class="modal-header border-bottom border-primary border-opacity-25 pb-3">
-                <div class="d-flex align-items-center">
-                    <div class="hud-icon-box me-3"><i class="bi bi-cpu text-primary fs-3"></i></div>
-                    <div>
-                        <h4 class="modal-title text-white fw-black mb-0">OPERATOR 1 MONITORING</h4>
-                        <div class="text-primary-50 small fw-bold">INPUT PARAMETER MESIN - JAM KE-@(readings.Count + 1)</div>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-action="AddReading" method="post" id="parameterForm">
-                <input type="hidden" name="ProductionReportId" value="@Model.Id" />
-                <input type="hidden" name="RecordedBy" value="Operator 1" />
-                <div class="modal-body p-0">
-                    <ul class="nav nav-tabs hud-tabs border-0" id="readingTabs" role="tablist">
-                        <li class="nav-item flex-grow-1"><button class="nav-link active w-100 py-3" data-bs-toggle="tab" data-bs-target="#tab-inner">INNER (TUBE 1)</button></li>
-                        <li class="nav-item flex-grow-1"><button class="nav-link w-100 py-3" data-bs-toggle="tab" data-bs-target="#tab-outer">OUTER (COVER)</button></li>
-                        <li class="nav-item flex-grow-1"><button class="nav-link w-100 py-3" data-bs-toggle="tab" data-bs-target="#tab-spiral">SPIRAL & OTHERS</button></li>
-                    </ul>
+<!-- (Legacy Input Modals Removed as they are handled in Edit View) -->
 
-                    <div class="tab-content p-4 bg-hud-navy-dark">
-                        <!-- TAB INNER -->
-                        <div class="tab-pane fade show active" id="tab-inner">
-                            <div class="row g-4">
-                                @foreach(var f in new[] { 
-                                    new { L="Head Temp", N="HeadTempInner", U="°C" }, new { L="Cyl 1", N="Cylinder1TempInner", U="°C" },
-                                    new { L="Cyl 2", N="Cylinder2TempInner", U="°C" }, new { L="Cyl 3", N="Cylinder3TempInner", U="°C" },
-                                    new { L="Screw Temp", N="ScrewTempInner", U="°C" }, new { L="Screw Speed", N="ScrewSpeedInner", U="RPM" },
-                                    new { L="Feed Roll", N="FeedRollRatioInner", U="%" }, new { L="Pressure", N="PressureInner", U="MPa" }
-                                }) {
-                                    <div class="col-md-3">
-                                        <div class="hud-input-group">
-                                            <label class="hud-label">@f.L <span class="unit">(@f.U)</span></label>
-                                            <input name="@f.N" type="number" step="0.1" class="hud-input-lg w-100" placeholder="0.0" />
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <!-- TAB OUTER -->
-                        <div class="tab-pane fade" id="tab-outer">
-                            <div class="row g-4">
-                                @foreach(var f in new[] { 
-                                    new { L="Head Temp", N="HeadTempOuter", U="°C" }, new { L="Cyl 1", N="Cylinder1TempOuter", U="°C" },
-                                    new { L="Cyl 2", N="Cylinder2TempOuter", U="°C" }, new { L="Cyl 3", N="Cylinder3TempOuter", U="°C" },
-                                    new { L="Screw Temp", N="ScrewTempOuter", U="°C" }, new { L="Screw Speed", N="ScrewSpeedOuter", U="RPM" },
-                                    new { L="Feed Roll", N="FeedRollRatioOuter", U="%" }, new { L="Pressure", N="PressureOuter", U="MPa" }
-                                }) {
-                                    <div class="col-md-3">
-                                        <div class="hud-input-group">
-                                            <label class="hud-label text-warning">@f.L <span class="unit">(@f.U)</span></label>
-                                            <input name="@f.N" type="number" step="0.1" class="hud-input-lg w-100 border-warning-subtle" placeholder="0.0" />
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <!-- TAB SPIRAL & OTHERS -->
-                        <div class="tab-pane fade" id="tab-spiral">
-                            <div class="row g-4">
-                                <div class="col-md-3"><label class="hud-label text-info">Spiral Speed (rpm)</label><input name="SpiralSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-3"><label class="hud-label text-info">Pitch (Set)</label><input name="SpiralPitchSetting" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-3"><label class="hud-label text-info">Pitch (Disp)</label><input name="SpiralPitchDisplay" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-3"><label class="hud-label text-info">Hose Speed (m/min)</label><input name="HoseSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                
-                                <div class="col-md-4"><label class="hud-label text-success">Take-up Speed</label><input name="TakeupConveyorSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-4"><label class="hud-label text-success">Cool Conv Speed</label><input name="CoolConveyorSpeed" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-4"><label class="hud-label text-success">Conv Ratio (%)</label><input name="ConveyorRatio" type="text" class="hud-input-lg w-100" placeholder="100%" /></div>
-                                
-                                <div class="col-md-3"><label class="hud-label">Chiller Temp</label><input name="ChillerWaterTemp" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-3"><label class="hud-label">Preset View</label><input name="PresetValue" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-3"><label class="hud-label">Control Value</label><input name="ControlValue" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                <div class="col-md-3"><label class="hud-label">Caterpillar Gap</label><input name="CaterpillarGap" type="number" step="0.1" class="hud-input-lg w-100" /></div>
-                                
-                                <div class="col-12"><label class="hud-label text-danger">Unsmooth Surface (mm)</label><input name="UnsmoothSurface" type="number" step="0.01" class="hud-input-lg w-100 text-danger" placeholder="0.5" /></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-top border-primary border-opacity-10 bg-hud-navy">
-                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">CANCEL</button>
-                    <button type="submit" class="btn btn-primary px-5 fw-bold neon-pulse-blue">SUBMIT ALL READINGS</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL OPERATOR 2 (DIMENSION HUD) -->
-<div class="modal fade no-print" id="addDimModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content scanner-modal-glass border-0">
-            <div class="modal-header border-bottom border-success border-opacity-25 pb-3">
-                <div class="d-flex align-items-center">
-                    <div class="hud-icon-box bg-success bg-opacity-10 me-3"><i class="bi bi-rulers text-success fs-3"></i></div>
-                    <div>
-                        <h4 class="modal-title text-white fw-black mb-0">OPERATOR 2 - QUALITY CONTROL</h4>
-                        <div class="text-success-50 small fw-bold">INPUT DIMENSI & VISUAL - @DateTime.Now.ToString("HH:mm")</div>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-action="AddDimensionReading" method="post">
-                <input type="hidden" name="ProductionReportId" value="@Model.Id" />
-                <div class="modal-body p-4 bg-hud-navy-dark">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="hud-input-group border-success border-opacity-10">
-                                <label class="hud-label text-success">Inner Diameter (mm)</label>
-                                <input name="InnerDiameter" type="number" step="0.01" class="hud-input-lg w-100 text-success" placeholder="0.00" />
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="hud-input-group">
-                                <label class="hud-label">Thick X (mm)</label>
-                                <input name="InnerThicknessX" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="hud-input-group">
-                                <label class="hud-label">Thick Y (mm)</label>
-                                <input name="InnerThicknessY" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="hud-input-group">
-                                <label class="hud-label">Total X (mm)</label>
-                                <input name="TotalThicknessX" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="hud-input-group">
-                                <label class="hud-label">Total Y (mm)</label>
-                                <input name="TotalThicknessY" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="hud-input-group">
-                                <label class="hud-label">Spiral Pitch (mm)</label>
-                                <input name="SpiralPitch" type="number" step="0.01" class="hud-input-lg w-100" placeholder="0.00" />
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="hud-input-group bg-dark bg-opacity-25">
-                                <label class="hud-label">Visual Status Check</label>
-                                <div class="d-flex gap-2">
-                                    <input type="radio" class="btn-check" name="VisualCheck" id="v-ok" value="OK" checked>
-                                    <label class="btn btn-outline-success flex-grow-1 py-3 fw-bold" for="v-ok">OK - PASSED</label>
-                                    
-                                    <input type="radio" class="btn-check" name="VisualCheck" id="v-sc" value="SC">
-                                    <label class="btn btn-outline-warning flex-grow-1 py-3 fw-bold" for="v-sc">SC - SCRATCH</label>
-                                    
-                                    <input type="radio" class="btn-check" name="VisualCheck" id="v-ng" value="NG">
-                                    <label class="btn btn-outline-danger flex-grow-1 py-3 fw-bold" for="v-ng">NG - REJECT</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-top border-success border-opacity-10 bg-hud-navy">
-                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">CANCEL</button>
-                    <button type="submit" class="btn btn-success px-5 fw-bold">SAVE QUALITY DATA</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <!-- MODAL FINISH PRODUCTION & WASTE -->
 <div class="modal fade no-print" id="finishProductionModal" tabindex="-1">
@@ -1369,6 +1161,37 @@
 </style>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function downloadPDF() {
+            const element = document.querySelector('.production-dashboard-sapphire');
+            const opt = {
+                margin:       0.2,
+                filename:     'Report_@Model.DocumentNumber.Replace("/", "_")' + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            Swal.fire({
+                title: 'GENERATING PDF...',
+                html: 'Tunggu sebentar, sedang menyiapkan laporan kualitas tinggi.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                noPrintElements.forEach(el => el.style.display = '');
+                Swal.fire({ icon: 'success', title: 'DOWNLOAD SELESAI', timer: 1500, showConfirmButton: false });
+            }).catch(err => {
+                noPrintElements.forEach(el => el.style.display = '');
+                Swal.fire({ icon: 'error', title: 'GAGAL DOWNLOAD', text: err.message });
+            });
+        }
+    </script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

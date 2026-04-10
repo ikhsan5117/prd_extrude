@@ -209,8 +209,8 @@
                                     <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">EMBOSSING</span><span class="label-main small">MARK DATA</span></div></td>
                                     <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
                                         <div class="row g-2 align-items-center">
-                                            <div class="col-7"><input asp-for="EmbossMarkContent" class="hud-input-underlined py-1 text-center font-monospace small" placeholder="CONTENT" /></div>
-                                            <div class="col-5"><input type="date" asp-for="EmbossMarkDate" class="hud-input-underlined py-1 text-center font-monospace small" /></div>
+                                            <div class="col-7"><input asp-for="EmbossMarkContent" id="EmbossMarkContent" class="hud-input-underlined py-1 text-center font-monospace small" placeholder="CONTENT" /></div>
+                                            <div class="col-5"><input type="date" asp-for="EmbossMarkDate" id="EmbossMarkDate" class="hud-input-underlined py-1 text-center font-monospace small" /></div>
                                         </div>
                                     </td>
                                 </tr>
@@ -773,6 +773,12 @@
             setSpec('HoseSpeed', sps.hoseSpeed);
             setSpec('ConveyorRatio', sps.conveyorRatio);
 
+            // Populate Emboss Marking Date if empty
+            const dateEl = document.getElementById('EmbossMarkDate');
+            if (dateEl && !dateEl.value) {
+                dateEl.value = new Date().toISOString().split('T')[0];
+            }
+
             Swal.fire({
                 icon: 'success', title: 'SPS SYNC SUCCESS',
                 text: `Protokol ${sps.hoseType || sps.HoseType || ''} berhasil dimuat!`,
@@ -787,7 +793,7 @@
 
         // Load existing readings from Model
         const initialReadings = @Html.Raw(Json.Serialize((Model.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).Select(r => new {
-            data = new Dictionary<string, string> {
+            data = new Dictionary<string, string?> {
                 { "HeadTempInner", r.HeadTempInner?.ToString() },
                 { "Cylinder1TempInner", r.Cylinder1TempInner?.ToString() },
                 { "Cylinder2TempInner", r.Cylinder2TempInner?.ToString() },
