@@ -342,8 +342,50 @@ namespace VelastoProductionSystem.Controllers
                     DRAC_Akhir = dto.DRAC_Akhir,
                     CreatedBy = dto.CreatedBy ?? "Operator",
                     CreatedDate = DateTime.Now,
-                    Status = "COMPLETED"
+                    Status = "COMPLETED",
+                    StandardParameterSettingId = dto.StandardParameterSettingId,
+                    NippleDieOK = dto.NippleDieOK, NippleDieInitial = dto.NippleDieInitial, NippleDieFinal = dto.NippleDieFinal,
+                    TubeDieOK = dto.TubeDieOK, TubeDieInitial = dto.TubeDieInitial, TubeDieFinal = dto.TubeDieFinal,
+                    MiddleDieOK = dto.MiddleDieOK, MiddleDieInitial = dto.MiddleDieInitial, MiddleDieFinal = dto.MiddleDieFinal,
+                    CoverDieOK = dto.CoverDieOK, CoverDieInitial = dto.CoverDieInitial, CoverDieFinal = dto.CoverDieFinal,
+                    SpacerDieOK = dto.SpacerDieOK, SpacerDieInitial = dto.SpacerDieInitial, SpacerDieFinal = dto.SpacerDieFinal,
+                    ToleranceDieOK = dto.ToleranceDieOK, ToleranceInitial = dto.ToleranceInitial, ToleranceFinal = dto.ToleranceFinal,
+                    MeshInner10Before = dto.MeshInner10Before, MeshInner40Before = dto.MeshInner40Before,
+                    MeshOuter10Before = dto.MeshOuter10Before, MeshOuter40Before = dto.MeshOuter40Before,
+                    MeshInnerCheck = dto.MeshInnerCheck, MeshOuterCheck = dto.MeshOuterCheck,
+                    EmbossMarkContent = dto.EmbossMarkContent,
+                    EmbossMarkDate = DateTime.TryParse(dto.EmbossMarkDate, out var ed) ? ed : null,
+                    QcCond = dto.QcCond, QcSurf = dto.QcSurf, QcRes = dto.QcRes
                 };
+
+                // Initialize the Initial settings arrays from the very first Reading
+                if (dto.Readings != null && dto.Readings.Count > 0) {
+                    var r0 = dto.Readings.FirstOrDefault();
+                    if(r0 != null) {
+                        report.InitHeadTempInner = decimal.TryParse(r0.HeadTempInner, out var it1) ? it1 : (decimal?)null;
+                        report.InitCylinder1TempInner = decimal.TryParse(r0.Cylinder1TempInner, out var it2) ? it2 : (decimal?)null;
+                        report.InitCylinder2TempInner = decimal.TryParse(r0.Cylinder2TempInner, out var it3) ? it3 : (decimal?)null;
+                        report.InitCylinder3TempInner = decimal.TryParse(r0.Cylinder3TempInner, out var it4) ? it4 : (decimal?)null;
+                        report.InitScrewTempInner = decimal.TryParse(r0.ScrewTempInner, out var it5) ? it5 : (decimal?)null;
+                        report.InitScrewSpeedInner = decimal.TryParse(r0.ScrewSpeedInner, out var it6) ? it6 : (decimal?)null;
+                        report.InitFeedRollRatioInner = decimal.TryParse(r0.FeedRollRatioInner, out var it7) ? it7 : (decimal?)null;
+                        report.InitPressureInner = decimal.TryParse(r0.PressureInner, out var it8) ? it8 : (decimal?)null;
+
+                        report.InitHeadTempOuter = decimal.TryParse(r0.HeadTempOuter, out var ot1) ? ot1 : (decimal?)null;
+                        report.InitCylinder1TempOuter = decimal.TryParse(r0.Cylinder1TempOuter, out var ot2) ? ot2 : (decimal?)null;
+                        report.InitCylinder2TempOuter = decimal.TryParse(r0.Cylinder2TempOuter, out var ot3) ? ot3 : (decimal?)null;
+                        report.InitCylinder3TempOuter = decimal.TryParse(r0.Cylinder3TempOuter, out var ot4) ? ot4 : (decimal?)null;
+                        report.InitScrewTempOuter = decimal.TryParse(r0.ScrewTempOuter, out var ot5) ? ot5 : (decimal?)null;
+                        report.InitScrewSpeedOuter = decimal.TryParse(r0.ScrewSpeedOuter, out var ot6) ? ot6 : (decimal?)null;
+                        report.InitFeedRollRatioOuter = decimal.TryParse(r0.FeedRollRatioOuter, out var ot7) ? ot7 : (decimal?)null;
+                        report.InitPressureOuter = decimal.TryParse(r0.PressureOuter, out var ot8) ? ot8 : (decimal?)null;
+
+                        report.InitSpiralSpeed = decimal.TryParse(r0.SpiralSpeed, out var m1) ? m1 : (decimal?)null;
+                        report.InitSpiralPitchSetting = decimal.TryParse(r0.SpiralPitchSetting, out var m2) ? m2 : (decimal?)null;
+                        report.InitHoseSpeed = decimal.TryParse(r0.HoseSpeed, out var m3) ? m3 : (decimal?)null;
+                        report.InitConveyorRatio = decimal.TryParse(r0.ConveyorRatio, out var m4) ? m4 : (decimal?)null;
+                    }
+                }
 
                 _context.ProductionReports.Add(report);
                 await _context.SaveChangesAsync(); // Save to get the ID

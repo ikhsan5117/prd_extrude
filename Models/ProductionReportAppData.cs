@@ -87,6 +87,45 @@ namespace VelastoProductionSystem.Models
         public string? DRAC_Awal { get; set; }
         public string? DRAC_Akhir { get; set; }
         public string? CreatedBy { get; set; }
+        
+        // --- NEW FIELDS ---
+        public int? StandardParameterSettingId { get; set; }
+        
+        // Dies
+        public bool NippleDieOK { get; set; }
+        public string? NippleDieInitial { get; set; }
+        public string? NippleDieFinal { get; set; }
+        public bool TubeDieOK { get; set; }
+        public string? TubeDieInitial { get; set; }
+        public string? TubeDieFinal { get; set; }
+        public bool MiddleDieOK { get; set; }
+        public string? MiddleDieInitial { get; set; }
+        public string? MiddleDieFinal { get; set; }
+        public bool CoverDieOK { get; set; }
+        public string? CoverDieInitial { get; set; }
+        public string? CoverDieFinal { get; set; }
+        public bool SpacerDieOK { get; set; }
+        public string? SpacerDieInitial { get; set; }
+        public string? SpacerDieFinal { get; set; }
+        public bool ToleranceDieOK { get; set; }
+        public string? ToleranceInitial { get; set; }
+        public string? ToleranceFinal { get; set; }
+
+        // Mesh
+        public bool MeshInner10Before { get; set; }
+        public bool MeshInner40Before { get; set; }
+        public bool MeshOuter10Before { get; set; }
+        public bool MeshOuter40Before { get; set; }
+        public string? MeshInnerCheck { get; set; }
+        public string? MeshOuterCheck { get; set; }
+
+        // Emboss & QC
+        public string? EmbossMarkContent { get; set; }
+        public string? EmbossMarkDate { get; set; }
+        public string? QcCond { get; set; }
+        public string? QcSurf { get; set; }
+        public string? QcRes { get; set; }
+
         public List<ProductionReadingSaveDto> Readings { get; set; } = new List<ProductionReadingSaveDto>();
     }
 

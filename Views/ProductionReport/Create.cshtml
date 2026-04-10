@@ -16,6 +16,7 @@
         </div>
 
         <form asp-action="Create" id="mainReportForm">
+            <input type="hidden" id="StandardParameterSettingId" name="StandardParameterSettingId" value="" />
             <!-- SECTION: PRODUCTION COMMAND CONSOLE (TOP HEADER) -->
             <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
                 <div class="hud-card-header d-flex justify-content-between align-items-center py-2 px-3">
@@ -1064,6 +1065,9 @@
             document.getElementById('InnerMaterial').value = sps.innerMaterial || '';
             document.getElementById('OuterMaterial').value = sps.outerMaterial || '';
             document.getElementById('Yarn').value = sps.yarnType || '';
+            
+            let spsIdEl = document.getElementById('StandardParameterSettingId');
+            if (spsIdEl) spsIdEl.value = sps.id || '';
 
             const formatVal = (val, prefix = '', suffix = '') => {
                 if (val === undefined || val === null || val === '') return '---';
@@ -1330,6 +1334,40 @@
                 DRAC_Awal: document.getElementById('DRAC_Awal').value,
                 DRAC_Akhir: document.getElementById('DRAC_Akhir').value,
 
+                StandardParameterSettingId: document.getElementById('StandardParameterSettingId')?.value ? parseInt(document.getElementById('StandardParameterSettingId').value) : null,
+
+                NippleDieOK: document.querySelector('input[name="NippleDieOK"]:checked')?.value === 'true',
+                NippleDieInitial: document.querySelector('input[name="NippleDieInitial"]')?.value,
+                NippleDieFinal: document.querySelector('input[name="NippleDieFinal"]')?.value,
+                TubeDieOK: document.querySelector('input[name="TubeDieOK"]:checked')?.value === 'true',
+                TubeDieInitial: document.querySelector('input[name="TubeDieInitial"]')?.value,
+                TubeDieFinal: document.querySelector('input[name="TubeDieFinal"]')?.value,
+                MiddleDieOK: document.querySelector('input[name="MiddleDieOK"]:checked')?.value === 'true',
+                MiddleDieInitial: document.querySelector('input[name="MiddleDieInitial"]')?.value,
+                MiddleDieFinal: document.querySelector('input[name="MiddleDieFinal"]')?.value,
+                CoverDieOK: document.querySelector('input[name="CoverDieOK"]:checked')?.value === 'true',
+                CoverDieInitial: document.querySelector('input[name="CoverDieInitial"]')?.value,
+                CoverDieFinal: document.querySelector('input[name="CoverDieFinal"]')?.value,
+                SpacerDieOK: document.querySelector('input[name="SpacerDieOK"]:checked')?.value === 'true',
+                SpacerDieInitial: document.querySelector('input[name="SpacerDieInitial"]')?.value,
+                SpacerDieFinal: document.querySelector('input[name="SpacerDieFinal"]')?.value,
+                ToleranceDieOK: document.querySelector('input[name="ToleranceDieOK"]:checked')?.value === 'true',
+                ToleranceInitial: document.querySelector('input[name="ToleranceInitial"]')?.value,
+                ToleranceFinal: document.querySelector('input[name="ToleranceFinal"]')?.value,
+
+                MeshInner10Before: document.querySelector('input[name="MeshInner10Before"]:checked')?.value === 'true',
+                MeshInner40Before: document.querySelector('input[name="MeshInner40Before"]:checked')?.value === 'true',
+                MeshOuter10Before: document.querySelector('input[name="MeshOuter10Before"]:checked')?.value === 'true',
+                MeshOuter40Before: document.querySelector('input[name="MeshOuter40Before"]:checked')?.value === 'true',
+                MeshInnerCheck: document.querySelector('input[name="MeshInnerCheck"]:checked')?.value,
+                MeshOuterCheck: document.querySelector('input[name="MeshOuterCheck"]:checked')?.value,
+
+                EmbossMarkContent: document.getElementById('EmbossMarkContent')?.value,
+                EmbossMarkDate: document.getElementById('EmbossMarkDate')?.value,
+                QcCond: document.querySelector('input[name="QcCond"]:checked')?.value,
+                QcSurf: document.querySelector('input[name="QcSurf"]:checked')?.value,
+                QcRes: document.querySelector('input[name="QcRes"]:checked')?.value,
+
                 CreatedBy: document.getElementById('CreatedBy').value,
                 
                 Readings: pReadings.map(p => ({
@@ -1529,6 +1567,9 @@
             document.getElementById('InnerMaterial').value = sps.innerMaterial || '';
             document.getElementById('OuterMaterial').value = sps.outerMaterial || '';
             document.getElementById('Yarn').value = sps.yarnType || '';
+
+            let spsIdEl = document.getElementById('StandardParameterSettingId');
+            if (spsIdEl) spsIdEl.value = sps.id || '';
 
             const formatVal = (val, prefix = '', suffix = '') => {
                 if (val === undefined || val === null || val === '') return '---';
