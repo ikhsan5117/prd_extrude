@@ -72,7 +72,7 @@
                         </div>
                         <div class="d-flex align-items-center mb-1">
                             <span class="small fw-bold me-2" style="width: 100px;">Item / PN :</span>
-                            <input asp-for="ProductCode" class="form-report-input border-0 bg-transparent flex-grow-1 fw-bold text-primary" placeholder="Scan Item..." />
+                            <input asp-for="ProductCode" id="ProductCode" class="form-report-input border-0 bg-transparent flex-grow-1 fw-bold text-primary" placeholder="Scan Item..." />
                         </div>
                         <div class="d-flex align-items-center">
                             <span class="small fw-bold me-2" style="width: 100px;">Tipe Hose :</span>
@@ -307,12 +307,20 @@
     
     <script>
         let html5QrCode;
+        let _isScanning = false; // Guard agar tidak double-fire
+
+        // Helper: set nilai ke semua elemen dengan id atau name = 'ProductCode'
+        function setProductCode(code) {
+            const byId = document.getElementById('ProductCode');
+            if (byId) byId.value = code;
+            document.querySelectorAll('input[name="ProductCode"]').forEach(el => el.value = code);
+        }
 
         function startScanner() {
+            _isScanning = false;
             document.getElementById('scanner-container').style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
             html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
                 .catch(err => {
                     console.error("Scanner Error:", err);
@@ -321,90 +329,97 @@
         }
 
         function stopScanner() {
+            document.getElementById('scanner-container').style.display = 'none';
             if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    document.getElementById('scanner-container').style.display = 'none';
-                });
+                html5QrCode.stop().catch(e => {});
             }
         }
 
-        async function onScanSuccess(decodedText, decodedResult) {
-            console.log("Scanned:", decodedText);
+        function onScanSuccess(decodedText) {
+            if (_isScanning) return; // Cegah double-fire
+            _isScanning = true;
+
             stopScanner();
-            
-            // Masukkan kode ke input ProductCode
-            document.getElementById('ProductCode').value = decodedText;
-            
-            // Audio feedback
-            try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play(); } catch(e){}
 
-            // Cari data standar ke backend
-            Swal.fire({
-                title: 'Mencari Standar...',
-                text: 'Mengambil data dari SPS Masterlist untuk ' + decodedText,
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+            // Delay 400ms agar scanner selesai close dulu, baru isi form
+            setTimeout(async function() {
+                // Tampilkan item code di input
+                setProductCode(decodedText);
 
-            try {
-                const response = await fetch(`/StandardParameterSetting/GetMasterDataByItem?itemCode=${encodeURIComponent(decodedText)}`);
-                const data = await response.json();
+                // Audio feedback
+                try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play(); } catch(e){}
 
-                if (data) {
-                    fillForm(data);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Data Ditemukan',
-                        text: 'Standar parameter untuk ' + decodedText + ' telah diisi otomatis.',
-                        timer: 2000
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Tidak Ditemukan',
-                        text: 'Item ' + decodedText + ' tidak ada di Masterlist SPS.'
-                    });
+                // Cari data standar ke backend
+                Swal.fire({
+                    title: 'Mencari Standar...',
+                    text: 'Mengambil data dari SPS Masterlist untuk ' + decodedText,
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                try {
+                    const response = await fetch(`/StandardParameterSetting/GetMasterDataByItem?itemCode=${encodeURIComponent(decodedText)}`);
+                    const data = await response.json();
+
+                    if (data) {
+                        fillForm(data, decodedText);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Data Ditemukan',
+                            text: 'Standar parameter untuk ' + decodedText + ' telah diisi otomatis.',
+                            timer: 2000
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Tidak Ditemukan',
+                            text: 'Item ' + decodedText + ' tidak ada di Masterlist SPS.'
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Gagal menghubungi server.', 'error');
                 }
-            } catch (error) {
-                Swal.fire('Error', 'Gagal menghubungi server.', 'error');
-            }
+
+                // Jaminan akhir — ProductCode PASTI tampil
+                setProductCode(decodedText);
+
+            }, 400);
         }
 
-        function fillForm(data) {
+        function fillForm(data, scannedCode) {
             const setV = (id, val) => {
                 const el = document.getElementById(id);
-                if (el) el.value = val || '';
+                if (el) el.value = (val !== null && val !== undefined) ? val : '';
             };
 
-            // Mapping Data Masterlist ke Form
             setV('CustomerName', data.customer);
             setV('HoseType', data.hoseType);
             setV('DocumentNumber', data.documentNumber);
             setV('RevisionNumber', data.revisionNumber);
             setV('Diameter', data.dimensi);
-            setV('ProductCode', data.itemList);
-            
+
+            // ProductCode = selalu dari hasil scan barcode
+            setProductCode(scannedCode);
+
             // Materials
             setV('InnerMaterial', data.innerTube || data.material);
             setV('OuterMaterial', data.outerCover);
-            
-            // Dies (Numeric)
+
+            // Dies
             setV('InnerDie', data.nipple);
             setV('TubeDie', data.tubeDie);
             setV('CoverDie', data.coverDie);
-            
-            // Temperatures & Speeds (Numeric/Int)
+
+            // Temperatures & Speeds
             setV('HeadTemp', parseInt(data.headTemp1) || 0);
             setV('Cylinder1Temp', parseInt(data.cylinder1_1) || 0);
             setV('Cylinder2Temp', parseInt(data.cylinder2_1) || 0);
             setV('ScrewSpeed', parseFloat(data.screwSpeed1) || 0);
             setV('Pressure', parseFloat(data.pressure1) || 0);
-            
+
             setV('ChillerWaterTemp', data.chillerWaterTemp);
             setV('TakeupConveyorSpeed', data.takeUpConveyorSpeed);
             setV('MarkingMaterialColor', data.markingColour);
-            
-            // Optional fields
             setV('MeshScreen', data.meshScreen1);
         }
     </script>

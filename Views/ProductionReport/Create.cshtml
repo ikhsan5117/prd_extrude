@@ -1532,7 +1532,12 @@
 
             const formatVal = (val, prefix = '', suffix = '') => {
                 if (val === undefined || val === null || val === '') return '---';
-                return `${prefix}${val}${suffix}`;
+                // Hindari double ± jika dari database sudah ada
+                let strVal = String(val).trim();
+                if (suffix.includes('±') && strVal.includes('±')) {
+                    suffix = '';
+                }
+                return `${prefix}${strVal}${suffix}`;
             };
 
             const specMappings = {
