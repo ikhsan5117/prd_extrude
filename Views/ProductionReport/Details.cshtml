@@ -43,7 +43,7 @@
 
     @if (currentPortal == "dimension")
     {
-        <div class="hud-container fade-in">
+        <div id="printArea" class="hud-container fade-in">
             <!-- PORTAL 2: DIMENSION (App Sync Layout) -->
             <div class="content-card shadow-2xl mx-auto mb-4" style="background: rgba(15, 23, 42, 0.8); border: 2px solid var(--accent-blue); border-radius: 12px; overflow: hidden;">
                 <!-- 2. META INFO BAR (Now as Header) -->
@@ -198,15 +198,7 @@
                 </div>
             </div>
 
-            <!-- ACTIONS -->
-            <div class="no-print d-flex justify-content-center gap-3 mt-2 mb-4">
-                <button onclick="window.print()" class="btn btn-outline-info px-4 rounded-pill">
-                    <i class="bi bi-printer me-2"></i> PRINT REPORT
-                </button>
-                <a href="@Url.Action("Index")" class="btn btn-outline-secondary px-4 rounded-pill">
-                    <i class="bi bi-arrow-left me-2"></i> BACK TO LIST
-                </a>
-            </div>
+
         </div>
     }
     else
@@ -214,7 +206,7 @@
         <!-- ============================================= -->
         <!-- PORTAL 1: PARAMETER SETTING (Modern HUD)      -->
         <!-- ============================================= -->
-        <div class="bg-white p-4">
+        <div id="printArea" class="bg-white p-4">
             <div class="paper-replica shadow-2xl mx-auto mb-5 p-4">
             <div class="paper-padding text-uppercase" style="font-size: 10px;">
                 
@@ -224,7 +216,7 @@
                     <div class="row g-0 border-bottom-form-bold">
                         <!-- Logo -->
                         <div class="col-3 border-end-form p-2 d-flex align-items-center justify-content-center">
-                             <img src="~/images/velasto-logo-e1700056160273.png" alt="Velasto Logo" style="height: 45px; object-fit: contain;" />
+                             <img src="/images/velasto-logo-e1700056160273.png" crossorigin="anonymous" alt="Velasto Logo" style="height: 45px; object-fit: contain;" />
                         </div>
                         <!-- Title -->
                         <div class="col-5 border-end-form p-2 d-flex flex-column justify-content-center align-items-center text-center">
@@ -338,12 +330,14 @@
                          <table class="w-100 grid-form border-0">
                             <!-- MATERIAL SECTION -->
                             <tr>
-                                <th width="30" rowspan="4" class="align-middle text-center p-0 border-bottom-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#f0f0f0; letter-spacing: 2px;">MATERIAL</th>
+                                <th rowspan="4" class="align-middle text-center p-0 border-bottom-0" style="background:#f0f0f0;">
+                                    <div style="font-size: 9px; line-height: 1.1; font-weight: 800; letter-spacing: 1px;">M<br/>A<br/>T<br/>E<br/>R<br/>I<br/>A<br/>L</div>
+                                </th>
                                 <th colspan="2" style="background:#f0f0f0; border-bottom: 0;"></th>
-                                <th width="80" style="background:#f0f0f0;" class="text-center">STANDARD</th>
-                                <th width="100" style="background:#f0f0f0;" class="text-center">ACTUAL</th>
-                                <th width="120" style="background:#f0f0f0;" class="text-center border-end-0">NO. LOT</th>
-                                <th rowspan="4" width="2" style="background:#f4f4f4;" class="border-start-form"></th>
+                                <th style="background:#f0f0f0;" class="text-center">STANDARD</th>
+                                <th style="background:#f0f0f0;" class="text-center">ACTUAL</th>
+                                <th style="background:#f0f0f0;" class="text-center border-end-0">NO. LOT</th>
+                                <th rowspan="4" style="background:#f4f4f4;" class="border-start-form"></th>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
@@ -374,7 +368,9 @@
                             }
                             <!-- DIES DIMENSION SECTION -->
                             <tr class="border-top-form">
-                                <th width="30" rowspan="7" class="align-middle text-center p-0" style="writing-mode: vertical-rl; transform: rotate(180deg); background:#f0f0f0; letter-spacing: 2px;">DIES DIMENSION</th>
+                                <th width="30" rowspan="7" class="align-middle text-center p-0" style="background:#f0f0f0;">
+                                    <div style="font-size: 8px; line-height: 1.0; font-weight: 800;">D<br/>I<br/>E<br/>S<br/><br/>D<br/>I<br/>M<br/>E<br/>N<br/>S<br/>I<br/>O<br/>N</div>
+                                </th>
                                 <th style="background:#f0f0f0;" class="text-start ps-2">DIES</th>
                                 <th width="100" style="background:#f0f0f0;" class="text-center">CEK VISUAL</th>
                                 <th width="90" style="background:#f0f0f0;" class="text-center">STANDARD</th>
@@ -674,12 +670,14 @@
                 </div>
 
                 <!-- 5. WASTE PERFORMANCE (Paper Theme) -->
-                <div class="row g-2 mb-4">
-                    <div class="col-8">
+                <div class="row m-0">
+                    <div class="col-12 p-0">
                         <table class="grid-form w-100 text-center m-0">
                             <tbody>
                                 <tr class="bg-light">
-                                    <th rowspan="6" class="align-middle fw-bold text-center border-end-0 border-bottom-0" style="width: 30px; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 2px;">WASTE</th>
+                                    <th rowspan="6" class="align-middle fw-bold text-center border-end-0 border-bottom-0" style="width: 30px; background: #f0f0f0;">
+                                        <div style="font-size: 9px; line-height: 1.1; font-weight: 800;">W<br/>A<br/>S<br/>T<br/>E</div>
+                                    </th>
                                     <th colspan="2" class="align-middle py-2 border-end-0 text-uppercase" style="font-size: 0.75rem;">Initial Setting</th>
                                     <th class="align-middle border-end-0 text-uppercase" style="width: 15%; font-size: 0.75rem;">Awal</th>
                                     <th class="align-middle border-end border-dark text-uppercase" style="width: 15%; font-size: 0.75rem;">Akhir</th>
@@ -718,19 +716,9 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="col-4">
-                        <div class="border border-dark p-2 h-100 bg-light">
-                            <div class="small fw-bold border-bottom border-dark pb-1 mb-1 text-primary">LINE REMARK / NOTES</div>
-                            <div class="small text-muted font-monospace">@(string.IsNullOrEmpty(Model.Remark) ? "-" : Model.Remark)</div>
-                        </div>
-                    </div>
                 </div>
 
-                <div class="mt-4 no-print d-flex justify-content-center gap-3">
-                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning-glass px-5 rounded-pill fw-bold">
-                        <i class="bi bi-pencil-square me-2"></i> EDIT & SYNC DATA
-                    </a>
-                </div>
+
             </div>
         </div>
     </div>
@@ -840,8 +828,8 @@
     .border-end-form { border-right: 1px solid #000 !important; }
     .border-bottom-form { border-bottom: 1px solid #000 !important; }
     .border-top-form { border-top: 1px solid #000 !important; }
-    .grid-form th, .grid-form td { border: 1px solid #000 !important; padding: 6px 4px; font-size: 11px; }
-    .grid-form th { background: #e9ecef; color: #333; font-weight: 800; text-transform: uppercase; }
+    .grid-form th, .grid-form td { border: 1px solid #000 !important; padding: 2px 2px; font-size: 9px; }
+    .grid-form th { background: #f0f0f0; color: #333; font-weight: 800; text-transform: uppercase; }
     
     /* PAPER REPLICA HUD SYSTEM (WHITE THEME) */
     .paper-replica {
@@ -1155,41 +1143,94 @@
         .production-dashboard-sapphire { background: transparent !important; padding: 0; }
         .no-print { display: none !important; }
         .glass-paper { background: white !important; border: 2px solid #000 !important; color: #000 !important; }
-        .glass-paper * { border-color: #000 !important; color: #000 !important; text-shadow: none !important; box-shadow: none !important; background: transparent !important; }
-        body { background: #fff !important; }
     }
+
+    /* ============================================================ */
+    /* PDF-FIT: Rules applied during html2canvas render via onclone  */
+    /* MUST be outside @@media print -- html2canvas ignores print CSS  */
+    /* ============================================================ */
+    .pdf-fit { font-size: 6.5px !important; line-height: 1.1 !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
+    .pdf-fit .paper-padding { padding: 8px 12px !important; }
+    .pdf-fit .mb-1, .pdf-fit .mb-2, .pdf-fit .mb-3, .pdf-fit .mb-4, .pdf-fit .mb-5, .pdf-fit .mt-4, .pdf-fit .mt-2 { margin: 0 !important; padding: 0 !important; }
+    .pdf-fit table { margin-bottom: 2px !important; table-layout: fixed !important; width: 100% !important; border-collapse: collapse !important; }
+    .pdf-fit th, .pdf-fit td { padding: 1px 2px !important; font-size: 6.5px !important; height: auto !important; line-height: 1 !important; overflow: hidden; }
+    .pdf-fit .grid-form th, .pdf-fit .grid-form td { font-size: 6px !important; padding: 1px !important; border-width: 0.3px !important; }
+    .pdf-fit input, .pdf-fit .input-transparent { font-size: 6.5px !important; height: auto !important; line-height: 1 !important; border: none !important; background: transparent !important; color: #000 !important; }
+    .pdf-fit .row { margin: 0 !important; display: flex !important; flex-wrap: nowrap !important; width: 100% !important; }
+    .pdf-fit .col-6 { width: 50% !important; flex: 0 0 50% !important; max-width: 50% !important; }
+    .pdf-fit .col-3 { width: 25% !important; flex: 0 0 25% !important; max-width: 25% !important; }
+    .pdf-fit img { height: 25px !important; }
+    .pdf-fit h6 { font-size: 11px !important; margin: 0 !important; padding: 0 !important; }
+    .pdf-fit .paper-replica { width: 100% !important; margin: 0 auto !important; background: white !important; color: #000 !important; }
+    .pdf-fit .border-form, .pdf-fit .border-form-bold { border-width: 0.5px !important; }
+    .pdf-fit .border-bottom-form, .pdf-fit .border-end-form, .pdf-fit .border-start-form, .pdf-fit .border-top-form { border-width: 0.5px !important; }
+
+    /* FIX: Vertical label column (MATERIAL, DIES DIMENSION) */
+    .pdf-fit th[rowspan] { width: 12px !important; padding: 0 !important; }
+    .pdf-fit th[rowspan] > div { font-size: 5px !important; line-height: 0.9 !important; letter-spacing: 0 !important; }
+
+    /* FIX: OK/NG checkbox labels */
+    .pdf-fit .d-flex.gap-1 { gap: 2px !important; flex-wrap: nowrap !important; }
+    .pdf-fit .d-flex.gap-1 label { white-space: nowrap !important; font-size: 5.5px !important; }
+    .pdf-fit .form-check-input { width: 8px !important; height: 8px !important; min-width: 8px !important; }
+
+    /* FIX: Mesh & Emboss labels */
+    .pdf-fit label.mb-0 { font-size: 5.5px !important; white-space: nowrap !important; margin: 0 !important; gap: 1px !important; }
+
 </style>
+
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         function downloadPDF() {
-            const element = document.querySelector('.production-dashboard-sapphire');
-            const opt = {
-                margin:       0.2,
-                filename:     'Report_@Model.DocumentNumber.Replace("/", "_")' + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
-            };
-
-            const noPrintElements = document.querySelectorAll('.no-print');
-            noPrintElements.forEach(el => el.style.display = 'none');
+            const element = document.getElementById('printArea');
+            if (!element) return;
 
             Swal.fire({
                 title: 'GENERATING PDF...',
-                html: 'Tunggu sebentar, sedang menyiapkan laporan kualitas tinggi.',
+                html: 'Mempersiapkan laporan produksi...',
                 allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
+                didOpen: () => Swal.showLoading()
             });
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                noPrintElements.forEach(el => el.style.display = '');
-                Swal.fire({ icon: 'success', title: 'DOWNLOAD SELESAI', timer: 1500, showConfirmButton: false });
-            }).catch(err => {
-                noPrintElements.forEach(el => el.style.display = '');
-                Swal.fire({ icon: 'error', title: 'GAGAL DOWNLOAD', text: err.message });
-            });
+            const opt = {
+                margin:      [3, 3, 3, 3],
+                filename:    'Report_@Model.DocumentNumber.Replace("/", "_")' + '.pdf',
+                image:       { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: false,
+                    onclone: (clonedDoc) => {
+                        const clonedEl = clonedDoc.getElementById('printArea');
+                        if (clonedEl) {
+                            // CSS zoom mengecilkan SEMUA elemen secara proporsional:
+                            // teks, gambar, tabel, border, dan spasi semuanya ikut mengecil
+                            clonedEl.style.zoom = '0.72';
+                            clonedEl.style.background = 'white';
+                        }
+
+                        // Perbaiki semua path gambar agar bisa dirender oleh html2canvas
+                        clonedDoc.querySelectorAll('img').forEach(img => {
+                            const src = img.getAttribute('src') || '';
+                            if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+                                img.src = window.location.origin + (src.startsWith('/') ? src : '/' + src);
+                            }
+                        });
+                    }
+                },
+                jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:   { mode: 'avoid-all' }
+            };
+
+            html2pdf().set(opt).from(element).save()
+                .then(() => {
+                    Swal.fire({ icon: 'success', title: 'DOWNLOAD SUCCESS', timer: 1500, showConfirmButton: false });
+                })
+                .catch(err => {
+                    Swal.fire({ icon: 'error', title: 'DOWNLOAD FAILED', text: err.message });
+                });
         }
     </script>
     <script src="https://unpkg.com/html5-qrcode"></script>
