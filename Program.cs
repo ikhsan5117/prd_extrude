@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
 using VelastoProductionSystem.WebSockets;
+using VelastoProductionSystem.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 // Configure Entity Framework Core with SQL Server (main DB)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -71,6 +73,8 @@ app.Map("/ws/dashboard", async context =>
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
     }
 });
+
+app.MapHub<DashboardHub>("/hub/dashboard");
 
 app.MapControllerRoute(
     name: "default",

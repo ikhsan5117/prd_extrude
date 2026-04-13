@@ -27,6 +27,15 @@
         100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
+    .animate-slideInRight {
+        animation: slideInRight 0.5s ease-out;
+    }
+
+    @@keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
     .xsmall { font-size: 0.7rem; }
     .uppercase { text-transform: uppercase; }
     .tracking-wider { letter-spacing: 0.05em; }
@@ -52,14 +61,30 @@
 <div class="decoration-blob blob-1"></div>
 <div class="decoration-blob blob-2"></div>
 
+<!-- SignalR Notification Toast -->
+<div id="updateToast" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999; display: none;">
+    <div class="glass-panel p-3 border-info border-opacity-50 shadow-lg d-flex align-items-center gap-3 animate-slideInRight" style="background: rgba(14, 165, 233, 0.2) !important; min-width: 300px;">
+        <div class="status-dot pulse" style="width: 12px; height: 12px; background: #00ccff;"></div>
+        <div>
+            <div class="fw-900 text-info-glow xsmall tracking-widest uppercase mb-1">DATA SYNC COMPLETE</div>
+            <div class="text-white small fw-bold">Data Produksi Baru Masuk!</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto small" onclick="$('#updateToast').fadeOut()"></button>
+    </div>
+</div>
+
 <!-- Dashboard Header -->
 <div class="dashboard-header mb-3 animate-fadeInUp">
     <div>
         <h1 class="dashboard-title h-auto py-2">
             Production Cockpit <span class="text-white-50 fw-light">v4.0</span>
         </h1>
-        <p class="dashboard-subtitle py-2 shadow-sm">
-            <i class="bi bi-cpu-fill"></i> REAL-TIME MANUFACTURING INTELLIGENCE &bull; FACILITY 4
+        <p class="dashboard-subtitle py-2 shadow-sm d-flex align-items-center justify-content-center gap-3">
+            <span><i class="bi bi-cpu-fill"></i> REAL-TIME MANUFACTURING INTELLIGENCE &bull; FACILITY 4</span>
+            <span id="signalrStatus" class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle xsmall px-2" style="font-size: 0.55rem;">
+                <span class="status-dot me-1" style="width: 6px; height: 6px; display: inline-block; background: currentColor; border-radius: 50%;"></span>
+                OFFLINE
+            </span>
         </p>
     </div>
 </div>
@@ -156,6 +181,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function() {
@@ -313,6 +339,65 @@
 
             // Initial load
             setTimeout(loadSpcData, 500);
+
+            // SignalR Live Sync
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/hub/dashboard")
+                .withAutomaticReconnect()
+                .build();
+
+            async function startSignalR() {
+                try {
+                    await connection.start();
+                    console.log("SignalR Connected.");
+                    $("#signalrStatus")
+                        .removeClass("bg-danger-subtle text-danger border-danger-subtle")
+                        .addClass("bg-success-subtle text-success border-success-subtle pulse-badge")
+                        .html('<span class="status-dot pulse me-1" style="width: 6px; height: 6px; display: inline-block; background: #10b981; border-radius: 50%;"></span>LIVE SYNC ACTIVE');
+                } catch (err) {
+                    console.log("SignalR Connection Error: ", err);
+                    setTimeout(startSignalR, 5000);
+                }
+            }
+
+            connection.on("ReceiveUpdate", function () {
+                console.log("Real-time Update Received!");
+                
+                // Show Popup Notification
+                $("#updateToast").fadeIn().delay(5000).fadeOut();
+
+                // Add a small toast or visual flash to indicate update
+                $(".glass-panel").addClass("blink-border");
+                setTimeout(() => $(".glass-panel").removeClass("blink-border"), 800);
+                loadSpcData();
+            });
+
+            connection.onreconnecting(error => {
+                $("#signalrStatus")
+                    .removeClass("bg-success-subtle text-success border-success-subtle pulse-badge")
+                    .addClass("bg-warning-subtle text-warning border-warning-subtle")
+                    .html("RECONNECTING...");
+            });
+
+            connection.onreconnected(connectionId => {
+                $("#signalrStatus")
+                    .removeClass("bg-warning-subtle text-warning border-warning-subtle")
+                    .addClass("bg-success-subtle text-success border-success-subtle pulse-badge")
+                    .html('<span class="status-dot pulse me-1" style="width: 6px; height: 6px; display: inline-block; background: #10b981; border-radius: 50%;"></span>LIVE SYNC ACTIVE');
+            });
+
+            startSignalR();
         });
     </script>
+    
+    <style>
+        .blink-border {
+            animation: blink-blue-border 0.8s ease-in-out;
+        }
+        @@keyframes blink-blue-border {
+            0% { border: 1px solid transparent; }
+            50% { border: 1px solid #00ccff; box-shadow: 0 0 15px rgba(0, 204, 255, 0.3); }
+            100% { border: 1px solid transparent; }
+        }
+    </style>
 }

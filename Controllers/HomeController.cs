@@ -115,28 +115,21 @@ namespace VelastoProductionSystem.Controllers
 
             string pointNameFilter = criteria;
 
-            // Jika tidak ada produk yang dipilih (Semua Produk), 
-            // kita ambil semua data tanpa mempedulikan kriteria agar grafik tidak kosong
-            if (string.IsNullOrEmpty(productCode)) {
-                // Jangan filter PointName jika ingin melihat tren umum
-            } 
-            else {
-                // Jika produk dipilih, baru kita filter kriterianya secara spesifik
-                if (criteria == "InnerThickness" || criteria == "Thickness") {
-                    pointNameFilter = "Inner Tube";
-                    query = query.Where(r => r.PointName.Contains("Thickness") || r.PointName.Contains("Inner") || r.PointName.Contains("Tebal"));
-                } else if (criteria == "Diameter") {
-                    pointNameFilter = "Inner Tube";
-                    query = query.Where(r => r.PointName.Contains("Diameter") || r.PointName.Contains("Inner Tube"));
-                } else if (criteria == "TotalThickness") {
-                    pointNameFilter = "Tebal Total";
-                    query = query.Where(r => r.PointName.Contains("Total") || r.PointName.Contains("Outer") || r.PointName.Contains("Tebal"));
-                } else if (criteria == "SpiralPitch") {
-                    pointNameFilter = "Spiral Pitch";
-                    query = query.Where(r => r.PointName.Contains("Spiral") || r.PointName.Contains("Pitch"));
-                } else {
-                    query = query.Where(r => r.PointName.Contains(criteria));
-                }
+            // Apply criteria filtering consistently, even for "All Products"
+            if (criteria == "InnerThickness" || criteria == "Thickness") {
+                pointNameFilter = "Inner Tube";
+                query = query.Where(r => r.PointName.Contains("Thickness") || r.PointName.Contains("Inner") || r.PointName.Contains("Tebal"));
+            } else if (criteria == "Diameter") {
+                pointNameFilter = "Inner Diameter";
+                query = query.Where(r => r.PointName.Contains("Diameter") || r.PointName.Contains("Inner Tube"));
+            } else if (criteria == "TotalThickness") {
+                pointNameFilter = "Tebal Total";
+                query = query.Where(r => r.PointName.Contains("Total") || r.PointName.Contains("Outer") || r.PointName.Contains("Tebal"));
+            } else if (criteria == "SpiralPitch") {
+                pointNameFilter = "Spiral Pitch";
+                query = query.Where(r => r.PointName.Contains("Spiral") || r.PointName.Contains("Pitch"));
+            } else if (!string.IsNullOrEmpty(criteria)) {
+                query = query.Where(r => r.PointName.Contains(criteria));
             }
 
             var readings = query

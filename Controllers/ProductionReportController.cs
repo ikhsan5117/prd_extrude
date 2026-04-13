@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Models;
+using VelastoProductionSystem.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -10,11 +12,13 @@ namespace VelastoProductionSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ElwpDbContext _elwpContext;
+        private readonly IHubContext<DashboardHub> _hubContext;
 
-        public ProductionReportController(ApplicationDbContext context, ElwpDbContext elwpContext)
+        public ProductionReportController(ApplicationDbContext context, ElwpDbContext elwpContext, IHubContext<DashboardHub> hubContext)
         {
             _context = context;
             _elwpContext = elwpContext;
+            _hubContext = hubContext;
         }
 
         // GET: ProductionReport (Monitoring List)
@@ -438,6 +442,9 @@ namespace VelastoProductionSystem.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                // Notify via SignalR
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                 return Json(new { success = true, id = report.Id });
             }
             catch (Exception ex)
@@ -579,6 +586,10 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                
+                // Notify via SignalR
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -679,6 +690,9 @@ namespace VelastoProductionSystem.Controllers
 
                     _context.Add(report);
                     await _context.SaveChangesAsync();
+                    
+                    // Notify via SignalR
+                    await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
                     
                     TempData["SuccessMessage"] = "Produksi Dimulai! Silakan monitor di Dashboard Parameter History.";
                     return RedirectToAction(nameof(ParameterHistory));
