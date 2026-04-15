@@ -17,9 +17,13 @@
                     <i class="bi bi-arrow-left me-2"></i> BACK TO HISTORY
                 </a>
                 <div class="vr bg-white opacity-25" style="height: 24px;"></div>
-                <div class="d-flex align-items-center">
-                    <div class="hud-status-dot me-2 animate-pulse-green"></div>
-                    <span class="text-white-50 small fw-bold tracking-widest text-uppercase">MONITORING DASHBOARD - @Model.Status</span>
+                <div class="btn-group btn-group-sm rounded-pill p-1 bg-black bg-opacity-25 border border-white border-opacity-10">
+                    <a href="?id=@Model.Id&portal=dashboard" class="btn rounded-pill px-4 @(currentPortal != "identity" ? "btn-primary shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
+                        <i class="bi bi-speedometer2 me-2"></i>DASHBOARD
+                    </a>
+                    <a href="?id=@Model.Id&portal=identity" class="btn rounded-pill px-4 @(currentPortal == "identity" ? "btn-info shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
+                        <i class="bi bi-card-checklist me-2"></i>IDENTITY CARD
+                    </a>
                 </div>
             </div>
 
@@ -41,7 +45,190 @@
         </div>
     </div>
 
-    @if (currentPortal == "dimension")
+    @if (currentPortal == "identity")
+    {
+        <style>
+            @@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
+            @@media print {
+                @@page { size: landscape; margin: 0; }
+                body { margin: 0; }
+                .no-print { display: none !important; }
+            }
+            .landscape-sheet { 
+                background: white; 
+                width: 1400px; 
+                padding: 15px; 
+                color: #111; 
+                font-family: 'Segoe UI', Arial, sans-serif; 
+                border: 3px solid #000; 
+                margin: 0 auto; 
+                box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+                position: relative; 
+            }
+            .inner-border {
+                border: 1px solid #000;
+                padding: 30px;
+                height: 100%;
+                width: 100%;
+            }
+            .landscape-sheet table { border-collapse: collapse; border: 1px solid #444; }
+            .landscape-sheet td, .landscape-sheet th { border: 1px solid #444; padding: 3px 6px; font-size: 10px; line-height: 1.2; }
+            .hand-ink { font-family: 'Caveat', cursive; color: #0033cc; font-size: 1.7rem; vertical-align: bottom; }
+            .dots-fill { border-bottom: 2px dotted #444; flex-grow: 1; min-height: 28px; display: inline-block; margin-left: 5px; position: relative; }
+            .label-main { font-size: 1.2rem; color: #000; font-weight: 500; white-space: nowrap; }
+            .header-title { text-align: center; font-size: 2.8rem; font-weight: bold; margin-bottom: 0; letter-spacing: 3px; }
+            .spv-box-outer { border: 1px solid #444; width: 160px; padding: 8px; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+            .spv-sq { width: 120px; height: 45px; border: 1px solid #444; margin: 2px 0; }
+        </style>
+
+        <div id="printArea" class="fade-in py-5 bg-secondary bg-opacity-10 d-flex justify-content-center" style="min-height: 100vh;">
+            <div class="landscape-sheet">
+                <div class="inner-border">
+                    <!-- ROW 1: HEADER -->
+                    <div class="row align-items-start mb-2">
+                        <div class="col-4"></div>
+                        <div class="col-4 text-center">
+                            <h1 class="header-title">NOW I'M PRODUCE :</h1>
+                        </div>
+                        <div class="col-4 text-end">
+                            <table style="width: 300px; display: inline-table;">
+                                <tr><td style="width: 45%; background: #f8f9fa;">No. Dokumen</td><td>: @Model.DocumentNumber</td></tr>
+                                <tr><td style="background: #f8f9fa;">No. Revisi</td><td>: @Model.RevisionNumber</td></tr>
+                                <tr><td style="background: #f8f9fa;">Effective Date</td><td>: @Model.CreatedDate.ToString("dd.MM.yy")</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 1:1 PHOTO REPLICA: 3 COLUMN MAIN BLOCK -->
+                    <div class="row g-0 mt-2 mb-5 align-items-start">
+                        
+                        <!-- COLUMN 1: IDENTITIES -->
+                        <div class="col-4">
+                            <div class="d-flex flex-column gap-3 pe-4">
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">1. Hose Type</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-1.5deg);">: @Model.HoseType</span></div>
+                                </div>
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">2. Class</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-0.5deg);">: @Model.CustomerName</span></div>
+                                </div>
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">3. Dimension</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(1deg);">: ø @Model.Dimension</span></div>
+                                </div>
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">4. Yarn</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-1deg);">: @Model.Yarn</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 2: DATE & TIMING -->
+                        <div class="col-4 px-3">
+                            <div class="d-flex align-items-end mb-4">
+                                <span class="label-main" style="font-size: 1.4rem;">Date</span>
+                                <div class="dots-fill text-center ms-3" style="width: 250px;"><span class="hand-ink" style="position: absolute; left: 20px; bottom: 2px; transform: rotate(-1deg);">: @Model.ProductionDate.ToString("dd.MM.yy")</span></div>
+                            </div>
+                            
+                            <div class="d-flex gap-3 align-items-start mb-4">
+                                <span class="fw-bold label-main" style="width: 100px; font-size: 1.4rem;">Dandori</span>
+                                <table style="width: 240px; border: 1px solid #000;">
+                                    <tr><th rowspan="2" style="width: 100px;"></th><th colspan="2" class="text-center">Waktu</th></tr>
+                                    <tr><th class="text-center">Awal</th><th class="text-center">Akhir</th></tr>
+                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Start Prod.</td><td></td><td></td></tr>
+                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Akhir Prod.</td><td></td><td></td></tr>
+                                </table>
+                            </div>
+
+                            <div class="d-flex gap-3 align-items-start">
+                                <span class="fw-bold label-main" style="width: 100px; font-size: 1.4rem; padding-top: 10px;">Production</span>
+                                <table style="width: 180px; border: 1px solid #000; margin-top: 10px;">
+                                    <tr><th colspan="2" class="text-center">Waktu</th></tr>
+                                    <tr><th class="text-center">Awal</th><th class="text-center">Akhir</th></tr>
+                                    <tr><td style="height: 30px;"></td><td style="height: 30px;"></td></tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 3: TARGET TABLES -->
+                        <div class="col-4 ps-5">
+                            <div class="mb-4">
+                                <div class="fw-bold mb-1" style="font-size: 9px; letter-spacing: 0.5px;">CHS 2 L DANDORY TARGET</div>
+                                <table style="width: 100%; text-align: center; font-size: 7px;">
+                                    <tr class="fw-bold"><td>TARGET TIME</td><td>DIES</td><td>MATERIAL</td><td>BENANG</td></tr>
+                                    <tr><td>20 Minute</td><td>O</td><td>O</td><td>-</td></tr>
+                                    <tr><td>40 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                    <tr><td>55 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                </table>
+                            </div>
+                            <div>
+                                <div class="fw-bold mb-1" style="font-size: 9px; letter-spacing: 0.5px;">CHS 3 L DANDORY TARGET</div>
+                                <table style="width: 100%; text-align: center; font-size: 7px;">
+                                    <tr class="fw-bold"><td>TARGET TIME</td><td>DIES</td><td>MATERIAL</td><td>BENANG</td></tr>
+                                    <tr><td>30 Minute</td><td>O</td><td>O</td><td>-</td></tr>
+                                    <tr><td>45 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                    <tr><td>60 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 3: MATERIAL LIST WIDE -->
+                    <div class="mt-5 border-top border-dark pt-3">
+                        <h5 class="fw-bold mb-4" style="font-size: 1.5rem;">Material :</h5>
+                        <div class="d-flex flex-column gap-4">
+                            <div class="d-flex align-items-end">
+                                <span class="label-main" style="width: 110px;">1) Inner :</span>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@Model.InnerMaterial</span></div>
+                                <span class="label-main mx-4">No.Lot :</span>
+                                <div class="dots-fill ps-3" style="min-width: 300px;"><span class="hand-ink">@Model.InnerMaterialLotNo</span></div>
+                                <span class="label-main mx-4">SG :</span>
+                                <div class="dots-fill ps-3" style="min-width: 150px;"><span class="hand-ink">@Model.InnerMaterialSG?.ToString("0.000")</span></div>
+                            </div>
+                            <div class="d-flex align-items-end opacity-25">
+                                <span class="label-main" style="width: 110px;">2) Middle :</span>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"></div>
+                                <span class="label-main mx-4">No.Lot :</span>
+                                <div class="dots-fill ps-3" style="min-width: 300px;"></div>
+                                <span class="label-main mx-4">SG :</span>
+                                <div class="dots-fill ps-3" style="min-width: 150px;"></div>
+                            </div>
+                            <div class="d-flex align-items-end">
+                                <span class="label-main" style="width: 110px;">3) Outer :</span>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@Model.OuterMaterial</span></div>
+                                <span class="label-main mx-4">No.Lot :</span>
+                                <div class="dots-fill ps-3" style="min-width: 300px;"><span class="hand-ink">@Model.OuterMaterialLotNo</span></div>
+                                <span class="label-main mx-4">SG :</span>
+                                <div class="dots-fill ps-3" style="min-width: 150px;"><span class="hand-ink">@Model.OuterMaterialSG?.ToString("0.000")</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 4: FOOTER WIDE -->
+                    <div class="row mt-5 pt-5 align-items-end">
+                        <div class="col-9">
+                            <div class="fw-bold mb-1" style="font-size: 13px;">NOTE :</div>
+                            <div style="font-size: 13px; border: 1px solid #000; padding: 15px; width: 60%;">
+                                JANGAN MENJALANKAN PRODUKSI SEBELUM CHECKSHEET INI DI CHECK OLEH SUPERVISOR.
+                            </div>
+                        </div>
+                        <div class="col-3 d-flex justify-content-end">
+                            <div class="spv-box-outer">
+                                <span class="fw-bold" style="font-size: 1.4rem;">SPV CHECK</span>
+                                <div class="d-flex flex-column gap-1">
+                                    <div class="spv-sq"></div>
+                                    <div class="spv-sq"></div>
+                                    <div class="spv-sq"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (currentPortal == "dimension")
     {
         <div id="printArea" class="hud-container fade-in">
             <!-- PORTAL 2: DIMENSION (App Sync Layout) -->
