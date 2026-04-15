@@ -203,5 +203,6 @@ namespace VelastoProductionSystem.Models
 
         // Navigation Properties
         public ICollection<ProductionReading> ProductionReadings { get; set; } = new List<ProductionReading>();
+        public ICollection<ProductionMaterialLot> MaterialLots { get; set; } = new List<ProductionMaterialLot>();
     }
 }

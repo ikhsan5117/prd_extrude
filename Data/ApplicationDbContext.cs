@@ -25,6 +25,7 @@ namespace VelastoProductionSystem.Data
         public DbSet<Machine> Machines { get; set; }
         public DbSet<PartMaster> PartMasters { get; set; }
         public DbSet<ShiftMaster> ShiftMasters { get; set; }
+        public DbSet<ProductionMaterialLot> ProductionMaterialLots { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

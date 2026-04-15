@@ -1,5 +1,14 @@
 namespace VelastoProductionSystem.Models
 {
+    public class ProductionMaterialLotDto
+    {
+        public string? LayerType { get; set; }
+        public string? MaterialName { get; set; }
+        public string? MaterialActual { get; set; }
+        public string? LotNumber { get; set; }
+        public decimal? SGValue { get; set; }
+    }
+
     public class DimensionReportAppData
     {
         public int ReportId { get; set; }
@@ -111,16 +120,12 @@ namespace VelastoProductionSystem.Models
         public bool ToleranceDieOK { get; set; }
         public string? ToleranceInitial { get; set; }
         public string? ToleranceFinal { get; set; }
-
-        // Mesh
         public bool MeshInner10Before { get; set; }
         public bool MeshInner40Before { get; set; }
         public bool MeshOuter10Before { get; set; }
         public bool MeshOuter40Before { get; set; }
         public string? MeshInnerCheck { get; set; }
         public string? MeshOuterCheck { get; set; }
-
-        // Emboss & QC
         public string? EmbossMarkContent { get; set; }
         public string? EmbossMarkDate { get; set; }
         public string? QcCond { get; set; }
@@ -128,6 +133,7 @@ namespace VelastoProductionSystem.Models
         public string? QcRes { get; set; }
 
         public List<ProductionReadingSaveDto> Readings { get; set; } = new List<ProductionReadingSaveDto>();
+        public List<ProductionMaterialLotDto> MaterialLots { get; set; } = new List<ProductionMaterialLotDto>();
     }
 
     public class ProductionReadingSaveDto

@@ -33,17 +33,6 @@
                 <!-- NEW: SPS PROTOCOL SYNC -->
                 <div class="p-3 bg-black bg-opacity-20 border-bottom border-white border-opacity-5 no-print">
                     <div class="row g-3 align-items-center">
-                        <div class="col-md-5">
-                            <div class="hud-pill p-0 d-flex flex-row overflow-hidden border border-info border-opacity-50" style="min-height: 60px; background: #0f172a; border-radius: 8px;">
-                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
-                                    <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-keyboard me-2"></i>MANUAL PROTOCOL</label>
-                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="ITEM CODE..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
-                                </div>
-                                <button type="button" onclick="let v = document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Search">
-                                    <i class="bi bi-search fs-4"></i>
-                                </button>
-                            </div>
-                        </div>
                         <div class="col-md-7">
                             <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height: 60px; position: relative; background: #0f172a; border-radius: 8px;">
                                 <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
@@ -57,6 +46,17 @@
                                 </div>
                                 <button type="button" onclick="refreshPlanningItems()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Refresh Planning">
                                     <i class="bi bi-arrow-clockwise fs-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="hud-pill p-0 d-flex flex-row overflow-hidden border border-info border-opacity-50" style="min-height: 60px; background: #0f172a; border-radius: 8px;">
+                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
+                                    <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-keyboard me-2"></i>MANUAL PROTOCOL</label>
+                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="ITEM CODE..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
+                                </div>
+                                <button type="button" onclick="let v = document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Search">
+                                    <i class="bi bi-search fs-4"></i>
                                 </button>
                             </div>
                         </div>
@@ -352,57 +352,82 @@
                             <i class="bi bi-box-seam hud-card-icon"></i>
                             <span class="hud-card-title">MATERIAL & LOT TRACKING</span>
                         </div>
-                        <table class="table-hud-unified">
-                            <thead>
-                                <tr class="bg-black bg-opacity-20 text-center">
-                                    <th class="ps-4 text-start">DESCRIPTION</th>
-                                    <th width="22%">STANDARD</th>
-                                    <th width="22%">ACTUAL</th>
-                                    <th width="32%" class="hud-th-scan text-info border-start border-white border-opacity-10">NO. LOT (SCAN)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="label-stack"><span class="label-sub">INNER (MATERIAL)</span><span class="label-main">COMPOUND</span></div>
-                                    </td>
-                                    <td><input asp-for="InnerMaterial" class="hud-input-underlined text-center opacity-50" readonly /></td>
-                                    <td><input asp-for="InnerMaterialActual" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td class="hud-td-scan border-start border-white border-opacity-10">
-                                        <div class="hud-scan-group">
-                                            <input asp-for="InnerMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
-                                            <button type="button" class="hud-scan-btn" onclick="openScanner('InnerMaterialLotNo')"><i class="bi bi-upc-scan"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="label-stack"><span class="label-sub">OUTER (MATERIAL)</span><span class="label-main">COMPOUND</span></div>
-                                    </td>
-                                    <td><input asp-for="OuterMaterial" class="hud-input-underlined text-center opacity-50" readonly /></td>
-                                    <td><input asp-for="OuterMaterialActual" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td class="hud-td-scan border-start border-white border-opacity-10">
-                                        <div class="hud-scan-group">
-                                            <input asp-for="OuterMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
-                                            <button type="button" class="hud-scan-btn" onclick="openScanner('OuterMaterialLotNo')"><i class="bi bi-upc-scan"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="label-stack"><span class="label-sub">YARN (SUPPORT)</span><span class="label-main">POLYESTER</span></div>
-                                    </td>
-                                    <td><input asp-for="Yarn" class="hud-input-underlined text-center opacity-50" readonly /></td>
-                                    <td><input asp-for="YarnActual" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td class="hud-td-scan border-start border-white border-opacity-10">
-                                        <div class="hud-scan-group">
-                                            <input asp-for="YarnLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
-                                            <button type="button" class="hud-scan-btn" onclick="openScanner('YarnLotNo')"><i class="bi bi-upc-scan"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="p-3 bg-black bg-opacity-20 d-flex flex-column gap-3">
+                            <!-- INNER COMPOUND -->
+                            <div class="hud-pill-integrated border border-info border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack"><span class="label-sub text-info">INNER (MATERIAL)</span><span class="label-main">COMPOUND</span></div>
+                                    <button type="button" onclick="addMaterialRow('inner')" class="btn btn-sm btn-outline-info border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(14, 165, 233, 0.1);">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input asp-for="InnerMaterial" id="InnerMaterial" class="hud-input font-monospace text-white opacity-50 w-100" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small text-info mb-1">ACTUAL BATCH NAME</label>
+                                        <input asp-for="InnerMaterialActual" id="InnerMaterialActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                    </div>
+                                </div>
+                                
+                                <!-- Dynamic List for Inner -->
+                                <div id="inner-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+                            
+                            <!-- OUTER COMPOUND -->
+                            <div class="hud-pill-integrated border border-warning border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack"><span class="label-sub text-warning">OUTER (MATERIAL)</span><span class="label-main">COMPOUND</span></div>
+                                    <button type="button" onclick="addMaterialRow('outer')" class="btn btn-sm btn-outline-warning border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(245, 158, 11, 0.1);">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input asp-for="OuterMaterial" id="OuterMaterial" class="hud-input font-monospace text-white opacity-50 w-100" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small text-warning mb-1">ACTUAL BATCH NAME</label>
+                                        <input asp-for="OuterMaterialActual" id="OuterMaterialActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic List for Outer -->
+                                <div id="outer-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+
+                            <!-- YARN SUPPORT -->
+                            <div class="hud-pill-integrated border border-success border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack"><span class="label-sub text-success">YARN (SUPPORT)</span><span class="label-main">POLYESTER</span></div>
+                                    <button type="button" onclick="addMaterialRow('yarn')" class="btn btn-sm btn-outline-success border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(16, 185, 129, 0.1);">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input asp-for="Yarn" id="Yarn" class="hud-input font-monospace text-white opacity-50 w-100" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small text-success mb-1">ACTUAL BATCH NAME</label>
+                                        <input asp-for="YarnActual" id="YarnActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic List for Yarn -->
+                                <div id="yarn-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1284,6 +1309,114 @@
             }
         }
 
+        // --- DYNAMIC MATERIAL LOT MANAGEMENT ---
+        const materialState = {
+            inner: [],
+            outer: [],
+            yarn: []
+        };
+
+        function addMaterialRow(layer) {
+            const listContainer = document.getElementById(`${layer}-lot-list`);
+            const index = materialState[layer].length;
+            
+            if (index >= 10) {
+                Swal.fire('PROCESS LIMIT', 'System supports a maximum of 10 batch lots per production cycle.', 'warning');
+                return;
+            }
+
+            const rowId = `lot-${layer}-${Date.now()}`;
+            const isYarn = (layer === 'yarn');
+            const themeColor = layer === 'inner' ? 'info' : (layer === 'outer' ? 'warning' : 'success');
+            
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = `row g-1 align-items-center animate__animated animate__fadeInLeft`;
+            div.innerHTML = `
+                <div class="${isYarn ? 'col-8' : 'col-6'}">
+                    <div class="hud-scan-group p-1" style="border-color: rgba(${themeColor === 'info' ? '14, 165, 233' : (themeColor === 'warning' ? '245, 158, 11' : '16, 185, 129')}, 0.25);">
+                        <input type="text" class="hud-input-scan text-${themeColor} fw-bold" style="font-size: 0.75rem" placeholder="LOT #${index + 1}..." data-layer="${layer}" data-type="lot" />
+                        <button type="button" class="hud-scan-btn ms-1 text-${themeColor}" onclick="openScannerForDynamicRow('${rowId}')"><i class="bi bi-upc-scan fs-6"></i></button>
+                    </div>
+                </div>
+                ${!isYarn ? `
+                <div class="col-4">
+                    <div class="d-flex flex-column" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 2px 8px;">
+                        <label class="font-black text-warning opacity-50 mb-0" style="font-size: 0.55rem; letter-spacing: 0.5px;">SG VALUE</label>
+                        <div class="d-flex align-items-center">
+                            <span class="text-warning-glow fw-900 me-1" style="font-size: 0.65rem; opacity: 0.6;">🧪</span>
+                            <input type="number" step="0.0001" class="hud-input font-monospace text-warning fw-black p-0 border-0 bg-transparent text-end flex-grow-1" style="font-size: 1rem;" placeholder="0.0000" data-layer="${layer}" data-type="sg" />
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                <div class="col-1 text-center">
+                    <button type="button" onclick="removeMaterialRow('${layer}', '${rowId}')" class="btn btn-link text-danger p-0 border-0"><i class="bi bi-x-circle-fill"></i></button>
+                </div>
+            `;
+            
+            listContainer.appendChild(div);
+            materialState[layer].push(rowId);
+        }
+
+        function removeMaterialRow(layer, rowId) {
+            const el = document.getElementById(rowId);
+            if (el) {
+                el.classList.replace('animate__fadeInLeft', 'animate__fadeOutRight');
+                setTimeout(() => {
+                    el.remove();
+                    materialState[layer] = materialState[layer].filter(id => id !== rowId);
+                }, 300);
+            }
+        }
+
+        function openScannerForDynamicRow(rowId) {
+            const input = document.getElementById(rowId).querySelector('input[data-type="lot"]');
+            // Assuming openScanner is globally available and sets a global target
+            window.scannerTargetId = null; 
+            openScannerCustom((code) => {
+                input.value = code;
+                input.classList.add('blink-once');
+            });
+        }
+
+        // Bridge for common scanner if needed
+        function openScannerCustom(callback) {
+            const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
+            modal.show();
+            
+            // Re-assign the global onScanSuccess for this specific call
+            window.onScanSuccess = function(decodedText) {
+                callback(decodedText);
+                modal.hide();
+                html5QrCode.stop();
+            };
+        }
+
+        function getMaterialLotPayload() {
+            const results = [];
+            ['inner', 'outer', 'yarn'].forEach(layer => {
+                const container = document.getElementById(`${layer}-lot-list`);
+                const rows = container.querySelectorAll('.row');
+                rows.forEach(row => {
+                    const lot = row.querySelector('input[data-type="lot"]').value;
+                    const sgInput = row.querySelector('input[data-type="sg"]');
+                    const sg = sgInput ? sgInput.value : null;
+                    
+                    if (lot || sg) {
+                        results.push({
+                            LayerType: layer.toUpperCase(),
+                            MaterialName: document.getElementById(`${layer === 'inner' ? 'Inner' : (layer === 'outer' ? 'Outer' : 'Yarn')}Material`).value,
+                            MaterialActual: document.getElementById(`${layer === 'inner' ? 'Inner' : (layer === 'outer' ? 'Outer' : 'Yarn')}MaterialActual`).value,
+                            LotNumber: lot,
+                            SGValue: sg ? parseFloat(sg) : null
+                        });
+                    }
+                });
+            });
+            return results;
+        }
+
         async function submitReportWithReadings() {
             saveCurrentInputsToMemory();
 
@@ -1312,15 +1445,14 @@
                 
                 InnerMaterial: document.getElementById('InnerMaterial').value,
                 InnerMaterialActual: document.getElementById('InnerMaterialActual').value,
-                InnerMaterialLotNo: document.getElementById('InnerMaterialLotNo').value,
                 
                 OuterMaterial: document.getElementById('OuterMaterial').value,
                 OuterMaterialActual: document.getElementById('OuterMaterialActual').value,
-                OuterMaterialLotNo: document.getElementById('OuterMaterialLotNo').value,
                 
                 Yarn: document.getElementById('Yarn').value,
                 YarnActual: document.getElementById('YarnActual').value,
-                YarnLotNo: document.getElementById('YarnLotNo').value,
+
+                MaterialLots: getMaterialLotPayload(),
 
                 DAI_Awal: document.getElementById('DAI_Awal').value,
                 DAI_Akhir: document.getElementById('DAI_Akhir').value,

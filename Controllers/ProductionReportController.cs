@@ -362,37 +362,27 @@ namespace VelastoProductionSystem.Controllers
                     QcCond = dto.QcCond, QcSurf = dto.QcSurf, QcRes = dto.QcRes
                 };
 
-                // Initialize the Initial settings arrays from the very first Reading
-                if (dto.Readings != null && dto.Readings.Count > 0) {
-                    var r0 = dto.Readings.FirstOrDefault();
-                    if(r0 != null) {
-                        report.InitHeadTempInner = decimal.TryParse(r0.HeadTempInner, out var it1) ? it1 : (decimal?)null;
-                        report.InitCylinder1TempInner = decimal.TryParse(r0.Cylinder1TempInner, out var it2) ? it2 : (decimal?)null;
-                        report.InitCylinder2TempInner = decimal.TryParse(r0.Cylinder2TempInner, out var it3) ? it3 : (decimal?)null;
-                        report.InitCylinder3TempInner = decimal.TryParse(r0.Cylinder3TempInner, out var it4) ? it4 : (decimal?)null;
-                        report.InitScrewTempInner = decimal.TryParse(r0.ScrewTempInner, out var it5) ? it5 : (decimal?)null;
-                        report.InitScrewSpeedInner = decimal.TryParse(r0.ScrewSpeedInner, out var it6) ? it6 : (decimal?)null;
-                        report.InitFeedRollRatioInner = decimal.TryParse(r0.FeedRollRatioInner, out var it7) ? it7 : (decimal?)null;
-                        report.InitPressureInner = decimal.TryParse(r0.PressureInner, out var it8) ? it8 : (decimal?)null;
-
-                        report.InitHeadTempOuter = decimal.TryParse(r0.HeadTempOuter, out var ot1) ? ot1 : (decimal?)null;
-                        report.InitCylinder1TempOuter = decimal.TryParse(r0.Cylinder1TempOuter, out var ot2) ? ot2 : (decimal?)null;
-                        report.InitCylinder2TempOuter = decimal.TryParse(r0.Cylinder2TempOuter, out var ot3) ? ot3 : (decimal?)null;
-                        report.InitCylinder3TempOuter = decimal.TryParse(r0.Cylinder3TempOuter, out var ot4) ? ot4 : (decimal?)null;
-                        report.InitScrewTempOuter = decimal.TryParse(r0.ScrewTempOuter, out var ot5) ? ot5 : (decimal?)null;
-                        report.InitScrewSpeedOuter = decimal.TryParse(r0.ScrewSpeedOuter, out var ot6) ? ot6 : (decimal?)null;
-                        report.InitFeedRollRatioOuter = decimal.TryParse(r0.FeedRollRatioOuter, out var ot7) ? ot7 : (decimal?)null;
-                        report.InitPressureOuter = decimal.TryParse(r0.PressureOuter, out var ot8) ? ot8 : (decimal?)null;
-
-                        report.InitSpiralSpeed = decimal.TryParse(r0.SpiralSpeed, out var m1) ? m1 : (decimal?)null;
-                        report.InitSpiralPitchSetting = decimal.TryParse(r0.SpiralPitchSetting, out var m2) ? m2 : (decimal?)null;
-                        report.InitHoseSpeed = decimal.TryParse(r0.HoseSpeed, out var m3) ? m3 : (decimal?)null;
-                        report.InitConveyorRatio = decimal.TryParse(r0.ConveyorRatio, out var m4) ? m4 : (decimal?)null;
-                    }
-                }
-
                 _context.ProductionReports.Add(report);
                 await _context.SaveChangesAsync(); // Save to get the ID
+
+                // Process Material Lots (New Relational Logic)
+                if (dto.MaterialLots != null && dto.MaterialLots.Count > 0)
+                {
+                    foreach (var lotDto in dto.MaterialLots)
+                    {
+                        var lot = new ProductionMaterialLot
+                        {
+                            ProductionReportId = report.Id,
+                            LayerType = lotDto.LayerType,
+                            MaterialName = lotDto.MaterialName,
+                            MaterialActual = lotDto.MaterialActual,
+                            LotNumber = lotDto.LotNumber,
+                            SGValue = lotDto.SGValue
+                        };
+                        _context.ProductionMaterialLots.Add(lot);
+                    }
+                    await _context.SaveChangesAsync();
+                }
 
                 // Process Readings
                 if (dto.Readings != null && dto.Readings.Count > 0)
