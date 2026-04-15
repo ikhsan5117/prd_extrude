@@ -30,65 +30,23 @@ namespace VelastoProductionSystem.Controllers
             return View();
         }
 
-        public IActionResult SeedSpcData()
+        public IActionResult ClearDummyData()
         {
-            // Pastikan report exist
-            var report = _context.DimensionReports.FirstOrDefault(r => r.HoseType == "NA2060");
-            if (report == null)
+            // Hapus semua data yang dibuat oleh System Seed
+            var seedReports = _context.DimensionReports
+                .Where(r => r.CreatedBy == "System Seed" || r.DocumentNumber == "DIM-NA2060-REF")
+                .ToList();
+
+            foreach (var r in seedReports)
             {
-                report = new DimensionReport {
-                    DocumentNumber = "DIM-NA2060-REF",
-                    ProductionDate = DateTime.Now,
-                    HoseType = "NA2060",
-                    DimensionDisplay = "Thickness",
-                    CustomerName = "VELASTO CORP",
-                    Status = "COMPLETED",
-                    CreatedDate = DateTime.Now,
-                    CreatedBy = "System Seed",
-                    Shift = "Shift 1",
-                    QtyTarget = 100,
-                    QtyOk = 95
-                };
-                _context.DimensionReports.Add(report);
-                _context.SaveChanges();
+                var measurements = _context.DimensionMeasurements.Where(m => m.DimensionReportId == r.Id).ToList();
+                if (measurements.Any()) _context.DimensionMeasurements.RemoveRange(measurements);
+                _context.DimensionReports.Remove(r);
             }
-
-            var random = new Random();
-            
-            // Buat data simulasi untuk beberapa kriteria sekaligus
-            var criteriaTypes = new[] { 
-                new { Name = "Inner Tube", Target = 3.6m },
-                new { Name = "Spiral Pitch", Target = 56.0m },
-                new { Name = "Tebal Total", Target = 5.2m }
-            };
-
-            // Hapus data lama agar tidak duplikat
-            var oldData = _context.DimensionMeasurements.Where(m => m.DimensionReportId == report.Id).ToList();
-            if (oldData.Any()) _context.DimensionMeasurements.RemoveRange(oldData);
-
-            foreach (var type in criteriaTypes)
-            {
-                for (int i = 54; i >= 1; i--)
-                {
-                    var dt = DateTime.Now.AddMinutes(-i * 30);
-                    
-                    var reading = new DimensionMeasurement {
-                        DimensionReportId = report.Id,
-                        PointName = type.Name,
-                        TimeSection = dt.ToString("HH:mm"),
-                        Frequency = "30m Sekali",
-                        RecordedTime = dt,
-                        // Simulasi nilai yang fluktuasi sedikit
-                        R1 = type.Target + (decimal)((random.NextDouble() - 0.5) * (double)type.Target * 0.05),
-                        R2 = type.Target + (decimal)((random.NextDouble() - 0.5) * (double)type.Target * 0.05),
-                        Status = "OK"
-                    };
-                    _context.DimensionMeasurements.Add(reading);
-                }
-            }
-            
             _context.SaveChanges();
-            return Content("Data simulasi (Thickness, Diameter, & Spiral Pitch) untuk 'NA2060' berhasil ditambahkan! Silakan refresh dashboard.");
+
+            int count = seedReports.Count;
+            return Content($"Berhasil menghapus {count} laporan data simulasi dari database. Refresh dashboard untuk melihat hasilnya.");
         }
 
         public IActionResult Privacy()

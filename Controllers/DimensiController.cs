@@ -4,15 +4,20 @@ using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Models;
 using System.Text.Json;
 
+using VelastoProductionSystem.Hubs;
+using Microsoft.AspNetCore.SignalR;
+
 namespace VelastoProductionSystem.Controllers
 {
     public class DimensiController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<DashboardHub> _hubContext;
 
-        public DimensiController(ApplicationDbContext context)
+        public DimensiController(ApplicationDbContext context, IHubContext<DashboardHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // GET: /Dimensi/Index
@@ -169,6 +174,10 @@ namespace VelastoProductionSystem.Controllers
                 if (data == null) return Json(new { success = false, message = "JSON Error" });
                 
                 var result = await ProcessSaveInternal(data);
+                
+                // Notify via SignalR for real-time dashboard updates
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+                
                 return Json(result);
             } catch (Exception ex) {
                 return Json(new { success = false, message = "System Error: " + ex.Message });
@@ -272,6 +281,9 @@ namespace VelastoProductionSystem.Controllers
                     {
                         report.Status = "COMPLETED";
                         await _context.SaveChangesAsync();
+                        
+                        // Notify via SignalR
+                        await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
                     }
                     return Json(new { success = true, redirectUrl = "/Dimensi/Index" });
                 }
