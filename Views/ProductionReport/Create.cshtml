@@ -438,80 +438,103 @@
                             <i class="bi bi-patch-check hud-card-icon"></i>
                             <span class="hud-card-title">MESH & EMBOSS QUALITY</span>
                         </div>
-                        <table class="table-hud-unified compact-hud instrument-style">
-                            <thead>
-                                <tr class="bg-black bg-opacity-40 text-center">
-                                    <th class="ps-3 text-start py-2 font-monospace tracking-widest text-primary-glow">CATEGORIES</th>
-                                    <th width="32%" class="py-2 border-start border-white border-opacity-5">Ø96 #10</th>
-                                    <th width="32%" class="py-2 border-start border-white border-opacity-5">Ø96 #40</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- MESH TYPE ZONE -->
-                                <tr class="group-lane">
-                                    <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub">TIPE MESH</span><span class="label-main small">INNER (BEFORE)</span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div></td>
-                                </tr>
-                                <tr class="group-lane border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (BEFORE)</span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div></td>
-                                </tr>
-                                <!-- MESH CHECK ZONE -->
-                                <tr>
-                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub">MESH CHECK</span><span class="label-main small">INNER (AFTER)</span></div></td>
-                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
-                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshInnerCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshInnerCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshInnerCheck" value="ASING"></label></div>
-                                    </td>
-                                </tr>
-                                <tr class="border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (AFTER)</span></div></td>
-                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
-                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshOuterCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshOuterCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshOuterCheck" value="ASING"></label></div>
-                                    </td>
-                                </tr>
-                                <!-- EMBOSSING ZONE -->
-                                <tr class="group-lane border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub">EMBOSSING</span><span class="label-main small">MARK DATA</span></div></td>
-                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-7"><input asp-for="EmbossMarkContent" class="hud-input-underlined py-1 text-center font-monospace small" placeholder="CONTENT" /></div>
-                                            <div class="col-5"><input type="date" asp-for="EmbossMarkDate" class="hud-input-underlined py-1 text-center font-monospace small" /></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- FINAL QC ZONE -->
-                                <tr>
-                                    <td class="ps-3 py-3"><div class="label-stack"><span class="label-sub">QC DETAILS</span><span class="label-main small">FINAL CHECK</span></div></td>
-                                    <td colspan="2" class="pe-3 py-3 border-start border-white border-opacity-10">
-                                        <div class="d-flex flex-column gap-2">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="label-sub font-black text-white-50" style="min-width:40px">COND</span>
-                                                <div class="hud-pill-group sm">
-                                                    <label class="hud-pill-item">BERSIH<input type="radio" asp-for="QcCond" value="BERSIH"></label>
-                                                    <label class="hud-pill-item red">KOTOR<input type="radio" asp-for="QcCond" value="KOTOR"></label>
+                        <div class="p-3 bg-slate-800 bg-opacity-40 flex-grow-1" style="background: rgba(30, 41, 59, 0.4);">
+                            <!-- CATEGORY: TIPE MESH (BEFORE) -->
+                            <div class="mb-4 border-bottom border-white border-opacity-20 pb-3">
+                                <div class="label-stack mb-2"><span class="label-sub text-info-glow fw-bold"><i class="bi bi-layers me-1"></i>TIPE MESH</span><span class="label-main small text-white fw-900">INNER & OUTER SELECTION (BEFORE)</span></div>
+                                <div class="row g-2">
+                                    <!-- INNER GROUP -->
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-slate-900 bg-opacity-60 border border-white border-opacity-20 text-center">
+                                            <span class="label-main small text-white fw-900 opacity-75 d-block mb-3 border-bottom border-white border-opacity-10 pb-1">INNER LAYER</span>
+                                            <div class="d-flex justify-content-center gap-4 py-1">
+                                                <div class="d-flex flex-column align-items-center gap-1">
+                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div>
+                                                    <span class="super-small text-white fw-bold">#10</span>
                                                 </div>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="label-sub font-black text-white-50" style="min-width:40px">SURF</span>
-                                                <div class="hud-pill-group sm">
-                                                    <label class="hud-pill-item">OK<input type="radio" asp-for="QcSurf" value="OK"></label>
-                                                    <label class="hud-pill-item red">SCRATCH<input type="radio" asp-for="QcSurf" value="SCRATCH"></label>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="label-sub font-black text-white-50" style="min-width:40px">RES</span>
-                                                <div class="hud-pill-group sm">
-                                                    <label class="hud-pill-item">READ<input type="radio" asp-for="QcRes" value="READ"></label>
-                                                    <label class="hud-pill-item red">UNREAD<input type="radio" asp-for="QcRes" value="UNREAD"></label>
+                                                <div class="d-flex flex-column align-items-center gap-1">
+                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div>
+                                                    <span class="super-small text-white fw-bold">#40</span>
                                                 </div>
                                             </div>
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </div>
+                                    <!-- OUTER GROUP -->
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-slate-900 bg-opacity-60 border border-white border-opacity-20 text-center">
+                                            <span class="label-main small text-white fw-900 opacity-75 d-block mb-3 border-bottom border-white border-opacity-10 pb-1">OUTER LAYER</span>
+                                            <div class="d-flex justify-content-center gap-4 py-1">
+                                                <div class="d-flex flex-column align-items-center gap-1">
+                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div>
+                                                    <span class="super-small text-white fw-bold">#10</span>
+                                                </div>
+                                                <div class="d-flex flex-column align-items-center gap-1">
+                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div>
+                                                    <span class="super-small text-white fw-bold">#40</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CATEGORY: MESH CHECK (AFTER) -->
+                            <div class="mb-4 border-bottom border-white border-opacity-20 pb-4">
+                                <div class="label-stack mb-2"><span class="label-sub text-info-glow fw-bold"><i class="bi bi-shield-check me-1"></i>MESH CHECK</span><span class="label-main small text-white fw-900">QUALITY VERIFICATION (AFTER)</span></div>
+                                <div class="d-flex flex-column gap-3 mt-2">
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-slate-900 bg-opacity-50 border border-white border-opacity-20">
+                                        <span class="label-main text-white fw-black" style="font-size: 0.8rem; min-width:80px">INNER</span>
+                                        <div class="hud-pill-group"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshInnerCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshInnerCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshInnerCheck" value="ASING"></label></div>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-slate-900 bg-opacity-50 border border-white border-opacity-20">
+                                        <span class="label-main text-white fw-black" style="font-size: 0.8rem; min-width:80px">OUTER</span>
+                                        <div class="hud-pill-group"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshOuterCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshOuterCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshOuterCheck" value="ASING"></label></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CATEGORY: EMBOSSING & QC -->
+                            <div class="p-3 bg-slate-900 bg-opacity-70 border border-white border-opacity-20 rounded-4">
+                                <div class="label-stack mb-3"><span class="label-sub text-info-glow fw-bold">FINAL SECURITY</span><span class="label-main small text-white fw-900">MARKING & QC ANALYTICS</span></div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-7">
+                                        <div class="p-2 px-3 rounded-3 border border-white border-opacity-30 bg-black bg-opacity-40 shadow-sm h-100">
+                                            <label class="super-small text-info-glow fw-black mb-1"><i class="bi bi-fonts me-1"></i>MARK CONTENT DATA</label>
+                                            <input asp-for="EmbossMarkContent" class="hud-input w-100 border-0 bg-transparent text-white fw-bold font-monospace mt-1" style="font-size: 1rem;" placeholder="[ ENTER SEQUENCE ]" />
+                                        </div>
+                                    </div>
+                                    <div class="col-5">
+                                        <div class="p-2 px-3 rounded-3 border border-white border-opacity-30 bg-black bg-opacity-40 shadow-sm h-100">
+                                            <label class="super-small text-info-glow fw-black mb-1"><i class="bi bi-calendar-event me-1"></i>VERIFICATION DATE</label>
+                                            <input type="date" asp-for="EmbossMarkDate" class="hud-input w-100 border-0 bg-transparent text-white fw-bold font-monospace mt-1" style="font-size: 1rem; color-scheme: dark;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex flex-column gap-3">
+                                    @{
+                                        var qcMetricsLight = new[] { 
+                                            new { Label = "CONDITION", Sub = "Q.01", Field = "QcCond", Opt1 = "BERSIH", Opt2 = "KOTOR" },
+                                            new { Label = "SURFACE", Sub = "Q.02", Field = "QcSurf", Opt1 = "OK", Opt2 = "SCRATCH" },
+                                            new { Label = "QUALITY RES", Sub = "Q.03", Field = "QcRes", Opt1 = "READ", Opt2 = "UNREAD" }
+                                        };
+                                    }
+
+                                    @foreach(var qc in qcMetricsLight) {
+                                        <div class="d-flex align-items-center justify-content-between p-2 px-3 rounded-3 bg-black bg-opacity-30 border border-white border-opacity-20">
+                                            <div class="label-stack">
+                                                <span class="label-sub text-info-glow opacity-75" style="font-size: 0.6rem">@qc.Sub</span>
+                                                <span class="label-main text-white fw-black" style="font-size: 0.85rem">@qc.Label</span>
+                                            </div>
+                                            <div class="hud-pill-group" style="width: 170px; height: 38px;">
+                                                <label class="hud-pill-item">@qc.Opt1<input type="radio" name="@qc.Field" value="@qc.Opt1"></label>
+                                                <label class="hud-pill-item red">@qc.Opt2<input type="radio" name="@qc.Field" value="@qc.Opt2"></label>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
