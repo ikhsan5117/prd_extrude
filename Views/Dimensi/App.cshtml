@@ -32,7 +32,7 @@
         /* --- Header & Layout --- */
         .search-action-bar {
             display: flex; align-items: center; justify-content: center; gap: 15px;
-            flex-wrap: wrap; margin-bottom: 30px;
+            flex-wrap: wrap; margin-bottom: 30px; position: relative; z-index: 50;
         }
         .header-title-main {
             font-size: 26px; font-weight: 800; color: #fff; text-align: center;
@@ -444,11 +444,11 @@
 
     <!-- Unified Technical HUD Dashboard -->
     <div class="tech-header-ribbon animate__animated animate__fadeIn">
-        <!-- CLUSTER 1: LINE -->
-        <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-gear-fill m-icon"></i> PRODUCTION LINE</span>
+        <!-- CLUSTER 1: MACHINE -->
+        <div class="header-cluster" style="border-left-color: #fca311;">
+            <span class="m-lbl"><i class="bi bi-gear-wide-connected m-icon" style="color: #fca311;"></i> PRODUCTION MACHINE</span>
             <div class="m-row">
-                <span class="m-val m-accent" id="h-line">DL01 ENGINE</span>
+                <span class="m-val" id="h-line" style="color: #fca311;">@(Model.MachineName ?? "---")</span>
             </div>
         </div>
         <!-- CLUSTER 2: DOC -->
@@ -468,12 +468,12 @@
                 <span class="m-val m-accent" id="h-shift" onclick="toggleShift()" style="cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
             </div>
         </div>
-        <!-- CLUSTER 4: PRODUCT -->
-        <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-cpu-fill m-icon"></i> CUSTOMER / SPEC</span>
+        <!-- CLUSTER 4: OPERATOR & SPEC -->
+        <div class="header-cluster" style="border-left-color: #0d6efd;">
+            <span class="m-lbl"><i class="bi bi-person-badge-fill m-icon" style="color: #0d6efd;"></i> OPERATOR / SPEC</span>
             <div class="m-row">
                 <div id="h-row-hose" style="display: flex; align-items: center; gap: 8px;">
-                    <span class="m-val" id="h-customer">---</span>
+                    <span class="m-val" id="h-operator" style="color: #0d6efd;">@(Model.CreatedBy ?? "---")</span>
                     <span class="m-divider"></span>
                     <span class="m-val m-accent" id="h-hose" style="font-size: 11px;">---</span>
                 </div>
@@ -707,10 +707,10 @@
         </div>
     </div> <!-- END CARD GRID -->
 
-    <!-- FLOATING ACTION BUTTON -->
-    <div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000; display: flex; gap: 15px; align-items: center;">
-        <div id="save-status" style="color: #10b981; font-size: 11px; opacity: 0; transition: 0.5s; font-weight: 800;">
-            <i class="bi bi-check2-circle"></i> DATA SAVED TO HISTORY
+    <!-- STICKY ACTION BAR -->
+    <div class="sticky-action-bar" style="position: sticky; bottom: 0; left: 0; width: 100%; padding: 20px 0; margin-top: 40px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-top: 1px solid rgba(56, 189, 248, 0.3); z-index: 9999; display: flex; justify-content: center; gap: 20px; align-items: center; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+        <div id="save-status" style="color: #10b981; font-size: 14px; opacity: 0; transition: 0.5s; font-weight: 800; background: rgba(16,185,129,0.1); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(16,185,129,0.3);">
+            <i class="bi bi-check2-circle"></i> DATA SAVED!
         </div>
         <button type="button" onclick="submitEntry()" class="submit-btn" style="
             background: linear-gradient(135deg, #3b82f6, #2563eb);

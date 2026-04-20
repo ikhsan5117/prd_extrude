@@ -23,12 +23,18 @@ namespace VelastoProductionSystem.Controllers
         // GET: /Dimensi/Index
         public IActionResult Index()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             var report = new DimensionReport
             {
                 DocumentNumber = "",
                 ProductionDate = DateTime.Now,
                 Shift = GetCurrentShift(),
-                Status = "DRAFT"
+                Status = "DRAFT",
+                CreatedBy = HttpContext.Session.GetString("UserName") ?? "QC Operator",
+                MachineName = HttpContext.Session.GetString("MachineName")
             };
             return View("App", report);
         }

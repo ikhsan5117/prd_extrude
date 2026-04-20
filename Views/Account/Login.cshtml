@@ -1,0 +1,484 @@
+@{
+    Layout = null; // Separate layout for login
+}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Velasto Production System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-accent: #064052;
+            --bg-deep: #020b13;
+            --accent-cyan: #00d2fe;
+            --text-dim: #94a3b8;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #01060a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- CENTERED CARD --- */
+        .login-card {
+            display: flex;
+            width: 860px;
+            max-width: 95%;
+            min-height: 520px;
+            background: linear-gradient(135deg, #132f4c 0%, #051424 50%, #010810 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+        }
+
+        /* --- LEFT PANEL --- */
+        .left-panel {
+            width: 45%;
+            background: linear-gradient(145deg, #021a2c 0%, #015d86 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 40px;
+            color: #fff;
+            text-align: center;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo-container {
+            background: #fff;
+            padding: 10px 22px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            z-index: 2;
+        }
+
+        .logo-container img { height: 30px; }
+
+        .left-panel h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            z-index: 2;
+        }
+
+        .left-panel p {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-bottom: 10px;
+            z-index: 2;
+        }
+
+        .pill-container {
+            display: flex;
+            gap: 10px;
+            z-index: 2;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .badge-pill {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* --- RIGHT PANEL --- */
+        .right-panel {
+            flex: 1;
+            padding: 35px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: radial-gradient(circle at top right, rgba(0, 210, 254, 0.08) 0%, transparent 60%);
+        }
+
+        .welcome-text {
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            font-weight: 800;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-heading {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .sub-heading {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-cyan);
+            font-size: 1.1rem;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .form-control, .form-select {
+            background-color: rgba(11, 26, 41, 0.7) !important;
+            background-repeat: no-repeat !important;
+            border: 1.5px solid rgba(255,255,255,0.1) !important;
+            height: 52px;
+            border-radius: 10px;
+            padding-left: 48px !important;
+            color: #fff !important;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-cyan) !important;
+            background-color: #122a3d !important;
+            box-shadow: 0 0 20px rgba(0, 210, 254, 0.2) !important;
+        }
+
+        .form-control::placeholder { color: rgba(255, 255, 255, 0.4) !important; }
+
+        /* Fix Select Arrow */
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2300d2fe' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 15px center !important;
+            background-size: 14px 10px !important;
+        }
+
+        .form-select option { background-color: #020b13; color: #fff; }
+
+        .pw-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+
+        .form-check-input {
+            background-color: rgba(255,255,255,0.1) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            width: 1.1rem;
+            height: 1.1rem;
+            margin-top: 0.15rem;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--accent-cyan) !important;
+            border-color: var(--accent-cyan) !important;
+        }
+
+        .btn-submit {
+            background: var(--accent-cyan);
+            border: none;
+            height: 54px;
+            border-radius: 12px;
+            color: #020b13;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            transition: 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 210, 254, 0.2);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            background: #fff;
+            box-shadow: 0 8px 30px rgba(0, 210, 254, 0.4);
+        }
+
+        .footer-links {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .footer-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin: 0 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.3s;
+        }
+
+        .footer-links a:hover { color: var(--accent-cyan); }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444; padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.85rem;
+            border-left: 4px solid #ef4444;
+        }
+
+        @@media (max-width: 992px) {
+            .login-card { width: 95%; max-width: 800px; height: auto; flex-direction: column; }
+            .left-panel { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .right-panel-header { display: none; }
+            .right-panel { padding: 30px 40px; }
+        }
+
+        /* --- 3D SHARDS BACKGROUND --- */
+        .shard-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .shard-wrapper {
+            position: absolute;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.6));
+        }
+
+        .shard-face-left, .shard-face-right {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            backdrop-filter: blur(8px);
+        }
+
+        .shard-face-left {
+            clip-path: polygon(50% 0, 0 85%, 50% 100%);
+            background: linear-gradient(135deg, rgba(0, 210, 254, 0.4) 0%, rgba(3, 20, 31, 0.2) 100%);
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .shard-face-right {
+            clip-path: polygon(50% 0, 50% 100%, 100% 75%);
+            background: linear-gradient(225deg, rgba(255, 255, 255, 0.15) 0%, rgba(2, 11, 19, 0.5) 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Shard Variants */
+        .shard-1 {
+            width: 320px; height: 380px;
+            bottom: -80px; right: 8%;
+            transform: rotate(15deg);
+        }
+        
+        .shard-2 {
+            width: 180px; height: 210px;
+            top: 12%; left: 8%;
+            transform: rotate(-25deg);
+            opacity: 0.9;
+        }
+
+        .shard-3 {
+            width: 90px; height: 110px;
+            top: 15%; right: 28%;
+            transform: rotate(45deg);
+            opacity: 0.6;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)) blur(2px);
+        }
+    </style>
+</head>
+<body>
+
+<!-- 3D SHARDS BACKGROUND -->
+<div class="shard-container">
+    <div class="shard-wrapper shard-1">
+        <div class="shard-face-left"></div>
+        <div class="shard-face-right"></div>
+    </div>
+    <div class="shard-wrapper shard-2">
+        <div class="shard-face-left"></div>
+        <div class="shard-face-right"></div>
+    </div>
+    <div class="shard-wrapper shard-3">
+        <div class="shard-face-left"></div>
+        <div class="shard-face-right"></div>
+    </div>
+</div>
+
+<div class="login-card">
+    <div class="left-panel">
+        <div class="logo-container">
+            <img src="~/images/velasto-logo-e1700056160273.png" alt="Velasto Logo">
+        </div>
+        <h1>EXTRUDE SYSTEM</h1>
+        <p>Production Monitoring Platform</p>
+        <div class="pill-container">
+            <div class="badge-pill">Aman</div>
+            <div class="badge-pill">Multi-Role</div>
+            <div class="badge-pill">Analitik</div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="right-panel-header">
+            <div class="welcome-text">
+                <i class="bi bi-shield-check"></i> SELAMAT DATANG
+            </div>
+            <h2 class="main-heading">Login Operator</h2>
+            <p class="sub-heading">Masukkan kredensial Anda untuk melanjutkan</p>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="error-msg">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        <span>@error.ErrorMessage</span>
+                    </div>
+                }
+            </div>
+        }
+
+        <form asp-action="Login" method="post" id="loginForm">
+            @Html.AntiForgeryToken()
+
+            <label class="form-label">USERNAME</label>
+            <div class="input-wrapper">
+                <i class="bi bi-person input-icon"></i>
+                <select name="userId" id="userId" class="form-select" required>
+                    <option value="" disabled selected>Pilih User...</option>
+                    @foreach (var user in ViewBag.Users)
+                    {
+                        <option value="@user.Id">@user.FullName (@user.NPK)</option>
+                    }
+                </select>
+            </div>
+
+            <label class="form-label">MESIN PRODUKSI</label>
+            <div class="input-wrapper">
+                <i class="bi bi-gear input-icon"></i>
+                <select name="machineId" id="machineId" class="form-select" required>
+                    <option value="" disabled selected>Pilih Mesin...</option>
+                    @foreach (var m in ViewBag.Machines)
+                    {
+                        <option value="@m.Id">@m.KodeMesin - @m.NamaMesin</option>
+                    }
+                </select>
+            </div>
+
+            <label class="form-label">PASSWORD</label>
+            <div class="input-wrapper">
+                <i class="bi bi-lock input-icon"></i>
+                <input type="password" name="password" id="password" class="form-control" placeholder="Masukkan password" required />
+                <i class="bi bi-eye-slash pw-toggle" id="togglePassword"></i>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+                    <label class="form-check-label ms-2" for="rememberMe" style="color: var(--text-dim); font-size: 0.8rem; cursor: pointer;">Ingat Saya</label>
+                </div>
+                <a href="#" style="color: var(--text-dim); font-size: 0.8rem; text-decoration: none;">Lupa Password?</a>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="bi bi-box-arrow-in-right"></i> MASUK
+            </button>
+        </form>
+
+        <div class="footer-links">
+            <a href="#"><i class="bi bi-headset"></i> Support</a>
+            <a href="/"><i class="bi bi-house"></i> Home</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const defaultPassword = "extrude123!";
+
+        // Fitur 1: Auto-Fill Password saat User Dipilih
+        $('#userId').on('change', function() {
+            if ($(this).val()) {
+                $('#password').val(defaultPassword);
+                
+                // Feedback visual pulse
+                $('#password').css('border-color', 'var(--accent-cyan)');
+                setTimeout(() => {
+                    $('#password').css('border-color', '');
+                }, 500);
+
+                // Fokus ke field password agar jika ingin memasukkan password lain bisa langsung diketik
+                $('#password').focus();
+            }
+        });
+
+        // Fitur 2: Toggle Password View
+        $('#togglePassword').on('click', function() {
+            const pwField = $('#password');
+            const icon = $(this);
+            if (pwField.attr('type') === 'password') {
+                pwField.attr('type', 'text');
+                icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            } else {
+                pwField.attr('type', 'password');
+                icon.removeClass('bi-eye').addClass('bi-eye-slash');
+            }
+        });
+
+        // Fitur 3: Enter key support for quick login
+        $('#password').on('keypress', function(e) {
+            if (e.which === 13) {
+                $('#loginForm').submit();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

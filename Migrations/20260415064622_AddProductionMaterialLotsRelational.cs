@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,12 +10,6 @@ namespace VelastoProductionSystem.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "StopReason",
-                table: "DailyPlanActivities",
-                type: "nvarchar(max)",
-                nullable: true);
-
             migrationBuilder.CreateTable(
                 name: "ProductionMaterialLots",
                 columns: table => new
@@ -51,10 +45,6 @@ namespace VelastoProductionSystem.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ProductionMaterialLots");
-
-            migrationBuilder.DropColumn(
-                name: "StopReason",
-                table: "DailyPlanActivities");
         }
     }
 }

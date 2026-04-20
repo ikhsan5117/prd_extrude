@@ -16,6 +16,8 @@ namespace VelastoProductionSystem.Data
 
         public DbSet<ElwpPlanning> ElwpPlannings { get; set; }
         public DbSet<ElwpMachine> ElwpMachines { get; set; }
+        public DbSet<ElwpUser> ElwpUsers { get; set; }
+        public DbSet<ElwpArea> ElwpAreas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,8 +42,18 @@ namespace VelastoProductionSystem.Data
             {
                 entity.ToTable("tb_elwp_produksi_mesins", "produksi");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.NamaMesin).HasColumnName("NamaMesin");
-                entity.Property(e => e.KodeMesin).HasColumnName("KodeMesin");
+            });
+
+            modelBuilder.Entity<ElwpUser>(entity =>
+            {
+                entity.ToTable("tb_elwp_produksi_users", "produksi");
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<ElwpArea>(entity =>
+            {
+                entity.ToTable("tb_elwp_produksi_areas", "produksi");
+                entity.HasKey(e => e.Id);
             });
         }
     }

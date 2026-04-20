@@ -563,9 +563,10 @@
         <!-- Document Info -->
         <div class="header-info-row">
             <div><span>NO DOC :</span> @Model.DocumentNumber</div>
-            <div><span>REVISI :</span> @Model.RevisionNumber</div>
             <div><span>DATE :</span> @Model.ProductionDate.ToString("dd/MMM/yyyy")</div>
             <div><span>SHIFT :</span> @Model.Shift</div>
+            <div class="text-info fw-bold"><span>OPERATOR :</span> @Model.CreatedBy</div>
+            <div class="text-warning fw-bold"><span>MESIN :</span> @Model.MachineName</div>
         </div>
         
         <!-- Product Info -->

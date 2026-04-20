@@ -24,6 +24,10 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport (Monitoring List)
         public async Task<IActionResult> Index()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             var reports = await _context.ProductionReports
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
@@ -65,7 +69,9 @@ namespace VelastoProductionSystem.Controllers
                     HoseType = "---",
                     Dimension = "---",
                     Yarn = "---",
-                    Shift = "---"
+                    Shift = "---",
+                    CreatedBy = HttpContext.Session.GetString("UserName") ?? "Operator",
+                    MachineName = HttpContext.Session.GetString("MachineName")
                 };
                 return View(emptyReport);
             }

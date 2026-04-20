@@ -19,6 +19,10 @@ namespace VelastoProductionSystem.Controllers
 
         public IActionResult Index()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             // Dashboard dengan statistik produksi
             ViewBag.TotalProductions = _context.ProductionReports.Count();
             ViewBag.ActiveProductions = _context.ProductionReports

@@ -36,6 +36,22 @@
                 </div>
             </div>
             <div class="navbar-right">
+                @if (!string.IsNullOrEmpty(Context.Session.GetString("UserName")))
+                {
+                    <div class="d-none d-md-flex align-items-center me-3 border-end pe-3 border-white border-opacity-10">
+                        <div class="text-end me-3">
+                            <div class="text-white-50 super-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">Operator</div>
+                            <div class="text-info fw-bold" style="font-size: 0.85rem;">@Context.Session.GetString("UserName")</div>
+                        </div>
+                        <div class="text-end me-3">
+                            <div class="text-white-50 super-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">Machine</div>
+                            <div class="text-warning fw-bold" style="font-size: 0.85rem;">@Context.Session.GetString("MachineName")</div>
+                        </div>
+                        <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm border-0 rounded-circle" title="Change User/Machine">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </div>
+                }
                 <div class="status-indicator">
                     <span class="status-dot pulse"></span>
                     <span>System Online</span>
@@ -59,33 +75,22 @@
         </div>
 
         <nav class="sidebar-nav">
+            @* Restricted for Operators
             <a asp-controller="Home" asp-action="Index" class="nav-item">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M120-120v-80l80-80v160h-80Zm160 0v-240l80-80v320h-80Zm160 0v-320l80 81v239h-80Zm160 0v-239l80-80v319h-80Zm160 0v-400l80-80v480h-80ZM120-327v-113l280-280 160 160 280-280v113L560-447 400-607 120-327Z"/></svg>
                 <span>Dashboard</span>
             </a>
+            *@
             
+            @* Restricted for Operators
             <div class="nav-group">
                 <div class="nav-group-title">
                     <i class="bi bi-database"></i>
                     <span>Master Data</span>
                 </div>
-                <a asp-controller="PlanningMaster" asp-action="Index" class="nav-item sub">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M337.5-463Q311-498 289-537q-5 14-6.5 28.5T281-480q0 83 58 141t141 58q14 0 28.5-2t28.5-6q-39-22-74-48.5T396-396q-32-32-58.5-67ZM567-364.5Q630-328 702-308q-40 51-98 79.5T481-200q-117 0-198.5-81.5T201-480q0-65 28.5-123t79.5-98q20 72 56.5 135T453-452q51 51 114 87.5ZM743-380q-20-5-39.5-11T665-405q8-18 11.5-36.5T680-480q0-83-58.5-141.5T480-680q-20 0-38.5 3.5T405-665q-8-19-13.5-38T381-742q24-9 49-13.5t51-4.5q117 0 198.5 81.5T761-480q0 26-4.5 51T743-380ZM440-840v-120h80v120h-80Zm0 840v-120h80V0h-80Zm323-706-57-57 85-84 57 56-85 85ZM169-113l-57-56 85-85 57 57-85 84Zm671-327v-80h120v80H840ZM0-440v-80h120v80H0Zm791 328-85-85 57-57 84 85-56 57ZM197-706l-84-85 56-57 85 85-57 57Zm199 310Z"/></svg>
-                    <span>Planning Master</span>
-                </a>
-                <a asp-controller="PartMaster" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-database-fill-gear"></i>
-                    <span>Part Master (DL0)</span>
-                </a>
-                <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-file-earmark-spreadsheet"></i>
-                    <span>SPS Excel Master</span>
-                </a>
-                <a asp-controller="Machine" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-gear-wide-connected"></i>
-                    <span>Machine Management</span>
-                </a>
+                <!-- ... Links hidden ... -->
             </div>
+            *@
 
             <div class="nav-group">
                 <div class="nav-group-title">

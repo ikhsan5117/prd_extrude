@@ -26,6 +26,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Tipe Hose")]
         public string? HoseType { get; set; } 
 
+        [Display(Name = "Mesin")]
+        public string? MachineName { get; set; } 
+
         [Display(Name = "Dimensi")]
         public string? Dimension { get; set; } 
 
