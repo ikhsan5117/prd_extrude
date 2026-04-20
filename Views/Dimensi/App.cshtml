@@ -707,27 +707,6 @@
         </div>
     </div> <!-- END CARD GRID -->
 
-    <!-- STICKY ACTION BAR -->
-    <div class="sticky-action-bar" style="position: sticky; bottom: 0; left: 0; width: 100%; padding: 20px 0; margin-top: 40px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-top: 1px solid rgba(56, 189, 248, 0.3); z-index: 9999; display: flex; justify-content: center; gap: 20px; align-items: center; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
-        <div id="save-status" style="color: #10b981; font-size: 14px; opacity: 0; transition: 0.5s; font-weight: 800; background: rgba(16,185,129,0.1); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(16,185,129,0.3);">
-            <i class="bi bi-check2-circle"></i> DATA SAVED!
-        </div>
-        <button type="button" onclick="submitEntry()" class="submit-btn" style="
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white; padding: 18px 35px; border: none; border-radius: 50px;
-            font-weight: 800; font-size: 16px; cursor: pointer;
-            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.4);
-            display: flex; align-items: center; gap: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase; letter-spacing: 1px;
-            border: 2px solid rgba(255,255,255,0.1);
-        " onmouseover="this.style.transform='scale(1.05) translateY(-5px)'; this.style.boxShadow='0 15px 50px rgba(37, 99, 235, 0.6)';" 
-          onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.boxShadow='0 10px 40px rgba(37, 99, 235, 0.4)';">
-            <i class="bi bi-cloud-arrow-up-fill" style="font-size: 24px;"></i>
-            SUBMIT ENTRY
-        </button>
-    </div>
-
     <!-- PRODUCTION DATA SECTION -->
     <div class="section-title">
         <i class="bi bi-clipboard2-data-fill"></i> PRODUCTION DATA Summary
@@ -799,6 +778,30 @@
         </div>
     </div>
 </div> <!-- END SMART DIMENSION HUB --></div>
+
+@section StickyFooter {
+    <!-- STICKY ACTION BAR -->
+    <div class="sticky-action-bar" style="position: fixed; bottom: 25px; left: 0; width: 100%; z-index: 9999; display: flex; justify-content: center; align-items: center; pointer-events: none;">
+        <div id="save-status" style="position: absolute; left: 30px; color: #10b981; font-size: 14px; opacity: 0; transition: 0.5s; font-weight: 800; background: rgba(16, 185, 129, 0.15); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(16, 185, 129, 0.4); backdrop-filter: blur(10px); pointer-events: auto;">
+            <i class="bi bi-check2-circle"></i> DATA SAVED!
+        </div>
+        <button type="button" onclick="submitEntry()" class="submit-btn" style="
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white; padding: 18px 35px; border: none; border-radius: 50px;
+            font-weight: 800; font-size: 16px; cursor: pointer;
+            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.4);
+            display: flex; align-items: center; gap: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase; letter-spacing: 1px;
+            border: 2px solid rgba(255,255,255,0.1);
+            pointer-events: auto;
+        " onmouseover="this.style.transform='scale(1.05) translateY(-5px)'; this.style.boxShadow='0 15px 50px rgba(37, 99, 235, 0.6)';" 
+          onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.boxShadow='0 10px 40px rgba(37, 99, 235, 0.4)';">
+            <i class="bi bi-cloud-arrow-up-fill" style="font-size: 24px;"></i>
+            SUBMIT ENTRY
+        </button>
+    </div>
+}
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
