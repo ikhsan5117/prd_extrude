@@ -1449,8 +1449,8 @@
                     if (lot || sg) {
                         results.push({
                             LayerType: layer.toUpperCase(),
-                            MaterialName: document.getElementById(`${layer === 'inner' ? 'Inner' : (layer === 'outer' ? 'Outer' : 'Yarn')}Material`).value,
-                            MaterialActual: document.getElementById(`${layer === 'inner' ? 'Inner' : (layer === 'outer' ? 'Outer' : 'Yarn')}MaterialActual`).value,
+                            MaterialName: document.getElementById(layer === 'yarn' ? 'Yarn' : (layer === 'inner' ? 'InnerMaterial' : 'OuterMaterial')).value,
+                            MaterialActual: document.getElementById(layer === 'yarn' ? 'YarnActual' : (layer === 'inner' ? 'InnerMaterialActual' : 'OuterMaterialActual')).value,
                             LotNumber: lot,
                             SGValue: sg ? parseFloat(sg) : null
                         });
@@ -1461,6 +1461,19 @@
         }
 
         async function submitReportWithReadings() {
+            const hoseType = document.getElementById('HoseType').value;
+            if (!hoseType || hoseType.trim() === '') {
+                Swal.fire({
+                    title: 'DATA KOSONG!',
+                    text: 'Anda belum memilih Planning / Item yang akan diproduksi. Harap lengkapi form sebelum submit.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0ea5e9',
+                    background: '#020617',
+                    color: '#fff'
+                });
+                return;
+            }
+
             saveCurrentInputsToMemory();
 
             const confirm = await Swal.fire({
@@ -1559,7 +1572,7 @@
                 const result = await res.json();
                 if (result.success) {
                     Swal.fire('UPLOAD COMPLETE', 'Report archived successfully in the digital vault.', 'success')
-                        .then(() => window.location.href = '/ProductionReport/Index');
+                        .then(() => window.location.href = '/ProductionReport/Create');
                 } else {
                     Swal.fire('TRANSMISSION ERROR', result.message || 'The server rejected the dataset.', 'error');
                 }

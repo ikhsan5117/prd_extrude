@@ -191,8 +191,61 @@ namespace VelastoProductionSystem.Controllers
             return Json(new { success = false, message = "Protocol Not Found" });
         }
 
+        // GET: ProductionReport/GetTodaysSummary
+        // Returns today's submitted data for the operator's machine (used by FAB popup, read-only)
+        [HttpGet]
+        public async Task<IActionResult> GetTodaysSummary()
+        {
+            var machineName = HttpContext.Session.GetString("MachineName");
+            var isAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            // Query ProductionReports for today
+            var paramQuery = _context.ProductionReports
+                .Where(r => r.CreatedDate >= today && r.CreatedDate < tomorrow);
+
+            // Query DimensionReports for today
+            var dimQuery = _context.DimensionReports
+                .Where(r => r.CreatedDate >= today && r.CreatedDate < tomorrow);
+
+            // Filter by machine for non-admin
+            if (!isAdmin && !string.IsNullOrEmpty(machineName))
+            {
+                paramQuery = paramQuery.Where(r => r.MachineName != null && r.MachineName.Contains(machineName));
+                dimQuery   = dimQuery.Where(r => r.MachineName != null && r.MachineName.Contains(machineName));
+            }
+
+            var paramReports = await paramQuery
+                .OrderByDescending(r => r.CreatedDate)
+                .Select(r => new {
+                    r.Id, r.HoseType, r.VinCode, r.Shift, r.CreatedBy, r.Status,
+                    r.InnerMaterial, r.OuterMaterial, r.Yarn,
+                    r.StandardLength, r.ActualLength,
+                    r.QtyTarget, r.QtyOk, r.NgDimension, r.NgVisual, r.Remark,
+                    r.MachineName
+                }).ToListAsync();
+
+            var dimReports = await dimQuery
+                .OrderByDescending(r => r.CreatedDate)
+                .Select(r => new {
+                    r.Id, r.HoseType, r.VinCode, r.Shift, r.CreatedBy, r.Status,
+                    r.DocumentNumber, r.DimensionDisplay,
+                    r.StandardLength, r.ActualLength,
+                    r.QtyTarget, r.QtyOk, r.NgDimension, r.NgVisual, r.Remark,
+                    r.MachineName
+                }).ToListAsync();
+
+            return Json(new {
+                machine = machineName ?? (isAdmin ? "ALL" : "—"),
+                parameterReports = paramReports,
+                dimensionReports = dimReports
+            });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetPlanningItems(DateTime date, string shift, string? machine = null)
+
         {
             var cultureID = new System.Globalization.CultureInfo("id-ID");
             var cultureEN = new System.Globalization.CultureInfo("en-US");
@@ -352,6 +405,7 @@ namespace VelastoProductionSystem.Controllers
                     Shift = dto.Shift,
                     CustomerName = dto.CustomerName,
                     HoseType = dto.HoseType,
+                    MachineName = HttpContext.Session.GetString("MachineName"),
                     InnerMaterial = dto.InnerMaterial,
                     InnerMaterialActual = dto.InnerMaterialActual,
                     InnerMaterialLotNo = dto.InnerMaterialLotNo,
@@ -388,77 +442,70 @@ namespace VelastoProductionSystem.Controllers
                 };
 
                 _context.ProductionReports.Add(report);
-                await _context.SaveChangesAsync(); // Save to get the ID
+                await _context.SaveChangesAsync(); // Save first to get the ID
 
-                // Process Material Lots (New Relational Logic)
+                // Batch insert Material Lots + Readings in a single round-trip
                 if (dto.MaterialLots != null && dto.MaterialLots.Count > 0)
                 {
-                    foreach (var lotDto in dto.MaterialLots)
+                    var lots = dto.MaterialLots.Select(lotDto => new ProductionMaterialLot
                     {
-                        var lot = new ProductionMaterialLot
-                        {
-                            ProductionReportId = report.Id,
-                            LayerType = lotDto.LayerType,
-                            MaterialName = lotDto.MaterialName,
-                            MaterialActual = lotDto.MaterialActual,
-                            LotNumber = lotDto.LotNumber,
-                            SGValue = lotDto.SGValue
-                        };
-                        _context.ProductionMaterialLots.Add(lot);
-                    }
-                    await _context.SaveChangesAsync();
+                        ProductionReportId = report.Id,
+                        LayerType    = lotDto.LayerType,
+                        MaterialName = lotDto.MaterialName,
+                        MaterialActual = lotDto.MaterialActual,
+                        LotNumber    = lotDto.LotNumber,
+                        SGValue      = lotDto.SGValue
+                    });
+                    _context.ProductionMaterialLots.AddRange(lots);
                 }
 
-                // Process Readings
                 if (dto.Readings != null && dto.Readings.Count > 0)
                 {
-                    foreach (var r in dto.Readings)
+                    var readings = dto.Readings.Select(r => new ProductionReading
                     {
-                        var reading = new ProductionReading
-                        {
-                            ProductionReportId = report.Id,
-                            ReadingTime = DateTime.TryParse(r.ReadingTime, out var rt) ? rt : DateTime.Now,
-                            RecordedBy = r.RecordedBy ?? report.CreatedBy,
-                            
-                            HeadTempInner = int.TryParse(r.HeadTempInner, out var hti) ? hti : (int?)null,
-                            Cylinder1TempInner = int.TryParse(r.Cylinder1TempInner, out var c1i) ? c1i : (int?)null,
-                            Cylinder2TempInner = int.TryParse(r.Cylinder2TempInner, out var c2i) ? c2i : (int?)null,
-                            Cylinder3TempInner = int.TryParse(r.Cylinder3TempInner, out var c3i) ? c3i : (int?)null,
-                            ScrewTempInner = int.TryParse(r.ScrewTempInner, out var sti) ? sti : (int?)null,
-                            ScrewSpeedInner = ParseDecimal(r.ScrewSpeedInner),
-                            FeedRollRatioInner = int.TryParse(r.FeedRollRatioInner, out var fri) ? fri : (int?)null,
-                            PressureInner = ParseDecimal(r.PressureInner),
+                        ProductionReportId  = report.Id,
+                        ReadingTime         = DateTime.TryParse(r.ReadingTime, out var rt) ? rt : DateTime.Now,
+                        RecordedBy          = r.RecordedBy ?? report.CreatedBy,
 
-                            HeadTempOuter = int.TryParse(r.HeadTempOuter, out var hto) ? hto : (int?)null,
-                            Cylinder1TempOuter = int.TryParse(r.Cylinder1TempOuter, out var c1o) ? c1o : (int?)null,
-                            Cylinder2TempOuter = int.TryParse(r.Cylinder2TempOuter, out var c2o) ? c2o : (int?)null,
-                            Cylinder3TempOuter = int.TryParse(r.Cylinder3TempOuter, out var c3o) ? c3o : (int?)null,
-                            ScrewTempOuter = int.TryParse(r.ScrewTempOuter, out var sto) ? sto : (int?)null,
-                            ScrewSpeedOuter = ParseDecimal(r.ScrewSpeedOuter),
-                            FeedRollRatioOuter = int.TryParse(r.FeedRollRatioOuter, out var fro) ? fro : (int?)null,
-                            PressureOuter = ParseDecimal(r.PressureOuter),
+                        HeadTempInner       = int.TryParse(r.HeadTempInner,       out var hti) ? hti : (int?)null,
+                        Cylinder1TempInner  = int.TryParse(r.Cylinder1TempInner,  out var c1i) ? c1i : (int?)null,
+                        Cylinder2TempInner  = int.TryParse(r.Cylinder2TempInner,  out var c2i) ? c2i : (int?)null,
+                        Cylinder3TempInner  = int.TryParse(r.Cylinder3TempInner,  out var c3i) ? c3i : (int?)null,
+                        ScrewTempInner      = int.TryParse(r.ScrewTempInner,      out var sti) ? sti : (int?)null,
+                        ScrewSpeedInner     = ParseDecimal(r.ScrewSpeedInner),
+                        FeedRollRatioInner  = int.TryParse(r.FeedRollRatioInner,  out var fri) ? fri : (int?)null,
+                        PressureInner       = ParseDecimal(r.PressureInner),
 
-                            SpiralSpeed = ParseDecimal(r.SpiralSpeed),
-                            SpiralPitchSetting = ParseDecimal(r.SpiralPitchSetting),
-                            SpiralPitchDisplay = ParseDecimal(r.SpiralPitchDisplay),
-                            PresetValue = ParseDecimal(r.PresetValue),
-                            ControlValue = ParseDecimal(r.ControlValue),
-                            HoseSpeed = ParseDecimal(r.HoseSpeed),
-                            TakeupConveyorSpeed = ParseDecimal(r.TakeupConveyorSpeed),
-                            CoolConveyorSpeed = ParseDecimal(r.CoolConveyorSpeed),
-                            ConveyorRatio = r.ConveyorRatio,
-                            UnsmoothSurface = ParseDecimal(r.UnsmoothSurface),
-                            ChillerWaterTemp = ParseDecimal(r.ChillerWaterTemp),
-                            CaterpillarGap = ParseDecimal(r.CaterpillarGap)
-                        };
+                        HeadTempOuter       = int.TryParse(r.HeadTempOuter,       out var hto) ? hto : (int?)null,
+                        Cylinder1TempOuter  = int.TryParse(r.Cylinder1TempOuter,  out var c1o) ? c1o : (int?)null,
+                        Cylinder2TempOuter  = int.TryParse(r.Cylinder2TempOuter,  out var c2o) ? c2o : (int?)null,
+                        Cylinder3TempOuter  = int.TryParse(r.Cylinder3TempOuter,  out var c3o) ? c3o : (int?)null,
+                        ScrewTempOuter      = int.TryParse(r.ScrewTempOuter,      out var sto) ? sto : (int?)null,
+                        ScrewSpeedOuter     = ParseDecimal(r.ScrewSpeedOuter),
+                        FeedRollRatioOuter  = int.TryParse(r.FeedRollRatioOuter,  out var fro) ? fro : (int?)null,
+                        PressureOuter       = ParseDecimal(r.PressureOuter),
 
-                        _context.ProductionReadings.Add(reading);
-                    }
-                    await _context.SaveChangesAsync();
+                        SpiralSpeed         = ParseDecimal(r.SpiralSpeed),
+                        SpiralPitchSetting  = ParseDecimal(r.SpiralPitchSetting),
+                        SpiralPitchDisplay  = ParseDecimal(r.SpiralPitchDisplay),
+                        PresetValue         = ParseDecimal(r.PresetValue),
+                        ControlValue        = ParseDecimal(r.ControlValue),
+                        HoseSpeed           = ParseDecimal(r.HoseSpeed),
+                        TakeupConveyorSpeed = ParseDecimal(r.TakeupConveyorSpeed),
+                        CoolConveyorSpeed   = ParseDecimal(r.CoolConveyorSpeed),
+                        ConveyorRatio       = r.ConveyorRatio,
+                        UnsmoothSurface     = ParseDecimal(r.UnsmoothSurface),
+                        ChillerWaterTemp    = ParseDecimal(r.ChillerWaterTemp),
+                        CaterpillarGap      = ParseDecimal(r.CaterpillarGap)
+                    });
+                    _context.ProductionReadings.AddRange(readings);
                 }
 
-                // Notify via SignalR
-                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+                // Single bulk save for lots + readings
+                await _context.SaveChangesAsync();
+
+                // Notify dashboard via SignalR (fire-and-forget, don't await to block response)
+                _ = _hubContext.Clients.All.SendAsync("ReceiveUpdate");
 
                 return Json(new { success = true, id = report.Id });
             }

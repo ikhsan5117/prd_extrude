@@ -210,7 +210,8 @@ namespace VelastoProductionSystem.Controllers
                         ProductionDate = DateTime.Now,
                         Status = "ACTIVE",
                         CreatedDate = DateTime.Now,
-                        CreatedBy = "QC Operator",
+                        CreatedBy = HttpContext.Session.GetString("UserName") ?? "QC Operator",
+                        MachineName = HttpContext.Session.GetString("MachineName"),
                         Shift = !string.IsNullOrEmpty(data.Shift) ? data.Shift : GetCurrentShift()
                     };
                     _context.DimensionReports.Add(report);

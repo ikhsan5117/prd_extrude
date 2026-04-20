@@ -422,16 +422,6 @@
 
     <!-- Item List Scanner Action Bar -->
     <div class="search-action-bar animate__animated animate__fadeInDown">
-        <!-- 3-Part Smart Search Bar -->
-        <div class="search-input-group">
-            <button class="cam-btn" title="Open Camera Scanner" onclick="openScanner()">
-                <i class="bi bi-qr-code-scan"></i>
-            </button>
-            <input type="text" id="main-item-search" placeholder="MANUAL INPUT / SCAN ITEM LIST..." autocomplete="off" onkeypress="if(event.key === 'Enter') loadMaster()">
-            <button class="search-trigger-btn" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
-                <i class="bi bi-search"></i>
-            </button>
-        </div>
         <div class="planning-search-panel">
             @{
                 var dimMachine = Context.Session.GetString("MachineName");
@@ -460,6 +450,13 @@
                 <button type="button" class="planning-refresh-btn" onclick="refreshPlanningItems()" title="Refresh Planning"><i class="bi bi-arrow-clockwise"></i></button>
             </div>
             <div id="planningResults" class="planning-results d-none"></div>
+        </div>
+
+        <div class="search-input-group">
+            <input type="text" id="main-item-search" placeholder="CARI ITEM LIST..." autocomplete="off" onkeypress="if(event.key === 'Enter') loadMaster()" style="padding-left: 20px;">
+            <button class="search-trigger-btn" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
+                <i class="bi bi-search"></i>
+            </button>
         </div>
         
     </div>
@@ -1676,6 +1673,19 @@
         }
 
         async function submitEntry() {
+            const hoseType = document.getElementById('h-hose')?.innerText || '';
+            if (!hoseType || hoseType.trim() === '' || hoseType.trim() === '---') {
+                Swal.fire({
+                    title: 'DATA KOSONG!',
+                    text: 'Anda belum memilih atau scan Planning / Mesin. Harap pilih terlebih dahulu.',
+                    icon: 'warning',
+                    confirmButtonColor: '#10b981',
+                    background: '#020617',
+                    color: '#fff'
+                });
+                return;
+            }
+
             saveCurrentData();
             const btn = document.querySelector('.submit-btn');
             if(btn) btn.disabled = true;
