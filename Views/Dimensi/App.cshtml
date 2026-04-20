@@ -967,7 +967,10 @@
                 div.className = 'planning-result-item';
                 div.dataset.index = index;
                 div.innerHTML = `
-                    <div class="planning-result-code">[${item.itemCode}]</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <div class="planning-result-code">[${item.itemCode}]</div>
+                        ${item.machineName ? `<div style="font-size:10px; font-weight:800; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:20px; white-space:nowrap;"><i class="bi bi-cpu-fill"></i> ${item.machineName}</div>` : ''}
+                    </div>
                     <div class="planning-result-name">${item.itemName || 'NO DESCRIPTION'}</div>
                     <div class="planning-result-meta">${item.dateShift || ''}</div>
                 `;
@@ -1008,7 +1011,11 @@
 
         function selectPlanningItem(item) {
             const planningInput = document.getElementById('planningSearch');
-            if (planningInput) planningInput.value = `[${item.itemCode}] ${item.itemName}`;
+            // Tampilkan hanya kode item + nama mesin (ringkas)
+            const displayText = item.machineName
+                ? `[${item.itemCode}] ${item.machineName}`
+                : `[${item.itemCode}]`;
+            if (planningInput) planningInput.value = displayText;
             document.getElementById('planningResults')?.classList.add('d-none');
             
             // Update Machine / Line dynamically from Planning

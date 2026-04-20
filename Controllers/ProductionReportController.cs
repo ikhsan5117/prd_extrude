@@ -192,21 +192,27 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPlanningItems(DateTime date, string shift)
+        public async Task<IActionResult> GetPlanningItems(DateTime date, string shift, string? machine = null)
         {
             var cultureID = new System.Globalization.CultureInfo("id-ID");
             var cultureEN = new System.Globalization.CultureInfo("en-US");
+            
+            // Ambil nama mesin dari session jika tidak di-pass via parameter (non-admin)
+            var sessionMachine = HttpContext.Session.GetString("MachineName");
+            var isAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
+            var machineFilter = machine ?? sessionMachine;
             
             // 1. PRIORITAS: Ambil Live dari ELWP_PRD (Source of Truth Utama)
             var start = date.Date;
             var end = start.AddDays(1);
 
-            var elwpRows = await (from p in _elwpContext.ElwpPlannings
-                                 join m in _elwpContext.ElwpMachines on p.MesinId equals m.Id into machineJoin
-                                 from m in machineJoin.DefaultIfEmpty()
-                                 where p.TanggalPlanning >= start && p.TanggalPlanning < end
-                                 select new { p, MachineName = m != null ? m.NamaMesin : "UNKNOWN" })
-                                 .ToListAsync();
+            var elwpQuery = from p in _elwpContext.ElwpPlannings
+                             join m in _elwpContext.ElwpMachines on p.MesinId equals m.Id into machineJoin
+                             from m in machineJoin.DefaultIfEmpty()
+                             where p.TanggalPlanning >= start && p.TanggalPlanning < end
+                             select new { p, MachineName = m != null ? m.NamaMesin : "UNKNOWN", MachineCode = m != null ? m.KodeMesin : "" };
+
+            var elwpRows = await elwpQuery.ToListAsync();
 
             if (elwpRows.Any())
             {
@@ -216,6 +222,16 @@ namespace VelastoProductionSystem.Controllers
                 // Filter berdasarkan shift
                 var matchedShift = elwpRows.Where(x => (x.p.Shift ?? "").ToUpper().Contains(shiftRaw)).ToList();
                 if (matchedShift.Any()) elwpRows = matchedShift;
+
+                // Filter berdasarkan mesin (kecuali admin)
+                if (!isAdmin && !string.IsNullOrEmpty(machineFilter))
+                {
+                    var machineFiltered = elwpRows.Where(x =>
+                        (x.MachineName ?? "").ToUpper().Contains(machineFilter.ToUpper()) ||
+                        (x.MachineCode ?? "").ToUpper().Contains(machineFilter.ToUpper())
+                    ).ToList();
+                    if (machineFiltered.Any()) elwpRows = machineFiltered;
+                }
 
                 var items = elwpRows.Select(x => new {
                     itemCode = x.p.KodeItem,

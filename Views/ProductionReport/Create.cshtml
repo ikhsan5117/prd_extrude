@@ -1631,12 +1631,15 @@
                 div.style.background = "rgba(15, 23, 42, 0.98)";
                 div.dataset.index = index;
                 div.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex flex-column gap-1">
-                            <span class="text-info-glow fw-900 font-monospace" style="font-size: 1.1rem; letter-spacing: 1px;">[${item.itemCode}]</span>
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                        <div class="d-flex flex-column gap-1" style="min-width:0; flex:1;">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="text-info-glow fw-900 font-monospace" style="font-size: 1.1rem; letter-spacing: 1px;">[${item.itemCode}]</span>
+                                ${item.machineName ? `<span style="font-size:10px; font-weight:800; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:20px; white-space:nowrap;"><i class="bi bi-cpu-fill"></i> ${item.machineName}</span>` : ''}
+                            </div>
                             <span class="text-white small opacity-80 fw-bold">${item.itemName}</span>
                         </div>
-                        <div class="text-end">
+                        <div class="text-end flex-shrink-0">
                             <div class="super-small text-info opacity-50 fw-black tracking-widest mb-1">PLANNING SCHEDULE</div>
                             <div class="badge bg-info bg-opacity-10 border border-info border-opacity-20 text-info fw-bold font-monospace" style="font-size: 0.65rem;">
                                 ${item.dateShift ? item.dateShift : 'NO DATE'}
@@ -1668,7 +1671,11 @@
         function selectPlanningItem(item) {
             console.log("SELECTED ITEM DATA:", item); // Debugging
             
-            document.getElementById('planningSearch').value = `[${item.itemCode}] ${item.itemName}`;
+            // Tampilkan hanya kode item + nama mesin (ringkas)
+            const displayText = item.machineName
+                ? `[${item.itemCode}] ${item.machineName}`
+                : `[${item.itemCode}]`;
+            document.getElementById('planningSearch').value = displayText;
             document.getElementById('planningResults').classList.add('d-none');
             
             // Auto-sync Date
