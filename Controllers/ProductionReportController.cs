@@ -223,23 +223,26 @@ namespace VelastoProductionSystem.Controllers
                 var matchedShift = elwpRows.Where(x => (x.p.Shift ?? "").ToUpper().Contains(shiftRaw)).ToList();
                 if (matchedShift.Any()) elwpRows = matchedShift;
 
-                // Filter berdasarkan mesin (kecuali admin)
+                // Filter berdasarkan mesin - SELALU diapply untuk non-admin
+                // jika operator memiliki session mesin, hanya tampilkan planning untuk mesin tersebut
                 if (!isAdmin && !string.IsNullOrEmpty(machineFilter))
                 {
-                    var machineFiltered = elwpRows.Where(x =>
+                    elwpRows = elwpRows.Where(x =>
                         (x.MachineName ?? "").ToUpper().Contains(machineFilter.ToUpper()) ||
                         (x.MachineCode ?? "").ToUpper().Contains(machineFilter.ToUpper())
                     ).ToList();
-                    if (machineFiltered.Any()) elwpRows = machineFiltered;
+                    // Tidak ada fallback ke semua data - operator hanya boleh lihat mesinnya sendiri
                 }
 
                 var items = elwpRows.Select(x => new {
                     itemCode = x.p.KodeItem,
                     itemName = (x.p.PartName ?? "#N/A") + (string.IsNullOrEmpty(x.p.PnSap) ? "" : " | " + x.p.PnSap),
                     machineName = x.MachineName,
+                    machineCode = x.MachineCode,
                     dateShift = $"{(x.p.TanggalPlanning?.ToString("dddd, d MMMM yyyy", cultureID) ?? "").ToUpper()} SHIFT {x.p.Shift}",
                     date = x.p.TanggalPlanning?.ToString("yyyy-MM-dd"),
-                    shift = x.p.Shift
+                    shift = x.p.Shift,
+                    isFiltered = !isAdmin && !string.IsNullOrEmpty(machineFilter)
                 }).OrderBy(p => p.itemName).ToList();
 
                 return Json(items);

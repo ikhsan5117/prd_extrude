@@ -433,6 +433,28 @@
             </button>
         </div>
         <div class="planning-search-panel">
+            @{
+                var dimMachine = Context.Session.GetString("MachineName");
+                var dimIsAdmin = Context.Session.GetString("IsAdmin") == "true";
+            }
+            @if (!dimIsAdmin && !string.IsNullOrEmpty(dimMachine))
+            {
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding: 0 4px;">
+                    <span style="font-size:8px; font-weight:900; color:#94a3b8; letter-spacing:1px; text-transform:uppercase;">FILTER:</span>
+                    <span style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 10px; border-radius:20px; border:1px solid rgba(245,158,11,0.3); white-space:nowrap;">
+                        <i class="bi bi-cpu-fill" style="margin-right:4px;"></i>@dimMachine
+                    </span>
+                </div>
+            }
+            else if (dimIsAdmin)
+            {
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding: 0 4px;">
+                    <span style="font-size:8px; font-weight:900; color:#94a3b8; letter-spacing:1px; text-transform:uppercase;">FILTER:</span>
+                    <span style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:2px 10px; border-radius:20px; border:1px solid rgba(16,185,129,0.3); white-space:nowrap;">
+                        <i class="bi bi-shield-fill" style="margin-right:4px;"></i>ALL MACHINES
+                    </span>
+                </div>
+            }
             <div class="planning-search-group">
                 <input id="planningSearch" type="text" placeholder="SEARCH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
                 <button type="button" class="planning-refresh-btn" onclick="refreshPlanningItems()" title="Refresh Planning"><i class="bi bi-arrow-clockwise"></i></button>
@@ -923,11 +945,17 @@
                 planningResultItems = planningItemsCache;
                 planningResultIndex = -1;
 
+                // Cek apakah filter mesin aktif
+                const isFiltered = planningItemsCache.length > 0 && planningItemsCache[0].isFiltered;
+                const machineCtx = isFiltered && planningItemsCache[0].machineName
+                    ? ` [${planningItemsCache[0].machineName}]`
+                    : '';
+
                 planningInput.disabled = false;
                 if (planningItemsCache.length > 0) {
-                    planningInput.placeholder = `SEARCH PLANNING (${planningItemsCache.length} ITEMS)`;
+                    planningInput.placeholder = `SEARCH PLANNING (${planningItemsCache.length} ITEM${planningItemsCache.length > 1 ? 'S' : ''}${machineCtx})`;
                 } else {
-                    planningInput.placeholder = 'NO ITEMS IN PLAN FOR THIS DAY';
+                    planningInput.placeholder = 'NO ITEMS IN PLAN FOR THIS MACHINE/DAY';
                 }
                 planningInput.value = '';
             } catch (error) {

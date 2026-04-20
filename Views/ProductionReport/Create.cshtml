@@ -36,7 +36,25 @@
                         <div class="col-md-7">
                             <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height: 60px; position: relative; background: #0f172a; border-radius: 8px;">
                                 <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
-                                    <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-list-check me-2"></i>PLANNING MASTER</label>
+                                    <div class="d-flex align-items-center gap-2 mb-0">
+                                        <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-list-check me-2"></i>PLANNING MASTER</label>
+                                        @{
+                                            var sessionMachine = Context.Session.GetString("MachineName");
+                                            var sessionIsAdmin = Context.Session.GetString("IsAdmin") == "true";
+                                        }
+                                        @if (!sessionIsAdmin && !string.IsNullOrEmpty(sessionMachine))
+                                        {
+                                            <span class="ms-1" style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.3); white-space:nowrap;">
+                                                <i class="bi bi-cpu-fill me-1"></i>@sessionMachine
+                                            </span>
+                                        }
+                                        else if (sessionIsAdmin)
+                                        {
+                                            <span class="ms-1" style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3); white-space:nowrap;">
+                                                <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
+                                            </span>
+                                        }
+                                    </div>
                                     <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH PLANNING..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
                                     
                                     <!-- Results Container -->
@@ -1570,11 +1588,17 @@
                 const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shift)}`);
                 planningItemsCache = await res.json();
                 
+                // Cek apakah data di-filter berdasarkan mesin
+                const isFiltered = planningItemsCache.length > 0 && planningItemsCache[0].isFiltered;
+                const machineCtx = planningItemsCache.length > 0 && isFiltered
+                    ? ` [${planningItemsCache[0].machineName || 'MESIN'}]`
+                    : '';
+
                 searchInput.disabled = false;
                 if (planningItemsCache.length > 0) {
-                    searchInput.placeholder = `TYPE ITEM CODE (${planningItemsCache.length} ITEMS LOADED)`;
+                    searchInput.placeholder = `TYPE ITEM CODE (${planningItemsCache.length} ITEM${planningItemsCache.length > 1 ? 'S' : ''}${machineCtx})`;
                 } else {
-                    searchInput.placeholder = "NO ITEMS IN PLAN FOR THIS DAY";
+                    searchInput.placeholder = "NO ITEMS IN PLAN FOR THIS MACHINE/DAY";
                 }
                 searchInput.value = "";
                 planningResultItems = planningItemsCache;
