@@ -77,18 +77,18 @@ namespace VelastoProductionSystem.Controllers
         {
             if (string.IsNullOrEmpty(hoseType)) return Json(new { success = false, message = "Input empty" });
 
+            var sanitized = hoseType.Trim().ToUpper();
+
+            // 1. Try MasterlistSpsDoubleLayers FIRST - this contains the full names like VHFUNC-...
             var standard = await _context.MasterlistSpsDoubleLayers
                 .FirstOrDefaultAsync(m => 
-                    m.HoseType == hoseType || 
-                    m.ItemList == hoseType ||
-                    m.ExcelId == hoseType || 
-                    m.DocumentNumber == hoseType
+                    (m.HoseType != null && m.HoseType.Trim().ToUpper() == sanitized) || 
+                    (m.ItemList != null && m.ItemList.Trim().ToUpper() == sanitized) ||
+                    (m.ExcelId != null && m.ExcelId.Trim().ToUpper() == sanitized) || 
+                    (m.DocumentNumber != null && m.DocumentNumber.Trim().ToUpper() == sanitized) ||
+                    (m.ItemList != null && m.ItemList.ToUpper().Contains(sanitized)) ||
+                    (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitized))
                 );
-
-            if (standard == null) {
-                standard = await _context.MasterlistSpsDoubleLayers
-                    .FirstOrDefaultAsync(m => (m.HoseType != null && m.HoseType.Contains(hoseType)));
-            }
             
             if (standard != null)
             {
@@ -103,9 +103,10 @@ namespace VelastoProductionSystem.Controllers
                         toleranceOuter = standard.ToleranceOuter,
                         tebalInner = standard.TebalInner,
                         tebalTotal = standard.TebalTotal,
-                        yarn = "ARAMID", 
+                        yarn = standard.Material ?? "ARAMID", 
                         customer = standard.Customer,
                         docNo = standard.DocumentNumber,
+                        revNo = standard.RevisionNumber,
                         excelId = standard.ExcelId,
                         itemList = standard.ItemList,
                         toleranceSpiralPitch = standard.ToleranceSpiralPitch,
@@ -113,6 +114,41 @@ namespace VelastoProductionSystem.Controllers
                     }
                 });
             }
+
+            // 2. Fallback to StandardParameterSettings (SPS Parameter)
+            var sps = await _context.StandardParameterSettings
+                .FirstOrDefaultAsync(s => 
+                    (s.ItemList != null && s.ItemList.Trim().ToUpper() == sanitized) || 
+                    (s.ProductCode != null && s.ProductCode.Trim().ToUpper() == sanitized) ||
+                    (s.HoseType != null && s.HoseType.Trim().ToUpper() == sanitized) ||
+                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitized)) ||
+                    (s.HoseType != null && s.HoseType.ToUpper().Contains(sanitized)) ||
+                    (s.ProductCode != null && s.ProductCode.ToUpper().Contains(sanitized)));
+
+            if (sps != null)
+            {
+                return Json(new { 
+                    success = true, 
+                    data = new {
+                        hoseType = sps.HoseType,
+                        dimensi = sps.Diameter,
+                        innerTube = sps.InnerMaterial,
+                        outerCover = sps.OuterMaterial,
+                        toleranceInner = sps.ToleranceDie.ToString("G29"),
+                        toleranceOuter = sps.Tol_CoverDie.ToString("G29"),
+                        tebalInner = sps.TubeDie.ToString("G29"),
+                        tebalTotal = sps.CoverDie.ToString("G29"),
+                        yarn = sps.YarnType ?? "GENERAL",
+                        customer = sps.CustomerName,
+                        docNo = sps.DocumentNumber,
+                        revNo = sps.RevisionNumber,
+                        itemList = sps.ItemList,
+                        toleranceSpiralPitch = sps.SpiralPitch.ToString("G29"),
+                        bypass = "2.0 mm" 
+                    }
+                });
+            }
+
             return Json(new { success = false, message = "Standard not found: " + hoseType });
         }
 

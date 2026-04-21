@@ -495,8 +495,25 @@
     </div>
 </div>
 
-<!-- SMART DIMENSION HUB -->
-<div class="p-3">
+<!-- SELECTION PLACEHOLDER -->
+<div id="selection-placeholder" class="text-center" style="padding: 100px 20px; background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(255,255,255,0.1); border-radius: 20px; margin: 20px;">
+    <div class="mb-4">
+        <i class="bi bi-cursor-fill text-info" style="font-size: 60px; opacity: 0.5; display: block;"></i>
+    </div>
+    <h3 style="color: #fff; font-weight: 800; letter-spacing: 1px;">PLEASE SELECT PLANNING</h3>
+    <p style="color: #94a3b8; font-size: 14px;">Select an item from the <b>Planning Master</b> above to start dimension inspection.</p>
+</div>
+
+<style>
+    @@keyframes floatAnim {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+    #input-workspace { display: none; opacity: 0; transition: opacity 0.5s ease-in-out; }
+</style>
+
+<!-- SMART DIMENSION HUB (Wrapped in Workspace) -->
+<div class="p-3" id="input-workspace">
     <!-- DIMENSION SECTION -->
     <div class="section-title">
         <i class="bi bi-rulers"></i>
@@ -789,31 +806,59 @@
             </div>
         </div>
     </div>
-</div> <!-- END SMART DIMENSION HUB --></div>
+</div> <!-- END INPUT WORKSPACE -->
 
-@section StickyFooter {
-    <!-- STICKY ACTION BAR -->
-    <div class="sticky-action-bar" style="position: fixed; bottom: 25px; left: 0; width: 100%; z-index: 9999; display: flex; justify-content: center; align-items: center; pointer-events: none;">
-        <div id="save-status" style="position: absolute; left: 30px; color: #10b981; font-size: 14px; opacity: 0; transition: 0.5s; font-weight: 800; background: rgba(16, 185, 129, 0.15); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(16, 185, 129, 0.4); backdrop-filter: blur(10px); pointer-events: auto;">
-            <i class="bi bi-check2-circle"></i> DATA SAVED!
-        </div>
+    <!-- STATIC ACTION BAR AT THE BOTTOM -->
+    <div class="bottom-action-bar-container" style="
+        margin-top: 50px; 
+        padding: 30px 0 60px; 
+        display: flex; 
+        justify-content: center;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        position: relative;
+    ">
         <button type="button" onclick="submitEntry()" class="submit-btn" style="
             background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white; padding: 18px 35px; border: none; border-radius: 50px;
-            font-weight: 800; font-size: 16px; cursor: pointer;
-            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.4);
-            display: flex; align-items: center; gap: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase; letter-spacing: 1px;
-            border: 2px solid rgba(255,255,255,0.1);
-            pointer-events: auto;
-        " onmouseover="this.style.transform='scale(1.05) translateY(-5px)'; this.style.boxShadow='0 15px 50px rgba(37, 99, 235, 0.6)';" 
-          onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.boxShadow='0 10px 40px rgba(37, 99, 235, 0.4)';">
-            <i class="bi bi-cloud-arrow-up-fill" style="font-size: 24px;"></i>
+            color: white; 
+            padding: 20px 100px; 
+            border: none; 
+            border-radius: 15px;
+            font-weight: 800; 
+            font-size: 20px; 
+            cursor: pointer;
+            box-shadow: 0 15px 40px rgba(37, 99, 235, 0.3);
+            display: flex; 
+            align-items: center; 
+            gap: 15px;
+            transition: all 0.3s;
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+        " onmouseover="this.style.transform='scale(1.05) translateY(-5px)';" 
+          onmouseout="this.style.transform='scale(1) translateY(0)';">
+            <i class="bi bi-cloud-arrow-up-fill" style="font-size: 28px;"></i>
             SUBMIT ENTRY
         </button>
+        
+        <div id="save-status" style="
+            position: absolute; 
+            right: 0; 
+            top: 40px;
+            color: #10b981; 
+            font-size: 14px; 
+            opacity: 0; 
+            transition: 0.5s; 
+            font-weight: 800; 
+            background: rgba(16, 185, 129, 0.1); 
+            padding: 10px 20px; 
+            border-radius: 10px; 
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            pointer-events: none;
+        ">
+            <i class="bi bi-check2-circle"></i> DATA SAVED!
+        </div>
     </div>
-}
+
+</div> <!-- END SMART DIMENSION HUB --></div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1588,6 +1633,20 @@
                 const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}`);
                 const data = await res.json();
                 Swal.close();
+                
+                if(!data.success) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'SPS TIDAK DITEMUKAN',
+                        text: `Item [${code}] belum memiliki data teknis (SPS). Kolom standar akan dikosongkan.`,
+                        confirmButtonColor: '#f59e0b',
+                        background: '#020617',
+                        color: '#fff'
+                    });
+                    clearTechnicalStandards();
+                    return;
+                }
+
                 if(data.success) {
                     const m = data.data;
                     
@@ -1595,14 +1654,20 @@
                     const custEl = document.getElementById('h-customer');
                     const hoseEl = document.getElementById('h-hose');
                     const docEl = document.getElementById('h-doc');
+                    const revEl = document.getElementById('h-rev');
 
                     if(custEl) custEl.innerText = m.customer || "GENERAL";
                     if(hoseEl) hoseEl.innerText = m.hoseType || "---";
                     if(docEl) docEl.innerText = m.docNo || "---";
+                    if(revEl) revEl.innerText = "REV." + (m.revNo || "0");
+
+                    // Update search input to full name
+                    const searchInput = document.getElementById('main-item-search');
+                    if(searchInput) searchInput.value = m.itemList || m.hoseType || code;
 
                     // Populate Data Summary
                     const partEl = document.getElementById('disp-part-no');
-                    if(partEl) partEl.innerText = m.itemList || "---";
+                    if(partEl) partEl.innerText = m.itemList || m.hoseType || "---";
                     
                     const stdPnjgEl = document.getElementById('disp-std-pnjg');
                     if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
@@ -1626,44 +1691,63 @@
 
                     const parseV = (str, def = 0) => {
                         if(!str || str === '---') return def;
-                        const m = str.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                        // Replace comma with dot and extract first number
+                        const m = str.toString().replace(/,/g, '.').match(/[-+]?\d+(\.\d+)?/);
                         return m ? parseFloat(m[0]) : def;
                     };
                     const parseT = (str, def = 0.1) => {
                         if(!str || str === '---') return def;
-                        const m = str.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                        // For tolerance, we usually want the last number (e.g. ± 0.1)
+                        const m = str.toString().replace(/,/g, '.').match(/[-+]?\d+(\.\d+)?/g);
                         if (!m) return def;
-                        let val = parseFloat(m[m.length - 1]);
-                        return val > 2.0 ? def : val;
+                        let val = Math.abs(parseFloat(m[m.length - 1]));
+                        return val > 5.0 ? def : val; // Sanity check for crazy tolerances
                     };
 
-                    const configs = [
-                        { id: 'innerdia', v: m.dimensi, t: m.toleranceInner, el: 'inner-dia', dt: 0.1 },
-                        { id: 'innertx', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                        { id: 'innerty', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
-                        { id: 'totaltx', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                        { id: 'totalty', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-ty', dt: 0.2 },
-                        { id: 'spiral', v: m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
-                    ];
+                    console.log("SPS Data Found:", m);
 
-                    configs.forEach(p => {
-                        const target = parseV(p.v);
-                        const tol = parseT(p.t, p.dt);
-                        activeStandards[p.id] = { val: target, tol: tol };
-                        
-                        const targetEl = document.getElementById(`std-${p.el}`);
-                        const minEl = document.getElementById(`limit-${p.el}-min`);
-                        const maxEl = document.getElementById(`limit-${p.el}-max`);
+                    // Show workspace and hide placeholder
+                    const placeholder = document.getElementById('selection-placeholder');
+                    const workspace = document.getElementById('input-workspace');
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (workspace) {
+                        workspace.style.display = 'block';
+                        setTimeout(() => workspace.style.opacity = '1', 10);
+                    }
 
-                        if (targetEl) targetEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)} ± ${tol.toFixed(2)}`;
-                        if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
-                        if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
-                    });
+                    try {
+                        const configs = [
+                            { id: 'innerdia', v: m.dimensi || m.innerDie || m.diameter, t: m.toleranceInner || m.toleranceDie, el: 'inner-dia', dt: 0.1 },
+                            { id: 'innertx', v: m.tebalInner || m.tubeDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'inner-tx', dt: 0.2 },
+                            { id: 'innerty', v: m.tebalInner || m.tubeDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'inner-ty', dt: 0.2 },
+                            { id: 'totaltx', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-tx', dt: 0.2 },
+                            { id: 'totalty', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-ty', dt: 0.2 },
+                            { id: 'spiral', v: m.toleranceSpiralPitch || m.spiralPitch, t: m.toleranceSpiralPitch || m.spiralPitch, el: 'spiral', dt: 5 }
+                        ];
+
+                        configs.forEach(p => {
+                            const target = parseV(p.v);
+                            const tol = parseT(p.t, p.dt);
+                            activeStandards[p.id] = { val: target, tol: tol };
+                            
+                            const targetEl = document.getElementById(`std-${p.el}`);
+                            const minEl = document.getElementById(`limit-${p.el}-min`);
+                            const maxEl = document.getElementById(`limit-${p.el}-max`);
+
+                            if (targetEl) targetEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)}`;
+                            if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
+                            if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
+                        });
+                    } catch (err) {
+                        console.error("Error populating cards:", err);
+                    }
 
                     // AUTO-SET VISUAL CHECKS TO OK (Speed up operator)
-                    ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
-                        toggleVisual(it, 'ok');
-                    });
+                    try {
+                        ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
+                            toggleVisual(it, 'ok');
+                        });
+                    } catch(e){}
                     
                     Swal.fire({ 
                         icon: 'success', 
@@ -1687,6 +1771,61 @@
                 console.error("LoadMaster Error:", e);
                 Swal.fire('Error', 'Failed to load master data structure.', 'error');
             }
+        }
+
+        function clearTechnicalStandards() {
+            // Reset active standards object
+            activeStandards = {};
+
+            // 1. Reset HUD Ribbon fallback text
+            const hudMappings = {
+                'h-customer': 'NO SPS DATA',
+                'h-hose': 'NOT FOUND',
+                'h-doc': '---',
+                'h-rev': '---',
+                'disp-part-no': '---'
+            };
+            
+            for (const [id, val] of Object.entries(hudMappings)) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = val;
+            }
+
+            // 1.5 Clear SPS Masterlist input
+            const searchInput = document.getElementById('main-item-search');
+            if (searchInput) searchInput.value = "";
+
+            // 2. Hide Workspace (Input Cards)
+            const workspace = document.getElementById('input-workspace');
+            if (workspace) {
+                workspace.style.opacity = '0';
+                setTimeout(() => workspace.style.display = 'none', 300);
+            }
+
+            // 3. Show Specific Error Placeholder
+            const placeholder = document.getElementById('selection-placeholder');
+            const searchVal = document.getElementById('planningSearch')?.value || 'Unknown Item';
+            if (placeholder) {
+                placeholder.style.display = 'block';
+                placeholder.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                placeholder.innerHTML = `
+                    <div class="mb-4">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 60px; opacity: 0.8; display: block;"></i>
+                    </div>
+                    <h3 style="color: #ef4444; font-weight: 800; letter-spacing: 1px;">TECHNICAL STANDARDS MISSING</h3>
+                    <p style="color: #94a3b8; font-size: 14px; max-width: 500px; margin: 0 auto;">
+                        The item <b>[${searchVal}]</b> does not have SPS data in our system. 
+                        Dimension inspection cannot start without technical references.
+                    </p>
+                    <div class="mt-3" style="font-size: 11px; color: #64748b; font-weight: 800;">PLEASE CONTACT PRODUCTION ADMIN / ENGINEERING</div>
+                `;
+            }
+
+            // 4. Update Status Indicator to Error
+            const dot = document.getElementById('scan-status-dot');
+            const text = document.getElementById('scan-status-text');
+            if (dot) { dot.style.background = '#ef4444'; dot.style.boxShadow = '0 0 15px #ef4444'; }
+            if (text) { text.innerText = 'LOCKED: NO SPS'; text.style.color = '#ef4444'; }
         }
 
         async function submitEntry() {

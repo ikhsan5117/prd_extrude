@@ -79,6 +79,9 @@
             .header-title { text-align: center; font-size: 2.8rem; font-weight: bold; margin-bottom: 0; letter-spacing: 3px; }
             .spv-box-outer { border: 1px solid #444; width: 160px; padding: 8px; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
             .spv-sq { width: 120px; height: 45px; border: 1px solid #444; margin: 2px 0; }
+            .border-bottom-form-bold { border-bottom: 2px solid #000; }
+            .border-end-form { border-right: 1px solid #000; }
+            .super-small { font-size: 8px; text-transform: uppercase; }
         </style>
 
         <div id="printArea" class="fade-in py-5 bg-secondary bg-opacity-10 d-flex justify-content-center" style="min-height: 100vh;">
@@ -455,23 +458,26 @@
                         <div class="col-5 border-end-form">
                             <table class="w-100 m-0 border-0 text-start fw-bold" style="font-size: 10px;">
                                 <tr>
-                                    <td style="width: 70px;" class="border-bottom-form py-1 ps-2">NO. DOC.</td>
+                                    <td style="width: 80px;" class="border-bottom-form py-1 ps-2">NO. DOC.</td>
                                     <td style="width: 15px;" class="border-bottom-form py-1 text-center">:</td>
-                                    <td class="border-bottom-form py-1 pe-2 ps-1">@Model.DocumentNumber</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-primary">@Model.DocumentNumber</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">PART NO.</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-info">@(Model.StandardParameterSetting?.ProductCode ?? "-")</td>
                                 </tr>
                                 <tr>
                                     <td class="border-bottom-form py-1 ps-2">DATE</td>
                                     <td class="border-bottom-form py-1 text-center">:</td>
                                     <td class="border-bottom-form py-1 pe-2">
-                                        <input type="text" class="input-transparent text-start w-100 text-dark fw-bold ps-1" value='@(Model.ProductionDate.ToString("dd.MM.yy"))' />
+                                        <input type="text" class="input-transparent text-start w-100 text-dark fw-bold ps-1" value='@(Model.ProductionDate.ToString("dd MMM yyyy"))' />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="border-bottom-form py-1 ps-2">SHIFT</td>
+                                    <td class="border-bottom-form py-1 ps-2">SHIFT / OP</td>
                                     <td class="border-bottom-form py-1 text-center">:</td>
-                                    <td class="border-bottom-form py-1 pe-2">
-                                        <input type="text" class="input-transparent text-start w-100 text-dark fw-bold ps-1" value='@Model.Shift' />
-                                    </td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1">@Model.Shift / @Model.CreatedBy</td>
                                 </tr>
                                 <tr>
                                     <td class="border-bottom-form py-1 ps-2">CUST.</td>
@@ -479,9 +485,14 @@
                                     <td class="border-bottom-form py-1 pe-2 ps-1">@(string.IsNullOrEmpty(Model.CustomerName) ? "-" : Model.CustomerName)</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1 ps-2">TIPE</td>
+                                    <td class="border-bottom-form py-1 ps-2">TIPE</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1">@Model.HoseType @Model.Dimension</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1 ps-2">LAYER</td>
                                     <td class="py-1 text-center">:</td>
-                                    <td class="py-1 pe-2 ps-1">@Model.HoseType @Model.Dimension</td>
+                                    <td class="py-1 pe-2 ps-1">@(Model.StandardParameterSetting?.LayerType ?? "-")</td>
                                 </tr>
                             </table>
                         </div>
@@ -835,8 +846,15 @@
                                 var otherRows = new[] {
                                     new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, std.SpiralSpeed, "", "±20"), U = "rpm" },
                                     new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(null, std.SpiralPitch, "", "±5"), U = "mm" },
-                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = "3.4±2", U = "m/min" },
-                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = "100±10", U = "%" }
+                                    new { L = "PRESET VALVE", K = "PresetValue", S = F(null, std.PresetValve, "", ""), U = "mm" },
+                                    new { L = "CONTROL VAL.", K = "ControlValue", S = (std.ControlValue ?? "-"), U = "mm" },
+                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = (std.HoseSpeed ?? "-"), U = "m/min" },
+                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = (std.TakeupConveyorSpeed ?? "-"), U = "m/min" },
+                                    new { L = "COOL SPEED", K = "CoolConveyorSpeed", S = (std.CoolConveyorSpeed ?? "-"), U = "m/min" },
+                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = (std.ConveyorRatio ?? "-"), U = "%" },
+                                    new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = (std.ChillerWaterTemp ?? "-"), U = "°C" },
+                                    new { L = "CATERPIL. GAP", K = "CaterpillarGap", S = (std.CaterpillarGap ?? "-"), U = "mm" },
+                                    new { L = "SURFACE", K = "UnsmoothSurface", S = F(null, std.UnsmoothSurface, "", ""), U = "" }
                                 };
                             }
                             @for(int r = 0; r < otherRows.Length; r++) {

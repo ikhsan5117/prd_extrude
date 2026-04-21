@@ -97,7 +97,18 @@
     .footer-att { width: 40%; padding: 5px; background: #fff; }
 
     .no-print-btns {
-        position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px;
+        position: fixed; 
+        top: 85px; 
+        right: 30px; 
+        z-index: 9000; 
+        display: flex; 
+        gap: 12px;
+        padding: 10px;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
 
     @@media print {
@@ -109,7 +120,7 @@
 </style>
 
 <div class="no-print-btns">
-    <a href="/Dimensi/History" class="btn btn-secondary btn-sm shadow">← Kembali</a>
+    <a href="/Dimensi/Index" class="btn btn-secondary btn-sm shadow">← Kembali</a>
     <button onclick="window.print()" class="btn btn-primary btn-sm shadow">Cetak A4 Landscape</button>
 </div>
 

@@ -385,7 +385,7 @@
                     const r = await fetch('/ProductionReport/GetTodaysSummary');
                     const d = await r.json();
                     renderToday(d);
-                    const tot = (d.parameterReports?.length||0)+(d.dimensionReports?.length||0);
+                    const tot = d.dimensionReports?.length||0;
                     const b = document.getElementById('fabBadge');
                     b.textContent = tot > 99 ? '99+' : tot;
                     b.style.display = tot > 0 ? 'flex' : 'none';
@@ -408,8 +408,8 @@
                     body.innerHTML = `<div class="t-empty"><i class="bi bi-moon-stars"></i><p>BELUM ADA DATA YANG DISUBMIT HARI INI</p></div>`;
                     return;
                 }
-                const okTot = p.reduce((s,r)=>s+(r.qtyOk||0),0)+d.reduce((s,r)=>s+(r.qtyOk||0),0);
-                const ngTot = p.reduce((s,r)=>s+(r.ngDimension||0)+(r.ngVisual||0),0)+d.reduce((s,r)=>s+(r.ngDimension||0)+(r.ngVisual||0),0);
+                const okTot = d.reduce((s,r)=>s+(r.qtyOk||0),0);
+                const ngTot = d.reduce((s,r)=>s+(r.ngDimension||0)+(r.ngVisual||0),0);
                 let html = `<div class="t-stats" style="margin-bottom:15px;">
                     <div class="t-pill"><i class="bi bi-cpu-fill text-warning"></i> ${data.machine||'—'}</div>
                     <div class="t-pill" style="color:#10b981">QTY OK <span class="v ms-1" style="color:#10b981">${okTot}</span></div>
@@ -418,56 +418,19 @@
                 
                 html += `
                 <div class="t-tabs">
-                    <button id="tab-param" class="t-tab active" onclick="switchTab('param')"><i class="bi bi-sliders2"></i> FORM PARAMETER (${p.length})</button>
-                    <button id="tab-dim" class="t-tab dim" onclick="switchTab('dim')"><i class="bi bi-rulers"></i> INPUT DIMENSI (${d.length})</button>
+                    <button class="t-tab dim active" style="cursor:default !important"><i class="bi bi-rulers"></i> INPUT DIMENSI (${d.length})</button>
                 </div>
                 `;
 
-                // PARAMETER PANE
-                html += `<div id="pane-param" class="t-pane active">`;
-                if(p.length===0){
-                    html += `<div class="t-empty"><i class="bi bi-inbox" style="font-size:28px"></i><p>BELUM ADA DATA</p></div>`;
-                } else {
-                    html += `<div class="t-table-wrapper"><table class="t-table">
-                        <thead><tr>
-                            <th>Hose Type</th><th>Status</th><th>Doc No / Rev</th><th>Shift</th><th>Created By</th>
-                            <th>Material (I/O/Y)</th><th>Std Pjg</th><th>Act Pjg</th><th>Target</th><th>OK</th><th>NG Dim</th><th>NG Vis</th><th>Remark</th>
-                        </tr></thead><tbody>`;
-                    p.forEach(r=>{
-                        const st = r.status === 'COMPLETED' ? 't-done' : 't-prod';
-                        html += `<tr>
-                            <td><div class="t-code">${r.hoseType||'—'}</div><div class="t-sub">${r.vinCode||'—'}</div></td>
-                            <td><span class="t-badge ${st}">${r.status||'—'}</span></td>
-                            <td>${r.documentNumber||'—'}<br><span class="t-sub">Rev: ${r.revisionNumber||0}</span></td>
-                            <td>${r.shift||'—'}</td>
-                            <td>${r.createdBy||'—'}</td>
-                            <td>
-                                <div><span class="t-sub">I:</span> ${r.innerMaterial||'—'}</div>
-                                <div><span class="t-sub">O:</span> ${r.outerMaterial||'—'}</div>
-                                <div><span class="t-sub">Y:</span> ${r.yarn||'—'}</div>
-                            </td>
-                            <td>${r.standardLength||'—'}</td>
-                            <td>${r.actualLength||'—'}</td>
-                            <td>${r.qtyTarget??'—'}</td>
-                            <td class="t-val ok">${r.qtyOk??'—'}</td>
-                            <td class="t-val ${r.ngDimension>0?'ng':''}">${r.ngDimension??0}</td>
-                            <td class="t-val ${r.ngVisual>0?'ng':''}">${r.ngVisual??0}</td>
-                            <td style="color:#94a3b8;max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${r.remark||''}">${r.remark||'—'}</td>
-                        </tr>`;
-                    });
-                    html += `</tbody></table></div>`;
-                }
-                html += `</div>`;
-
-                // DIMENSION PANE
-                html += `<div id="pane-dim" class="t-pane">`;
+                // DIMENSION PANE (NOW AS MAIN PANE)
+                html += `<div id="pane-dim" class="t-pane active">`;
                 if(d.length===0){
-                    html += `<div class="t-empty"><i class="bi bi-inbox" style="font-size:28px"></i><p>BELUM ADA DATA</p></div>`;
+                    html += `<div class="t-empty"><i class="bi bi-inbox" style="font-size:28px"></i><p>BELUM ADA DATA DIMENSI</p></div>`;
                 } else {
                     html += `<div class="t-table-wrapper"><table class="t-table">
                         <thead><tr>
                             <th>Hose Type</th><th>Status</th><th>Dimensi</th><th>Doc No</th><th>Shift</th><th>Created By</th>
-                            <th>Std Pjg</th><th>Act Pjg</th><th>Target</th><th>OK</th><th>NG Dim</th><th>NG Vis</th><th>Remark</th>
+                            <th>Std Pjg</th><th>Act Pjg</th><th>Target</th><th>OK</th><th>NG Dim</th><th>NG Vis</th><th>Remark</th><th>Action</th>
                         </tr></thead><tbody>`;
                     d.forEach(r=>{
                         const st = r.status === 'COMPLETED' ? 't-done' : 't-actv';
@@ -485,6 +448,11 @@
                             <td class="t-val ${r.ngDimension>0?'ng':''}">${r.ngDimension??0}</td>
                             <td class="t-val ${r.ngVisual>0?'ng':''}">${r.ngVisual??0}</td>
                             <td style="color:#94a3b8;max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${r.remark||''}">${r.remark||'—'}</td>
+                            <td class="text-center">
+                                <a href="/Dimensi/Details/${r.id}" class="btn btn-sm p-0 text-info" title="View Details">
+                                    <i class="bi bi-eye-fill fs-5"></i>
+                                </a>
+                            </td>
                         </tr>`;
                     });
                     html += `</tbody></table></div>`;
@@ -499,7 +467,7 @@
                 try {
                     const r = await fetch('/ProductionReport/GetTodaysSummary');
                     const d = await r.json();
-                    const tot = (d.parameterReports?.length||0)+(d.dimensionReports?.length||0);
+                    const tot = d.dimensionReports?.length||0;
                     const b = document.getElementById('fabBadge');
                     b.textContent = tot > 99 ? '99+' : tot;
                     b.style.display = tot > 0 ? 'flex' : 'none';
