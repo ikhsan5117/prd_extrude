@@ -7,6 +7,10 @@
 
 @section Styles {
     <style>
+        .swal2-container {
+            z-index: 15000 !important;
+        }
+
         :root {
             --bg-deep: #020617;
             --glass-bg: rgba(15, 23, 42, 0.8);
@@ -233,13 +237,25 @@
         }
         .add-btn { background: rgba(0, 242, 254, 0.05); border-style: dashed; }
         .slot-delete-btn {
-            position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
-            border-radius: 50%; background: var(--accent-danger); border: 2px solid var(--bg-deep);
-            display: flex; align-items: center; justify-content: center; font-size: 10px;
-            color: #fff; opacity: 0; transition: 0.3s; z-index: 5;
-            box-shadow: 0 0 10px var(--accent-danger);
+            position: absolute; 
+            top: -12px; 
+            right: -12px; 
+            width: 28px; 
+            height: 28px;
+            border-radius: 50%; 
+            background: #ef4444; 
+            border: 2px solid #020617;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 12px;
+            color: #fff; 
+            opacity: 1; 
+            transition: all 0.2s ease; 
+            z-index: 50;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
         }
-        .jam-btn:hover .slot-delete-btn { opacity: 1; }
+        .jam-btn:active .slot-delete-btn { transform: scale(0.8); }
 
         /* --- Card Styles --- */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
@@ -1417,7 +1433,7 @@
                 btn.innerText = slot.time || `P-${idx + 1}`;
                 btn.onclick = () => switchSlot(idx);
                 
-                if (measurements.length > 1) {
+                if (idx > 0) {
                     const del = document.createElement('div');
                     del.className = 'slot-delete-btn';
                     del.innerHTML = '<i class="bi bi-x-lg"></i>';

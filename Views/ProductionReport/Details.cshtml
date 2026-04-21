@@ -900,16 +900,16 @@
                             @{
                                 var otherRows = new[] {
                                     new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, std.SpiralSpeed, "", "±20"), U = "rpm" },
-                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(null, std.SpiralPitch, "", "±5"), U = "mm" },
+                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(sMaster?.ToleranceSpiralPitch, std.SpiralPitch, "", "±5"), U = "mm" },
                                     new { L = "PRESET VALVE", K = "PresetValue", S = F(null, std.PresetValve, "", ""), U = "mm" },
                                     new { L = "CONTROL VAL.", K = "ControlValue", S = (std.ControlValue ?? "-"), U = "mm" },
                                     new { L = "HOSE SPEED", K = "HoseSpeed", S = (std.HoseSpeed ?? "-"), U = "m/min" },
-                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = (std.TakeupConveyorSpeed ?? "-"), U = "m/min" },
+                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = (sMaster?.TakeUpConveyorSpeed ?? std.TakeupConveyorSpeed ?? "-"), U = "m/min" },
                                     new { L = "COOL SPEED", K = "CoolConveyorSpeed", S = (std.CoolConveyorSpeed ?? "-"), U = "m/min" },
                                     new { L = "CONV. RATIO", K = "ConveyorRatio", S = (std.ConveyorRatio ?? "-"), U = "%" },
-                                    new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = (std.ChillerWaterTemp ?? "-"), U = "°C" },
+                                    new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = (sMaster?.ChillerWaterTemp ?? std.ChillerWaterTemp ?? "-"), U = "°C" },
                                     new { L = "CATERPIL. GAP", K = "CaterpillarGap", S = (std.CaterpillarGap ?? "-"), U = "mm" },
-                                    new { L = "SURFACE", K = "UnsmoothSurface", S = F(null, std.UnsmoothSurface, "", ""), U = "" }
+                                    new { L = "SURFACE", K = "UnsmoothSurface", S = F(null, std.UnsmoothSurface, "OK", ""), U = "" }
                                 };
                             }
                             @for(int r = 0; r < otherRows.Length; r++) {

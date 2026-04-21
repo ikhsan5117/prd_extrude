@@ -18,7 +18,7 @@
         <form asp-action="Create" id="mainReportForm">
             <input type="hidden" id="StandardParameterSettingId" name="StandardParameterSettingId" value="" />
             <!-- SECTION: PRODUCTION COMMAND CONSOLE (TOP HEADER) -->
-            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10" style="position: relative; z-index: 50; overflow: visible;">
+            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10" style="position: relative; z-index: 1050; overflow: visible;">
                 <div class="hud-card-header d-flex justify-content-between align-items-center py-2 px-3">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-terminal-fill hud-card-icon fs-6"></i>
@@ -56,11 +56,6 @@
                                         }
                                     </div>
                                     <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
-                                    
-                                    <!-- Results Container -->
-                                    <div id="planningResults" class="d-none custom-tactical-scroll" style="position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid #0ea5e9; border-top: none; z-index: 1000; max-height: 350px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.8); border-radius: 0 0 12px 12px;">
-                                        <!-- Items will be injected here -->
-                                    </div>
                                 </div>
                                 <button type="button" onclick="refreshPlanningItems()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Refresh Planning">
                                     <i class="bi bi-arrow-clockwise fs-4"></i>
@@ -78,6 +73,11 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Tactical Results Container (Wider & Repositioned) -->
+                    <div id="planningResults" class="d-none custom-tactical-scroll" style="position: absolute; top: 135px; left: 15px; right: 15px; background: #0f172a; border: 2px solid #0ea5e9; z-index: 9999; max-height: 450px; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.9); border-radius: 12px;">
+                        <!-- Items will be injected here -->
                     </div>
                 </div>
                 <div class="p-2 bg-black bg-opacity-10">
@@ -114,7 +114,23 @@
                 </div>
             </div>
 
-            <!-- ROW 2: MATERIAL & MESH CHECKING -->
+            <!-- MAIN FORM CONTENT: LOCKED & HIDDEN UNTIL PLANNING SELECTED -->
+            <div id="mainFormContainer" class="form-locked-state" style="position: relative; min-height: 450px; transition: all 0.5s ease;">
+                <!-- LOCK OVERLAY (Indicator) -->
+                <div id="formLockOverlay" class="d-flex flex-column align-items-center justify-content-center" 
+                     style="position: absolute; top:0; left:0; right:0; bottom:20px; z-index: 1000; background: rgba(2, 6, 23, 0.65); border-radius: 12px; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
+                    <div class="text-center p-5 rounded-4 border border-info border-opacity-30 shadow-hud-blue" style="background: rgba(15, 23, 42, 0.95);">
+                        <div class="mb-4">
+                            <i class="bi bi-shield-lock-fill text-info" style="font-size: 5rem; filter: drop-shadow(0 0 20px rgba(14, 165, 233, 0.6));"></i>
+                        </div>
+                        <h2 class="text-white fw-900 tracking-widest mb-2" style="font-size: 1.5rem;">FORM LOCKED</h2>
+                        <p class="text-info opacity-70 super-small mb-0 tracking-widest uppercase">PLEASE SELECT PLANNING MASTER<br/>OR MANUAL PROTOCOL TO REVEAL DATA ENTRY</p>
+                    </div>
+                </div>
+
+                <!-- CONTENT WRAPPER (Hidden by default) -->
+                <div id="formContentBlurWrapper" style="display: none;">
+                   <div class="py-4"> <!-- Spacer when revealed -->
             <!-- ROW 2: MATERIAL & MESH CHECKING -->
             <style>
                 .hud-pill-group {
@@ -927,11 +943,43 @@
                 </div>
             </div>
 
+                    </div> <!-- End py-4 -->
+                </div> <!-- End Blur Wrapper -->
+            </div> <!-- End Main Form Container -->
         </form>
     </div>
 </div>
 
+<!-- BARCODE SCANNER MODAL -->
+<div class="modal fade" id="scannerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="background: #020617; border: 2px solid #0ea5e9; box-shadow: 0 0 30px rgba(14, 165, 233, 0.4); border-radius: 12px;">
+            <div class="modal-header border-bottom border-info border-opacity-25 py-2">
+                <h6 class="modal-title text-info fw-900 tracking-widest d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                    <i class="bi bi-upc-scan fs-6"></i> BATCH SCANNER
+                </h6>
+                <button type="button" class="btn-close btn-close-white" onclick="closeScannerModal()" style="font-size: 0.7rem;"></button>
+            </div>
+            <div class="modal-body p-2 bg-black bg-opacity-40">
+                <div id="reader" style="width: 100%; border: none; overflow: hidden; border-radius: 8px;"></div>
+                <div class="text-center mt-2">
+                    <span class="text-white opacity-40 super-small" style="font-size: 0.6rem;">ALIGN BARCODE INSIDE THE FRAME</span>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-info border-opacity-25 py-2 justify-content-center">
+                <button type="button" class="btn btn-hud-outline py-1 px-4 btn-sm" onclick="closeScannerModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <style>
+    /* Force SweetAlert to be on top of high z-index elements */
+    .swal2-container {
+        z-index: 15000 !important;
+    }
     :root {
         --hud-primary: #0ea5e9;
         --hud-glow: #38bdf8;
@@ -1100,6 +1148,27 @@
 
         function applySpsToForm(sps) {
             console.log("Applying SPS Data:", sps);
+
+            // UNLOCK FORM (SHOW CONTENT)
+            const overlay = document.getElementById('formLockOverlay');
+            const wrapper = document.getElementById('formContentBlurWrapper');
+            const container = document.getElementById('mainFormContainer');
+
+            if (overlay) overlay.remove(); // REMOVE COMPLETELY
+            if (container) {
+                container.style.minHeight = '0';
+                container.style.pointerEvents = 'auto';
+            }
+            
+            if (wrapper) {
+                wrapper.style.display = 'block';
+                wrapper.style.pointerEvents = 'auto';
+                wrapper.style.opacity = '1';
+                wrapper.style.visibility = 'visible';
+                wrapper.classList.remove('d-none');
+                wrapper.classList.add('animate__animated', 'animate__fadeInUp');
+            }
+
             const itemCode = sps.itemList || sps.itemCode || sps.productCode || '';
             document.getElementById('manualItemSearch').value = itemCode;
             document.getElementById('DocNo').value = sps.documentNumber || sps.DocumentNumber || '---';
@@ -1149,14 +1218,12 @@
                 'PresetValue': formatVal(sps.presetValve || sps.PresetValue || sps.presetValue, '', ' ± 0.5'),
                 'ControlValue': formatVal(sps.controlValue || sps.ControlValue),
                 'HoseSpeed': formatVal(sps.hoseSpeed || sps.HoseSpeed),
-                'TakeupConveyorSpeed': formatVal(sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed),
+                'TakeupConveyorSpeed': formatVal(sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed || sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed),
                 'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed || sps.CoolConveyorSpeed),
                 'ConveyorRatio': formatVal(sps.conveyorRatio || sps.ConveyorRatio),
-                'ChillerTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp, '', ' ± 5'),
-                'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
-                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface || 'OK'),
                 'ChillerWaterTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp),
                 'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
+                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface || 'OK'),
 
                 'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple),
                 'TubeDie': formatVal(sps.tubeDie || sps.TubeDie),
@@ -1424,11 +1491,50 @@
             const container = document.getElementById('readingsTabs');
             if(!container) return;
             container.innerHTML = pReadings.map((p, idx) => `
-                <div class="btn btn-hud-outline reading-tab py-1 px-3 d-flex flex-column align-items-center rounded ${idx === currentReadingIndex ? 'active-tab' : ''}" onclick="switchReadingTab(${idx})">
+                <div class="btn btn-hud-outline reading-tab py-1 px-3 d-flex flex-column align-items-center rounded ${idx === currentReadingIndex ? 'active-tab' : ''}" 
+                     style="position: relative;" onclick="switchReadingTab(${idx})">
+                    ${idx > 0 ? `
+                    <button type="button" class="btn p-0 text-danger border-0 shadow-none" 
+                            style="position: absolute; top: -8px; right: -8px; z-index: 10; background: #020617; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;" 
+                            onclick="event.stopPropagation(); removeReadingPoint(${idx})">
+                        <i class="bi bi-x-circle-fill" style="font-size: 0.9rem;"></i>
+                    </button>` : ''}
                     <span style="font-size: 0.6rem; opacity: 0.6;">${p.label}</span>
                     <span class="small fw-bold">${p.time}</span>
                 </div>
             `).join('');
+        }
+
+        function removeReadingPoint(index) {
+            if (index === 0) return;
+            
+            Swal.fire({
+                title: 'DELETE CHECK POINT?',
+                text: `Remove ${pReadings[index].label} and its data?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#334155',
+                confirmButtonText: 'YES, DELETE',
+                background: '#020617',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    pReadings.splice(index, 1);
+                    // Re-label all points
+                    pReadings.forEach((p, i) => { p.label = `P-${i + 1}`; });
+                    
+                    // Adjust current focus
+                    if (currentReadingIndex >= pReadings.length) {
+                        currentReadingIndex = pReadings.length - 1;
+                    } else if (currentReadingIndex === index) {
+                        currentReadingIndex = Math.max(0, index - 1);
+                    }
+                    
+                    renderTabs();
+                    loadCurrentDataFromMemory();
+                }
+            });
         }
 
         function updateReadingData(key, value) {
@@ -1459,11 +1565,11 @@
             
             const div = document.createElement('div');
             div.id = rowId;
-            div.className = `row g-1 align-items-center animate__animated animate__fadeInLeft`;
+            div.className = `row g-1 align-items-center animate__animated animate__fadeInLeft mb-2`;
             div.innerHTML = `
-                <div class="${isYarn ? 'col-8' : 'col-6'}">
+                <div class="${isYarn ? 'col-10' : 'col-6'}">
                     <div class="hud-scan-group p-1" style="border-color: rgba(${themeColor === 'info' ? '14, 165, 233' : (themeColor === 'warning' ? '245, 158, 11' : '16, 185, 129')}, 0.25);">
-                        <input type="text" class="hud-input-scan text-${themeColor} fw-bold" style="font-size: 0.75rem" placeholder="LOT #${index + 1}..." data-layer="${layer}" data-type="lot" />
+                        <input type="text" class="hud-input-scan text-${themeColor} fw-bold w-100" style="font-size: 0.75rem" placeholder="LOT #${index + 1}..." data-layer="${layer}" data-type="lot" />
                         <button type="button" class="hud-scan-btn ms-1 text-${themeColor}" onclick="openScannerForDynamicRow('${rowId}')"><i class="bi bi-upc-scan fs-6"></i></button>
                     </div>
                 </div>
@@ -1478,8 +1584,10 @@
                     </div>
                 </div>
                 ` : ''}
-                <div class="col-1 text-center">
-                    <button type="button" onclick="removeMaterialRow('${layer}', '${rowId}')" class="btn btn-link text-danger p-0 border-0"><i class="bi bi-x-circle-fill"></i></button>
+                <div class="col-2 text-center" style="min-width: 40px;">
+                    <button type="button" onclick="removeMaterialRow('${layer}', '${rowId}')" class="btn btn-link text-danger p-0 border-0 shadow-none" title="REMOVE LOT">
+                        <i class="bi bi-x-circle-fill fs-5"></i>
+                    </button>
                 </div>
             `;
             
@@ -1500,25 +1608,41 @@
 
         function openScannerForDynamicRow(rowId) {
             const input = document.getElementById(rowId).querySelector('input[data-type="lot"]');
-            // Assuming openScanner is globally available and sets a global target
-            window.scannerTargetId = null; 
             openScannerCustom((code) => {
                 input.value = code;
                 input.classList.add('blink-once');
             });
         }
 
-        // Bridge for common scanner if needed
         function openScannerCustom(callback) {
-            const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
+            const modalEl = document.getElementById('scannerModal');
+            const modal = new bootstrap.Modal(modalEl);
             modal.show();
-            
-            // Re-assign the global onScanSuccess for this specific call
-            window.onScanSuccess = function(decodedText) {
-                callback(decodedText);
+
+            setTimeout(() => {
+                html5QrCode = new Html5Qrcode("reader");
+                const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+                html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+                    callback(decodedText);
+                    closeScannerModal();
+                    // Optional beep sound could be added here
+                }).catch(err => {
+                    console.error("Scanner failed", err);
+                });
+            }, 300);
+        }
+
+        function closeScannerModal() {
+            const modalEl = document.getElementById('scannerModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    modal.hide();
+                }).catch(() => modal.hide());
+            } else {
                 modal.hide();
-                html5QrCode.stop();
-            };
+            }
         }
 
         function getMaterialLotPayload() {
@@ -1710,9 +1834,14 @@
         function showPlanningResults() {
             const container = document.getElementById('planningResults');
             const searchInput = document.getElementById('planningSearch');
-            if (planningResultItems.length > 0) {
-                filterPlanningResults(searchInput.value || "");
-                container.classList.remove('d-none');
+            
+            // Show even if cache is empty (will show "NO MATCH" or re-fetch)
+            filterPlanningResults(searchInput.value || "");
+            container.classList.remove('d-none');
+            
+            // Re-render if empty to show feedback
+            if (planningItemsCache.length === 0) {
+                refreshPlanningItems();
             }
         }
 
@@ -1720,7 +1849,9 @@
         document.addEventListener('click', function(e) {
             const container = document.getElementById('planningResults');
             const searchInput = document.getElementById('planningSearch');
-            if (container && !container.contains(e.target) && e.target !== searchInput) {
+            const refreshBtn = document.querySelector('[onclick="refreshPlanningItems()"]');
+            
+            if (container && !container.contains(e.target) && e.target !== searchInput && (!refreshBtn || !refreshBtn.contains(e.target))) {
                 container.classList.add('d-none');
             }
         });

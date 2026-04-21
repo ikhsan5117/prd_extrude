@@ -184,7 +184,8 @@ namespace VelastoProductionSystem.Controllers
                     ToleranceDie = master.ToleranceInner,
                     
                     ChillerWaterTemp = master.ChillerWaterTemp,
-                    TakeupConveyorSpeed = master.TakeUpConveyorSpeed
+                    TakeupConveyorSpeed = master.TakeUpConveyorSpeed,
+                    ToleranceSpiralPitch = master.ToleranceSpiralPitch
                 });
             }
 
@@ -452,6 +453,41 @@ namespace VelastoProductionSystem.Controllers
                     QcCond = dto.QcCond, QcSurf = dto.QcSurf, QcRes = dto.QcRes
                 };
 
+                // Sync Initial instrument parameters from the first reading if they are provided
+                if (dto.Readings != null && dto.Readings.Count > 0)
+                {
+                    var r0 = dto.Readings[0];
+                    report.InitHeadTempInner = ParseDecimal(r0.HeadTempInner);
+                    report.InitCylinder1TempInner = ParseDecimal(r0.Cylinder1TempInner);
+                    report.InitCylinder2TempInner = ParseDecimal(r0.Cylinder2TempInner);
+                    report.InitCylinder3TempInner = ParseDecimal(r0.Cylinder3TempInner);
+                    report.InitScrewTempInner = ParseDecimal(r0.ScrewTempInner);
+                    report.InitScrewSpeedInner = ParseDecimal(r0.ScrewSpeedInner);
+                    report.InitFeedRollRatioInner = ParseDecimal(r0.FeedRollRatioInner);
+                    report.InitPressureInner = ParseDecimal(r0.PressureInner);
+
+                    report.InitHeadTempOuter = ParseDecimal(r0.HeadTempOuter);
+                    report.InitCylinder1TempOuter = ParseDecimal(r0.Cylinder1TempOuter);
+                    report.InitCylinder2TempOuter = ParseDecimal(r0.Cylinder2TempOuter);
+                    report.InitCylinder3TempOuter = ParseDecimal(r0.Cylinder3TempOuter);
+                    report.InitScrewTempOuter = ParseDecimal(r0.ScrewTempOuter);
+                    report.InitScrewSpeedOuter = ParseDecimal(r0.ScrewSpeedOuter);
+                    report.InitFeedRollRatioOuter = ParseDecimal(r0.FeedRollRatioOuter);
+                    report.InitPressureOuter = ParseDecimal(r0.PressureOuter);
+
+                    report.InitSpiralSpeed = ParseDecimal(r0.SpiralSpeed);
+                    report.InitSpiralPitchSetting = ParseDecimal(r0.SpiralPitchSetting);
+                    report.InitHoseSpeed = ParseDecimal(r0.HoseSpeed);
+                    report.InitConveyorRatio = ParseDecimal(r0.ConveyorRatio);
+                    report.InitTakeupConveyorSpeed = ParseDecimal(r0.TakeupConveyorSpeed);
+                    report.InitCoolConveyorSpeed = ParseDecimal(r0.CoolConveyorSpeed);
+                    report.InitChillerWaterTemp = ParseDecimal(r0.ChillerWaterTemp);
+                    report.InitCaterpillarGap = ParseDecimal(r0.CaterpillarGap);
+                    report.InitUnsmoothSurface = ParseDecimal(r0.UnsmoothSurface);
+                    report.InitPresetValue = ParseDecimal(r0.PresetValue);
+                    report.InitControlValue = ParseDecimal(r0.ControlValue);
+                }
+
                 _context.ProductionReports.Add(report);
                 await _context.SaveChangesAsync(); // Save first to get the ID
 
@@ -610,6 +646,13 @@ namespace VelastoProductionSystem.Controllers
                     report.InitSpiralPitchSetting = decimal.TryParse(r0.SpiralPitchSetting, out var m2) ? m2 : report.InitSpiralPitchSetting;
                     report.InitHoseSpeed = decimal.TryParse(r0.HoseSpeed, out var m3) ? m3 : report.InitHoseSpeed;
                     report.InitConveyorRatio = decimal.TryParse(r0.ConveyorRatio, out var m4) ? m4 : report.InitConveyorRatio;
+                    report.InitTakeupConveyorSpeed = decimal.TryParse(r0.TakeupConveyorSpeed, out var m5) ? m5 : report.InitTakeupConveyorSpeed;
+                    report.InitCoolConveyorSpeed = decimal.TryParse(r0.CoolConveyorSpeed, out var m6) ? m6 : report.InitCoolConveyorSpeed;
+                    report.InitChillerWaterTemp = decimal.TryParse(r0.ChillerWaterTemp, out var m7) ? m7 : report.InitChillerWaterTemp;
+                    report.InitCaterpillarGap = decimal.TryParse(r0.CaterpillarGap, out var m8) ? m8 : report.InitCaterpillarGap;
+                    report.InitUnsmoothSurface = decimal.TryParse(r0.UnsmoothSurface, out var m9) ? m9 : report.InitUnsmoothSurface;
+                    report.InitPresetValue = decimal.TryParse(r0.PresetValue, out var m10) ? m10 : report.InitPresetValue;
+                    report.InitControlValue = decimal.TryParse(r0.ControlValue, out var m11) ? m11 : report.InitControlValue;
                 }
 
                 // Update Readings: Remove old and add new (simplest for Edit)
