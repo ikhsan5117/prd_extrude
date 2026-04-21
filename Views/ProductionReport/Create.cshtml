@@ -1166,10 +1166,31 @@
 
             for (const [key, val] of Object.entries(specMappings)) {
                 const el = document.getElementById('spec_' + key);
+                const mainInput = document.getElementById('input_' + key);
+                const isNoData = (val === '---' || val === '' || val === null);
+
                 if (el) {
                     el.innerText = val;
                     el.classList.add('blink-once');
                     
+                    // Logic to Disable/Lock inputs if no standard exists
+                    if (isNoData) {
+                        if (mainInput) {
+                            mainInput.disabled = true;
+                            mainInput.placeholder = "N/A";
+                            mainInput.value = "";
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '0.4', 'important');
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'none', 'important');
+                        }
+                    } else {
+                        if (mainInput) {
+                            mainInput.disabled = false;
+                            mainInput.placeholder = "0.00";
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '1', 'important');
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'auto', 'important');
+                        }
+                    }
+
                     if (key.includes('Die') || key === 'ToleranceDie') {
                         const dieRadios = {
                             'NippleDie': { field: 'NippleDieOK', init: 'NippleDieInitial', final: 'NippleDieFinal' },
@@ -1180,10 +1201,36 @@
                             'ToleranceDie': { field: 'ToleranceDieOK', init: 'ToleranceInitial', final: 'ToleranceFinal' }
                         };
                         const d = dieRadios[key];
-                        if (d) checkDieStatus('spec_' + key, d.field, d.init, d.final);
+                        if (d) {
+                            const container = document.getElementsByName(d.init)[0]?.closest('.die-card');
+                            if (isNoData) {
+                                document.getElementsByName(d.init)[0].disabled = true;
+                                document.getElementsByName(d.final)[0].disabled = true;
+                                if (container) {
+                                    container.style.opacity = "0.4";
+                                    container.style.pointerEvents = "none";
+                                }
+                            } else {
+                                document.getElementsByName(d.init)[0].disabled = false;
+                                document.getElementsByName(d.final)[0].disabled = false;
+                                if (container) {
+                                    container.style.opacity = "1";
+                                    container.style.pointerEvents = "auto";
+                                }
+                            }
+                            checkDieStatus('spec_' + key, d.field, d.init, d.final);
+                        }
                     } else {
                         const inputs = document.querySelectorAll(`[name$="${key}"]`);
-                        inputs.forEach(inp => { if(inp.value) validateParam(inp, 'spec_' + key); });
+                        inputs.forEach(inp => { 
+                            if (isNoData) {
+                                inp.disabled = true;
+                                inp.placeholder = "N/A";
+                            } else {
+                                inp.disabled = false;
+                                if(inp.value) validateParam(inp, 'spec_' + key); 
+                            }
+                        });
                     }
                 }
             }

@@ -268,6 +268,12 @@
     @* FAB: Today's Summary - Operator Only *@
     @if (Context.Session.GetString("IsAdmin") != "true" && !string.IsNullOrEmpty(Context.Session.GetString("UserName")))
     {
+        var path = Context.Request.Path.Value ?? "";
+        bool isInputPage = path.Contains("/ProductionReport/Create", StringComparison.OrdinalIgnoreCase) || 
+                           (path.Contains("/Dimensi", StringComparison.OrdinalIgnoreCase) && 
+                            !path.Contains("/History", StringComparison.OrdinalIgnoreCase) && 
+                            !path.Contains("/Details", StringComparison.OrdinalIgnoreCase));
+
         <style>
             #todayFab {
                 position: fixed; bottom: 30px; right: 30px;
@@ -350,7 +356,7 @@
             @@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
         </style>
 
-        @if (Context.Request.Path.Value?.Contains("/Details/") != true)
+        @if (isInputPage)
         {
             <button id="todayFab" onclick="openTodayModal()" title="Data Yang Sudah Diinput Hari Ini">
                 <i class="bi bi-eye-fill"></i>
@@ -364,10 +370,12 @@
                     <div class="t-title">
                         <span class="t-live"></span>
                         <i class="bi bi-calendar-check text-info"></i>
-                        TODAY'S INPUT SUMMARY
-                        <span id="t-date" style="font-size:10px;color:#64748b;font-weight:700;letter-spacing:1px;"></span>
+                        INPUT SUMMARY
                     </div>
-                    <button class="t-close" onclick="closeTodayModal()"><i class="bi bi-x-lg"></i></button>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="date" id="t-date-filter" class="form-control form-control-sm bg-dark text-white border-secondary" style="font-size: 11px; width: 140px; height: 30px; border-radius: 6px;" onchange="fetchTodayData(this.value)">
+                        <button class="t-close" onclick="closeTodayModal()"><i class="bi bi-x-lg"></i></button>
+                    </div>
                 </div>
                 <div class="t-body" id="t-body"><div class="t-empty"><i class="bi bi-hourglass-split"></i><p>LOADING...</p></div></div>
             </div>
@@ -376,16 +384,20 @@
         <script>
             async function openTodayModal() {
                 document.getElementById('todayModal').classList.add('show');
-                document.getElementById('t-date').textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
-                await fetchTodayData();
+                const filter = document.getElementById('t-date-filter');
+                if (!filter.value) {
+                    filter.value = new Date().toISOString().split('T')[0];
+                }
+                await fetchTodayData(filter.value);
             }
             function closeTodayModal() { document.getElementById('todayModal').classList.remove('show'); }
 
-            async function fetchTodayData() {
+            async function fetchTodayData(targetDate) {
                 const body = document.getElementById('t-body');
                 body.innerHTML = `<div class="t-empty"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite"></i><p>LOADING DATA...</p></div>`;
                 try {
-                    const r = await fetch('/ProductionReport/GetTodaysSummary');
+                    const url = targetDate ? `/ProductionReport/GetTodaysSummary?targetDate=${targetDate}` : '/ProductionReport/GetTodaysSummary';
+                    const r = await fetch(url);
                     const d = await r.json();
                     
                     // Context detection
@@ -425,7 +437,7 @@
                 else if (isParam) { d = []; }
 
                 if (p.length===0 && d.length===0) {
-                    body.innerHTML = `<div class="t-empty"><i class="bi bi-moon-stars"></i><p>BELUM ADA DATA ${isParam?'PARAMETER ': (isDim?'DIMENSI ':'')}YANG DISUBMIT HARI INI</p></div>`;
+                    body.innerHTML = `<div class="t-empty"><i class="bi bi-moon-stars"></i><p>BELUM ADA DATA PADA TANGGAL INI</p></div>`;
                     return;
                 }
 

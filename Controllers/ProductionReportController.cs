@@ -194,20 +194,21 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/GetTodaysSummary
         // Returns today's submitted data for the operator's machine (used by FAB popup, read-only)
         [HttpGet]
-        public async Task<IActionResult> GetTodaysSummary()
+        public async Task<IActionResult> GetTodaysSummary(DateTime? targetDate = null)
         {
             var machineName = HttpContext.Session.GetString("MachineName");
             var isAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
+            
+            var startDate = (targetDate ?? DateTime.Today).Date;
+            var endDate = startDate.AddDays(1);
 
-            // Query ProductionReports for today
+            // Query ProductionReports for target date
             var paramQuery = _context.ProductionReports
-                .Where(r => r.CreatedDate >= today && r.CreatedDate < tomorrow);
+                .Where(r => r.CreatedDate >= startDate && r.CreatedDate < endDate);
 
-            // Query DimensionReports for today
+            // Query DimensionReports for target date
             var dimQuery = _context.DimensionReports
-                .Where(r => r.CreatedDate >= today && r.CreatedDate < tomorrow);
+                .Where(r => r.CreatedDate >= startDate && r.CreatedDate < endDate);
 
             // Filter by machine for non-admin
             if (!isAdmin && !string.IsNullOrEmpty(machineName))

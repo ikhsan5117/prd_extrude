@@ -1733,10 +1733,26 @@
                             const targetEl = document.getElementById(`std-${p.el}`);
                             const minEl = document.getElementById(`limit-${p.el}-min`);
                             const maxEl = document.getElementById(`limit-${p.el}-max`);
+                            const inputEl = document.getElementById(`val-${p.el}`);
 
                             if (targetEl) targetEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)}`;
                             if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
                             if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
+
+                            if (inputEl) {
+                                if (target === 0) {
+                                    inputEl.disabled = true;
+                                    inputEl.placeholder = "N/A";
+                                    inputEl.value = "";
+                                    inputEl.closest('.dimensi-card').style.opacity = "0.4";
+                                    inputEl.closest('.dimensi-card').style.pointerEvents = "none";
+                                } else {
+                                    inputEl.disabled = false;
+                                    inputEl.placeholder = "0.00";
+                                    inputEl.closest('.dimensi-card').style.opacity = "1";
+                                    inputEl.closest('.dimensi-card').style.pointerEvents = "auto";
+                                }
+                            }
                         });
                     } catch (err) {
                         console.error("Error populating cards:", err);
