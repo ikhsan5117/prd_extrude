@@ -23,9 +23,14 @@ namespace VelastoProductionSystem.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            var isSqlite = Database.ProviderName?.Contains("Sqlite") == true;
+
             modelBuilder.Entity<ElwpPlanning>(entity =>
             {
-                entity.ToTable("tb_elwp_produksi_plannings", "produksi");
+                if (isSqlite)
+                    entity.ToTable("tb_elwp_produksi_plannings");
+                else
+                    entity.ToTable("tb_elwp_produksi_plannings", "produksi");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.TanggalPlanning).HasColumnName("TanggalPlanning");
@@ -40,19 +45,28 @@ namespace VelastoProductionSystem.Data
 
             modelBuilder.Entity<ElwpMachine>(entity =>
             {
-                entity.ToTable("tb_elwp_produksi_mesins", "produksi");
+                if (isSqlite)
+                    entity.ToTable("tb_elwp_produksi_mesins");
+                else
+                    entity.ToTable("tb_elwp_produksi_mesins", "produksi");
                 entity.HasKey(e => e.Id);
             });
 
             modelBuilder.Entity<ElwpUser>(entity =>
             {
-                entity.ToTable("tb_elwp_produksi_users", "produksi");
+                if (isSqlite)
+                    entity.ToTable("tb_elwp_produksi_users");
+                else
+                    entity.ToTable("tb_elwp_produksi_users", "produksi");
                 entity.HasKey(e => e.Id);
             });
 
             modelBuilder.Entity<ElwpArea>(entity =>
             {
-                entity.ToTable("tb_elwp_produksi_areas", "produksi");
+                if (isSqlite)
+                    entity.ToTable("tb_elwp_produksi_areas");
+                else
+                    entity.ToTable("tb_elwp_produksi_areas", "produksi");
                 entity.HasKey(e => e.Id);
             });
         }

@@ -48,105 +48,79 @@
         .search-container {
             max-width: 1200px; margin: 0 auto 25px auto; width: 100%; padding: 0 15px;
         }
-        .search-input-group {
-            flex: 1 1 380px; max-width: 800px; display: flex; align-items: stretch; 
-            background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(15, 23, 42, 0.8) 25%, #020617 85%);
-            border: 1px solid var(--glass-border); border-left: 5px solid var(--accent-glow);
-            border-radius: 4px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            transition: all 0.3s; height: 52px;
-        }
-        .search-input-group:focus-within { border-color: var(--accent-glow); box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); }
-
+        
         .planning-search-panel {
-            width: 360px; min-width: 260px; max-width: 100%; position: relative;
-            display: flex; flex-direction: column; gap: 6px;
+            flex: 1; min-width: 320px; position: relative;
         }
-        .planning-search-group {
-            display: flex; align-items: stretch; background: rgba(15, 23, 42, 0.9);
-            border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; overflow: hidden;
+
+        .hud-console-pill {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: visible;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            position: relative;
         }
-        .planning-search-group input {
-            flex: 1; padding: 0 14px; border: none; outline: none;
-            background: transparent; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.8px;
-            text-transform: uppercase; height: 42px;
+
+        .hud-console-pill:focus-within {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
         }
-        .planning-refresh-btn {
-            width: 46px; border: none; background: rgba(56, 189, 248, 0.15); color: #38bdf8;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;
+
+        .hud-label-mini {
+            font-size: 8px;
+            font-weight: 900;
+            color: var(--accent-glow);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            background: rgba(56, 189, 248, 0.1);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
+        .hud-input-flat {
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+            width: 100%;
+            height: 44px;
+            letter-spacing: 0.5px;
+        }
+
+        .hud-btn-side {
+            width: 50px;
+            background: rgba(56, 189, 248, 0.05);
+            color: var(--accent-glow);
+            border: none;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .hud-btn-side:hover {
+            background: var(--accent-glow);
+            color: #000;
+        }
+
         .planning-results {
-            position: absolute; top: 52px; left: 0; right: 0; background: rgba(15, 23, 42, 0.98);
-            border: 1px solid rgba(56, 189, 248, 0.4); border-top: none; z-index: 1000;
-            max-height: 260px; overflow-y: auto; border-radius: 0 0 8px 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        }
-        .planning-result-item {
-            padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
-            transition: background 0.2s ease;
-        }
-        .planning-result-item:hover, .planning-result-highlight {
-            background: rgba(56, 189, 248, 0.12);
-        }
-        .planning-result-code { font-size: 11px; font-weight: 900; color: #38bdf8; letter-spacing: 0.5px; }
-        .planning-result-name { font-size: 12px; color: #fff; opacity: 0.85; margin-top: 4px; }
-        .planning-result-meta { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 4px; }
-
-        @@media (max-width: 1200px) {
-            .tech-header-ribbon { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .header-cluster { min-height: 80px; padding: 15px; }
-            .planning-search-panel { width: 100%; min-width: 0; }
+            position: absolute; top: 100%; left: 0; right: 0; background: #0f172a;
+            border: 1px solid var(--accent-glow); border-top: none; z-index: 1000;
+            max-height: 350px; overflow-y: auto; border-radius: 0 0 12px 12px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
-        @@media (max-width: 900px) {
-            .search-action-bar { justify-content: stretch; }
-            .search-input-group, .planning-search-panel { flex: 1 1 100%; max-width: 100%; }
-            .search-action-bar > * { width: 100%; }
-            .tech-header-ribbon { grid-template-columns: 1fr; }
-            .header-cluster { padding: 14px 16px; }
-            .header-cluster .m-row { flex-wrap: wrap; gap: 6px; }
-        }
-
-        @@media (max-width: 700px) {
-            .search-action-bar { gap: 12px; }
-            .search-input-group, .planning-search-group, .planning-refresh-btn { height: 44px; }
-            .search-input-group input, .planning-search-group input { font-size: 12px; padding: 0 12px; }
-            .header-cluster { padding: 12px 14px; }
-            .m-val { font-size: 10px; }
-            .m-lbl { font-size: 7px; gap: 4px; }
-            .m-sub { font-size: 8px; }
-        }
-
-        .planning-search-panel {
-            width: 360px; min-width: 280px; position: relative;
-            display: flex; flex-direction: column; gap: 6px;
-        }
-        .planning-search-group {
-            display: flex; align-items: stretch; background: rgba(15, 23, 42, 0.9);
-            border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; overflow: hidden;
-        }
-        .planning-search-group input {
-            flex: 1; padding: 0 14px; border: none; outline: none;
-            background: transparent; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.8px;
-            text-transform: uppercase; height: 42px;
-        }
-        .planning-refresh-btn {
-            width: 46px; border: none; background: rgba(56, 189, 248, 0.15); color: #38bdf8;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;
-        }
-        .planning-results {
-            position: absolute; top: 52px; left: 0; right: 0; background: rgba(15, 23, 42, 0.98);
-            border: 1px solid rgba(56, 189, 248, 0.4); border-top: none; z-index: 1000;
-            max-height: 260px; overflow-y: auto; border-radius: 0 0 8px 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        }
-        .planning-result-item {
-            padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
-            transition: background 0.2s ease;
-        }
-        .planning-result-item:hover, .planning-result-highlight {
-            background: rgba(56, 189, 248, 0.12);
-        }
-        .planning-result-code { font-size: 11px; font-weight: 900; color: #38bdf8; letter-spacing: 0.5px; }
-        .planning-result-name { font-size: 12px; color: #fff; opacity: 0.8; margin-top: 4px; }
-        .planning-result-meta { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 4px; }
 
         @@media (max-width: 1200px) {
             .tech-header-ribbon { grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -421,44 +395,63 @@
     </div>
 
     <!-- Item List Scanner Action Bar -->
-    <div class="search-action-bar animate__animated animate__fadeInDown">
-        <div class="planning-search-panel">
-            @{
-                var dimMachine = Context.Session.GetString("MachineName");
-                var dimIsAdmin = Context.Session.GetString("IsAdmin") == "true";
-            }
-            @if (!dimIsAdmin && !string.IsNullOrEmpty(dimMachine))
-            {
-                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding: 0 4px;">
-                    <span style="font-size:8px; font-weight:900; color:#94a3b8; letter-spacing:1px; text-transform:uppercase;">FILTER:</span>
-                    <span style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 10px; border-radius:20px; border:1px solid rgba(245,158,11,0.3); white-space:nowrap;">
-                        <i class="bi bi-cpu-fill" style="margin-right:4px;"></i>@dimMachine
-                    </span>
+    <div class="search-container no-print">
+        <div class="row g-3 animate__animated animate__fadeInUp">
+            <!-- Left Console: Planning Master -->
+            <div class="col-md-7">
+                <div class="hud-console-pill">
+                    <div class="hud-label-mini">
+                        @{
+                            var dimMachine = Context.Session.GetString("MachineName");
+                            var dimIsAdmin = Context.Session.GetString("IsAdmin") == "true";
+                        }
+                        <i class="bi bi-list-check"></i>
+                        <span>PLANNING MASTER</span>
+                        @if (!dimIsAdmin && !string.IsNullOrEmpty(dimMachine))
+                        {
+                            <span class="ms-auto" style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.2);">
+                                <i class="bi bi-cpu-fill me-1"></i>@dimMachine
+                            </span>
+                        }
+                        else if (dimIsAdmin)
+                        {
+                            <span class="ms-auto" style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.2);">
+                                <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
+                            </span>
+                        }
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input id="planningSearch" type="text" class="hud-input-flat" 
+                               placeholder="SEARCH PLANNING MASTER..." 
+                               oninput="filterPlanningResults(this.value)" 
+                               onfocus="showPlanningResults()" autocomplete="off" />
+                        <button type="button" class="hud-btn-side" onclick="refreshPlanningItems()" title="Refresh Planning">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    <div id="planningResults" class="planning-results d-none custom-tactical-scroll"></div>
                 </div>
-            }
-            else if (dimIsAdmin)
-            {
-                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding: 0 4px;">
-                    <span style="font-size:8px; font-weight:900; color:#94a3b8; letter-spacing:1px; text-transform:uppercase;">FILTER:</span>
-                    <span style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:2px 10px; border-radius:20px; border:1px solid rgba(16,185,129,0.3); white-space:nowrap;">
-                        <i class="bi bi-shield-fill" style="margin-right:4px;"></i>ALL MACHINES
-                    </span>
-                </div>
-            }
-            <div class="planning-search-group">
-                <input id="planningSearch" type="text" placeholder="SEARCH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
-                <button type="button" class="planning-refresh-btn" onclick="refreshPlanningItems()" title="Refresh Planning"><i class="bi bi-arrow-clockwise"></i></button>
             </div>
-            <div id="planningResults" class="planning-results d-none"></div>
-        </div>
 
-        <div class="search-input-group">
-            <input type="text" id="main-item-search" placeholder="CARI ITEM LIST..." autocomplete="off" onkeypress="if(event.key === 'Enter') loadMaster()" style="padding-left: 20px;">
-            <button class="search-trigger-btn" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
-                <i class="bi bi-search"></i>
-            </button>
+            <!-- Right Console: Masterlist SPS -->
+            <div class="col-md-5">
+                <div class="hud-console-pill">
+                    <div class="hud-label-mini">
+                        <i class="bi bi-search"></i>
+                        <span>SPS MASTERLIST</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input type="text" id="main-item-search" class="hud-input-flat" 
+                               placeholder="SEARCH SPS MASTERLIST..." 
+                               autocomplete="off" 
+                               onkeypress="if(event.key === 'Enter') loadMaster()" />
+                        <button class="hud-btn-side" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
+                            <i class="bi bi-lightning-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        
     </div>
 
     <!-- Unified Technical HUD Dashboard -->
@@ -1658,18 +1651,42 @@
                         const tol = parseT(p.t, p.dt);
                         activeStandards[p.id] = { val: target, tol: tol };
                         
-                        document.getElementById(`std-${p.el}`).innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)} ± ${tol.toFixed(2)}`;
-                        document.getElementById(`limit-${p.el}-min`).innerText = target === 0 ? "---" : (target - tol).toFixed(2);
-                        document.getElementById(`limit-${p.el}-max`).innerText = target === 0 ? "---" : (target + tol).toFixed(2);
+                        const targetEl = document.getElementById(`std-${p.el}`);
+                        const minEl = document.getElementById(`limit-${p.el}-min`);
+                        const maxEl = document.getElementById(`limit-${p.el}-max`);
+
+                        if (targetEl) targetEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)} ± ${tol.toFixed(2)}`;
+                        if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
+                        if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
+                    });
+
+                    // AUTO-SET VISUAL CHECKS TO OK (Speed up operator)
+                    ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
+                        toggleVisual(it, 'ok');
                     });
                     
-                    Swal.fire({ icon: 'success', title: 'MASTER LOADED', timer: 800, showConfirmButton: false });
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'MASTER LOADED', 
+                        text: 'Standard and Visuals have been synced.',
+                        timer: 1500, 
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                     
                     // Auto-focus starting point
-                    document.getElementById('val-inner-dia')?.focus();
+                    const firstInput = document.getElementById('val-inner-dia');
+                    if (firstInput) {
+                        firstInput.focus();
+                        firstInput.select();
+                    }
                     loadDataToUI();
                 }
-            } catch (e) { }
+            } catch (e) { 
+                console.error("LoadMaster Error:", e);
+                Swal.fire('Error', 'Failed to load master data structure.', 'error');
+            }
         }
 
         async function submitEntry() {

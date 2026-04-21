@@ -55,7 +55,7 @@
                                             </span>
                                         }
                                     </div>
-                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH PLANNING..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
+                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
                                     
                                     <!-- Results Container -->
                                     <div id="planningResults" class="d-none custom-tactical-scroll" style="position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid #0ea5e9; border-top: none; z-index: 1000; max-height: 350px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.8); border-radius: 0 0 12px 12px;">
@@ -71,7 +71,7 @@
                             <div class="hud-pill p-0 d-flex flex-row overflow-hidden border border-info border-opacity-50" style="min-height: 60px; background: #0f172a; border-radius: 8px;">
                                 <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
                                     <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-keyboard me-2"></i>MANUAL PROTOCOL</label>
-                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="ITEM CODE..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
+                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH SPS MASTERLIST..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
                                 </div>
                                 <button type="button" onclick="let v = document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Search">
                                     <i class="bi bi-search fs-4"></i>
@@ -606,13 +606,13 @@
                                         <div class="col-4">
                                             <div class="text-center">
                                                 <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">BEFORE</label>
-                                                <input name="@die.InitName" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                                <input name="@die.InitName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
                                             </div>
                                         </div>
                                         <div class="col-4">
                                             <div class="text-center">
                                                 <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">AFTER</label>
-                                                <input name="@die.FinalName" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                                <input name="@die.FinalName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
                                             </div>
                                         </div>
                                     </div>
@@ -907,30 +907,9 @@
                              </div>
                         </div>
 
-                        <!-- DIGITAL SIGN-OFF PANEL -->
-                        <div class="hud-card p-3 bg-black bg-opacity-40 border-white border-opacity-10 shadow-hud-blue">
-                            <div class="text-info-glow super-small fw-black mb-3 tracking-widest ps-1"><i class="bi bi-vector-pen me-2"></i>OPERATIONAL SIGN-OFF</div>
-                            <div class="d-flex flex-column gap-2">
-                                <div class="hud-pill-integrated border-white border-opacity-5">
-                                    <label>DIBUAT (OPERATOR)</label>
-                                    <input asp-for="CreatedBy" class="hud-input text-primary-glow font-black h-auto py-1" placeholder="ENTER NAME..." />
-                                </div>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="hud-pill-integrated border-white border-opacity-5 opacity-50">
-                                            <label>CHECKED (LEADER)</label>
-                                            <input asp-for="CheckedBy" class="hud-input small" readonly placeholder="---" />
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="hud-pill-integrated border-white border-opacity-5 opacity-50">
-                                            <label>APPROVED (FOREMAN)</label>
-                                            <input asp-for="ApprovedBy" class="hud-input small" readonly placeholder="---" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- OPERATIONAL SIGN-OFF (Hidden as name is from login) -->
+                        <input type="hidden" asp-for="CreatedBy" />
+
                         
                         <!-- FINAL CONTROL TERMINAL -->
                         <div class="hud-card p-3 flex-grow-1 d-flex flex-column bg-black bg-opacity-40 border-white border-opacity-10 shadow-hud-blue">
@@ -1120,70 +1099,69 @@
         }
 
         function applySpsToForm(sps) {
-            // Header Info
-            document.getElementById('DocNo').value = sps.documentNumber || '---';
-            document.getElementById('RevNo').value = sps.revisionNumber || '0';
-            document.getElementById('HoseType').value = sps.hoseType || '';
-            document.getElementById('CustomerName').value = sps.customerName || '';
+            console.log("Applying SPS Data:", sps);
+            const itemCode = sps.itemList || sps.itemCode || sps.productCode || '';
+            document.getElementById('manualItemSearch').value = itemCode;
+            document.getElementById('DocNo').value = sps.documentNumber || sps.DocumentNumber || '---';
+            document.getElementById('RevNo').value = sps.revisionNumber || sps.RevisionNumber || '0';
+            document.getElementById('HoseType').value = sps.hoseType || sps.HoseType || '';
+            document.getElementById('CustomerName').value = sps.customerName || sps.CustomerName || '';
             
-            // Materials
-            document.getElementById('InnerMaterial').value = sps.innerMaterial || '';
-            document.getElementById('OuterMaterial').value = sps.outerMaterial || '';
-            document.getElementById('Yarn').value = sps.yarnType || '';
-            
+            // Materials mapping
+            document.getElementById('InnerMaterial').value = sps.innerMaterial || sps.InnerMaterial || sps.innerTube || sps.InnerTube || '';
+            document.getElementById('OuterMaterial').value = sps.outerMaterial || sps.OuterMaterial || sps.outerCover || sps.OuterCover || '';
+            document.getElementById('Yarn').value = sps.yarnType || sps.YarnType || sps.material || sps.Material || '';
+
             let spsIdEl = document.getElementById('StandardParameterSettingId');
-            if (spsIdEl) spsIdEl.value = sps.id || '';
+            if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
 
             const formatVal = (val, prefix = '', suffix = '') => {
                 if (val === undefined || val === null || val === '') return '---';
-                if (typeof val === 'string' && (val.includes('±') || val.includes('+') || val.includes('-'))) {
-                    // Prevent duplicate suffixes if Masterlist already contains formatting like '90+/-5' or '1.0±0.1'
-                    return `${prefix}${val}`;
-                }
-                return `${prefix}${val}${suffix}`;
+                let strVal = String(val).trim();
+                // Prevent duplicate symbols
+                if (suffix.includes('±') && strVal.includes('±')) suffix = '';
+                if (prefix.toLowerCase().includes('max') && strVal.toLowerCase().includes('max')) prefix = '';
+                return `${prefix}${strVal}${suffix}`;
             };
 
-            // Update Table Specs
             const specMappings = {
-                'HeadTempInner': formatVal(sps.headTempInner ?? sps.headTemp, '', ' ± 5'),
-                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner ?? sps.cylinder1Temp, '', ' ± 5'),
-                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner ?? sps.cylinder2Temp, '', ' ± 5'),
-                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner ?? sps.cylinder3Temp, '', ' ± 5'),
-                'ScrewTempInner': formatVal(sps.screwTempInner ?? sps.screwTemp, '', ' ± 5'),
-                'ScrewSpeedInner': formatVal(sps.screwSpeedInner ?? sps.screwSpeed, '', ' ± 2'),
-                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner ?? sps.feedRollRatio, 'Max '),
-                'PressureInner': formatVal(sps.pressureInner ?? sps.pressure, 'Max '),
-                
-                'HeadTempOuter': formatVal(sps.headTempOuter ?? sps.headTemp, '', ' ± 5'),
-                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter ?? sps.cylinder1Temp, '', ' ± 5'),
-                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter ?? sps.cylinder2Temp, '', ' ± 5'),
-                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter ?? sps.cylinder3Temp, '', ' ± 5'),
-                'ScrewTempOuter': formatVal(sps.screwTempOuter ?? sps.screwTemp, '', ' ± 5'),
-                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter ?? sps.screwSpeed, '', ' ± 2'),
-                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter ?? sps.feedRollRatio, 'Max '),
-                'PressureOuter': formatVal(sps.pressureOuter ?? sps.pressure, 'Max '),
-                
-                'SpiralSpeed': formatVal(sps.spiralSpeed, '', ' ± 20'),
-                'SpiralPitchSetting': formatVal(sps.spiralPitch, '', ' ± 5'),
-                'SpiralPitchDisplay': formatVal(sps.spiralPitchDisplay, '', ' ± 5'),
-                
-                'PresetValue': formatVal(sps.presetValve, '', ' ± 0.5'),
-                'ControlValue': formatVal(sps.controlValue),
-                'HoseSpeed': formatVal(sps.hoseSpeed),
-                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed),
-                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed),
-                'ConveyorRatio': formatVal(sps.conveyorRatio),
-                'UnsmoothSurface': formatVal(sps.unsmoothSurface),
-                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp),
-                'CaterpillarGap': formatVal(sps.caterpillarGap),
+                'HeadTempInner': formatVal(sps.headTempInner || sps.headTemp || sps.HeadTemp || sps.HeadTemp1, '', ' ± 5'),
+                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_1, '', ' ± 5'),
+                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_1, '', ' ± 5'),
+                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder1_3, '', ' ± 5'),
+                'ScrewTempInner': formatVal(sps.screwTempInner || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp1, '', ' ± 5'),
+                'ScrewSpeedInner': formatVal(sps.screwSpeedInner || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed1, '', ' ± 2'),
+                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed1, 'Max '),
+                'PressureInner': formatVal(sps.pressureInner || sps.pressure || sps.Pressure || sps.Pressure1, 'Max '),
 
-                // Dies Measurements
-                'NippleDie': formatVal(sps.innerDie, '', ' ± 0.1'),
-                'TubeDie': formatVal(sps.tubeDie, '', ' ± 0.1'),
-                'MiddleDie': formatVal(sps.middleDie, '', ' ± 0.1'),
-                'CoverDie': formatVal(sps.coverDie, '', ' ± 0.1'),
-                'SpacerDie': formatVal(sps.spacerDie, '', ' ± 0.1'),
-                'ToleranceDie': formatVal(sps.toleranceDie, '', ' ± 0.1')
+                'HeadTempOuter': formatVal(sps.headTempOuter || sps.headTemp || sps.HeadTemp || sps.HeadTemp2, '', ' ± 5'),
+                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_2, '', ' ± 5'),
+                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_2, '', ' ± 5'),
+                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder3_2, '', ' ± 5'),
+                'ScrewTempOuter': formatVal(sps.screwTempOuter || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp2, '', ' ± 5'),
+                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed2, '', ' ± 2'),
+                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed2, 'Max '),
+                'PressureOuter': formatVal(sps.pressureOuter || sps.pressure || sps.Pressure || sps.Pressure2, 'Max '),
+
+                'SpiralSpeed': formatVal(sps.spiralSpeed || sps.SpiralSpeed, '', ' ± 20'),
+                'SpiralPitchSetting': formatVal(sps.spiralPitch || sps.SpiralPitch || sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
+                'SpiralPitchDisplay': formatVal(sps.spiralPitchDisplay || sps.SpiralPitchDisplay, '', ' ± 5'),
+                'PresetValue': formatVal(sps.presetValve || sps.PresetValue || sps.presetValue || sps.PresetValue, '', ' ± 0.5'),
+                'ControlValue': formatVal(sps.controlValue || sps.ControlValue),
+                'HoseSpeed': formatVal(sps.hoseSpeed || sps.HoseSpeed),
+                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed || sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed),
+                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed || sps.CoolConveyorSpeed),
+                'ConveyorRatio': formatVal(sps.conveyorRatio || sps.ConveyorRatio),
+                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface),
+                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp),
+                'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
+
+                'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple, '', ' ± 0.1'),
+                'TubeDie': formatVal(sps.tubeDie || sps.TubeDie, '', ' ± 0.1'),
+                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie || sps.tubeDie || sps.TubeDie, '', ' ± 0.1'),
+                'CoverDie': formatVal(sps.coverDie || sps.CoverDie, '', ' ± 0.1'),
+                'SpacerDie': formatVal(sps.spacerDie || sps.SpacerDie, '', ' ± 0.1'),
+                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie || sps.toleranceInner || sps.ToleranceInner, '', ' ± 0.1')
             };
 
             for (const [key, val] of Object.entries(specMappings)) {
@@ -1192,15 +1170,27 @@
                     el.innerText = val;
                     el.classList.add('blink-once');
                     
-                    // Auto-validate current inputs if they have values
-                    const inputs = document.querySelectorAll(`[name$="_${key}"]`);
-                    inputs.forEach(inp => { if(inp.value) validateParam(inp, 'spec_' + key); });
+                    if (key.includes('Die') || key === 'ToleranceDie') {
+                        const dieRadios = {
+                            'NippleDie': { field: 'NippleDieOK', init: 'NippleDieInitial', final: 'NippleDieFinal' },
+                            'TubeDie': { field: 'TubeDieOK', init: 'TubeDieInitial', final: 'TubeDieFinal' },
+                            'MiddleDie': { field: 'MiddleDieOK', init: 'MiddleDieInitial', final: 'MiddleDieFinal' },
+                            'CoverDie': { field: 'CoverDieOK', init: 'CoverDieInitial', final: 'CoverDieFinal' },
+                            'SpacerDie': { field: 'SpacerDieOK', init: 'SpacerDieInitial', final: 'SpacerDieFinal' },
+                            'ToleranceDie': { field: 'ToleranceDieOK', init: 'ToleranceInitial', final: 'ToleranceFinal' }
+                        };
+                        const d = dieRadios[key];
+                        if (d) checkDieStatus('spec_' + key, d.field, d.init, d.final);
+                    } else {
+                        const inputs = document.querySelectorAll(`[name$="${key}"]`);
+                        inputs.forEach(inp => { if(inp.value) validateParam(inp, 'spec_' + key); });
+                    }
                 }
             }
 
             Swal.fire({
                 title: 'SPS SYNC SUCCESS',
-                text: 'Protokol ' + sps.hoseType + ' berhasil dimuat!',
+                text: 'Protokol ' + (sps.hoseType || sps.HoseType || '') + ' berhasil dimuat!',
                 icon: 'success',
                 toast: true,
                 position: 'top-end',
@@ -1210,24 +1200,13 @@
         }
 
         // --- PARAMETER VALIDATION LOGIC ---
-        function validateParam(input, specId) {
-            const valStr = input.value.trim();
+        // --- PARAMETER VALIDATION LOGIC ---
+        function computeValidity(valStr, specText) {
             const val = parseFloat(valStr);
-            const specEl = document.getElementById(specId);
-            if(!specEl) return;
-            const specText = specEl.innerText.trim();
-            
-            console.log(`Validating [${valStr}] against [${specText}]`);
-
-            if (valStr === "" || isNaN(val) || !specText || specText === '--') {
-                input.classList.remove('valid-success', 'valid-error');
-                return;
-            }
-
+            if (valStr === "" || isNaN(val) || !specText || specText === '--') return true;
 
             let isValid = true;
             try {
-                // Pre-clean: strip "Max.", "Min.", etc. to avoid token errors (like Max. 15 being parsed as .15)
                 let workingText = specText.replace(/max\.?/i, '').replace(/min\.?/i, '').replace(/[A-Za-z°%]/g, '').trim();
 
                 if (specText.includes('±')) {
@@ -1250,9 +1229,19 @@
                     const target = parseFloat(workingText.replace(/[^-0-9.]/g, ''));
                     if(!isNaN(target)) isValid = (val === target);
                 }
-            } catch (e) { 
-                console.error("Validation Logic Error:", e); 
-                isValid = false;
+            } catch (e) { isValid = false; }
+            return isValid;
+        }
+
+        function validateParam(input, specId) {
+            const specEl = document.getElementById(specId);
+            if(!specEl) return;
+            const specText = specEl.innerText.trim();
+            const isValid = computeValidity(input.value.trim(), specText);
+            
+            if (input.value.trim() === "") {
+                input.classList.remove('valid-success', 'valid-error');
+                return;
             }
 
             if (isValid) {
@@ -1261,6 +1250,45 @@
             } else {
                 input.classList.add('valid-error');
                 input.classList.remove('valid-success');
+            }
+        }
+
+        function checkDieStatus(specId, radioFieldName, initName, finalName) {
+            const initInp = document.querySelector(`[name="${initName}"]`);
+            const finalInp = document.querySelector(`[name="${finalName}"]`);
+            const specEl = document.getElementById(specId);
+            if(!specEl) return;
+            const specText = specEl.innerText.trim();
+            if(specText === '--') return;
+
+            let isInitOk = true;
+            let isFinalOk = true;
+
+            if(initInp && initInp.value) isInitOk = computeValidity(initInp.value, specText);
+            if(finalInp && finalInp.value) isFinalOk = computeValidity(finalInp.value, specText);
+
+            // Styling
+            if(initInp) {
+                if(!initInp.value) initInp.classList.remove('valid-success', 'valid-error');
+                else { initInp.classList.toggle('valid-success', isInitOk); initInp.classList.toggle('valid-error', !isInitOk); }
+            }
+            if(finalInp) {
+                if(!finalInp.value) finalInp.classList.remove('valid-success', 'valid-error');
+                else { finalInp.classList.toggle('valid-success', isFinalOk); finalInp.classList.toggle('valid-error', !isFinalOk); }
+            }
+
+            // Radio logic: Source of truth is BOTH (if any is NG, overall is NG. If only one has value, that one decides)
+            let overallOk = true;
+            if(initInp.value && finalInp.value) overallOk = isInitOk && isFinalOk;
+            else if(initInp.value) overallOk = isInitOk;
+            else if(finalInp.value) overallOk = isFinalOk;
+
+            const radios = document.getElementsByName(radioFieldName);
+            if (radios.length > 0) {
+                for(let r of radios) {
+                    if(r.value === 'true') r.checked = overallOk;
+                    if(r.value === 'false') r.checked = !overallOk;
+                }
             }
         }
 
@@ -1677,7 +1705,7 @@
                             <span class="text-white small opacity-80 fw-bold">${item.itemName}</span>
                         </div>
                         <div class="text-end flex-shrink-0">
-                            <div class="super-small text-info opacity-50 fw-black tracking-widest mb-1">PLANNING SCHEDULE</div>
+                            <div class="super-small text-info opacity-50 fw-black tracking-widest mb-1">PLANNING MASTER</div>
                             <div class="badge bg-info bg-opacity-10 border border-info border-opacity-20 text-info fw-bold font-monospace" style="font-size: 0.65rem;">
                                 ${item.dateShift ? item.dateShift : 'NO DATE'}
                             </div>
@@ -1756,76 +1784,6 @@
                     color: '#0ea5e9',
                     confirmButtonColor: '#0ea5e9'
                 });
-            }
-        }
-
-        function applySpsToForm(sps) {
-            const itemCode = sps.itemList || sps.itemCode || sps.productCode || '';
-            document.getElementById('manualItemSearch').value = itemCode;
-            document.getElementById('DocNo').value = sps.documentNumber || '---';
-            document.getElementById('RevNo').value = sps.revisionNumber || '0';
-            document.getElementById('HoseType').value = sps.hoseType || '';
-            document.getElementById('CustomerName').value = sps.customerName || '';
-            document.getElementById('InnerMaterial').value = sps.innerMaterial || '';
-            document.getElementById('OuterMaterial').value = sps.outerMaterial || '';
-            document.getElementById('Yarn').value = sps.yarnType || '';
-
-            let spsIdEl = document.getElementById('StandardParameterSettingId');
-            if (spsIdEl) spsIdEl.value = sps.id || '';
-
-            const formatVal = (val, prefix = '', suffix = '') => {
-                if (val === undefined || val === null || val === '') return '---';
-                // Hindari double ± jika dari database sudah ada
-                let strVal = String(val).trim();
-                if (suffix.includes('±') && strVal.includes('±')) {
-                    suffix = '';
-                }
-                return `${prefix}${strVal}${suffix}`;
-            };
-
-            const specMappings = {
-                'HeadTempInner': formatVal(sps.headTempInner, '', ' ± 5'),
-                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner, '', ' ± 5'),
-                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner, '', ' ± 5'),
-                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner, '', ' ± 5'),
-                'ScrewTempInner': formatVal(sps.screwTempInner, '', ' ± 5'),
-                'ScrewSpeedInner': formatVal(sps.screwSpeedInner, '', ' ± 2'),
-                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner, 'Max '),
-                'PressureInner': formatVal(sps.pressureInner, 'Max '),
-                'HeadTempOuter': formatVal(sps.headTempOuter, '', ' ± 5'),
-                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter, '', ' ± 5'),
-                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter, '', ' ± 5'),
-                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter, '', ' ± 5'),
-                'ScrewTempOuter': formatVal(sps.screwTempOuter, '', ' ± 5'),
-                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter, '', ' ± 2'),
-                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter, 'Max '),
-                'PressureOuter': formatVal(sps.pressureOuter, 'Max '),
-                'SpiralSpeed': formatVal(sps.spiralSpeed, '', ' ± 20'),
-                'SpiralPitchSetting': formatVal(sps.spiralPitch, '', ' ± 5'),
-                'SpiralPitchDisplay': formatVal(sps.spiralPitchDisplay, '', ' ± 5'),
-                'PresetValue': formatVal(sps.presetValve, '', ' ± 0.5'),
-                'ControlValue': formatVal(sps.controlValue),
-                'HoseSpeed': formatVal(sps.hoseSpeed),
-                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed),
-                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed),
-                'ConveyorRatio': formatVal(sps.conveyorRatio),
-                'UnsmoothSurface': formatVal(sps.unsmoothSurface),
-                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp),
-                'CaterpillarGap': formatVal(sps.caterpillarGap),
-                'NippleDie': formatVal(sps.innerDie, '', ' ± 0.1'),
-                'TubeDie': formatVal(sps.tubeDie, '', ' ± 0.1'),
-                'MiddleDie': formatVal(sps.middleDie, '', ' ± 0.1'),
-                'CoverDie': formatVal(sps.coverDie, '', ' ± 0.1'),
-                'SpacerDie': formatVal(sps.spacerDie, '', ' ± 0.1'),
-                'ToleranceDie': formatVal(sps.toleranceDie, '', ' ± 0.1')
-            };
-
-            for (const [key, val] of Object.entries(specMappings)) {
-                const el = document.getElementById('spec_' + key);
-                if (el) {
-                    el.innerText = val;
-                    el.classList.add('blink-once');
-                }
             }
         }
 

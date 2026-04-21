@@ -706,7 +706,8 @@ namespace VelastoProductionSystem.Controllers
             { 
                 ProductionDate = DateTime.Today,
                 Status = "NOW PRODUCING",
-                Yarn = "---"
+                Yarn = "---",
+                CreatedBy = HttpContext.Session.GetString("UserName") ?? "Operator"
             });
         }
 
