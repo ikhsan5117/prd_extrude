@@ -516,8 +516,10 @@ namespace VelastoProductionSystem.Controllers
                 await _context.SaveChangesAsync();
 
                 // Notify dashboard via SignalR (fire-and-forget, don't await to block response)
-                _ = _hubContext.Clients.All.SendAsync("ReceiveUpdate");
-
+                // Final Save for all added collections
+                await _context.SaveChangesAsync();
+                
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
                 return Json(new { success = true, id = report.Id, message = "Report archived successfully." });
             }
             catch (Exception ex)
@@ -677,8 +679,11 @@ namespace VelastoProductionSystem.Controllers
         {
             if (string.IsNullOrWhiteSpace(input) || input == "---") return null;
             try {
-                // Remove everything except numbers, dots, and hyphens
-                string cleaned = System.Text.RegularExpressions.Regex.Replace(input, @"[^-0-9.]", "");
+                // Normalize: Replace comma with dot first
+                string normalized = input.Replace(',', '.');
+                // Keep only numbers, one dot, and a hyphen
+                string cleaned = System.Text.RegularExpressions.Regex.Replace(normalized, @"[^-0-9.]", "");
+                
                 if (decimal.TryParse(cleaned, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal result))
                     return result;
             } catch { }
@@ -692,6 +697,7 @@ namespace VelastoProductionSystem.Controllers
             var report = await _context.ProductionReports
                 .Include(p => p.StandardParameterSetting)
                 .Include(p => p.ProductionReadings)
+                .Include(p => p.MaterialLots)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (report == null) return NotFound();

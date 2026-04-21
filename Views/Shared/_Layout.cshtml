@@ -32,10 +32,15 @@
                 </button>
                 <div class="brand">
                     <i class="bi bi-gear-fill"></i>
-                    <span>VELASTO Production System</span>
+                    <span>VELASTO <small class="d-none d-lg-inline opacity-50 fw-light">Production System</small></span>
                 </div>
             </div>
             <div class="navbar-right">
+                <!-- Fullscreen Toggle -->
+                <button class="btn btn-link text-white-50 p-0 me-2 me-md-3 border-0" onclick="toggleFullScreen()" title="Toggle Fullscreen">
+                    <i class="bi bi-fullscreen fs-5" id="fs-icon"></i>
+                </button>
+
                 @if (!string.IsNullOrEmpty(Context.Session.GetString("UserName")))
                 {
                     <div class="d-flex align-items-center me-2 me-md-3 border-end pe-2 pe-md-3 border-white border-opacity-10">
@@ -596,5 +601,31 @@
         </script>
     }
 
-</body>
+        <script>
+            function toggleFullScreen() {
+                const icon = document.getElementById('fs-icon');
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                    });
+                    icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                        icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
+                    }
+                }
+            }
+
+            // Sync icon if user presses ESC to exit fullscreen
+            document.addEventListener('fullscreenchange', () => {
+                const icon = document.getElementById('fs-icon');
+                if (!document.fullscreenElement) {
+                    icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
+                } else {
+                    icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
+                }
+            });
+        </script>
+    </body>
 </html>

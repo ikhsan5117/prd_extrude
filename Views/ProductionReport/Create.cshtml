@@ -1144,24 +1144,26 @@
                 'PressureOuter': formatVal(sps.pressureOuter || sps.pressure || sps.Pressure || sps.Pressure2, 'Max '),
 
                 'SpiralSpeed': formatVal(sps.spiralSpeed || sps.SpiralSpeed, '', ' ± 20'),
-                'SpiralPitchSetting': formatVal(sps.spiralPitch || sps.SpiralPitch || sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
-                'SpiralPitchDisplay': formatVal(sps.spiralPitchDisplay || sps.SpiralPitchDisplay, '', ' ± 5'),
-                'PresetValue': formatVal(sps.presetValve || sps.PresetValue || sps.presetValue || sps.PresetValue, '', ' ± 0.5'),
+                'SpiralPitchSetting': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
+                'SpiralPitchDisplay': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
+                'PresetValue': formatVal(sps.presetValve || sps.PresetValue || sps.presetValue, '', ' ± 0.5'),
                 'ControlValue': formatVal(sps.controlValue || sps.ControlValue),
                 'HoseSpeed': formatVal(sps.hoseSpeed || sps.HoseSpeed),
-                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed || sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed),
+                'TakeupConveyorSpeed': formatVal(sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed),
                 'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed || sps.CoolConveyorSpeed),
                 'ConveyorRatio': formatVal(sps.conveyorRatio || sps.ConveyorRatio),
-                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface),
+                'ChillerTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp, '', ' ± 5'),
+                'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
+                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface || 'OK'),
                 'ChillerWaterTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp),
                 'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
 
-                'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple, '', ' ± 0.1'),
-                'TubeDie': formatVal(sps.tubeDie || sps.TubeDie, '', ' ± 0.1'),
-                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie || sps.tubeDie || sps.TubeDie, '', ' ± 0.1'),
-                'CoverDie': formatVal(sps.coverDie || sps.CoverDie, '', ' ± 0.1'),
-                'SpacerDie': formatVal(sps.spacerDie || sps.SpacerDie, '', ' ± 0.1'),
-                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie || sps.toleranceInner || sps.ToleranceInner, '', ' ± 0.1')
+                'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple),
+                'TubeDie': formatVal(sps.tubeDie || sps.TubeDie),
+                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie || sps.tubeDie || sps.TubeDie),
+                'CoverDie': formatVal(sps.coverDie || sps.CoverDie),
+                'SpacerDie': formatVal(sps.spacerDie || sps.SpacerDie),
+                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie || sps.toleranceInner || sps.ToleranceInner)
             };
 
             for (const [key, val] of Object.entries(specMappings)) {
@@ -1249,15 +1251,18 @@
         // --- PARAMETER VALIDATION LOGIC ---
         // --- PARAMETER VALIDATION LOGIC ---
         function computeValidity(valStr, specText) {
-            const val = parseFloat(valStr);
+            // Replace comma with dot for validation
+            const normalizedVal = valStr.replace(',', '.');
+            const val = parseFloat(normalizedVal);
             if (valStr === "" || isNaN(val) || !specText || specText === '--') return true;
 
             let isValid = true;
             try {
-                let workingText = specText.replace(/max\.?/i, '').replace(/min\.?/i, '').replace(/[A-Za-z°%]/g, '').trim();
+                // Normalize specText as well (replace comma with dot)
+                let workingText = specText.replace(',', '.').replace(/max\.?/i, '').replace(/min\.?/i, '').replace(/[A-Za-z°%]/g, '').trim();
 
                 if (specText.includes('±')) {
-                    const parts = specText.split('±');
+                    const parts = specText.replace(',', '.').split('±');
                     const target = parseFloat(parts[0].replace(/[^-0-9.]/g, ''));
                     const tolerance = parseFloat(parts[1].replace(/[^-0-9.]/g, ''));
                     if (!isNaN(target) && !isNaN(tolerance)) {
@@ -1269,9 +1274,14 @@
                 } else if (specText.toLowerCase().includes('min')) {
                     const limit = parseFloat(workingText.replace(/[^-0-9.]/g, ''));
                     if (!isNaN(limit)) isValid = (val >= limit);
-                } else if (specText.includes('-')) {
-                    const range = specText.replace(/[^-0-9.]+/g, ' ').trim().split(/\s+/).map(s => parseFloat(s));
-                    if (range.length >= 2) isValid = (val >= range[0] && val <= range[1]);
+                } else if (specText.includes('-') && !specText.startsWith('-')) {
+                    // Range logic (e.g. 10-14)
+                    const rangeParts = specText.split('-');
+                    const min = parseFloat(rangeParts[0].replace(',', '.').replace(/[^-0-9.]/g, ''));
+                    const max = parseFloat(rangeParts[1].replace(',', '.').replace(/[^-0-9.]/g, ''));
+                    if (!isNaN(min) && !isNaN(max)) {
+                        isValid = (val >= min && val <= max);
+                    }
                 } else {
                     const target = parseFloat(workingText.replace(/[^-0-9.]/g, ''));
                     if(!isNaN(target)) isValid = (val === target);
@@ -1519,7 +1529,7 @@
                 rows.forEach(row => {
                     const lot = row.querySelector('input[data-type="lot"]').value;
                     const sgInput = row.querySelector('input[data-type="sg"]');
-                    const sg = sgInput ? sgInput.value : null;
+                    const sg = sgInput ? sgInput.value.replace(',', '.') : null;
                     
                     if (lot || sg) {
                         results.push({

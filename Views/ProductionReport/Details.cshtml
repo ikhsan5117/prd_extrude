@@ -564,7 +564,7 @@
                                 @if (Model.MaterialLots.Any()) {
                                     @foreach (var lot in Model.MaterialLots.OrderBy(x => x.LayerType)) {
                                         <tr>
-                                            <td class="ps-2 text-start fw-bold text-primary">@lot.LayerType</td>
+                                            <td class="ps-2 text-start fw-bold text-dark">@lot.LayerType</td>
                                             <td class="text-start ps-2">@lot.MaterialName</td>
                                             <td class="text-start ps-2">@lot.MaterialActual</td>
                                             <td class="fw-bold text-dark">@lot.LotNumber</td>
@@ -593,27 +593,22 @@
                                 </th>
                                 <th colspan="2" style="background:#f0f0f0; border-bottom: 0;"></th>
                                 <th style="background:#f0f0f0;" class="text-center">STANDARD</th>
-                                <th style="background:#f0f0f0;" class="text-center">ACTUAL</th>
-                                <th style="background:#f0f0f0;" class="text-center border-end-0">NO. LOT</th>
-                                <th rowspan="4" style="background:#f4f4f4;" class="border-start-form"></th>
+                                <th colspan="3" style="background:#f0f0f0;" class="text-center border-end-0">ACTUAL</th>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
                                 <td class="text-center">@(Model.InnerMaterial ?? "-")</td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.InnerMaterialLotNo == "0" ? "" : Model.InnerMaterialLotNo)" placeholder="" /></td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">OUTER(MATERIAL)</td>
                                 <td class="text-center">@(Model.OuterMaterial ?? "-")</td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.OuterMaterialLotNo == "0" ? "" : Model.OuterMaterialLotNo)" placeholder="" /></td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">YARN</td>
                                 <td class="text-center">ARAMID</td>
-                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
-                                <td class="p-0 border-end-0 bg-light"><input type="text" class="input-transparent w-100 h-100 text-center text-dark" value="@(Model.YarnLotNo == "0" ? "" : Model.YarnLotNo)" placeholder="" /></td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
                             </tr>
                             
                             @{
@@ -632,7 +627,7 @@
                                 <th style="background:#f0f0f0;" class="text-start ps-2">DIES</th>
                                 <th width="100" style="background:#f0f0f0;" class="text-center">CEK VISUAL</th>
                                 <th width="90" style="background:#f0f0f0;" class="text-center">STANDARD</th>
-                                <th width="60" style="background:#f0f0f0;" class="text-center">BEFORE</th>
+                                <th colspan="2" style="background:#f0f0f0;" class="text-center">BEFORE</th>
                                 <th width="60" style="background:#f0f0f0; border-right: 0 !important;" class="text-center">AFTER</th>
                             </tr>
                             <tr>
@@ -644,7 +639,7 @@
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(mSps?.Nipple, std.InnerDie, "8.8±0.1")</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.NippleDieInitial == "0" ? "" : Model.NippleDieInitial)" placeholder="" /></td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.NippleDieInitial == "0" ? "" : Model.NippleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.NippleDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
@@ -656,7 +651,7 @@
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(mSps?.TubeDie, std.TubeDie, "11.1±0.1")</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.TubeDieInitial == "0" ? "" : Model.TubeDieInitial)" placeholder="" /></td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.TubeDieInitial == "0" ? "" : Model.TubeDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.TubeDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
@@ -668,7 +663,7 @@
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(null, std.MiddleDie, "14.2±0.1")</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.MiddleDieInitial == "0" ? "" : Model.MiddleDieInitial)" placeholder="" /></td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.MiddleDieInitial == "0" ? "" : Model.MiddleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.MiddleDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
@@ -680,7 +675,7 @@
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(mSps?.CoverDie, std.CoverDie, "15.1±0.1")</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.CoverDieInitial == "0" ? "" : Model.CoverDieInitial)" placeholder="" /></td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.CoverDieInitial == "0" ? "" : Model.CoverDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.CoverDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
@@ -692,7 +687,7 @@
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(null, std.SpacerDie, "7.3±0.1")</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.SpacerDieInitial == "0" ? "" : Model.SpacerDieInitial)" placeholder="" /></td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.SpacerDieInitial == "0" ? "" : Model.SpacerDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.SpacerDieFinal" placeholder="" /></td>
                             </tr>
                             <tr>
@@ -704,7 +699,7 @@
                                     </div>
                                 </td>
                                 <td class="text-center">@FDie(null, std.ToleranceDie, "0.4±0.1")</td>
-                                <td class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.ToleranceInitial == "0" ? "" : Model.ToleranceInitial)" placeholder="" /></td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.ToleranceInitial == "0" ? "" : Model.ToleranceInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.ToleranceFinal" placeholder="" /></td>
                             </tr>
                         </table>
