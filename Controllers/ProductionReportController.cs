@@ -219,8 +219,13 @@ namespace VelastoProductionSystem.Controllers
             var paramReports = await paramQuery
                 .OrderByDescending(r => r.CreatedDate)
                 .Select(r => new {
-                    r.Id, r.HoseType, r.VinCode, r.Shift, r.CreatedBy, r.Status,
-                    r.InnerMaterial, r.OuterMaterial, r.Yarn,
+                    r.Id, r.HoseType, r.VinCode, r.Shift, r.CreatedBy, r.Status, r.CreatedDate,
+                    r.DocumentNumber, r.RevisionNumber,
+                    r.InnerMaterialActual, r.InnerMaterialLotNo,
+                    r.OuterMaterialActual, r.OuterMaterialLotNo,
+                    r.YarnActual, r.YarnLotNo,
+                    r.InitHoseSpeed, r.EmbossMarkContent,
+                    r.NippleDieOK, r.TubeDieOK, r.MiddleDieOK, r.CoverDieOK, r.SpacerDieOK, r.ToleranceDieOK,
                     r.StandardLength, r.ActualLength,
                     r.QtyTarget, r.QtyOk, r.NgDimension, r.NgVisual, r.Remark,
                     r.MachineName
@@ -408,13 +413,18 @@ namespace VelastoProductionSystem.Controllers
                     MachineName = HttpContext.Session.GetString("MachineName"),
                     InnerMaterial = dto.InnerMaterial,
                     InnerMaterialActual = dto.InnerMaterialActual,
-                    InnerMaterialLotNo = dto.InnerMaterialLotNo,
                     OuterMaterial = dto.OuterMaterial,
                     OuterMaterialActual = dto.OuterMaterialActual,
-                    OuterMaterialLotNo = dto.OuterMaterialLotNo,
                     Yarn = dto.Yarn,
                     YarnActual = dto.YarnActual,
-                    YarnLotNo = dto.YarnLotNo,
+
+                    // AUTO-MAPPING: Ambil Lot & SG pertama dari list untuk ditampilkan di Identity Card
+                    InnerMaterialLotNo = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "INNER")?.LotNumber,
+                    InnerMaterialSG = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "INNER")?.SGValue,
+                    OuterMaterialLotNo = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "OUTER")?.LotNumber,
+                    OuterMaterialSG = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "OUTER")?.SGValue,
+                    YarnLotNo = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "YARN")?.LotNumber,
+
                     DAI_Awal = dto.DAI_Awal,
                     DAI_Akhir = dto.DAI_Akhir,
                     DAC_Awal = dto.DAC_Awal,
@@ -507,13 +517,14 @@ namespace VelastoProductionSystem.Controllers
                 // Notify dashboard via SignalR (fire-and-forget, don't await to block response)
                 _ = _hubContext.Clients.All.SendAsync("ReceiveUpdate");
 
-                return Json(new { success = true, id = report.Id });
+                return Json(new { success = true, id = report.Id, message = "Report archived successfully." });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = "CRITICAL ERROR: " + ex.Message + (ex.InnerException != null ? " -> " + ex.InnerException.Message : "") });
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> UpdateWithReadings([FromBody] ProductionReportSaveDto dto)
@@ -660,10 +671,16 @@ namespace VelastoProductionSystem.Controllers
             }
         }
 
-        private decimal? ParseDecimal(string? val)
+        // Helper to handle messy inputs like "15.5 mm" or "100 rpm"
+        private decimal? ParseDecimal(string? input)
         {
-            if (string.IsNullOrEmpty(val)) return null;
-            if (decimal.TryParse(val.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var res)) return res;
+            if (string.IsNullOrWhiteSpace(input) || input == "---") return null;
+            try {
+                // Remove everything except numbers, dots, and hyphens
+                string cleaned = System.Text.RegularExpressions.Regex.Replace(input, @"[^-0-9.]", "");
+                if (decimal.TryParse(cleaned, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal result))
+                    return result;
+            } catch { }
             return null;
         }
 

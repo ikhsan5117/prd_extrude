@@ -1600,7 +1600,7 @@
                 const result = await res.json();
                 if (result.success) {
                     Swal.fire('UPLOAD COMPLETE', 'Report archived successfully in the digital vault.', 'success')
-                        .then(() => window.location.href = '/ProductionReport/Create');
+                        .then(() => window.location.href = '/ProductionReport/Details?id=' + result.id);
                 } else {
                     Swal.fire('TRANSMISSION ERROR', result.message || 'The server rejected the dataset.', 'error');
                 }

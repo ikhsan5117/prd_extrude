@@ -10,11 +10,11 @@
 
 <div class="production-dashboard-sapphire fade-in">
     <!-- PREMUIM ACTION TOOLBAR (No Print) -->
-    <div class="no-print sticky-top mb-4 p-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px);">
+    <div class="no-print sticky-top mb-4 p-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px); margin-top: 70px; border-radius: 0 0 20px 20px;">
         <div class="container-fluid d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <a asp-action="ParameterHistory" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
-                    <i class="bi bi-arrow-left me-2"></i> BACK TO HISTORY
+                <a href="/ProductionReport/Create" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
+                    <i class="bi bi-arrow-left me-2"></i> KEMBALI KE INPUT
                 </a>
                 <div class="vr bg-white opacity-25" style="height: 24px;"></div>
                 <div class="btn-group btn-group-sm rounded-pill p-1 bg-black bg-opacity-25 border border-white border-opacity-10">
@@ -57,12 +57,13 @@
             .landscape-sheet { 
                 background: white; 
                 width: 1400px; 
-                padding: 15px; 
-                color: #111; 
+                min-height: 800px;
+                padding: 40px; 
+                color: #000; 
                 font-family: 'Segoe UI', Arial, sans-serif; 
-                border: 3px solid #000; 
+                border: 4px solid #000; 
                 margin: 0 auto; 
-                box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+                box-shadow: 0 0 40px rgba(0,0,0,0.2); 
                 position: relative; 
             }
             .inner-border {
@@ -71,17 +72,17 @@
                 height: 100%;
                 width: 100%;
             }
-            .landscape-sheet table { border-collapse: collapse; border: 1px solid #444; }
-            .landscape-sheet td, .landscape-sheet th { border: 1px solid #444; padding: 3px 6px; font-size: 10px; line-height: 1.2; }
-            .hand-ink { font-family: 'Caveat', cursive; color: #0033cc; font-size: 1.7rem; vertical-align: bottom; }
-            .dots-fill { border-bottom: 2px dotted #444; flex-grow: 1; min-height: 28px; display: inline-block; margin-left: 5px; position: relative; }
+            .landscape-sheet table { border-collapse: collapse; border: 2px solid #000; }
+            .landscape-sheet td, .landscape-sheet th { border: 2px solid #000; padding: 4px 8px; font-size: 11px; line-height: 1.2; color: #000; }
+            .hand-ink { font-family: 'Caveat', cursive; color: #0033cc; font-size: 1.8rem; vertical-align: bottom; font-weight: bold; }
+            .dots-fill { border-bottom: 2px solid #000; flex-grow: 1; min-height: 32px; display: inline-block; margin-left: 5px; position: relative; }
             .label-main { font-size: 1.2rem; color: #000; font-weight: 500; white-space: nowrap; }
             .header-title { text-align: center; font-size: 2.8rem; font-weight: bold; margin-bottom: 0; letter-spacing: 3px; }
-            .spv-box-outer { border: 1px solid #444; width: 160px; padding: 8px; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-            .spv-sq { width: 120px; height: 45px; border: 1px solid #444; margin: 2px 0; }
-            .border-bottom-form-bold { border-bottom: 2px solid #000; }
-            .border-end-form { border-right: 1px solid #000; }
-            .super-small { font-size: 8px; text-transform: uppercase; }
+            .spv-box-outer { border: 2px solid #000; width: 160px; padding: 8px; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+            .spv-sq { width: 120px; height: 45px; border: 2px solid #000; margin: 2px 0; }
+            .border-bottom-form-bold { border-bottom: 3px solid #000; }
+            .border-end-form { border-right: 2px solid #000; }
+            .super-small { font-size: 8px; text-transform: uppercase; color: #000; }
         </style>
 
         <div id="printArea" class="fade-in py-5 bg-secondary bg-opacity-10 d-flex justify-content-center" style="min-height: 100vh;">
@@ -122,7 +123,7 @@
                                 </div>
                                 <div class="d-flex align-items-end">
                                     <span class="label-main" style="width: 130px;">4. Yarn</span>
-                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-1deg);">: @Model.Yarn</span></div>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-1.5deg);">: @(Model.YarnActual ?? Model.Yarn)</span></div>
                                 </div>
                             </div>
                         </div>
@@ -139,8 +140,8 @@
                                 <table style="width: 240px; border: 1px solid #000;">
                                     <tr><th rowspan="2" style="width: 100px;"></th><th colspan="2" class="text-center">Waktu</th></tr>
                                     <tr><th class="text-center">Awal</th><th class="text-center">Akhir</th></tr>
-                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Start Prod.</td><td></td><td></td></tr>
-                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Akhir Prod.</td><td></td><td></td></tr>
+                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Start Prod.</td><td class="text-center hand-ink" style="font-size:12px">@Model.DAI_Awal</td><td class="text-center hand-ink" style="font-size:12px">@Model.DAI_Akhir</td></tr>
+                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Akhir Prod.</td><td class="text-center hand-ink" style="font-size:12px">@Model.DRAI_Awal</td><td class="text-center hand-ink" style="font-size:12px">@Model.DRAI_Akhir</td></tr>
                                 </table>
                             </div>
 
@@ -149,7 +150,7 @@
                                 <table style="width: 180px; border: 1px solid #000; margin-top: 10px;">
                                     <tr><th colspan="2" class="text-center">Waktu</th></tr>
                                     <tr><th class="text-center">Awal</th><th class="text-center">Akhir</th></tr>
-                                    <tr><td style="height: 30px;"></td><td style="height: 30px;"></td></tr>
+                                    <tr><td class="text-center hand-ink" style="height: 30px; vertical-align:middle; font-size:14px">@Model.DAC_Awal</td><td class="text-center hand-ink" style="height: 30px; vertical-align:middle; font-size:14px">@Model.DAC_Akhir</td></tr>
                                 </table>
                             </div>
                         </div>
@@ -183,11 +184,27 @@
                         <div class="d-flex flex-column gap-4">
                             <div class="d-flex align-items-end">
                                 <span class="label-main" style="width: 110px;">1) Inner :</span>
-                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@Model.InnerMaterial</span></div>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@(Model.InnerMaterialActual ?? Model.InnerMaterial)</span></div>
                                 <span class="label-main mx-4">No.Lot :</span>
-                                <div class="dots-fill ps-3" style="min-width: 300px;"><span class="hand-ink">@Model.InnerMaterialLotNo</span></div>
+                                <div class="dots-fill ps-3" style="min-width: 300px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var innerLots = Model.MaterialLots.Where(x => x.LayerType == "INNER").Select(x => x.LotNumber).ToList();
+                                            var innerShow = innerLots.Any() ? string.Join(", ", innerLots) : Model.InnerMaterialLotNo;
+                                        }
+                                        @innerShow
+                                    </span>
+                                </div>
                                 <span class="label-main mx-4">SG :</span>
-                                <div class="dots-fill ps-3" style="min-width: 150px;"><span class="hand-ink">@Model.InnerMaterialSG?.ToString("0.000")</span></div>
+                                <div class="dots-fill ps-3" style="min-width: 150px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var innerSGs = Model.MaterialLots.Where(x => x.LayerType == "INNER" && x.SGValue.HasValue).Select(x => x.SGValue!.Value).ToList();
+                                            var innerSGShow = innerSGs.Any() ? ((decimal)innerSGs.Average()).ToString("0.000") : (Model.InnerMaterialSG?.ToString("0.000") ?? "-");
+                                        }
+                                        @innerSGShow
+                                    </span>
+                                </div>
                             </div>
                             <div class="d-flex align-items-end opacity-25">
                                 <span class="label-main" style="width: 110px;">2) Middle :</span>
@@ -199,31 +216,37 @@
                             </div>
                             <div class="d-flex align-items-end">
                                 <span class="label-main" style="width: 110px;">3) Outer :</span>
-                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@Model.OuterMaterial</span></div>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@(Model.OuterMaterialActual ?? Model.OuterMaterial)</span></div>
                                 <span class="label-main mx-4">No.Lot :</span>
-                                <div class="dots-fill ps-3" style="min-width: 300px;"><span class="hand-ink">@Model.OuterMaterialLotNo</span></div>
+                                <div class="dots-fill ps-3" style="min-width: 300px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var outerLots = Model.MaterialLots.Where(x => x.LayerType == "OUTER").Select(x => x.LotNumber).ToList();
+                                            var outerShow = outerLots.Any() ? string.Join(", ", outerLots) : Model.OuterMaterialLotNo;
+                                        }
+                                        @outerShow
+                                    </span>
+                                </div>
                                 <span class="label-main mx-4">SG :</span>
-                                <div class="dots-fill ps-3" style="min-width: 150px;"><span class="hand-ink">@Model.OuterMaterialSG?.ToString("0.000")</span></div>
+                                <div class="dots-fill ps-3" style="min-width: 150px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var outerSGs = Model.MaterialLots.Where(x => x.LayerType == "OUTER" && x.SGValue.HasValue).Select(x => x.SGValue!.Value).ToList();
+                                            var outerSGShow = outerSGs.Any() ? ((decimal)outerSGs.Average()).ToString("0.000") : (Model.OuterMaterialSG?.ToString("0.000") ?? "-");
+                                        }
+                                        @outerSGShow
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- ROW 4: FOOTER WIDE -->
                     <div class="row mt-5 pt-5 align-items-end">
-                        <div class="col-9">
+                        <div class="col-12">
                             <div class="fw-bold mb-1" style="font-size: 13px;">NOTE :</div>
-                            <div style="font-size: 13px; border: 1px solid #000; padding: 15px; width: 60%;">
+                            <div style="font-size: 13px; border: 1px solid #000; padding: 15px; width: 100%; min-height: 80px;">
                                 JANGAN MENJALANKAN PRODUKSI SEBELUM CHECKSHEET INI DI CHECK OLEH SUPERVISOR.
-                            </div>
-                        </div>
-                        <div class="col-3 d-flex justify-content-end">
-                            <div class="spv-box-outer">
-                                <span class="fw-bold" style="font-size: 1.4rem;">SPV CHECK</span>
-                                <div class="d-flex flex-column gap-1">
-                                    <div class="spv-sq"></div>
-                                    <div class="spv-sq"></div>
-                                    <div class="spv-sq"></div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -518,6 +541,43 @@
                                 <tr><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
                             </table>
                         </div>
+                    </div>
+                </div>
+
+                <div class="row g-0 border-form mb-0 border-top-0" style="background: #fafafa;">
+                    <div class="col-12 p-2">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-list-ul text-primary"></i>
+                            <span class="fw-black text-dark" style="font-size: 10px; letter-spacing: 0.5px;">MATERIAL LOT TRACKING (FULL HISTORY)</span>
+                        </div>
+                        <table class="w-100 grid-form border-0 text-center" style="font-size: 9px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #e9ecef;">
+                                    <th class="ps-2 text-start">LAYER</th>
+                                    <th>MATERIAL NAME</th>
+                                    <th>ACTUAL BATCH</th>
+                                    <th>LOT NUMBER</th>
+                                    <th class="border-end-0">SG VALUE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MaterialLots.Any()) {
+                                    @foreach (var lot in Model.MaterialLots.OrderBy(x => x.LayerType)) {
+                                        <tr>
+                                            <td class="ps-2 text-start fw-bold text-primary">@lot.LayerType</td>
+                                            <td class="text-start ps-2">@lot.MaterialName</td>
+                                            <td class="text-start ps-2">@lot.MaterialActual</td>
+                                            <td class="fw-bold text-dark">@lot.LotNumber</td>
+                                            <td class="border-end-0 fw-bold">@(lot.SGValue?.ToString("0.000") ?? "-")</td>
+                                        </tr>
+                                    }
+                                } else {
+                                    <tr>
+                                        <td colspan="5" class="p-2 text-muted italic">--- NO DYNAMIC LOTS RECORDED ---</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -1392,6 +1452,57 @@
             const element = document.getElementById('printArea');
             if (!element) return;
 
+            // Deteksi portal mana yang aktif
+            const isIdentity = new URLSearchParams(window.location.search).get('portal') === 'identity';
+
+            if (isIdentity) {
+                Swal.fire({ title: 'GENERATING PDF...', html: 'Mempersiapkan laporan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                html2pdf().set({
+                    margin: [4, 3, 4, 3],
+                    filename: 'NowImProduce_@(Model.DocumentNumber.Replace("/", "_")).pdf',
+                    image: { type: 'png' },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: false,
+                        backgroundColor: '#ffffff',
+                        onclone: (clonedDoc) => {
+                            // Rapikan printArea
+                            const pa = clonedDoc.getElementById('printArea');
+                            if (pa) pa.style.cssText = 'padding:0;margin:0;background:white;min-height:auto;display:block;';
+
+                            // Perkecil landscape-sheet agar muat A4 landscape
+                            const sheet = clonedDoc.querySelector('.landscape-sheet');
+                            if (sheet) sheet.style.cssText = 'width:900px;min-height:auto;padding:12px;border:3px solid #000;box-shadow:none;font-size:8px;margin:0;';
+
+                            const inner = clonedDoc.querySelector('.inner-border');
+                            if (inner) inner.style.padding = '10px';
+
+                            clonedDoc.querySelectorAll('.hand-ink').forEach(el => el.style.fontSize = '1rem');
+                            clonedDoc.querySelectorAll('.label-main').forEach(el => el.style.fontSize = '0.75rem');
+                            clonedDoc.querySelectorAll('.header-title').forEach(el => el.style.fontSize = '1.6rem');
+
+                            // Fix image paths
+                            clonedDoc.querySelectorAll('img').forEach(img => {
+                                const src = img.getAttribute('src') || '';
+                                if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+                                    img.src = window.location.origin + (src.startsWith('/') ? src : '/' + src);
+                                }
+                            });
+                        }
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                    pagebreak: { mode: ['avoid-all'] }
+                }).from(element).save()
+                .then(() => Swal.fire({ icon: 'success', title: 'DOWNLOAD COMPLETE', timer: 1500, showConfirmButton: false }))
+                .catch(err => Swal.fire({ icon: 'error', title: 'GAGAL', text: err.message }));
+                return;
+            }
+
+            // =============================================
+            // PORTAL LAIN: Pakai html2pdf seperti biasa
+            // =============================================
             Swal.fire({
                 title: 'GENERATING PDF...',
                 html: 'Mempersiapkan laporan produksi...',
@@ -1400,22 +1511,55 @@
             });
 
             const opt = {
-                margin:      [3, 3, 3, 3],
-                filename:    'Report_@Model.DocumentNumber.Replace("/", "_")' + '.pdf',
-                image:       { type: 'jpeg', quality: 0.98 },
+                margin:      isIdentity ? [4, 3, 4, 3] : [3, 3, 3, 3],
+                filename:    'Report_@(Model.DocumentNumber.Replace("/", "_"))_' + (isIdentity ? 'IdentityCard' : 'ParameterSetting') + '.pdf',
+                image:       { type: 'png' },
                 html2canvas: {
-                    scale: 2,
+                    scale: 3,
                     useCORS: true,
                     allowTaint: false,
+                    backgroundColor: '#ffffff',
+                    letterRendering: true,
                     onclone: (clonedDoc) => {
                         const clonedEl = clonedDoc.getElementById('printArea');
                         if (clonedEl) {
-                            // CSS zoom mengecilkan SEMUA elemen secara proporsional:
-                            // teks, gambar, tabel, border, dan spasi semuanya ikut mengecil
-                            clonedEl.style.zoom = '0.72';
                             clonedEl.style.background = 'white';
-                        }
+                            clonedEl.style.padding = '0';
+                            clonedEl.style.margin = '0';
+                            clonedEl.style.minHeight = 'auto';
 
+                            if (isIdentity) {
+                                // Langsung perkecil landscape-sheet agar muat A4 landscape (297x210mm)
+                                const sheet = clonedEl.querySelector('.landscape-sheet');
+                                if (sheet) {
+                                    sheet.style.width = '980px';
+                                    sheet.style.minHeight = 'auto';
+                                    sheet.style.padding = '15px 20px';
+                                    sheet.style.fontSize = '9px';
+                                    sheet.style.boxShadow = 'none';
+                                }
+                                const inner = clonedEl.querySelector('.inner-border');
+                                if (inner) {
+                                    inner.style.padding = '15px';
+                                }
+                                // Kecilkan judul utama
+                                const title = clonedEl.querySelector('.header-title');
+                                if (title) {
+                                    title.style.fontSize = '2rem';
+                                    title.style.letterSpacing = '2px';
+                                }
+                                // Kecilkan .hand-ink (tulisan biru)
+                                clonedEl.querySelectorAll('.hand-ink').forEach(el => {
+                                    el.style.fontSize = '1.2rem';
+                                });
+                                // Kecilkan label-main
+                                clonedEl.querySelectorAll('.label-main').forEach(el => {
+                                    el.style.fontSize = '0.85rem';
+                                });
+                            } else {
+                                clonedEl.style.zoom = '0.72';
+                            }
+                        }
                         // Perbaiki semua path gambar agar bisa dirender oleh html2canvas
                         clonedDoc.querySelectorAll('img').forEach(img => {
                             const src = img.getAttribute('src') || '';
@@ -1425,8 +1569,8 @@
                         });
                     }
                 },
-                jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:   { mode: 'avoid-all' }
+                jsPDF:       { unit: 'mm', format: 'a4', orientation: isIdentity ? 'landscape' : 'portrait' },
+                pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(element).save()
