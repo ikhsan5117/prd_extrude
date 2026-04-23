@@ -135,7 +135,7 @@ namespace VelastoProductionSystem.Controllers
                     (x.PartName != null && x.PartName.ToLower().Contains(normalizedQuery)) ||
                     (x.PnSap != null && x.PnSap.ToLower().Contains(normalizedQuery)) ||
                     (x.Shift != null && x.Shift.ToLower().Contains(normalizedQuery)) ||
-                    (x.MesinId != null && x.MesinId.Value.ToString().Contains(normalizedQuery)));
+                    (x.MesinId != null && x.MesinId.ToString().Contains(normalizedQuery)));
             }
 
             var elwpRows = await elwpQuery
@@ -188,7 +188,7 @@ namespace VelastoProductionSystem.Controllers
                     (x.PartName != null && x.PartName.ToLower().Contains(normalizedQuery)) ||
                     (x.PnSap != null && x.PnSap.ToLower().Contains(normalizedQuery)) ||
                     (x.Shift != null && x.Shift.ToLower().Contains(normalizedQuery)) ||
-                    (x.MesinId != null && x.MesinId.Value.ToString().Contains(normalizedQuery)));
+                    (x.MesinId != null && x.MesinId.ToString().Contains(normalizedQuery)));
             }
 
             var elwpRows = await elwpQuery

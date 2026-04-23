@@ -201,6 +201,9 @@ namespace VelastoProductionSystem.Controllers
                 if (report.Measurements != null) _context.DimensionMeasurements.RemoveRange(report.Measurements);
                 _context.DimensionReports.Remove(report);
                 await _context.SaveChangesAsync();
+
+                // Notify via SignalR
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
             }
             return RedirectToAction(nameof(History));
         }

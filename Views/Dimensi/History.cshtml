@@ -385,4 +385,46 @@
 
     // Initial run
     window.addEventListener('load', filterHistory);
+
+    // SignalR Live Sync for Dimension History
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hub/dashboard")
+        .withAutomaticReconnect()
+        .build();
+
+    async function startSignalR() {
+        try {
+            await connection.start();
+            console.log("SignalR Connected to Dimensi History Hub.");
+        } catch (err) {
+            console.log("SignalR Connection Error: ", err);
+            setTimeout(startSignalR, 5000);
+        }
+    }
+
+    connection.on("ReceiveUpdate", function () {
+        console.log("Real-time Update Received in Dimensi History!");
+        
+        // Show notification (SweetAlert2)
+        Swal.fire({
+            title: 'Cloud Sync',
+            text: 'Daftar diperbarui secara otomatis...',
+            icon: 'success',
+            background: '#010409',
+            color: '#fff',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+
+        // Refresh list to show new data
+        setTimeout(() => {
+            window.location.reload();
+        }, 1200);
+    });
+
+    startSignalR();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

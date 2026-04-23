@@ -966,6 +966,10 @@ namespace VelastoProductionSystem.Controllers
                         existing.CreatedBy = report.CreatedBy;
 
                     await _context.SaveChangesAsync();
+
+                    // Notify via SignalR for real-time dashboard updates
+                    await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                     TempData["SuccessMessage"] = "Data berhasil diupdate!";
                     return RedirectToAction(nameof(ParameterHistory));
                 }
@@ -1007,6 +1011,10 @@ namespace VelastoProductionSystem.Controllers
             {
                 _context.ProductionReports.Remove(report);
                 await _context.SaveChangesAsync();
+
+                // Notify via SignalR for real-time dashboard updates
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                 TempData["SuccessMessage"] = "Laporan berhasil dihapus!";
             }
             
@@ -1036,6 +1044,10 @@ namespace VelastoProductionSystem.Controllers
                 report.Status = "COMPLETED";
                 report.ProductionEndTime = DateTime.Now;
                 await _context.SaveChangesAsync();
+
+                // Notify via SignalR for real-time dashboard updates
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                 TempData["SuccessMessage"] = "Produksi Selesai!";
             }
             return RedirectToAction(nameof(Index));
@@ -1172,6 +1184,10 @@ namespace VelastoProductionSystem.Controllers
                 report.Remark = data.Remark ?? "";
 
                 await _context.SaveChangesAsync();
+
+                // Notify via SignalR for real-time dashboard updates
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                 return Json(new { success = true, reportId = report.Id, message = "Data saved successfully" });
             }
             catch (Exception ex)
@@ -1201,6 +1217,10 @@ namespace VelastoProductionSystem.Controllers
                 report.ApprovedBy = "Production Manager";
 
                 await _context.SaveChangesAsync();
+
+                // Notify via SignalR for real-time dashboard updates
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                 return Json(new { success = true, message = "Report submitted successfully" });
             }
             catch (Exception ex)
@@ -1250,6 +1270,10 @@ namespace VelastoProductionSystem.Controllers
                 report.NgVisual = ngVis;
                 report.Remark = remark;
                 await _context.SaveChangesAsync();
+
+                // Notify via SignalR for real-time dashboard updates
+                await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+
                 return Json(new { success = true });
             }
             return Json(new { success = false });

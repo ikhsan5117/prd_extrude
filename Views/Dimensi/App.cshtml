@@ -119,12 +119,105 @@
         }
 
         .planning-results {
-            position: absolute; top: 100%; left: 0; right: 0; background: #0f172a;
-            border: 1px solid var(--accent-glow); border-top: none; z-index: 1000;
-            max-height: 350px; overflow-y: auto; border-radius: 0 0 12px 12px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: absolute; top: calc(100% + 5px); left: 0; right: 0; 
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent-glow); 
+            border-radius: 12px; 
+            z-index: 1000;
+            max-height: 450px; overflow-y: auto; 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.1);
+            animation: dropdownFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 8px;
         }
 
+        @@keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Custom Scrollbar --- */
+        .custom-tactical-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-tactical-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb { 
+            background: rgba(56, 189, 248, 0.3); border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent-glow); }
+
+        .planning-result-item {
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .planning-result-item:last-child { margin-bottom: 0; }
+
+        .planning-result-item:hover, .planning-result-highlight {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateX(5px);
+        }
+
+        .planning-result-highlight {
+            background: rgba(56, 189, 248, 0.15) !important;
+            border-color: var(--accent-glow) !important;
+            box-shadow: inset 4px 0 0 var(--accent-glow);
+        }
+
+        .planning-result-code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--accent-glow);
+            letter-spacing: 0.5px;
+        }
+
+        .planning-result-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f1f5f9;
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .planning-result-meta {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .planning-result-meta i { font-size: 12px; opacity: 0.5; }
+
+        .machine-badge-mini {
+            font-size: 10px; 
+            font-weight: 900; 
+            color: #000;
+            background: var(--accent-warning); 
+            padding: 3px 10px; 
+            border-radius: 50px; 
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
 
         @@media (max-width: 1200px) {
             .tech-header-ribbon { grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -1036,22 +1129,36 @@
             container.innerHTML = '';
 
             if (items.length === 0) {
-                container.innerHTML = `<div class="planning-result-item"><div class="planning-result-code">--- NO MATCHES FOUND ---</div></div>`;
+                container.innerHTML = `<div class="planning-result-item" style="text-align:center; opacity:0.5; pointer-events:none;">
+                    <div class="planning-result-code">--- NO MATCHES FOUND ---</div>
+                </div>`;
                 container.classList.remove('d-none');
                 return;
             }
+
+            // Add Header with count
+            const header = document.createElement('div');
+            header.style = "padding: 10px 20px; font-size: 9px; font-weight: 900; color: var(--accent-glow); letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 8px; opacity: 0.7; display: flex; align-items: center; justify-content: space-between;";
+            header.innerHTML = `<span>PLANNING RESULTS (${items.length})</span> <i class="bi bi-funnel-fill"></i>`;
+            container.appendChild(header);
 
             items.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'planning-result-item';
                 div.dataset.index = index;
                 div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                        <div class="planning-result-code">[${item.itemCode}]</div>
-                        ${item.machineName ? `<div style="font-size:10px; font-weight:800; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:20px; white-space:nowrap;"><i class="bi bi-cpu-fill"></i> ${item.machineName}</div>` : ''}
+                    <div style="display:flex; justify-content:space-between; align-items:center; width: 100%;">
+                        <div class="planning-result-code">${item.itemCode}</div>
+                        ${item.machineName ? `
+                            <div class="machine-badge-mini">
+                                <i class="bi bi-cpu-fill"></i>
+                                ${item.machineName}
+                            </div>` : ''}
                     </div>
                     <div class="planning-result-name">${item.itemName || 'NO DESCRIPTION'}</div>
-                    <div class="planning-result-meta">${item.dateShift || ''}</div>
+                    <div class="planning-result-meta">
+                        <i class="bi bi-calendar3"></i> ${item.dateShift || '---'}
+                    </div>
                 `;
                 div.onclick = () => selectPlanningItem(item);
                 div.onmouseenter = () => highlightPlanningResult(index);

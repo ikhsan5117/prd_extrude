@@ -180,6 +180,48 @@
     </div>
 </div>
 
+<!-- ── Live Sensor Feed Panel ────────────────────────────────── -->
+<div class="row g-3 mb-5">
+    <div class="col-12">
+        <div class="card glass-panel border-0 shadow" style="background: rgba(15,23,42,0.6) !important; backdrop-filter: blur(20px);">
+            <div class="card-header border-bottom border-white border-opacity-5 p-3 bg-transparent d-flex align-items-center gap-3">
+                <h6 class="mb-0 fw-bold text-white">
+                    <i class="bi bi-broadcast text-success me-2"></i>Live Sensor Feed
+                </h6>
+                <span class="badge bg-success ms-1" id="sensorLiveBadge" style="font-size:.7rem;">● LIVE</span>
+                <a href="/SensorReadings/Monitor" class="btn btn-sm btn-outline-light ms-auto" style="font-size:.75rem;">
+                    <i class="bi bi-arrow-up-right-square me-1"></i>Full Monitor
+                </a>
+            </div>
+            <div class="card-body p-3">
+                <!-- Device Status Mini -->
+                <div class="row g-2 mb-3" id="homeSensorDevices">
+                    <div class="col-12"><small class="text-white-50 fst-italic">Memuat status perangkat...</small></div>
+                </div>
+                <!-- Latest Readings Table -->
+                <div style="overflow-x:auto;">
+                    <table class="table table-dark table-sm table-hover mb-0" style="font-size:.8rem;">
+                        <thead>
+                            <tr>
+                                <th>Device</th>
+                                <th>Machine</th>
+                                <th>Metric</th>
+                                <th class="text-end">Value</th>
+                                <th>Unit</th>
+                                <th>Quality</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="homeSensorTableBody">
+                            <tr><td colspan="7" class="text-center text-white-50 fst-italic py-3">Menunggu data sensor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -372,6 +414,11 @@
                 loadSpcData();
             });
 
+            connection.on("SensorDataReceived", function (data) {
+                refreshHomeSensorFeed();
+                refreshHomeSensorDevices();
+            });
+
             connection.onreconnecting(error => {
                 $("#signalrStatus")
                     .removeClass("bg-success-subtle text-success border-success-subtle pulse-badge")
@@ -387,6 +434,56 @@
             });
 
             startSignalR();
+
+            // ── Sensor Live Feed (home) ──────────────────────────────
+            async function refreshHomeSensorFeed() {
+                try {
+                    const res  = await fetch('/api/sensor-readings/live?last=10');
+                    const rows = await res.json();
+                    const tbody = document.getElementById('homeSensorTableBody');
+                    if (!rows || rows.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-white-50 fst-italic py-3">Belum ada data sensor</td></tr>';
+                        return;
+                    }
+                    const sorted = [...rows].reverse();
+                    tbody.innerHTML = sorted.map(r => {
+                        const qClass = r.quality === 'OK' ? '#10b981' : r.quality === 'WARN' ? '#ffc107' : '#ef4444';
+                        return `<tr>
+                            <td><span class="badge bg-secondary" style="font-size:.65rem;">${r.deviceId}</span></td>
+                            <td class="text-white-50">${r.machineCode || '—'}</td>
+                            <td><span class="badge bg-info text-dark" style="font-size:.65rem;">${r.metricType}</span></td>
+                            <td class="text-end text-warning fw-semibold">${(+r.metricValue).toFixed(3)}</td>
+                            <td class="text-white-50">${r.unit || '—'}</td>
+                            <td><span style="color:${qClass}; font-size:.7rem;">● ${r.quality}</span></td>
+                            <td class="text-white-50">${r.timestamp}</td>
+                        </tr>`;
+                    }).join('');
+                } catch (e) { console.warn('Sensor feed error:', e); }
+            }
+
+            async function refreshHomeSensorDevices() {
+                try {
+                    const res     = await fetch('/api/sensor-readings/device-status');
+                    const devices = await res.json();
+                    const cont    = document.getElementById('homeSensorDevices');
+                    if (!devices || devices.length === 0) {
+                        cont.innerHTML = '<div class="col-12"><small class="text-white-50 fst-italic">Belum ada device terdaftar</small></div>';
+                        return;
+                    }
+                    cont.innerHTML = devices.map(d => `
+                        <div class="col-auto">
+                            <span class="badge ${d.isOnline ? 'bg-success' : 'bg-secondary'} px-2 py-1" style="font-size:.72rem;">
+                                ${d.isOnline ? '●' : '○'} ${d.deviceId} <span class="opacity-75">${d.machineCode || ''}</span>
+                                — ${(+d.lastValue).toFixed(2)} ${d.lastUnit || ''} (${d.lastMetric})
+                            </span>
+                        </div>`).join('');
+                } catch (e) { console.warn('Device status error:', e); }
+            }
+
+            refreshHomeSensorFeed();
+            refreshHomeSensorDevices();
+            setInterval(refreshHomeSensorFeed, 20000);
+            setInterval(refreshHomeSensorDevices, 30000);
         });
     </script>
     

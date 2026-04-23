@@ -6,46 +6,29 @@ namespace VelastoProductionSystem.Data
     {
         public static void SeedData(ApplicationDbContext context, ElwpDbContext? elwpContext = null)
         {
-            // 1. SEED ELWP MOCK SERVER (elwpContext)
-            if (elwpContext != null)
-            {
-                if (!elwpContext.ElwpMachines.Any())
-                {
-                    elwpContext.ElwpMachines.AddRange(new List<ElwpMachine>
-                    {
-                        new ElwpMachine { Id = 1, KodeMesin = "EXT-01", NamaMesin = "Extruder 01" },
-                        new ElwpMachine { Id = 2, KodeMesin = "EXT-02", NamaMesin = "Extruder 02" },
-                        new ElwpMachine { Id = 3, KodeMesin = "EXT-03", NamaMesin = "Extruder 03" }
-                    });
-                    elwpContext.SaveChanges();
-                }
-
-                if (!elwpContext.ElwpPlannings.Any())
-                {
-                    var today = DateTime.Today;
-                    elwpContext.ElwpPlannings.AddRange(new List<ElwpPlanning>
-                    {
-                        new ElwpPlanning { TanggalPlanning = today, MesinId = 1, Shift = "1", KodeItem = "ITEM-001", PartName = "Fuel Hose 8mm", PnSap = "FH8-TYT", QtyPlanning = 1000 },
-                        new ElwpPlanning { TanggalPlanning = today, MesinId = 1, Shift = "1", KodeItem = "DIE-TEST-001", PartName = "TEST DIES HOSE", PnSap = "DIE-TEST", QtyPlanning = 100 },
-                        new ElwpPlanning { TanggalPlanning = today, MesinId = 1, Shift = "2", KodeItem = "ITEM-002", PartName = "Oil Hose 10mm", PnSap = "OH10-HND", QtyPlanning = 800 },
-                        new ElwpPlanning { TanggalPlanning = today, MesinId = 2, Shift = "1", KodeItem = "ITEM-003", PartName = "Brake Hose 6mm", PnSap = "BH6-SZK", QtyPlanning = 1500 }
-                    });
-                    elwpContext.SaveChanges();
-                }
-
-                // ALWAYS ENSURE TEST DATA FOR 20 APRIL 2026 EXISTS
-                if (!elwpContext.ElwpPlannings.Any(p => p.KodeItem == "SPS-FH-2026"))
-                {
-                    elwpContext.ElwpPlannings.Add(new ElwpPlanning { TanggalPlanning = new DateTime(2026, 4, 20), MesinId = 1, Shift = "2", KodeItem = "SPS-FH-2026", PartName = "High-Pressure Fuel Hose", PnSap = "HPFH-2026", QtyPlanning = 500 });
-                }
-                if (!elwpContext.ElwpPlannings.Any(p => p.KodeItem == "BH-2026-X1"))
-                {
-                    elwpContext.ElwpPlannings.Add(new ElwpPlanning { TanggalPlanning = new DateTime(2026, 4, 20), MesinId = 2, Shift = "2", KodeItem = "BH-2026-X1", PartName = "Premium Brake Hose V1", PnSap = "BH-X1", QtyPlanning = 1200 });
-                }
-                elwpContext.SaveChanges();
-            }
-
-            // 2. SEED LOCAL DB (context)
+        // 1. SEED ELWP PRODUCTION DATABASE (elwpContext) - Read-only sync
+        // Skip seeding for ELWP - use existing production data
+        // if (elwpContext != null)
+        // {
+        //     try
+        //     {
+        //         if (!elwpContext.ElwpMachines.Any())
+        //         {
+        //             elwpContext.ElwpMachines.AddRange(new List<ElwpMachine>
+        //             {
+        //                 new ElwpMachine { Id = 1, KodeMesin = "EXT-01", NamaMesin = "Extruder 01" },
+        //                 new ElwpMachine { Id = 2, KodeMesin = "EXT-02", NamaMesin = "Extruder 02" },
+        //                 new ElwpMachine { Id = 3, KodeMesin = "EXT-03", NamaMesin = "Extruder 03" }
+        //             });
+        //             elwpContext.SaveChanges();
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         // Silently ignore seeding errors for ElwpContext - it's a read-only connection to production
+        //         System.Diagnostics.Debug.WriteLine($"ElwpContext seeding skipped: {ex.Message}");
+        //     }
+        // }
             // Seed Standard Parameter Settings
             if (!context.StandardParameterSettings.Any())
             {

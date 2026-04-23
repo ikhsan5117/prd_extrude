@@ -26,6 +26,7 @@ namespace VelastoProductionSystem.Data
         public DbSet<PartMaster> PartMasters { get; set; }
         public DbSet<ShiftMaster> ShiftMasters { get; set; }
         public DbSet<ProductionMaterialLot> ProductionMaterialLots { get; set; }
+        public DbSet<SensorIngestLog> SensorIngestLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -106,6 +107,16 @@ namespace VelastoProductionSystem.Data
             modelBuilder.Entity<PackingStandard>()
                 .HasIndex(p => p.NACode)
                 .IsUnique();
+
+            // SensorIngestLogs indexes
+            modelBuilder.Entity<SensorIngestLog>()
+                .HasIndex(s => s.IdempotencyKey)
+                .IsUnique()
+                .HasFilter("[IdempotencyKey] IS NOT NULL");
+            modelBuilder.Entity<SensorIngestLog>()
+                .HasIndex(s => new { s.MachineCode, s.SensorTimestamp });
+            modelBuilder.Entity<SensorIngestLog>()
+                .HasIndex(s => s.DeviceId);
 
             // Seed initial data (optional)
             SeedData(modelBuilder);

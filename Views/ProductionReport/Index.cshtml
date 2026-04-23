@@ -329,5 +329,46 @@
                 });
             });
         });
+
+        // SignalR Live Sync for Monitor Page
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hub/dashboard")
+            .withAutomaticReconnect()
+            .build();
+
+        async function startSignalR() {
+            try {
+                await connection.start();
+                console.log("SignalR Connected to Monitor Hub.");
+            } catch (err) {
+                console.log("SignalR Connection Error: ", err);
+                setTimeout(startSignalR, 5000);
+            }
+        }
+
+        connection.on("ReceiveUpdate", function () {
+            console.log("Real-time Update Received in Monitor!");
+            
+            // Show notification
+            Swal.fire({
+                title: 'Data Update!',
+                text: 'Perubahan data terdeteksi. Memperbarui daftar...',
+                icon: 'info',
+                background: '#0f172a',
+                color: '#fff',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+
+            // Reload page to show new data after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        });
+
+        startSignalR();
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
 }

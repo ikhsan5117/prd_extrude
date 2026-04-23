@@ -1526,6 +1526,79 @@ namespace VelastoProductionSystem.Migrations
                     b.ToTable("ProductionReports");
                 });
 
+            modelBuilder.Entity("VelastoProductionSystem.Models.SensorIngestLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("IngestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MachineCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("MetricType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("MetricValue")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<int?>("ProductionReportId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Quality")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("SensorTimestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("[IdempotencyKey] IS NOT NULL");
+
+                    b.HasIndex("ProductionReportId");
+
+                    b.HasIndex("MachineCode", "SensorTimestamp");
+
+                    b.ToTable("SensorIngestLogs");
+                });
+
             modelBuilder.Entity("VelastoProductionSystem.Models.ShiftMaster", b =>
                 {
                     b.Property<int>("Id")
@@ -1838,6 +1911,15 @@ namespace VelastoProductionSystem.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("StandardParameterSetting");
+                });
+
+            modelBuilder.Entity("VelastoProductionSystem.Models.SensorIngestLog", b =>
+                {
+                    b.HasOne("VelastoProductionSystem.Models.ProductionReport", "ProductionReport")
+                        .WithMany()
+                        .HasForeignKey("ProductionReportId");
+
+                    b.Navigation("ProductionReport");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.DailyPlanExecution", b =>
