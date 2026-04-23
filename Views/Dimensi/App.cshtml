@@ -990,7 +990,7 @@
                 totalTy = g.FirstOrDefault(x => x.PointName == "Total Thick Y")?.R1,
                 spiral = g.FirstOrDefault(x => x.PointName == "Spiral Pitch")?.R1,
                 visual = new { 
-                    burry = "ok", line = "ok", bubble = "ok", scratch = "ok" 
+                    burry = (string?)null, line = (string?)null, bubble = (string?)null, scratch = (string?)null 
                 } // Visual labels can be expanded as needed
             }
         })));
@@ -1881,12 +1881,7 @@
                         console.error("Error populating cards:", err);
                     }
 
-                    // AUTO-SET VISUAL CHECKS TO OK (Speed up operator)
-                    try {
-                        ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
-                            toggleVisual(it, 'ok');
-                        });
-                    } catch(e){}
+                    // REMOVED AUTO-SET VISUAL CHECKS TO OK (Per User Request)
                     
                     Swal.fire({ 
                         icon: 'success', 

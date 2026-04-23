@@ -931,7 +931,7 @@
                         <div class="hud-card p-3 flex-grow-1 d-flex flex-column bg-black bg-opacity-40 border-white border-opacity-10 shadow-hud-blue">
                              <div class="text-info-glow super-small fw-black mb-3 tracking-widest ps-1"><i class="bi bi-terminal-fill me-2"></i>FINAL COMMANDS</div>
                              <div class="mt-auto d-flex gap-2">
-                                <button type="button" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold small d-flex align-items-center justify-content-center gap-2" style="border-width: 1px;" onclick="location.reload()">
+                                <button type="button" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold small d-flex align-items-center justify-content-center gap-2" style="border-width: 1px;" onclick="resetHUD()">
                                     <i class="bi bi-trash3-fill"></i> RESET
                                 </button>
                                 <button type="button" class="btn btn-hud-primary flex-grow-3 py-3 fw-900 tracking-widest shadow-glow-primary border-0 rounded-1 d-flex align-items-center justify-content-center gap-2" style="font-size: 1.1rem;" onclick="submitReportWithReadings()">
@@ -1383,7 +1383,16 @@
             const specEl = document.getElementById(specId);
             if(!specEl) return;
             const specText = specEl.innerText.trim();
-            if(specText === '--') return;
+            if(specText === '--' || specText === '---') return;
+
+            // FIX: Jika kedua input kosong, reset status OK/NG menjadi netral
+            if (!initInp.value && !finalInp.value) {
+                const radios = document.getElementsByName(radioFieldName);
+                radios.forEach(r => r.checked = false);
+                initInp.classList.remove('valid-success', 'valid-error');
+                finalInp.classList.remove('valid-success', 'valid-error');
+                return;
+            }
 
             let isInitOk = true;
             let isFinalOk = true;
@@ -1781,7 +1790,7 @@
                 const result = await res.json();
                 if (result.success) {
                     Swal.fire('UPLOAD COMPLETE', 'Report archived successfully in the digital vault.', 'success')
-                        .then(() => window.location.href = '/ProductionReport/Details?id=' + result.id);
+                        .then(() => resetHUD());
                 } else {
                     Swal.fire('TRANSMISSION ERROR', result.message || 'The server rejected the dataset.', 'error');
                 }
@@ -1985,6 +1994,89 @@
                 searchInput.addEventListener('focus', () => showPlanningResults());
             }
         });
+        function resetHUD() {
+            // 1. Reset Arrays & State
+            pReadings = [
+                { id: 0, label: 'P-1', time: new Date().getHours().toString().padStart(2, '0') + ':' + new Date().getMinutes().toString().padStart(2, '0'), data: {} }
+            ];
+            currentReadingIndex = 0;
+            
+            // 2. Clear All Form Inputs
+            const form = document.getElementById('mainReportForm');
+            if (form) {
+                // Clear text inputs, number, selects (Except metadata)
+                form.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(inp => {
+                    const id = inp.id;
+                    if (id === 'ProductionDate' || id === 'Shift' || id === 'CreatedBy') return; 
+                    inp.value = "";
+                });
+                
+                // Clear Radios
+                form.querySelectorAll('input[type="radio"]').forEach(rad => rad.checked = false);
+                
+                // Clear validation classes
+                form.querySelectorAll('.valid-success, .valid-error').forEach(el => el.classList.remove('valid-success', 'valid-error'));
+            }
+
+            // 3. Clear Dynamic Material Lots
+            ['inner', 'outer', 'yarn'].forEach(layer => {
+                const container = document.getElementById(`${layer}-lot-list`);
+                if (container) container.innerHTML = "";
+                materialState[layer] = [];
+            });
+
+            // 4. Reset Planning Search & Manual Search
+            const pSearch = document.getElementById('planningSearch');
+            const mSearch = document.getElementById('manualItemSearch');
+            if (pSearch) pSearch.value = "";
+            if (mSearch) mSearch.value = "";
+            document.getElementById('StandardParameterSettingId').value = "";
+
+            // 5. Re-lock the form UI
+            const wrapper = document.getElementById('formContentBlurWrapper');
+            const container = document.getElementById('mainFormContainer');
+            
+            // Re-inject Lock Overlay if it was removed
+            if (!document.getElementById('formLockOverlay')) {
+                const overlay = document.createElement('div');
+                overlay.id = 'formLockOverlay';
+                overlay.className = 'd-flex flex-column align-items-center justify-content-center';
+                overlay.style = "position: absolute; top:0; left:0; right:0; bottom:20px; z-index: 1000; background: rgba(2, 6, 23, 0.65); border-radius: 12px; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;";
+                overlay.innerHTML = `
+                    <div class="text-center p-5 rounded-4 border border-info border-opacity-30 shadow-hud-blue" style="background: rgba(15, 23, 42, 0.95);">
+                        <div class="mb-4">
+                            <i class="bi bi-shield-lock-fill text-info" style="font-size: 5rem; filter: drop-shadow(0 0 20px rgba(14, 165, 233, 0.6));"></i>
+                        </div>
+                        <h2 class="text-white fw-900 tracking-widest mb-2" style="font-size: 1.5rem;">FORM LOCKED</h2>
+                        <p class="text-info opacity-70 super-small mb-0 tracking-widest uppercase">PLEASE SELECT PLANNING MASTER<br/>OR MANUAL PROTOCOL TO REVEAL DATA ENTRY</p>
+                    </div>
+                `;
+                container.prepend(overlay);
+            }
+
+            if (wrapper) {
+                wrapper.style.display = 'none';
+                wrapper.classList.remove('animate__fadeInUp');
+            }
+            if (container) {
+                container.style.minHeight = '450px';
+                container.style.pointerEvents = 'none';
+            }
+
+            // 6. UI Updates
+            renderTabs();
+            refreshPlanningItems();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'HUD RESET',
+                text: 'Dashboard is ready for new production command.',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
     </script>
     <style>
         .hover-bg-success:hover { background: rgba(16, 185, 129, 0.2) !important; color: white; }
