@@ -46,11 +46,17 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Outer | #cover")]
         public string? OuterCover { get; set; }
 
+        [Display(Name = "Middle | #tube2")]
+        public string? MiddleTube { get; set; }
+
         [Display(Name = "Use limits of the material | #Inner")]
         public string? UseLimitsInner { get; set; }
 
         [Display(Name = "Use limits of the material | #Outer")]
         public string? UseLimitsOuter { get; set; }
+
+        [Display(Name = "Use limits of the material | #Middle")]
+        public string? UseLimitsMiddle { get; set; }
 
         [Display(Name = "Nipple | #material")]
         public string? Nipple { get; set; }
@@ -61,11 +67,32 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Cover Die | #material")]
         public string? CoverDie { get; set; }
 
+        [Display(Name = "Middle Die | #material")]
+        public string? MiddleDie { get; set; }
+
+        [Display(Name = "Spacer | #material")]
+        public string? SpacerDie { get; set; }
+
+        [Display(Name = "A distance | #material")]
+        public string? ADistance { get; set; }
+
+        [Display(Name = "Yarn")]
+        public string? Yarn { get; set; }
+
+        [Display(Name = "Tension Yarn | #Inner")]
+        public string? TensionYarnInner { get; set; }
+
+        [Display(Name = "Tension Yarn | #Outer")]
+        public string? TensionYarnOuter { get; set; }
+
         [Display(Name = "Mesh screen | #material 1")]
         public string? MeshScreen1 { get; set; }
 
         [Display(Name = "Mesh screen | #material 2")]
         public string? MeshScreen2 { get; set; }
+
+        [Display(Name = "Mesh screen | #material 3")]
+        public string? MeshScreen3 { get; set; }
 
         [Display(Name = "Head Temp. | #material 1")]
         public string? HeadTemp1 { get; set; }
@@ -84,6 +111,27 @@ namespace VelastoProductionSystem.Models
 
         [Display(Name = "Cylinder 2 | #material 2")]
         public string? Cylinder2_2 { get; set; }
+
+        [Display(Name = "Cylinder 3 | #material 1")]
+        public string? Cylinder3_1 { get; set; }
+
+        [Display(Name = "Cylinder 3 | #material 2")]
+        public string? Cylinder3_2 { get; set; }
+
+        [Display(Name = "Cylinder 3 | #material 3")]
+        public string? Cylinder3_3 { get; set; }
+
+        [Display(Name = "Head Temp. | #material 3")]
+        public string? HeadTemp3 { get; set; }
+
+        [Display(Name = "Cylinder 1 | #material 3")]
+        public string? Cylinder1_3 { get; set; }
+
+        [Display(Name = "Cylinder 2 | #material 3")]
+        public string? Cylinder2_3 { get; set; }
+
+        [Display(Name = "Screw Temp. | #material 3")]
+        public string? ScrewTemp3 { get; set; }
 
         [Display(Name = "FEED | #material 1")]
         public string? Feed1 { get; set; }
@@ -108,6 +156,15 @@ namespace VelastoProductionSystem.Models
 
         [Display(Name = "Pressure | #material 2")]
         public string? Pressure2 { get; set; }
+
+        [Display(Name = "FEED | #material 3")]
+        public string? Feed3 { get; set; }
+
+        [Display(Name = "Screw Speed | #material 3")]
+        public string? ScrewSpeed3 { get; set; }
+
+        [Display(Name = "Pressure | #material 3")]
+        public string? Pressure3 { get; set; }
 
         [Display(Name = "Am meter")]
         public string? AmMeter { get; set; }
@@ -159,5 +216,81 @@ namespace VelastoProductionSystem.Models
 
         [Display(Name = "MC")]
         public string? MachineCode { get; set; }
+
+        // --- NEW FIELDS FROM CHS 2 LAYER REFINEMENT ---
+        
+        [Display(Name = "Pitch Yarn")]
+        public string? PitchYarn { get; set; }
+
+
+
+        [Display(Name = "Feed Roll Ratio 1")]
+        public string? FeedRollRatio1 { get; set; }
+
+        [Display(Name = "Feed Roll Ratio 2")]
+        public string? FeedRollRatio2 { get; set; }
+
+        [Display(Name = "Current Value")]
+        public string? CurrentValue { get; set; }
+
+        [Display(Name = "Am Meter 2")]
+        public string? AmMeter2 { get; set; }
+
+        [Display(Name = "Preset Value")]
+        public string? PresetValue { get; set; }
+
+        [Display(Name = "Control Value")]
+        public string? ControlValue { get; set; }
+
+        [Display(Name = "Spiral Pitch Setting")]
+        public string? SpiralPitchSetting { get; set; }
+
+        [Display(Name = "Spiral Pitch Display")]
+        public string? SpiralPitchDisplay { get; set; }
+
+        [Display(Name = "Spiral Speed")]
+        public string? SpiralSpeed { get; set; }
+
+        [Display(Name = "Hose Speed")]
+        public string? HoseSpeed { get; set; }
+
+        [Display(Name = "Unsmooth Surface")]
+        public string? UnsmoothSurface { get; set; }
+
+        [Display(Name = "Dancer Position")]
+        public string? DancerPosition { get; set; }
+
+        [Display(Name = "Caterpillar Gap")]
+        public string? CaterpillarGap { get; set; }
+
+        [Display(Name = "Cool Conveyor Speed")]
+        public string? CoolConveyorSpeed { get; set; }
+
+        [Display(Name = "Conveyor Ratio")]
+        public string? ConveyorRatio { get; set; }
+
+        // --- QUALITY MATRIX (INNER) ---
+        public string? InnerTarget { get; set; }
+        public string? InnerTol { get; set; }
+        public string? InnerLCL { get; set; }
+        public string? InnerMin { get; set; }
+        public string? InnerUCL { get; set; }
+        public string? InnerMax { get; set; }
+
+        // --- QUALITY MATRIX (THICKNESS) ---
+        public string? ThickTarget { get; set; }
+        public string? ThickTol { get; set; }
+        public string? ThickLCL { get; set; }
+        public string? ThickMin { get; set; }
+        public string? ThickUCL { get; set; }
+        public string? ThickMax { get; set; }
+
+        // --- QUALITY MATRIX (TOTAL) ---
+        public string? TotalTarget { get; set; }
+        public string? TotalTol { get; set; }
+        public string? TotalLCL { get; set; }
+        public string? TotalMin { get; set; }
+        public string? TotalUCL { get; set; }
+        public string? TotalMax { get; set; }
     }
 }

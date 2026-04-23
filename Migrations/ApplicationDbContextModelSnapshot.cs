@@ -445,13 +445,34 @@ namespace VelastoProductionSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ADistance")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("AmMeter")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AmMeter2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CaterpillarGap")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ChillerWaterTemp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ControlValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConveyorRatio")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CoolConveyorSpeed")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CoverDie")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CurrentValue")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Customer")
@@ -466,10 +487,28 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("Cylinder1_2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Cylinder1_3")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Cylinder2_1")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Cylinder2_2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cylinder2_3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cylinder3_1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cylinder3_2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cylinder3_3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DancerPosition")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Dimensi")
@@ -487,6 +526,15 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("Feed2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Feed3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeedRollRatio1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeedRollRatio2")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Formulasi")
                         .HasColumnType("nvarchar(max)");
 
@@ -496,10 +544,34 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("HeadTemp2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("HeadTemp3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HoseSpeed")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("HoseType")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("InnerLCL")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InnerMax")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InnerMin")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InnerTarget")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InnerTol")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("InnerTube")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InnerUCL")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ItemList")
@@ -526,6 +598,15 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("MeshScreen2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("MeshScreen3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MiddleDie")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MiddleTube")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Nipple")
                         .HasColumnType("nvarchar(max)");
 
@@ -538,10 +619,19 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("OuterCover")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PitchYarn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PresetValue")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Pressure1")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Pressure2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Pressure3")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RevisionDate")
@@ -556,13 +646,31 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("ScrewSpeed2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ScrewSpeed3")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ScrewTemp1")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ScrewTemp2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ScrewTemp3")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SelisihTebal")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpacerDie")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpiralPitchDisplay")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpiralPitchSetting")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpiralSpeed")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TakeUpConveyorSpeed")
@@ -577,7 +685,31 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("TebalTotal")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("TensionYarnInner")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TensionYarnOuter")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TextMarkingMaterial")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThickLCL")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThickMax")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThickMin")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThickTarget")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThickTol")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThickUCL")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ToleranceInner")
@@ -589,13 +721,40 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("ToleranceSpiralPitch")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("TotalLCL")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TotalMax")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TotalMin")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TotalTarget")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TotalTol")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TotalUCL")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TubeDie")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UnsmoothSurface")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UseLimitsInner")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UseLimitsMiddle")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("UseLimitsOuter")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Yarn")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

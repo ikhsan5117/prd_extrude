@@ -464,13 +464,15 @@
                 $('#operatorFields').hide();
                 $('#adminFields').show();
                 $('#userId').removeAttr('required');
-                $('#password').val('');
+                $('#password').val('admin123!');
+                $('#adminUsernameInput').val('admin');
                 $(this).html('<i class="bi bi-person"></i> Login Operator').css('color', 'var(--accent-cyan)');
                 $('#adminUsernameInput').focus();
             } else {
                 $('#operatorFields').show();
                 $('#adminFields').hide();
                 $('#userId').attr('required', 'required');
+                $('#password').val('');
                 $('#adminUsernameInput').val('');
                 $('#adminUsername').val('');
                 $(this).html('<i class="bi bi-person-badge"></i> Login Admin').css('color', '');

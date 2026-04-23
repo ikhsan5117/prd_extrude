@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -193,27 +194,7 @@
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert-glass alert-success">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>@TempData["SuccessMessage"]</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-        }
-        
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert-glass alert-danger">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>@TempData["ErrorMessage"]</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-        }
+        <!-- Global alerts removed to use SweetAlert instead -->
 
         @RenderBody()
 
@@ -225,7 +206,37 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        $(document).ready(function() {
+            // Global SweetAlert for TempData
+            @if (TempData["SuccessMessage"] != null && !ViewContext.RouteData.Values["controller"].ToString().Contains("MasterlistSpsDoubleLayers"))
+            {
+                var msg = TempData["SuccessMessage"].ToString().Replace("\n", "<br>").Replace("'", "\\'");
+                <text>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    html: '@Html.Raw(msg)',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                </text>
+            }
+
+            @if (TempData["ErrorMessage"] != null && !ViewContext.RouteData.Values["controller"].ToString().Contains("MasterlistSpsDoubleLayers"))
+            {
+                var msg = TempData["ErrorMessage"].ToString().Replace("\n", "<br>").Replace("'", "\\'");
+                <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    html: '@Html.Raw(msg)'
+                });
+                </text>
+            }
+        });
+
         // Sidebar toggle
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
