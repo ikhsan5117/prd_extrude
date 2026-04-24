@@ -102,6 +102,7 @@ namespace VelastoProductionSystem.Controllers
                         toleranceInner = standard.ToleranceInner,
                         toleranceOuter = standard.ToleranceOuter,
                         tebalInner = standard.TebalInner,
+                        tebalInnerMiddle = standard.TebalInnerMiddle,
                         tebalTotal = standard.TebalTotal,
                         yarn = standard.Material ?? "ARAMID", 
                         customer = standard.Customer,

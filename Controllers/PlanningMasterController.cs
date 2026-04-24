@@ -118,7 +118,7 @@ namespace VelastoProductionSystem.Controllers
             var machinesMap = await _elwpContext.ElwpMachines
                 .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
 
-            var elwpQuery = _elwpContext.ElwpPlannings.Where(x => x.AreaId == 1 || x.AreaId == 10).AsQueryable();
+            var elwpQuery = _elwpContext.ElwpPlannings.Where(x => x.AreaId == 1).AsQueryable();
 
             if (filterDate.HasValue)
             {
@@ -247,7 +247,7 @@ namespace VelastoProductionSystem.Controllers
                 {
                     elwpRows = await _elwpContext.ElwpPlannings
                         .Where(x => x.TanggalPlanning >= dateStart && x.TanggalPlanning < dateEnd)
-                        .Where(x => x.AreaId == 1 || x.AreaId == 10) // Filter Extrude & TPE
+                        .Where(x => x.AreaId == 1) // Filter Extrude Only
                         .OrderBy(x => x.MesinId)
                         .ThenBy(x => x.Shift)
                         .ThenBy(x => x.Id)
@@ -339,11 +339,13 @@ namespace VelastoProductionSystem.Controllers
                             PlanTargetPcs   = planQty,
                             Compound        = pm?.CompoundCombo ?? "",
                             CompoundInner   = pm?.CompoundInner ?? "",
+                            CompoundMiddle  = pm?.CompoundMiddle ?? "",
                             CompoundOuter   = pm?.CompoundOuter ?? "",
                             Length          = pm?.Length ?? "",
                             CtAwal          = pm?.CtAwal?.ToString("G29") ?? "",
                             CtMinus20       = pm?.CtMinus20?.ToString("G29") ?? "",
                             NeedKgInner     = pm?.NeedKgInner?.ToString("G29") ?? "",
+                            NeedKgMiddle    = pm?.NeedKgMiddle?.ToString("G29") ?? "",
                             NeedKgOuter     = pm?.NeedKgOuter?.ToString("G29") ?? "",
                             Menit           = durationMins.ToString(),
                             WaktuMulai      = startTime.ToString(@"hh\:mm"),
@@ -508,6 +510,7 @@ namespace VelastoProductionSystem.Controllers
                                         CtAwal    = pm?.CtAwal?.ToString("G29"),
                                         CtMinus20 = pm?.CtMinus20?.ToString("G29"),
                                         NeedKgInner = pm?.NeedKgInner?.ToString("G29"),
+                                        NeedKgMiddle = pm?.NeedKgMiddle?.ToString("G29"),
                                         NeedKgOuter = pm?.NeedKgOuter?.ToString("G29"),
                                         Menit = durationMinutes.ToString(),
                                         WaktuMulai = startTime.ToString(@"hh\:mm"),

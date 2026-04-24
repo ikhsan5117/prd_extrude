@@ -27,6 +27,7 @@
                                 <th>Customer</th>
                                 <th>Tipe Hose</th>
                                 <th>Part Number</th>
+                                <th>Layer</th>
                                 <th>Tanggal Efektif</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
@@ -40,6 +41,12 @@
                                     <td>@item.CustomerName</td>
                                     <td>@item.HoseType</td>
                                     <td>@item.ProductCode</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = item.LayerType == "CHS 3 Layer" ? "bg-danger" : (item.LayerType == "CHS 2 Layer" ? "bg-warning text-dark" : "bg-secondary");
+                                        }
+                                        <span class="badge @badgeClass">@item.LayerType</span>
+                                    </td>
                                     <td>@item.EffectiveDate.ToString("dd/MM/yyyy")</td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">

@@ -23,6 +23,7 @@ namespace VelastoProductionSystem.Models
 
         // New fields to match DL0
         public string? CompoundInner { get; set; }
+        public string? CompoundMiddle { get; set; }
         public string? CompoundOuter { get; set; }
         public string? CompoundCombo { get; set; }
         public string? Length { get; set; }
@@ -33,6 +34,7 @@ namespace VelastoProductionSystem.Models
         public string? CtAwal { get; set; }
         public string? CtMinus20 { get; set; }
         public string? NeedKgInner { get; set; }
+        public string? NeedKgMiddle { get; set; }
         public string? NeedKgOuter { get; set; }
         
         [Display(Name = "Target (Pcs)")]

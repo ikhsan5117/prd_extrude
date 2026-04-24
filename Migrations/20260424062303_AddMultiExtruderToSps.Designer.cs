@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VelastoProductionSystem.Data;
 
@@ -11,9 +12,11 @@ using VelastoProductionSystem.Data;
 namespace VelastoProductionSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424062303_AddMultiExtruderToSps")]
+    partial class AddMultiExtruderToSps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -999,9 +1002,6 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("CompoundInner")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CompoundMiddle")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CompoundOuter")
                         .HasColumnType("nvarchar(max)");
 
@@ -1035,10 +1035,6 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("NeedKgInner")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("NeedKgMiddle")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -1090,9 +1086,6 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("CompoundInner")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CompoundMiddle")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CompoundOuter")
                         .HasColumnType("nvarchar(max)");
 
@@ -1121,9 +1114,6 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NeedKgInner")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NeedKgMiddle")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NeedKgOuter")

@@ -720,6 +720,60 @@
             <span class="status-badge"></span>
         </div>
 
+        <!-- Inner + Middle Thick X Card (NEW 3L) -->
+        <div class="dimensi-card" id="card-innermid-tx" style="display:none;">
+            <div class="card-header-flex">
+                <div class="card-point">INN+MID THICK (X)</div>
+                <i class="bi bi-layers card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-innermid-tx">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-innermid-tx-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-innermid-tx-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <input type="text" inputmode="decimal" class="c-input" id="val-innermid-tx" oninput="validateCard('innermid-tx')" placeholder="0.00" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Inner + Middle Thick Y Card (NEW 3L) -->
+        <div class="dimensi-card" id="card-innermid-ty" style="display:none;">
+            <div class="card-header-flex">
+                <div class="card-point">INN+MID THICK (Y)</div>
+                <i class="bi bi-layers-half card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-innermid-ty">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-innermid-ty-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-innermid-ty-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <input type="text" inputmode="decimal" class="c-input" id="val-innermid-ty" oninput="validateCard('innermid-ty')" placeholder="0.00" />
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
         <!-- Total Thick X Card -->
         <div class="dimensi-card" id="card-total-tx">
             <div class="card-header-flex">
@@ -1652,6 +1706,8 @@
                 innerDia: document.getElementById('val-inner-dia').value,
                 innerTx: document.getElementById('val-inner-tx').value,
                 innerTy: document.getElementById('val-inner-ty').value,
+                innermidTx: document.getElementById('val-innermid-tx').value,
+                innermidTy: document.getElementById('val-innermid-ty').value,
                 totalTx: document.getElementById('val-total-tx').value,
                 totalTy: document.getElementById('val-total-ty').value,
                 spiral: document.getElementById('val-spiral').value,
@@ -1666,7 +1722,7 @@
                 remark:  document.getElementById('val-remark')?.value || ''
             };
 
-            const hasVal = ['innerDia','innerTx','innerTy','totalTx','totalTy','spiral'].some(k => current.data[k] !== '') ||
+            const hasVal = ['innerDia','innerTx','innerTy','innermidTx','innermidTy','totalTx','totalTy','spiral'].some(k => current.data[k] !== '') ||
                            Object.values(vStates).some(v => v !== null);
 
             if (hasVal && !current.time) {
@@ -1682,6 +1738,8 @@
             document.getElementById('val-inner-dia').value = data.innerDia || '';
             document.getElementById('val-inner-tx').value = data.innerTx || '';
             document.getElementById('val-inner-ty').value = data.innerTy || '';
+            document.getElementById('val-innermid-tx').value = data.innermidTx || '';
+            document.getElementById('val-innermid-ty').value = data.innermidTy || '';
             document.getElementById('val-total-tx').value = data.totalTx || '';
             document.getElementById('val-total-ty').value = data.totalTy || '';
             document.getElementById('val-spiral').value = data.spiral || '';
@@ -1727,7 +1785,7 @@
             }
 
             // 5. Run validation for all cards
-            ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
+            ['inner-dia', 'inner-tx', 'inner-ty', 'innermid-tx', 'innermid-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
         }
 
         function validateCard(id) {
@@ -1843,6 +1901,8 @@
                             { id: 'innerdia', v: m.dimensi || m.innerDie || m.diameter, t: m.toleranceInner || m.toleranceDie, el: 'inner-dia', dt: 0.1 },
                             { id: 'innertx', v: m.tebalInner || m.tubeDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'inner-tx', dt: 0.2 },
                             { id: 'innerty', v: m.tebalInner || m.tubeDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'inner-ty', dt: 0.2 },
+                            { id: 'innermidtx', v: m.tebalInnerMiddle, t: m.toleranceOuter, el: 'innermid-tx', dt: 0.2 },
+                            { id: 'innermidty', v: m.tebalInnerMiddle, t: m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
                             { id: 'totaltx', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-tx', dt: 0.2 },
                             { id: 'totalty', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-ty', dt: 0.2 },
                             { id: 'spiral', v: m.toleranceSpiralPitch || m.spiralPitch, t: m.toleranceSpiralPitch || m.spiralPitch, el: 'spiral', dt: 5 }
@@ -1857,23 +1917,29 @@
                             const minEl = document.getElementById(`limit-${p.el}-min`);
                             const maxEl = document.getElementById(`limit-${p.el}-max`);
                             const inputEl = document.getElementById(`val-${p.el}`);
+                            const cardEl = document.getElementById(`card-${p.el}`);
 
                             if (targetEl) targetEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)}`;
                             if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
                             if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
 
-                            if (inputEl) {
+                            if (cardEl) {
                                 if (target === 0) {
-                                    inputEl.disabled = true;
-                                    inputEl.placeholder = "N/A";
-                                    inputEl.value = "";
-                                    inputEl.closest('.dimensi-card').style.opacity = "0.4";
-                                    inputEl.closest('.dimensi-card').style.pointerEvents = "none";
+                                    cardEl.style.display = (p.id.startsWith('innermid')) ? 'none' : 'block';
+                                    if (inputEl) {
+                                        inputEl.disabled = true;
+                                        inputEl.placeholder = "N/A";
+                                        inputEl.value = "";
+                                    }
+                                    cardEl.style.opacity = (p.id.startsWith('innermid')) ? "1" : "0.4";
                                 } else {
-                                    inputEl.disabled = false;
-                                    inputEl.placeholder = "0.00";
-                                    inputEl.closest('.dimensi-card').style.opacity = "1";
-                                    inputEl.closest('.dimensi-card').style.pointerEvents = "auto";
+                                    cardEl.style.display = 'block';
+                                    if (inputEl) {
+                                        inputEl.disabled = false;
+                                        inputEl.placeholder = "0.00";
+                                    }
+                                    cardEl.style.opacity = "1";
+                                    cardEl.style.pointerEvents = "auto";
                                 }
                             }
                         });
@@ -1986,6 +2052,8 @@
                     { name: 'Inner Diameter',       key: 'innerDia', stdKey: 'innerdia'       },
                     { name: 'Inner Thickness (x)',  key: 'innerTx',  stdKey: 'innertx'        },
                     { name: 'Inner Thickness (y)',  key: 'innerTy',  stdKey: 'innerty'        },
+                    { name: 'Inn+Mid Thickness (x)', key: 'innermidTx', stdKey: 'innermidtx'   },
+                    { name: 'Inn+Mid Thickness (y)', key: 'innermidTy', stdKey: 'innermidty'   },
                     { name: 'Total Thickness (x)',  key: 'totalTx',  stdKey: 'totaltx'        },
                     { name: 'Total Thickness (y)',  key: 'totalTy',  stdKey: 'totalty'        },
                     { name: 'Spiral Pitch',         key: 'spiral',   stdKey: 'spiral'         }

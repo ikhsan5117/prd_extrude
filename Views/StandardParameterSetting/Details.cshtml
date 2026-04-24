@@ -98,12 +98,12 @@
                                 @{ var dies = new[] { ("TubeDie", "Tol_TubeDie", "Tube Die"), ("MiddleDie", "Tol_MiddleDie", "Middle Die"), ("OuterDie", "Tol_OuterDie", "Outer/Ring Target"), ("CoverDie", "Tol_CoverDie", "Cover Die") }; }
                                 @foreach(var d in dies)
                                 {
-                                    <div class="col-md-12">
+                                    <div class="col-md-12 @(d.Item1 == "MiddleDie" ? "layer-3-only" : "")">
                                         <label class="text-white-50 small fw-bold mb-1">@d.Item3</label>
                                         <div class="input-group">
-                                            <input type="number" step="0.01" id="@d.Item1" name="@d.Item1" disabled disabled class="form-control text-center bg-dark text-white border-secondary base-input" placeholder="0.0" />
+                                            <input type="number" step="0.01" id="@d.Item1" name="@d.Item1" disabled class="form-control text-center bg-dark text-white border-secondary base-input" value="@Model.GetType().GetProperty(d.Item1)?.GetValue(Model)" />
                                             <span class="input-group-text bg-secondary text-white border-secondary">±</span>
-                                            <input type="number" step="0.01" id="@d.Item2" name="@d.Item2" disabled disabled class="form-control text-center bg-dark text-light border-secondary tol-input" placeholder="0.0" />
+                                            <input type="number" step="0.01" id="@d.Item2" name="@d.Item2" disabled class="form-control text-center bg-dark text-light border-secondary tol-input" value="@Model.GetType().GetProperty(d.Item2)?.GetValue(Model)" />
                                             <span class="input-group-text bg-primary border-primary text-white result-display" style="min-width: 100px;">0.0 ~ 0.0</span>
                                         </div>
                                     </div>
@@ -117,31 +117,76 @@
                     </div>
                 </div>
 
-                <!-- SUHU & KECEPATAN -->
+                <!-- EXTRUDER SETTINGS TABS -->
                 <div class="col-lg-6">
-                    <div class="card h-100 border-0 shadow-lg bg-glass" style="backdrop-filter: blur(10px); background: rgba(25, 30, 40, 0.7); border-radius: 15px;">
-                        <div class="card-header bg-transparent border-bottom border-danger py-3">
-                            <h6 class="mb-0 text-danger fw-bold"><i class="bi bi-thermometer-sun me-2"></i> SUHU & KECEPATAN MESIN</h6>
+                    <div class="card h-100 border-0 shadow-lg bg-glass overflow-hidden" style="backdrop-filter: blur(10px); background: rgba(25, 30, 40, 0.7); border-radius: 15px;">
+                        <div class="card-header bg-transparent border-bottom border-danger p-0">
+                            <ul class="nav nav-tabs nav-fill border-0" id="extruderTabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active text-white py-3 border-0 rounded-0" id="ex1-tab" data-bs-toggle="tab" data-bs-target="#ex1" type="button" role="tab">EXTRUDER 1</button>
+                                </li>
+                                <li class="nav-item layer-2-up">
+                                    <button class="nav-link text-white py-3 border-0 rounded-0" id="ex2-tab" data-bs-toggle="tab" data-bs-target="#ex2" type="button" role="tab">EXTRUDER 2</button>
+                                </li>
+                                <li class="nav-item layer-3-only">
+                                    <button class="nav-link text-white py-3 border-0 rounded-0" id="ex3-tab" data-bs-toggle="tab" data-bs-target="#ex3" type="button" role="tab">EXTRUDER 3</button>
+                                </li>
+                            </ul>
                         </div>
-                        <div class="card-body p-4">
-                            <h6 class="text-white-50 fw-bold border-bottom border-secondary pb-1 mb-3">Temperature (°C)</h6>
-                            <div class="row g-2 mb-4">
-                                <div class="col-md-4"><label class="text-white-50 small">Head</label><div class="input-group"><input asp-for="HeadTemp" disabled class="form-control bg-dark text-danger fw-bold border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50">°C</span></div></div>
-                                <div class="col-md-4"><label class="text-white-50 small">Cyl 1</label><input asp-for="Cylinder1Temp" disabled class="form-control bg-dark text-white border-secondary" /></div>
-                                <div class="col-md-4"><label class="text-white-50 small">Cyl 2</label><input asp-for="Cylinder2Temp" disabled class="form-control bg-dark text-white border-secondary" /></div>
-                                <div class="col-md-4"><label class="text-white-50 small">Cyl 3</label><input asp-for="Cylinder3Temp" disabled class="form-control bg-dark text-white border-secondary" /></div>
-                                <div class="col-md-4"><label class="text-white-50 small">Screw</label><input asp-for="ScrewTemp" disabled class="form-control bg-dark text-white border-secondary" /></div>
-                                <div class="col-md-4"><label class="text-white-50 small">Chiller</label><input asp-for="ChillerWaterTemp" disabled class="form-control bg-dark text-info border-info" /></div>
+                        <div class="card-body p-4 tab-content" id="extruderTabContent">
+                            <!-- EXTRUDER 1 -->
+                            <div class="tab-pane fade show active" id="ex1" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-12"><label class="text-info small fw-bold">Mesh Screen 1</label><input asp-for="MeshScreen" disabled class="form-control bg-dark text-white border-info" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Head Temp</label><input asp-for="HeadTemp" disabled class="form-control bg-dark text-danger fw-bold border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 1</label><input asp-for="Cylinder1Temp" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 2</label><input asp-for="Cylinder2Temp" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 3</label><input asp-for="Cylinder3Temp" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Screw Temp</label><input asp-for="ScrewTemp" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Screw Spd.</label><input asp-for="ScrewSpeed" disabled class="form-control bg-dark text-warning border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Pressure</label><input asp-for="Pressure" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Feed Ratio</label><input asp-for="FeedRollRatio" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">AmMeter</label><input asp-for="AmMeter" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                </div>
                             </div>
-                            
-                            <h6 class="text-white-50 fw-bold border-bottom border-secondary pb-1 mb-3">Speed & Pressure</h6>
+                            <!-- EXTRUDER 2 -->
+                            <div class="tab-pane fade" id="ex2" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-12"><label class="text-info small fw-bold">Mesh Screen 2</label><input asp-for="MeshScreen2" disabled class="form-control bg-dark text-white border-info" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Head Temp</label><input asp-for="HeadTemp2" disabled class="form-control bg-dark text-danger fw-bold border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 1</label><input asp-for="Cylinder1_2" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 2</label><input asp-for="Cylinder2_2" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 3</label><input asp-for="Cylinder3_2" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Screw Temp</label><input asp-for="ScrewTemp2" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Screw Spd.</label><input asp-for="ScrewSpeed2" disabled class="form-control bg-dark text-warning border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Pressure</label><input asp-for="Pressure2" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Feed Ratio</label><input asp-for="FeedRollRatio2" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">AmMeter</label><input asp-for="AmMeter2" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                </div>
+                            </div>
+                            <!-- EXTRUDER 3 -->
+                            <div class="tab-pane fade" id="ex3" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-12"><label class="text-info small fw-bold">Mesh Screen 3</label><input asp-for="MeshScreen3" disabled class="form-control bg-dark text-white border-info" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Head Temp</label><input asp-for="HeadTemp3" disabled class="form-control bg-dark text-danger fw-bold border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 1</label><input asp-for="Cylinder1_3" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 2</label><input asp-for="Cylinder2_3" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Cyl 3</label><input asp-for="Cylinder3_3" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Screw Temp</label><input asp-for="ScrewTemp3" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Screw Spd.</label><input asp-for="ScrewSpeed3" disabled class="form-control bg-dark text-warning border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Pressure</label><input asp-for="Pressure3" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">Feed Ratio</label><input asp-for="FeedRollRatio3" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                    <div class="col-md-4"><label class="text-white-50 small">AmMeter</label><input asp-for="AmMeter3" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                </div>
+                            </div>
+
+                            <hr class="border-secondary my-4" />
                             <div class="row g-2">
-                                <div class="col-md-4"><label class="text-white-50 small">Screw Spd.</label><div class="input-group"><input asp-for="ScrewSpeed" disabled class="form-control bg-dark text-warning border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50 p-1">rpm</span></div></div>
-                                <div class="col-md-4"><label class="text-white-50 small">Feed Ratio</label><div class="input-group"><input asp-for="FeedRollRatio" disabled class="form-control bg-dark text-white border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50 p-1">%</span></div></div>
-                                <div class="col-md-4"><label class="text-white-50 small">Pressure</label><div class="input-group"><input asp-for="Pressure" disabled class="form-control bg-dark text-white border-secondary" /><span class="input-group-text bg-dark border-secondary text-white-50 p-1">MPa</span></div></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Chiller</label><input asp-for="ChillerWaterTemp" disabled class="form-control bg-dark text-info border-info" /></div>
                                 <div class="col-md-4"><label class="text-white-50 small">Set Valve</label><input asp-for="PresetValve" disabled class="form-control bg-dark text-white border-secondary" /></div>
                                 <div class="col-md-4"><label class="text-white-50 small">Air Press.</label><input asp-for="AirPressureA" disabled class="form-control bg-dark text-white border-secondary" /></div>
                                 <div class="col-md-4"><label class="text-white-50 small">Hose Spd.</label><input asp-for="HoseSpeed" disabled class="form-control bg-dark text-white border-secondary" /></div>
+                                <div class="col-md-4"><label class="text-white-50 small">Preset Temp.</label><input asp-for="PresetTemp" disabled class="form-control bg-dark text-white border-secondary" /></div>
                             </div>
                         </div>
                     </div>
@@ -234,6 +279,19 @@
                     updateToleranceRange(group); // init
                 }
             });
+
+            function toggleLayers(type) {
+                if (type === "CHS 3 Layer") {
+                    $('.layer-2-up, .layer-3-only').show();
+                } else if (type === "CHS 2 Layer" || type === "2 Layer") {
+                    $('.layer-2-up').show();
+                    $('.layer-3-only').hide();
+                } else {
+                    $('.layer-2-up, .layer-3-only').hide();
+                }
+            }
+
+            toggleLayers('@Model.LayerType');
         });
 
         document.getElementById('mainForm').addEventListener('submit', function(e) {

@@ -29,6 +29,9 @@ namespace VelastoProductionSystem.Models
 
         [Display(Name = "Compound Outer")]
         public string? CompoundOuter { get; set; }
+        
+        [Display(Name = "Compound Middle")]
+        public string? CompoundMiddle { get; set; }
 
         [Display(Name = "Compound Combo")]
         public string? CompoundCombo { get; set; }
@@ -38,6 +41,9 @@ namespace VelastoProductionSystem.Models
 
         [Display(Name = "Need KG Outer (kg/pcs)")]
         public decimal? NeedKgOuter { get; set; }
+        
+        [Display(Name = "Need KG Middle (kg/pcs)")]
+        public decimal? NeedKgMiddle { get; set; }
 
         /// <summary>
         /// Cycle Time dasar dalam DETIK per pcs (sec/pcs dari DL0 kolom 11)
