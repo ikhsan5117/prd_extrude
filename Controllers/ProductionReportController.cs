@@ -165,6 +165,7 @@ namespace VelastoProductionSystem.Controllers
                     HeadTempInner = master.HeadTemp1,
                     Cylinder1TempInner = master.Cylinder1_1,
                     Cylinder2TempInner = master.Cylinder2_1,
+                    Cylinder3TempInner = master.Cylinder3_1,
                     ScrewTempInner = master.ScrewTemp1,
                     ScrewSpeedInner = master.ScrewSpeed1,
                     PressureInner = master.Pressure1,
@@ -173,6 +174,7 @@ namespace VelastoProductionSystem.Controllers
                     HeadTempOuter = master.HeadTemp2,
                     Cylinder1TempOuter = master.Cylinder1_2,
                     Cylinder2TempOuter = master.Cylinder2_2,
+                    Cylinder3TempOuter = master.Cylinder3_2,
                     ScrewTempOuter = master.ScrewTemp2,
                     ScrewSpeedOuter = master.ScrewSpeed2,
                     PressureOuter = master.Pressure2,
@@ -180,8 +182,10 @@ namespace VelastoProductionSystem.Controllers
                     
                     InnerDie = master.Nipple,
                     TubeDie = master.TubeDie,
+                    MiddleDie = master.MiddleDie,
                     CoverDie = master.CoverDie,
-                    ToleranceDie = master.ToleranceInner,
+                    SpacerDie = master.SpacerDie,
+                    ToleranceDie = master.ADistance,
                     
                     ChillerWaterTemp = master.ChillerWaterTemp,
                     TakeupConveyorSpeed = master.TakeUpConveyorSpeed,
