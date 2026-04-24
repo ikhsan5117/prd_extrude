@@ -118,7 +118,7 @@ namespace VelastoProductionSystem.Controllers
             var machinesMap = await _elwpContext.ElwpMachines
                 .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
 
-            var elwpQuery = _elwpContext.ElwpPlannings.AsQueryable();
+            var elwpQuery = _elwpContext.ElwpPlannings.Where(x => x.AreaId == 1 || x.AreaId == 10).AsQueryable();
 
             if (filterDate.HasValue)
             {
@@ -247,6 +247,7 @@ namespace VelastoProductionSystem.Controllers
                 {
                     elwpRows = await _elwpContext.ElwpPlannings
                         .Where(x => x.TanggalPlanning >= dateStart && x.TanggalPlanning < dateEnd)
+                        .Where(x => x.AreaId == 1 || x.AreaId == 10) // Filter Extrude & TPE
                         .OrderBy(x => x.MesinId)
                         .ThenBy(x => x.Shift)
                         .ThenBy(x => x.Id)
