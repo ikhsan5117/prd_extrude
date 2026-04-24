@@ -210,9 +210,9 @@
     <script>
         $(document).ready(function() {
             // Global SweetAlert for TempData
-            @if (TempData["SuccessMessage"] != null && !ViewContext.RouteData.Values["controller"].ToString().Contains("MasterlistSpsDoubleLayers"))
+            @if (TempData["SuccessMessage"] != null && ViewContext.RouteData.Values["controller"]?.ToString()?.Contains("MasterlistSpsDoubleLayers") == false)
             {
-                var msg = TempData["SuccessMessage"].ToString().Replace("\n", "<br>").Replace("'", "\\'");
+                var msg = TempData["SuccessMessage"]?.ToString()?.Replace("\n", "<br>").Replace("'", "\\'") ?? "";
                 <text>
                 Swal.fire({
                     icon: 'success',
@@ -224,9 +224,9 @@
                 </text>
             }
 
-            @if (TempData["ErrorMessage"] != null && !ViewContext.RouteData.Values["controller"].ToString().Contains("MasterlistSpsDoubleLayers"))
+            @if (TempData["ErrorMessage"] != null && ViewContext.RouteData.Values["controller"]?.ToString()?.Contains("MasterlistSpsDoubleLayers") == false)
             {
-                var msg = TempData["ErrorMessage"].ToString().Replace("\n", "<br>").Replace("'", "\\'");
+                var msg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>").Replace("'", "\\'") ?? "";
                 <text>
                 Swal.fire({
                     icon: 'error',
@@ -290,7 +290,6 @@
             }, 5000);
         });
     </script>
-    @await RenderSectionAsync("Scripts", required: false)
 
     @* FAB: Today's Summary - Operator Only *@
     @if (Context.Session.GetString("IsAdmin") != "true" && !string.IsNullOrEmpty(Context.Session.GetString("UserName")))
@@ -620,205 +619,7 @@
                     }
                 } catch(e){}
             });
-        </script>
-    }
 
-        <script>
-            function toggleFullScreen() {
-                const icon = document.getElementById('fs-icon');
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-                    });
-                    icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                        icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
-                    }
-                }
-            }
-
-                } catch(e) {
-                    body.innerHTML = `<div class="t-empty"><i class="bi bi-wifi-off text-danger"></i><p>GAGAL MEMUAT DATA</p></div>`;
-                }
-            }
-
-            window.switchTab = function(type) {
-                document.querySelectorAll('.t-tab').forEach(el=>el.classList.remove('active'));
-                document.querySelectorAll('.t-pane').forEach(el=>el.classList.remove('active'));
-                document.getElementById('tab-'+type).classList.add('active');
-                document.getElementById('pane-'+type).classList.add('active');
-            };
-
-            function renderToday(data, isDim, isParam) {
-                const body = document.getElementById('t-body');
-                let p = data.parameterReports||[], d = data.dimensionReports||[];
-                
-                if (isDim) { p = []; }
-                else if (isParam) { d = []; }
-
-                if (p.length===0 && d.length===0) {
-                    body.innerHTML = `<div class="t-empty"><i class="bi bi-moon-stars"></i><p>BELUM ADA DATA PADA TANGGAL INI</p></div>`;
-                    return;
-                }
-
-                const okTot = (isParam ? p : (isDim ? d : [...p,...d])).reduce((s,r)=>s+(r.qtyOk||0),0);
-                const ngTot = (isParam ? p : (isDim ? d : [...p,...d])).reduce((s,r)=>s+(r.ngDimension||0)+(r.ngVisual||0),0);
-                
-                let html = `<div class="t-stats" style="margin-bottom:15px;">
-                    <div class="t-pill"><i class="bi bi-cpu-fill text-warning"></i> ${data.machine||'—'}</div>
-                    <div class="t-pill" style="color:#10b981">QTY OK <span class="v ms-1" style="color:#10b981">${okTot}</span></div>
-                    ${ngTot>0?`<div class="t-pill" style="color:#ef4444">TOTAL NG <span class="v ms-1" style="color:#ef4444">${ngTot}</span></div>`:''}
-                </div>`;
-                
-                html += `
-                <div class="t-tabs">
-                    ${isParam ? 
-                        `<button class="t-tab active" style="cursor:default !important"><i class="bi bi-sliders2"></i> FORM PARAMETER (${p.length})</button>` : 
-                        (isDim ? 
-                            `<button class="t-tab dim active" style="cursor:default !important"><i class="bi bi-rulers"></i> INPUT DIMENSI (${d.length})</button>` :
-                            `<button class="t-tab active" style="cursor:default !important">TOTAL SUMMARY (${p.length + d.length})</button>`
-                        )
-                    }
-                </div>
-                `;
-
-                if(isParam || (!isDim && p.length > 0)) {
-                    html += `<div id="pane-param" class="t-pane active">`;
-                    if(p.length===0){
-                        html += `<div class="t-empty"><i class="bi bi-inbox" style="font-size:28px"></i><p>BELUM ADA DATA PARAMETER</p></div>`;
-                    } else {
-                        html += `<div class="t-table-wrapper"><table class="t-table">
-                            <thead><tr>
-                                <th>Item / Hose Type</th><th>Doc & Marking</th><th>Operator / Shift</th><th>Machine Performance</th><th>Material Batches</th><th>Status</th><th>Action</th>
-                            </tr></thead><tbody>`;
-                        p.forEach(r=>{
-                            const st = r.status === 'COMPLETED' ? 't-done' : 't-prod';
-                            const time = r.createdDate ? new Date(r.createdDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
-                            
-                            // Dies calculation
-                            const dies = [r.nippleDieOK, r.tubeDieOK, r.middleDieOK, r.coverDieOK, r.spacerDieOK, r.toleranceDieOK];
-                            const okCount = dies.filter(d => d === true).length;
-                            const dieColor = okCount === 6 ? '#10b981' : (okCount > 0 ? '#f59e0b' : '#ef4444');
-
-                            // Material logic
-                            const matIn = r.innerMaterialLotNo || r.innerMaterialActual || '—';
-                            const matOut = r.outerMaterialLotNo || r.outerMaterialActual || '—';
-                            const matYrn = r.yarnLotNo || r.yarnActual || '—';
-
-                            html += `<tr>
-                                <td>
-                                    <div class="t-code">${r.hoseType||'—'}</div>
-                                    <div class="t-sub"><i class="bi bi-clock me-1"></i>${time} | ${r.vinCode||'—'}</div>
-                                </td>
-                                <td>
-                                    <div class="fw-bold text-info" style="font-size:0.75rem;">${r.documentNumber||'—'}</div>
-                                    <div class="t-sub fw-bold" style="color: #60a5fa; margin-top:4px; max-width:150px; overflow:hidden; text-overflow:ellipsis;">
-                                        <i class="bi bi-fonts me-1"></i>${r.embossMarkContent || '—'}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="fw-bold text-white" style="font-size:0.75rem;">${r.createdBy||'—'}</div>
-                                    <div class="t-sub">SHIFT ${r.shift||'—'}</div>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column gap-1">
-                                        <div class="fw-bold text-warning" style="font-size:0.85rem;">
-                                            <i class="bi bi-speedometer2 me-1"></i>${r.initHoseSpeed || '0'} <small>m/m</small>
-                                        </div>
-                                        <div style="font-size:0.65rem; color:${dieColor}">
-                                            <i class="bi bi-gear-fill me-1"></i>DIES: ${okCount}/6 OK
-                                        </div>
-                                    </div>
-                                </td>
-                                <td style="min-width:160px;">
-                                    <div class="d-flex flex-column gap-1">
-                                        <div class="badge bg-dark border border-white border-opacity-10 text-info super-small text-start">IN: ${matIn}</div>
-                                        <div class="badge bg-dark border border-white border-opacity-10 text-warning super-small text-start">OUT: ${matOut}</div>
-                                        <div class="badge bg-dark border border-white border-opacity-10 text-success super-small text-start">YRN: ${matYrn}</div>
-                                    </div>
-                                </td>
-                                <td><span class="t-badge ${st}">${r.status||'—'}</span></td>
-                                <td class="text-center">
-                                    <a href="/ProductionReport/Details/${r.id}" class="btn btn-sm p-0 text-info">
-                                        <i class="bi bi-eye-fill fs-5"></i>
-                                    </a>
-                                </td>
-                            </tr>`;
-                        });
-                        html += `</tbody></table></div>`;
-                    }
-                    html += `</div>`;
-                }
-
-                if(isDim || (!isParam && d.length > 0)) {
-                    html += `<div id="pane-dim" class="t-pane active">`;
-                    if(d.length===0){
-                        html += `<div class="t-empty"><i class="bi bi-inbox" style="font-size:28px"></i><p>BELUM ADA DATA DIMENSI</p></div>`;
-                    } else {
-                        html += `<div class="t-table-wrapper"><table class="t-table">
-                            <thead><tr>
-                                <th>Hose Type</th><th>Status</th><th>Dimensi</th><th>Doc No</th><th>Shift</th><th>Created By</th>
-                                <th>Std Pjg</th><th>Act Pjg</th><th>Target</th><th>OK</th><th>NG Dim</th><th>NG Vis</th><th>Remark</th><th>Action</th>
-                            </tr></thead><tbody>`;
-                        d.forEach(r=>{
-                            const st = r.status === 'COMPLETED' ? 't-done' : 't-actv';
-                            html += `<tr>
-                                <td><div class="t-code dim">${r.hoseType||'—'}</div><div class="t-sub">${r.vinCode||'—'}</div></td>
-                                <td><span class="t-badge ${st}">${r.status||'—'}</span></td>
-                                <td class="t-val dim">${r.dimensionDisplay||'—'}</td>
-                                <td>${r.documentNumber||'—'}</td>
-                                <td>${r.shift||'—'}</td>
-                                <td>${r.createdBy||'—'}</td>
-                                <td>${r.standardLength||'—'}</td>
-                                <td>${r.actualLength||'—'}</td>
-                                <td>${r.qtyTarget??'—'}</td>
-                                <td class="t-val ok">${r.qtyOk??'—'}</td>
-                                <td class="t-val ${r.ngDimension>0?'ng':''}">${r.ngDimension??0}</td>
-                                <td class="t-val ${r.ngVisual>0?'ng':''}">${r.ngVisual??0}</td>
-                                <td style="color:#94a3b8;max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${r.remark||''}">${r.remark||'—'}</td>
-                                <td class="text-center">
-                                    <a href="/Dimensi/Details/${r.id}" class="btn btn-sm p-0 text-info" title="View Details">
-                                        <i class="bi bi-eye-fill fs-5"></i>
-                                    </a>
-                                </td>
-                            </tr>`;
-                        });
-                        html += `</tbody></table></div>`;
-                    }
-                    html += `</div>`;
-                }
-
-                body.innerHTML = html;
-            }
-
-            // Silent badge load on page ready
-            window.addEventListener('load', async()=>{
-                try {
-                    const r = await fetch('/ProductionReport/GetTodaysSummary');
-                    const d = await r.json();
-
-                    const path = window.location.pathname;
-                    const isDim = path.includes('/Dimensi');
-                    const isParam = path.includes('/ProductionReport');
-
-                    let tot = 0;
-                    if (isDim) tot = d.dimensionReports?.length||0;
-                    else if (isParam) tot = d.parameterReports?.length||0;
-                    else tot = (d.parameterReports?.length||0) + (d.dimensionReports?.length||0);
-
-                    const b = document.getElementById('fabBadge');
-                    if (b) {
-                        b.textContent = tot > 99 ? '99+' : tot;
-                        b.style.display = tot > 0 ? 'flex' : 'none';
-                    }
-                } catch(e){}
-            });
-        </script>
-    }
-
-        <script>
             function toggleFullScreen() {
                 const icon = document.getElementById('fs-icon');
                 if (!document.fullscreenElement) {
@@ -843,52 +644,8 @@
                     icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
                 }
             });
-
-            // SignalR Live Sync for Global FAB Badge
-            const layoutConnection = new signalR.HubConnectionBuilder()
-                .withUrl("/hub/dashboard")
-                .withAutomaticReconnect()
-                .build();
-
-            async function startLayoutSignalR() {
-                try {
-                    await layoutConnection.start();
-                } catch (err) {
-                    setTimeout(startLayoutSignalR, 10000);
-                }
-            }
-
-            layoutConnection.on("ReceiveUpdate", async function () {
-                // If the user has the FAB (operator), update the badge
-                const b = document.getElementById('fabBadge');
-                if (b) {
-                    try {
-                        const r = await fetch('/ProductionReport/GetTodaysSummary');
-                        const d = await r.json();
-                        
-                        const path = window.location.pathname;
-                        const isDim = path.includes('/Dimensi');
-                        const isParam = path.includes('/ProductionReport');
-
-                        let tot = 0;
-                        if (isDim) tot = d.dimensionReports?.length||0;
-                        else if (isParam) tot = d.parameterReports?.length||0;
-                        else tot = (d.parameterReports?.length||0) + (d.dimensionReports?.length||0);
-
-                        b.textContent = tot > 99 ? '99+' : tot;
-                        b.style.display = tot > 0 ? 'flex' : 'none';
-                        
-                        // Subtle bounce animation for the badge
-                        b.style.animation = 'none';
-                        b.offsetHeight; // trigger reflow
-                        b.style.animation = 'fabIn 0.5s ease-out';
-                    } catch(e) {}
-                }
-            });
-
-            startLayoutSignalR();
         </script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
-
+    }
+        @await RenderSectionAsync("Scripts", required: false)
     </body>
 </html>

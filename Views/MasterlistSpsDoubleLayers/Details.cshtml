@@ -338,8 +338,8 @@
             
             <tr>
                 <td class="text-center">4</td><td>Mesh Screen Matrix</td><td></td>
-                <td class="text-center">@Model.MeshScreen1</td><td class="text-center">@Model.MeshScreen2</td>
-                @if (!string.IsNullOrEmpty(Model.HeadTemp3)) { <td class="text-center">@Model.MeshScreen3</td> }
+                <td class="text-center">@Model.MeshScreen1 / @Model.MeshDim1</td><td class="text-center">@Model.MeshScreen2 / @Model.MeshDim2</td>
+                @if (!string.IsNullOrEmpty(Model.HeadTemp3)) { <td class="text-center">@Model.MeshScreen3 / @Model.MeshDim3</td> }
                 <td class="text-center">Visual</td><td>-</td><td>-</td><td>-</td><td>-</td><td>Mat Change</td><td class="text-center">2</td><td class="text-center">o</td>
                 <td class="text-center fw-bold small">EPR (Parameter Setting)</td>
             </tr>

@@ -339,12 +339,12 @@
                     <!-- Primary Header Category -->
                     <tr>
                         <th colspan="9" class="group-label">Identifikasi Utama</th>
-                        <th colspan="21" class="group-label group-label-orange">Spesifikasi Hose & Dies</th>
+                        <th colspan="20" class="group-label group-label-orange">Spesifikasi Hose & Dies</th>
                         <th colspan="3" class="group-label">Mesh</th>
-                        <th colspan="10" class="group-label group-label-orange">Suhu Pengerjaan (°C)</th>
-                        <th colspan="17" class="group-label">Output Mesin</th>
-                        <th colspan="10" class="group-label group-label-orange">Proses Akhir</th>
-                        <th colspan="24" class="group-label">Final Quality Matrix</th>
+                        <th colspan="17" class="group-label group-label-orange">Suhu Pengerjaan (°C)</th>
+                        <th colspan="21" class="group-label">Output Mesin</th>
+                        <th colspan="11" class="group-label group-label-orange">Proses Akhir</th>
+                        <th colspan="31" class="group-label">Final Quality Matrix</th>
                         <th rowspan="2" class="align-middle">Opsi</th>
                     </tr>
                     <!-- Secondary Header Labels -->
@@ -385,25 +385,39 @@
                         <th>Mesh 3</th>
 
                         <th class="marker-re"><span class="badge-re">RE</span>Head 1</th>
-                        <th class="marker-re"><span class="badge-re">RE</span>Head 2</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Cyl 1-1</th>
-                        <th class="marker-re"><span class="badge-re">RE</span>Cyl 1-2</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Cyl 2-1</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cyl 3-1</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Screw 1</th>
+
+                        <th class="marker-re"><span class="badge-re">RE</span>Head 2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cyl 1-2</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Cyl 2-2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cyl 3-2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Screw 2</th>
+
+                        <th class="marker-re"><span class="badge-re">RE</span>Head 3</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cyl 1-3</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cyl 2-3</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cyl 3-3</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Screw 3</th>
+
                         <th class="marker-re"><span class="badge-re">RE</span>Feed 1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Feed 2</th>
-                        <th class="marker-re"><span class="badge-re">RE</span>Screw Temp 1</th>
-                        <th class="marker-re"><span class="badge-re">RE</span>Screw Temp 2</th>
 
                         <th class="marker-re"><span class="badge-re">RE</span>Screw V1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Screw V2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Screw V3</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Feed 1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Feed 2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Feed 3</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Press 1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Press 2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Press 3</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Curr Val</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Am 1</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Am 2</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Am 3</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Preset</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Control</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Sp-Set</th>
@@ -418,7 +432,8 @@
                         <th class="marker-re"><span class="badge-re">RE</span>Cat.Gap</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Cutting</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Take-up</th>
-                        <th class="marker-re"><span class="badge-re">RE</span>Cool-S</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cool-S 1</th>
+                        <th class="marker-re"><span class="badge-re">RE</span>Cool-S 2</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Conv-R</th>
                         <th>Mark Sort</th>
                         <th>Text Material</th>
@@ -427,6 +442,7 @@
                         <th class="marker-im"><span class="badge-im">IM</span>± Inner</th>
                         <th class="marker-im"><span class="badge-im">IM</span>± Outer</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Tebal In</th>
+                        <th class="marker-im"><span class="badge-im">IM</span>In + Mid</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Tebal Out</th>
                         <th class="marker-im"><span class="badge-im">IM</span>Tot Tebal</th>
                         <th>Selisih</th>
@@ -436,6 +452,12 @@
                         <th class="matrix-h">In Min</th>
                         <th class="matrix-h">In UCL</th>
                         <th class="matrix-h">In Max</th>
+                        <th class="matrix-h text-info">Mid Target</th>
+                        <th class="matrix-h text-info">Mid Tol</th>
+                        <th class="matrix-h text-info">Mid LCL</th>
+                        <th class="matrix-h text-info">Mid Min</th>
+                        <th class="matrix-h text-info">Mid UCL</th>
+                        <th class="matrix-h text-info">Mid Max</th>
                         <th class="matrix-h">Th Target</th>
                         <th class="matrix-h">Th Tol</th>
                         <th class="matrix-h">Th LCL</th>
@@ -485,30 +507,44 @@
                             <td class="text-info">@item.SpacerDie</td>
                             <td class="text-info">@item.ADistance</td>
 
-                            <td>@item.MeshScreen1</td>
-                            <td>@item.MeshScreen2</td>
-                            <td>@item.MeshScreen3</td>
+                            <td>@item.MeshScreen1<br /><small class="text-white-50">@item.MeshDim1</small></td>
+                            <td>@item.MeshScreen2<br /><small class="text-white-50">@item.MeshDim2</small></td>
+                            <td>@item.MeshScreen3<br /><small class="text-white-50">@item.MeshDim3</small></td>
 
                             <td class="text-warning">@item.HeadTemp1</td>
-                            <td class="text-warning">@item.HeadTemp2</td>
                             <td>@item.Cylinder1_1</td>
-                            <td>@item.Cylinder1_2</td>
                             <td>@item.Cylinder2_1</td>
+                            <td>@item.Cylinder3_1</td>
+                            <td>@item.ScrewTemp1</td>
+
+                            <td class="text-warning">@item.HeadTemp2</td>
+                            <td>@item.Cylinder1_2</td>
                             <td>@item.Cylinder2_2</td>
+                            <td>@item.Cylinder3_2</td>
+                            <td>@item.ScrewTemp2</td>
+
+                            <td class="text-warning">@item.HeadTemp3</td>
+                            <td>@item.Cylinder1_3</td>
+                            <td>@item.Cylinder2_3</td>
+                            <td>@item.Cylinder3_3</td>
+                            <td>@item.ScrewTemp3</td>
+
                             <td>@item.Feed1</td>
                             <td>@item.Feed2</td>
-                            <td>@item.ScrewTemp1</td>
-                            <td>@item.ScrewTemp2</td>
 
                             <td>@item.ScrewSpeed1</td>
                             <td>@item.ScrewSpeed2</td>
-                            <td>@item.FeedRollRatio1</td>
-                            <td>@item.FeedRollRatio2</td>
+                            <td>@item.ScrewSpeed3</td>
+                            <td>@(item.FeedRollRatio1 ?? item.Feed1)</td>
+                            <td>@(item.FeedRollRatio2 ?? item.Feed2)</td>
+                            <td>@(item.FeedRollRatio3 ?? item.Feed3)</td>
                             <td>@item.Pressure1</td>
                             <td>@item.Pressure2</td>
+                            <td>@item.Pressure3</td>
                             <td class="text-info">@item.CurrentValue</td>
                             <td>@item.AmMeter</td>
                             <td>@item.AmMeter2</td>
+                            <td>@item.AmMeter3</td>
                             <td>@item.PresetValue</td>
                             <td>@item.ControlValue</td>
                             <td>@item.SpiralPitchSetting</td>
@@ -524,6 +560,7 @@
                             <td>@item.CuttingSpeed</td>
                             <td>@item.TakeUpConveyorSpeed</td>
                             <td>@item.CoolConveyorSpeed</td>
+                            <td>@item.CoolConveyorSpeed2</td>
                             <td>@item.ConveyorRatio</td>
                             <td>@item.MarkingSort</td>
                             <td>@item.TextMarkingMaterial</td>
@@ -532,6 +569,7 @@
                             <td class="fw-bold">@item.ToleranceInner</td>
                             <td class="fw-bold">@item.ToleranceOuter</td>
                             <td>@item.TebalInner</td>
+                            <td>@item.TebalInnerMiddle</td>
                             <td>@item.TebalOuter</td>
                             <td class="text-primary fw-bold">@item.TebalTotal</td>
                             <td>@item.SelisihTebal</td>
@@ -542,6 +580,12 @@
                             <td class="text-white-50">@item.InnerMin</td>
                             <td class="text-white-50">@item.InnerUCL</td>
                             <td class="text-white-50">@item.InnerMax</td>
+                            <td class="text-info fw-bold">@item.InnerMidTarget</td>
+                            <td class="text-info">@item.InnerMidTol</td>
+                            <td class="text-info opacity-50">@item.InnerMidLCL</td>
+                            <td class="text-info opacity-50">@item.InnerMidMin</td>
+                            <td class="text-info opacity-50">@item.InnerMidUCL</td>
+                            <td class="text-info opacity-50">@item.InnerMidMax</td>
                             <td class="text-white-50">@item.ThickTarget</td>
                             <td class="text-white-50">@item.ThickTol</td>
                             <td class="text-white-50">@item.ThickLCL</td>
@@ -628,8 +672,8 @@
              // Trigger SweetAlert for messages from TempData
              @if (TempData["SuccessMessage"] != null)
              {
-                 var successMsg = TempData["SuccessMessage"]?.ToString().Replace("\n", "<br>").Replace("\r", "");
-                 var sheetLog = TempData["SheetLog"]?.ToString().Replace("\n", "\\n").Replace("\r", "").Replace("'", "\\'");
+                  var successMsg = TempData["SuccessMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "");
+                  var sheetLog = TempData["SheetLog"]?.ToString()?.Replace("\n", "\\n")?.Replace("\r", "")?.Replace("'", "\\'");
                  
                  <text>
                  Swal.fire({
@@ -652,7 +696,7 @@
              
              @if (TempData["ErrorMessage"] != null)
              {
-                 var errorMsg = TempData["ErrorMessage"]?.ToString().Replace("\n", "<br>").Replace("\r", "");
+                  var errorMsg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "");
                  
                  <text>
                  Swal.fire({

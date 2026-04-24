@@ -85,13 +85,22 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Tension Yarn | #Outer")]
         public string? TensionYarnOuter { get; set; }
 
-        [Display(Name = "Mesh screen | #material 1")]
+        [Display(Name = "Mesh Dim. | #material 1")]
+        public string? MeshDim1 { get; set; }
+
+        [Display(Name = "Mesh Screen | #material 1")]
         public string? MeshScreen1 { get; set; }
 
-        [Display(Name = "Mesh screen | #material 2")]
+        [Display(Name = "Mesh Dim. | #material 2")]
+        public string? MeshDim2 { get; set; }
+
+        [Display(Name = "Mesh Screen | #material 2")]
         public string? MeshScreen2 { get; set; }
 
-        [Display(Name = "Mesh screen | #material 3")]
+        [Display(Name = "Mesh Dim. | #material 3")]
+        public string? MeshDim3 { get; set; }
+
+        [Display(Name = "Mesh Screen | #material 3")]
         public string? MeshScreen3 { get; set; }
 
         [Display(Name = "Head Temp. | #material 1")]
@@ -199,6 +208,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Tebal Inner")]
         public string? TebalInner { get; set; }
 
+        [Display(Name = "Tebal Inner + Middle")]
+        public string? TebalInnerMiddle { get; set; }
+
         [Display(Name = "Tebal Outer")]
         public string? TebalOuter { get; set; }
 
@@ -230,11 +242,17 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Feed Roll Ratio 2")]
         public string? FeedRollRatio2 { get; set; }
 
+        [Display(Name = "Feed Roll Ratio 3")]
+        public string? FeedRollRatio3 { get; set; }
+
         [Display(Name = "Current Value")]
         public string? CurrentValue { get; set; }
 
         [Display(Name = "Am Meter 2")]
         public string? AmMeter2 { get; set; }
+
+        [Display(Name = "Am Meter 3")]
+        public string? AmMeter3 { get; set; }
 
         [Display(Name = "Preset Value")]
         public string? PresetValue { get; set; }
@@ -263,8 +281,11 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Caterpillar Gap")]
         public string? CaterpillarGap { get; set; }
 
-        [Display(Name = "Cool Conveyor Speed")]
+        [Display(Name = "Cool Conveyor 1 Speed")]
         public string? CoolConveyorSpeed { get; set; }
+
+        [Display(Name = "Cool Conveyor 2 Speed")]
+        public string? CoolConveyorSpeed2 { get; set; }
 
         [Display(Name = "Conveyor Ratio")]
         public string? ConveyorRatio { get; set; }
@@ -276,6 +297,14 @@ namespace VelastoProductionSystem.Models
         public string? InnerMin { get; set; }
         public string? InnerUCL { get; set; }
         public string? InnerMax { get; set; }
+
+        // Final Quality Matrix (Inner + Middle)
+        public string? InnerMidTarget { get; set; }
+        public string? InnerMidTol { get; set; }
+        public string? InnerMidLCL { get; set; }
+        public string? InnerMidMin { get; set; }
+        public string? InnerMidUCL { get; set; }
+        public string? InnerMidMax { get; set; }
 
         // --- QUALITY MATRIX (THICKNESS) ---
         public string? ThickTarget { get; set; }

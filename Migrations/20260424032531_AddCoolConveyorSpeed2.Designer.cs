@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VelastoProductionSystem.Data;
 
@@ -11,9 +12,11 @@ using VelastoProductionSystem.Data;
 namespace VelastoProductionSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424032531_AddCoolConveyorSpeed2")]
+    partial class AddCoolConveyorSpeed2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -568,24 +571,6 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("InnerMax")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("InnerMidLCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidMax")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidMin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidTarget")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidTol")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidUCL")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("InnerMin")
                         .HasColumnType("nvarchar(max)");
 
@@ -713,9 +698,6 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TebalInner")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TebalInnerMiddle")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TebalOuter")

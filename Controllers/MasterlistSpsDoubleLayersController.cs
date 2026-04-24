@@ -136,7 +136,11 @@ namespace VelastoProductionSystem.Controllers
                             string rawItems = GetV(row, idxItem);
                             if (string.IsNullOrEmpty(rawItems)) continue;
 
-                            var itemsList = rawItems.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                            var itemsList = rawItems.Split(',')
+                                .Select(s => s.Trim())
+                                .Where(s => !string.IsNullOrEmpty(s))
+                                .Select(s => (isDig3L && s.Contains("-")) ? s.Replace("-", "") : s)
+                                .ToList();
 
                             foreach (var itemCode in itemsList)
                             {
@@ -186,8 +190,11 @@ namespace VelastoProductionSystem.Controllers
                                     target.CoverDie = GetV(row, 25);
                                     target.SpacerDie = GetV(row, 26);
                                     target.ADistance = GetV(row, 27);
+                                    target.MeshDim1 = GetV(row, 28);
                                     target.MeshScreen1 = GetV(row, 29);
+                                    target.MeshDim2 = GetV(row, 30);
                                     target.MeshScreen2 = GetV(row, 31);
+                                    target.MeshDim3 = GetV(row, 32);
                                     target.MeshScreen3 = GetV(row, 33);
                                 } else if (isDig2L) {
                                     target.Yarn = GetV(row, 17);
@@ -199,7 +206,9 @@ namespace VelastoProductionSystem.Controllers
                                     target.CoverDie = GetV(row, 24);
                                     target.SpacerDie = GetV(row, 25);
                                     target.ADistance = GetV(row, 26);
+                                    target.MeshDim1 = GetV(row, 27);
                                     target.MeshScreen1 = GetV(row, 28);
+                                    target.MeshDim2 = GetV(row, 29);
                                     target.MeshScreen2 = GetV(row, 30);
                                 } else {
                                     target.Nipple = GetV(row, 15);
@@ -223,10 +232,21 @@ namespace VelastoProductionSystem.Controllers
                                     target.ScrewTemp3 = GetV(row, 48);
                                     target.ScrewSpeed1 = GetV(row, 49); target.ScrewSpeed2 = GetV(row, 50);
                                     target.ScrewSpeed3 = GetV(row, 51);
+                                    target.FeedRollRatio1 = GetV(row, 52);
+                                    target.FeedRollRatio2 = GetV(row, 53);
+                                    target.FeedRollRatio3 = GetV(row, 54);
                                     target.Pressure1 = GetV(row, 55); target.Pressure2 = GetV(row, 56);
+                                    target.Pressure3 = GetV(row, 57);
                                     target.AmMeter = GetV(row, 58);
                                     target.AmMeter2 = GetV(row, 59);
-                                    target.OdSensor = GetV(row, 61);
+                                    target.AmMeter3 = GetV(row, 60);
+                                    target.PresetValue = GetV(row, 61);
+                                    target.ControlValue = GetV(row, 62);
+                                    target.SpiralPitchSetting = GetV(row, 63);
+                                    target.SpiralPitchDisplay = GetV(row, 64);
+                                    target.SpiralSpeed = GetV(row, 65);
+                                    target.HoseSpeed = GetV(row, 66);
+                                    target.UnsmoothSurface = GetV(row, 67);
 
                                     target.MarkingSort = GetV(row, 68);
                                     target.TextMarkingMaterial = GetV(row, 69);
@@ -235,13 +255,39 @@ namespace VelastoProductionSystem.Controllers
                                     target.CaterpillarGap = GetV(row, 72);
                                     target.TakeUpConveyorSpeed = GetV(row, 73);
                                     target.CoolConveyorSpeed = GetV(row, 74);
+                                    target.CoolConveyorSpeed2 = GetV(row, 75);
+                                    target.ConveyorRatio = GetV(row, 76);
                                     
                                     target.ToleranceInner = GetV(row, 77);
                                     target.ToleranceOuter = GetV(row, 78);
                                     target.TebalInner = GetV(row, 79);
-                                    target.TebalOuter = GetV(row, 80);
+                                    target.TebalInnerMiddle = GetV(row, 80);
                                     target.TebalTotal = GetV(row, 81);
                                     target.SelisihTebal = GetV(row, 82);
+
+                                    // Final Quality Matrix (Inner) - Col 90-95
+                                    target.InnerTarget = GetV(row, 89);
+                                    target.InnerTol = GetV(row, 90);
+                                    target.InnerLCL = GetV(row, 91);
+                                    target.InnerMin = GetV(row, 92);
+                                    target.InnerUCL = GetV(row, 93);
+                                    target.InnerMax = GetV(row, 94);
+
+                                    // Final Quality Matrix (Inner + Middle) - Col 96-101
+                                    target.InnerMidTarget = GetV(row, 95);
+                                    target.InnerMidTol = GetV(row, 96);
+                                    target.InnerMidLCL = GetV(row, 97);
+                                    target.InnerMidMin = GetV(row, 98);
+                                    target.InnerMidUCL = GetV(row, 99);
+                                    target.InnerMidMax = GetV(row, 100);
+
+                                    // Final Quality Matrix (Total Thick) - Col 102-107
+                                    target.TotalTarget = GetV(row, 101);
+                                    target.TotalTol = GetV(row, 102);
+                                    target.TotalLCL = GetV(row, 103);
+                                    target.TotalMin = GetV(row, 104);
+                                    target.TotalUCL = GetV(row, 105);
+                                    target.TotalMax = GetV(row, 106);
                                 } else if (isDig2L) {
                                     target.HeadTemp1 = GetV(row, 31); target.Cylinder1_1 = GetV(row, 32);
                                     target.Cylinder2_1 = GetV(row, 33); target.Cylinder3_1 = GetV(row, 34);
@@ -276,32 +322,35 @@ namespace VelastoProductionSystem.Controllers
 
                                     target.ToleranceInner = GetV(row, 66);
                                     target.ToleranceOuter = GetV(row, 67);
-                                    target.TebalInner = GetV(row, 68);
-                                    target.TebalOuter = GetV(row, 69);
-                                    target.TebalTotal = GetV(row, 70);
-                                    target.SelisihTebal = GetV(row, 71);
+                                    target.TebalInner = GetV(row, 68); // Col 69
+                                    target.TebalTotal = GetV(row, 69); // Col 70
+                                    target.SelisihTebal = GetV(row, 70); // Col 71
+                                    target.TebalOuter = null; // Clear if not explicitly in 2L
 
                                     // Quality Matrix CHS 2L
-                                    target.InnerTarget = GetV(row, 72);
-                                    target.InnerTol = GetV(row, 73);
-                                    target.InnerLCL = GetV(row, 74);
-                                    target.InnerMin = GetV(row, 75);
-                                    target.InnerUCL = GetV(row, 76);
-                                    target.InnerMax = GetV(row, 77);
+                                    // Map Col 78-83 (Inner Thickness) to Inner Matrix for UI consistency
+                                    target.InnerTarget = GetV(row, 77);
+                                    target.InnerTol = GetV(row, 78);
+                                    target.InnerLCL = GetV(row, 79);
+                                    target.InnerMin = GetV(row, 80);
+                                    target.InnerUCL = GetV(row, 81);
+                                    target.InnerMax = GetV(row, 82);
                                     
-                                    target.ThickTarget = GetV(row, 78);
-                                    target.ThickTol = GetV(row, 79);
-                                    target.ThickLCL = GetV(row, 80);
-                                    target.ThickMin = GetV(row, 81);
-                                    target.ThickUCL = GetV(row, 82);
-                                    target.ThickMax = GetV(row, 83);
+                                    // Move previous matrix (Col 72-77) to Thick fields if needed, or clear
+                                    target.ThickTarget = GetV(row, 71);
+                                    target.ThickTol = GetV(row, 72);
+                                    target.ThickLCL = GetV(row, 73);
+                                    target.ThickMin = GetV(row, 74);
+                                    target.ThickUCL = GetV(row, 75);
+                                    target.ThickMax = GetV(row, 76);
 
-                                    target.TotalTarget = GetV(row, 84);
-                                    target.TotalTol = GetV(row, 85);
-                                    target.TotalLCL = GetV(row, 86);
-                                    target.TotalMin = GetV(row, 87);
-                                    target.TotalUCL = GetV(row, 88);
-                                    target.TotalMax = GetV(row, 89);
+                                    // Total Matrix for 2L - Col 84-89
+                                    target.TotalTarget = GetV(row, 83);
+                                    target.TotalTol = GetV(row, 84);
+                                    target.TotalLCL = GetV(row, 85);
+                                    target.TotalMin = GetV(row, 86);
+                                    target.TotalUCL = GetV(row, 87);
+                                    target.TotalMax = GetV(row, 88);
                                 } else {
                                     target.HeadTemp1 = GetV(row, 20); target.HeadTemp2 = GetV(row, 21);
                                     target.Cylinder1_1 = GetV(row, 22); target.Cylinder1_2 = GetV(row, 23);
@@ -470,6 +519,15 @@ namespace VelastoProductionSystem.Controllers
                     if (!string.IsNullOrEmpty(col107) && (col107.Contains("Item") || col107.Contains("107"))) {
                         isDig3L = true;
                         log.AppendLine($"✓ FALLBACK: CHS 3 LAYER (Row {checkRow}, Col 107: '{col107}')");
+                        break;
+                    }
+                    
+                    // New check: if Mesh 3 exists
+                    string mesh3Dim = GetV(table.Rows[checkRow], 32);
+                    string mesh3Scr = GetV(table.Rows[checkRow], 33);
+                    if (!string.IsNullOrEmpty(mesh3Dim) || !string.IsNullOrEmpty(mesh3Scr)) {
+                        isDig3L = true;
+                        log.AppendLine($"✓ FALLBACK: CHS 3 LAYER (Found Mesh 3 at Row {checkRow})");
                         break;
                     }
                     else if (!string.IsNullOrEmpty(col89) && (col89.Contains("Item") || col89.Contains("89") || col89.Contains("90"))) {
