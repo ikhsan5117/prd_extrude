@@ -376,8 +376,21 @@
                 .custom-scrollbar::-webkit-scrollbar { height: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.2); border-radius: 10px; }
                 
-                .blink-once { animation: blink-blue 0.5s ease-in-out; }
                 @@keyframes blink-blue { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; color: #38bdf8; } }
+
+                /* STANDARD SUGGESTION BOX */
+                .std-suggestion-box {
+                    display: none; position: absolute; top: 100%; left: 0; right: 0;
+                    background: #0f172a; border: 1px solid rgba(14, 165, 233, 0.4);
+                    border-radius: 4px; z-index: 1000; margin-top: 2px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                }
+                .std-suggestion-item {
+                    padding: 8px 12px; font-size: 0.8rem; font-weight: 800; color: #38bdf8;
+                    cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);
+                }
+                .std-suggestion-item:hover { background: rgba(14, 165, 233, 0.15); color: #fff; }
+                .std-suggestion-label { font-size: 0.55rem; color: rgba(255,255,255,0.4); margin-bottom: 2px; display: block; }
             </style>
 
             <div class="row g-4 mb-5">
@@ -404,7 +417,15 @@
                                     </div>
                                     <div class="col-8">
                                         <label class="super-small text-info mb-1">ACTUAL BATCH NAME</label>
-                                        <input asp-for="InnerMaterialActual" id="InnerMaterialActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                        <div style="position: relative;">
+                                            <input asp-for="InnerMaterialActual" id="InnerMaterialActual" 
+                                                   class="hud-input font-monospace text-white w-100" 
+                                                   placeholder="Input Actual..." 
+                                                   onfocus="showStdSuggestion('InnerMaterial', 'InnerMaterialActual', 'inner-std-dropdown')"
+                                                   onblur="hideStdSuggestion('inner-std-dropdown')"
+                                                   autocomplete="off" />
+                                            <div id="inner-std-dropdown" class="std-suggestion-box"></div>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -429,7 +450,15 @@
                                     </div>
                                     <div class="col-8">
                                         <label class="super-small text-warning mb-1">ACTUAL BATCH NAME</label>
-                                        <input asp-for="OuterMaterialActual" id="OuterMaterialActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                        <div style="position: relative;">
+                                            <input asp-for="OuterMaterialActual" id="OuterMaterialActual" 
+                                                   class="hud-input font-monospace text-white w-100" 
+                                                   placeholder="Input Actual..." 
+                                                   onfocus="showStdSuggestion('OuterMaterial', 'OuterMaterialActual', 'outer-std-dropdown')"
+                                                   onblur="hideStdSuggestion('outer-std-dropdown')"
+                                                   autocomplete="off" />
+                                            <div id="outer-std-dropdown" class="std-suggestion-box"></div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -454,7 +483,15 @@
                                     </div>
                                     <div class="col-8">
                                         <label class="super-small text-success mb-1">ACTUAL BATCH NAME</label>
-                                        <input asp-for="YarnActual" id="YarnActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                        <div style="position: relative;">
+                                            <input asp-for="YarnActual" id="YarnActual" 
+                                                   class="hud-input font-monospace text-white w-100" 
+                                                   placeholder="Input Actual..." 
+                                                   onfocus="showStdSuggestion('Yarn', 'YarnActual', 'yarn-std-dropdown')"
+                                                   onblur="hideStdSuggestion('yarn-std-dropdown')"
+                                                   autocomplete="off" />
+                                            <div id="yarn-std-dropdown" class="std-suggestion-box"></div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1559,6 +1596,35 @@
             outer: [],
             yarn: []
         };
+
+        function showStdSuggestion(stdId, actId, dropdownId) {
+            const stdVal = document.getElementById(stdId).value;
+            const dd = document.getElementById(dropdownId);
+            if (!stdVal || stdVal === '---' || stdVal === '') {
+                dd.style.display = 'none';
+                return;
+            }
+            
+            dd.innerHTML = `
+                <div class="std-suggestion-item" onclick="selectStdSuggestion('${actId}', '${stdVal}', '${dropdownId}')">
+                    <span class="std-suggestion-label">USE STANDARD:</span>
+                    ${stdVal}
+                </div>
+            `;
+            dd.style.display = 'block';
+        }
+
+        function selectStdSuggestion(actId, val, dropdownId) {
+            document.getElementById(actId).value = val;
+            hideStdSuggestion(dropdownId);
+        }
+
+        function hideStdSuggestion(dropdownId) {
+            setTimeout(() => {
+                const dd = document.getElementById(dropdownId);
+                if (dd) dd.style.display = 'none';
+            }, 200);
+        }
 
         function addMaterialRow(layer) {
             const listContainer = document.getElementById(`${layer}-lot-list`);

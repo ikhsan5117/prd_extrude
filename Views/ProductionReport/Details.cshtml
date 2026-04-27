@@ -10,36 +10,29 @@
 
 <div class="production-dashboard-sapphire fade-in">
     <!-- PREMUIM ACTION TOOLBAR (No Print) -->
-    <div class="no-print sticky-top mb-4 p-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px); margin-top: 70px; border-radius: 0 0 20px 20px;">
-        <div class="container-fluid d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
+    <div class="no-print sticky-top mb-4 p-2 p-md-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px); margin-top: 70px; border-radius: 0 0 20px 20px;">
+        <div class="container-fluid d-flex flex-column flex-xl-row align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 gap-md-3">
                 <a href="/ProductionReport/Create" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
-                    <i class="bi bi-arrow-left me-2"></i> KEMBALI KE INPUT
+                    <i class="bi bi-arrow-left me-1 me-md-2"></i> <span class="d-none d-sm-inline">KEMBALI KE INPUT</span><span class="d-inline d-sm-none">KEMBALI</span>
                 </a>
-                <div class="vr bg-white opacity-25" style="height: 24px;"></div>
+                <div class="vr bg-white opacity-25 d-none d-md-block" style="height: 24px;"></div>
                 <div class="btn-group btn-group-sm rounded-pill p-1 bg-black bg-opacity-25 border border-white border-opacity-10">
-                    <a href="?id=@Model.Id&portal=dashboard" class="btn rounded-pill px-4 @(currentPortal != "identity" ? "btn-primary shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
-                        <i class="bi bi-speedometer2 me-2"></i>DASHBOARD
+                    <a href="?id=@Model.Id&portal=dashboard" class="btn rounded-pill px-3 px-md-4 @(currentPortal != "identity" ? "btn-primary shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
+                        <i class="bi bi-speedometer2 me-1"></i><span class="d-none d-sm-inline">DASHBOARD</span><span class="d-inline d-sm-none">DASH</span>
                     </a>
-                    <a href="?id=@Model.Id&portal=identity" class="btn rounded-pill px-4 @(currentPortal == "identity" ? "btn-info shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
-                        <i class="bi bi-card-checklist me-2"></i>IDENTITY CARD
+                    <a href="?id=@Model.Id&portal=identity" class="btn rounded-pill px-3 px-md-4 @(currentPortal == "identity" ? "btn-info shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
+                        <i class="bi bi-card-checklist me-1"></i><span class="d-none d-sm-inline">IDENTITY CARD</span><span class="d-inline d-sm-none">ID CARD</span>
                     </a>
                 </div>
             </div>
 
-            <div class="d-flex gap-2">
-                <button onclick="downloadPDF()" class="btn btn-outline-info btn-sm px-4 rounded-pill fw-bold neon-glow-info">
-                    <i class="bi bi-file-earmark-pdf me-2"></i> DOWNLOAD PDF
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                <button onclick="downloadPDF()" class="btn btn-outline-info btn-sm px-3 px-md-4 rounded-pill fw-bold neon-glow-info">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> <span class="d-none d-sm-inline">DOWNLOAD PDF</span><span class="d-inline d-sm-none">PDF</span>
                 </button>
-                <button onclick="window.print()" class="btn btn-outline-primary btn-sm px-4 rounded-pill fw-bold">
-                    <i class="bi bi-printer me-2"></i> PRINT REPORT
-                </button>
-                <div class="vr bg-white opacity-25 mx-2" style="height: 32px;"></div>
-                <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning-glass btn-sm px-4 rounded-pill fw-bold">
-                    <i class="bi bi-pencil-square me-2"></i> EDIT SYNC
-                </a>
-                <button type="button" class="btn btn-danger-glass btn-sm px-4 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#finishProductionModal">
-                    <i class="bi bi-flag-fill me-2"></i> FINISH
+                <button onclick="window.print()" class="btn btn-outline-primary btn-sm px-3 px-md-4 rounded-pill fw-bold">
+                    <i class="bi bi-printer me-1"></i> <span class="d-none d-sm-inline">PRINT REPORT</span><span class="d-inline d-sm-none">PRINT</span>
                 </button>
             </div>
         </div>
@@ -421,7 +414,7 @@
         <!-- ============================================= -->
         <!-- PORTAL 1: PARAMETER SETTING (Modern HUD)      -->
         <!-- ============================================= -->
-        <div id="printArea" class="bg-white p-2">
+        <div id="printArea" class="bg-white p-2" style="overflow-x: auto;">
             <div class="paper-replica shadow-2xl mx-auto mb-5 p-0">
             <div class="text-uppercase" style="font-size: 10px;">
                 
@@ -1081,6 +1074,12 @@
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
         border: 2px solid #000;
         border-radius: 0;
+        width: 800px;
+        min-width: 800px;
+        margin: 0 auto;
+        padding: 10px;
+        box-sizing: border-box;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     .paper-padding { padding: 0; }
     .border-form-bold { border: 2px solid #000 !important; }
@@ -1092,15 +1091,6 @@
     .grid-form { table-layout: fixed; width: 100%; border-collapse: collapse; }
     .grid-form th, .grid-form td { border: 1px solid #000 !important; padding: 3px 6px; font-size: 10.5px; height: 26px; overflow: hidden; }
     .grid-form th { background: #f0f0f0; color: #333; font-weight: 800; text-transform: uppercase; font-size: 10px; }
-    
-    /* PAPER REPLICA HUD SYSTEM (WHITE THEME) */
-    .paper-replica {
-        background: #fff;
-        color: #000;
-        border: 2px solid #000;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        font-family: 'Arial', sans-serif;
-    }
     .grid-form th, .grid-form td { 
         border: 1px solid #333 !important; 
         padding: 0; 
@@ -1405,6 +1395,14 @@
         .production-dashboard-sapphire { background: transparent !important; padding: 0; }
         .no-print { display: none !important; }
         .glass-paper { background: white !important; border: 2px solid #000 !important; color: #000 !important; }
+        /* Force A4 width on print to avoid tablet layout */
+        .paper-replica { 
+            width: 800px !important; 
+            max-width: none !important; 
+            margin: 0 auto !important; 
+            box-shadow: none !important; 
+            border: 2px solid #000 !important; 
+        }
     }
 
     /* ============================================================ */
@@ -1423,7 +1421,7 @@
     .pdf-fit .col-3 { width: 25% !important; flex: 0 0 25% !important; max-width: 25% !important; }
     .pdf-fit img { height: 25px !important; }
     .pdf-fit h6 { font-size: 11px !important; margin: 0 !important; padding: 0 !important; }
-    .pdf-fit .paper-replica { width: 100% !important; margin: 0 auto !important; background: white !important; color: #000 !important; }
+    .pdf-fit .paper-replica { width: 800px !important; max-width: none !important; margin: 0 auto !important; background: white !important; color: #000 !important; border: 2px solid #000 !important; box-shadow: none !important; padding: 20px !important; }
     .pdf-fit .border-form, .pdf-fit .border-form-bold { border-width: 0.5px !important; }
     .pdf-fit .border-bottom-form, .pdf-fit .border-end-form, .pdf-fit .border-start-form, .pdf-fit .border-top-form { border-width: 0.5px !important; }
 
@@ -1554,7 +1552,16 @@
                                     el.style.fontSize = '0.85rem';
                                 });
                             } else {
-                                clonedEl.style.zoom = '0.72';
+                                clonedEl.style.width = '800px';
+                                clonedEl.classList.add('pdf-fit');
+                                const paper = clonedEl.querySelector('.paper-replica');
+                                if (paper) {
+                                    paper.style.width = '800px';
+                                    paper.style.maxWidth = 'none';
+                                    paper.style.margin = '0 auto';
+                                    paper.style.padding = '20px';
+                                    paper.style.boxShadow = 'none';
+                                }
                             }
                         }
                         // Perbaiki semua path gambar agar bisa dirender oleh html2canvas

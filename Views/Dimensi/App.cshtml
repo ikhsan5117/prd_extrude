@@ -964,9 +964,23 @@
                 </div>
             </div>
             <div class="field-column">
-                <div class="field-box">
-                    <span class="field-label">VIN KODE</span>
-                    <div class="field-input-wrap"><input type="text" class="f-input" id="val-vin-kode" placeholder="Enter VIN Code"></div>
+                <div class="field-box" style="position: relative;">
+                    <span class="field-label">VIN KODE (KODE ITEM)</span>
+                    <div class="field-input-wrap">
+                        <input type="text" class="f-input" id="val-vin-kode"
+                               placeholder="Ketik atau pilih Kode Item..."
+                               oninput="filterVinKode(this.value)"
+                               onfocus="showVinDropdown(this.value)"
+                               onblur="setTimeout(hideVinDropdown, 250)"
+                               autocomplete="off" />
+                    </div>
+                    <div id="vin-dropdown" style="
+                        display: none; position: absolute; top: 100%; left: 0; right: 0;
+                        background: rgba(10,20,40,0.98); border: 1px solid #00e5ff66;
+                        border-radius: 8px; max-height: 205px; overflow-y: auto;
+                        z-index: 99999; box-shadow: 0 12px 40px rgba(0,229,255,0.25);
+                        margin-top: 4px;
+                    "></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">ACT PNJG</span>
@@ -1126,6 +1140,52 @@
 
         let currentIndex = 0;
         let activeStandards = {}; // Will be populated by loadMaster()
+
+        // ── VIN KODE Autocomplete ──────────────────────────────────────────────
+        const vinItemCodes = @Html.Raw(
+            System.Text.Json.JsonSerializer.Serialize(
+                (ViewBag.ItemCodes as IEnumerable<object> ?? new List<object>())
+                .Select(x => x == null ? "" : x.ToString())
+                .Where(x => !string.IsNullOrEmpty(x))
+                .ToList()
+            )
+        );
+        console.log('[VIN KODE] Items loaded:', vinItemCodes.length, vinItemCodes);
+
+        function renderVinItems(list) {
+            const dd = document.getElementById('vin-dropdown');
+            if (!dd) return;
+            if (list.length === 0) { dd.style.display = 'none'; return; }
+            dd.innerHTML = list.map(c => `
+                <div onclick="selectVinCode('${c}')" style="
+                    padding: 10px 16px; cursor: pointer; font-size: 12px; font-family: 'Roboto Mono', monospace;
+                    color: #e0f7ff; letter-spacing: 1px; border-bottom: 1px solid #ffffff10;
+                    transition: background .15s;
+                " onmouseover="this.style.background='#00e5ff18'" onmouseout="this.style.background='transparent'">
+                    ${c}
+                </div>`).join('');
+            dd.style.display = 'block';
+        }
+
+        function showVinDropdown(val) {
+            const q = (val || '').trim().toUpperCase();
+            const filtered = q.length === 0 ? vinItemCodes : vinItemCodes.filter(c => c.toUpperCase().includes(q));
+            renderVinItems(filtered);
+        }
+
+        function filterVinKode(val) { showVinDropdown(val); }
+
+        function hideVinDropdown() {
+            const dd = document.getElementById('vin-dropdown');
+            if (dd) dd.style.display = 'none';
+        }
+
+        function selectVinCode(code) {
+            const inp = document.getElementById('val-vin-kode');
+            if (inp) inp.value = code;
+            hideVinDropdown();
+        }
+        // ──────────────────────────────────────────────────────────────────────
 
         let html5QrCode;
 
@@ -2322,6 +2382,26 @@
                                 NgDimension: parseInt(s.ngD) || 0,
                                 NgVisual: parseInt(s.ngV) || 0
                             });
+                        });
+                    }
+                    
+                    // Auto-capture loose inputs if user forgot to click "Add to List"
+                    const looseVin = (m.data.vin || '').trim();
+                    const looseAct = (m.data.actPnjg || '').trim();
+                    const looseOk = parseInt(m.data.qtyOk) || 0;
+                    const looseNgD = parseInt(m.data.ngDim) || 0;
+                    const looseNgV = parseInt(m.data.ngVis) || 0;
+
+                    if (looseVin !== '' || looseAct !== '' || looseOk > 0 || looseNgD > 0 || looseNgV > 0) {
+                        allSummaries.push({
+                            PartNumber: document.getElementById('disp-part-no')?.innerText || '',
+                            VinCode: looseVin || '-',
+                            StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                            ActualLength: looseAct,
+                            QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
+                            QtyOk: looseOk,
+                            NgDimension: looseNgD,
+                            NgVisual: looseNgV
                         });
                     }
                 });

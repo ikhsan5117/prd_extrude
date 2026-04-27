@@ -12,11 +12,13 @@ namespace VelastoProductionSystem.Controllers
     public class DimensiController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ElwpDbContext _elwpContext;
         private readonly IHubContext<DashboardHub> _hubContext;
 
-        public DimensiController(ApplicationDbContext context, IHubContext<DashboardHub> hubContext)
+        public DimensiController(ApplicationDbContext context, ElwpDbContext elwpContext, IHubContext<DashboardHub> hubContext)
         {
             _context = context;
+            _elwpContext = elwpContext;
             _hubContext = hubContext;
         }
 
@@ -27,6 +29,19 @@ namespace VelastoProductionSystem.Controllers
             {
                 return RedirectToAction("Login", "Account");
             }
+
+            // Ambil Kode Item dari ELWP langsung (hari ini), agar selalu up-to-date
+            var today = DateTime.Today;
+            ViewBag.ItemCodes = _elwpContext.ElwpPlannings
+                .Where(p => !string.IsNullOrEmpty(p.KodeItem)
+                         && p.TanggalPlanning >= today
+                         && p.TanggalPlanning < today.AddDays(1)
+                         && p.AreaId == 1)
+                .Select(p => p.KodeItem)
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+
             var report = new DimensionReport
             {
                 DocumentNumber = "",
