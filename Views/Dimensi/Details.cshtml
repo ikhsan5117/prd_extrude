@@ -389,7 +389,7 @@
                     int totalNgVis = 0;
                 }
                 @if (hasSummaries) {
-                    @foreach (var s in Model.Summaries) {
+                    @foreach (var s in Model.Summaries!) {
                         totalTarget += s.QtyTarget;
                         totalOk += s.QtyOk;
                         totalNgDim += s.NgDimension;

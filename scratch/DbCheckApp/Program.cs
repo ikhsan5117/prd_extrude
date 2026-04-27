@@ -1,34 +1,33 @@
 using System;
-using System.IO;
-using System.Data;
-using ExcelDataReader;
+using Microsoft.Data.SqlClient;
 
 namespace DbCheckApp
 {
     class Program {
         static void Main(string[] args) {
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            string connStr = "Server=10.14.149.34;Database=prd_extrude_hose;User Id=usrvelasto;Password=H1s@na2025!!;TrustServerCertificate=True;";
+            using var conn = new SqlConnection(connStr);
+            conn.Open();
             
-            string filePath = "Masterlist SPS CHS 2 Layer DIG.xlsx";
-            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var reader = ExcelReaderFactory.CreateReader(stream);
-            var result = reader.AsDataSet();
+            var query = @"
+                SELECT CAST(CreatedDate AS DATE) as InputDate, CreatedBy, COUNT(*) as TotalInput
+                FROM ProductionReports 
+                GROUP BY CAST(CreatedDate AS DATE), CreatedBy
+                ORDER BY InputDate DESC";
+                
+            using var cmd = new SqlCommand(query, conn);
+            using var reader = cmd.ExecuteReader();
             
-            DataTable table = null;
-            foreach(DataTable t in result.Tables) {
-                if (t.TableName.Contains("Parameter Setting") || t.TableName.Contains("Master 1")) {
-                    table = t; break;
-                }
+            Console.WriteLine("Ringkasan Tanggal Input dan Nama Operator:");
+            Console.WriteLine("---------------------------------------------------------------");
+            while(reader.Read()) {
+                var inputDate = reader.GetDateTime(0);
+                var createdBy = reader.IsDBNull(1) ? "-" : reader.GetString(1);
+                var totalInput = reader.GetInt32(2);
+                
+                Console.WriteLine($"Tanggal: {inputDate:yyyy-MM-dd} | Nama: {createdBy,-20} | Jumlah Input: {totalInput}");
             }
-
-            if (table == null) return;
-
-            Console.WriteLine($"=== ANALISIS DATA ROW 20 (TA1440) ===\n");
-            
-            var row = table.Rows[20];
-            for (int i = 30; i <= 46; i++) {
-                Console.WriteLine($"[{i}] {row[i]}");
-            }
+            Console.WriteLine("---------------------------------------------------------------");
         }
     }
 }
