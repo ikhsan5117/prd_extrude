@@ -1188,8 +1188,9 @@
                 if (val === undefined || val === null || val === '') return '---';
                 let strVal = String(val).trim();
                 // Prevent duplicate symbols
+                if (strVal === '-' || strVal === '' || strVal === '---') return strVal;
                 if (suffix.includes('±') && strVal.includes('±')) suffix = '';
-                if (prefix.toLowerCase().includes('max') && strVal.toLowerCase().includes('max')) prefix = '';
+                if (prefix.toLowerCase().includes('max') && (strVal.toLowerCase().includes('max') || strVal.includes('±'))) prefix = '';
                 return `${prefix}${strVal}${suffix}`;
             };
 
@@ -1199,8 +1200,8 @@
                 'Cylinder2TempInner': formatVal(sps.cylinder2TempInner || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_1, '', ' ± 5'),
                 'Cylinder3TempInner': formatVal(sps.cylinder3TempInner || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder1_3, '', ' ± 5'),
                 'ScrewTempInner': formatVal(sps.screwTempInner || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp1, '', ' ± 5'),
-                'ScrewSpeedInner': formatVal(sps.screwSpeedInner || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed1, '', ' ± 2'),
-                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed1, 'Max '),
+                'ScrewSpeedInner': formatVal(sps.screwSpeedInner || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed1, '', ' ± 5'),
+                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.FeedRollRatioInner || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed1, 'Max '),
                 'PressureInner': formatVal(sps.pressureInner || sps.pressure || sps.Pressure || sps.Pressure1, 'Max '),
 
                 'HeadTempOuter': formatVal(sps.headTempOuter || sps.headTemp || sps.HeadTemp || sps.HeadTemp2, '', ' ± 5'),
@@ -1208,14 +1209,14 @@
                 'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_2, '', ' ± 5'),
                 'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder3_2, '', ' ± 5'),
                 'ScrewTempOuter': formatVal(sps.screwTempOuter || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp2, '', ' ± 5'),
-                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed2, '', ' ± 2'),
-                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed2, 'Max '),
+                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed2, '', ' ± 5'),
+                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.FeedRollRatioOuter || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed2, 'Max '),
                 'PressureOuter': formatVal(sps.pressureOuter || sps.pressure || sps.Pressure || sps.Pressure2, 'Max '),
 
                 'SpiralSpeed': formatVal(sps.spiralSpeed || sps.SpiralSpeed, '', ' ± 20'),
                 'SpiralPitchSetting': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
                 'SpiralPitchDisplay': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
-                'PresetValue': formatVal(sps.presetValve || sps.PresetValue || sps.presetValue, '', ' ± 0.5'),
+                'PresetValue': formatVal(sps.presetValue || sps.PresetValue, '', ' ± 0.5'),
                 'ControlValue': formatVal(sps.controlValue || sps.ControlValue),
                 'HoseSpeed': formatVal(sps.hoseSpeed || sps.HoseSpeed),
                 'TakeupConveyorSpeed': formatVal(sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed || sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed),

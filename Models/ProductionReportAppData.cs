@@ -31,6 +31,21 @@ namespace VelastoProductionSystem.Models
         
         // Dimension readings array
         public List<DimensionReadingData> DimensionReadings { get; set; } = new List<DimensionReadingData>();
+        
+        // Summaries array
+        public List<DimensionSummaryData> ProductionDataSummaries { get; set; } = new List<DimensionSummaryData>();
+    }
+
+    public class DimensionSummaryData
+    {
+        public string? PartNumber { get; set; }
+        public string? VinCode { get; set; }
+        public string? StandardLength { get; set; }
+        public string? ActualLength { get; set; }
+        public int? QtyTarget { get; set; }
+        public int? QtyOk { get; set; }
+        public int? NgDimension { get; set; }
+        public int? NgVisual { get; set; }
     }
 
     public class DimensionReadingData

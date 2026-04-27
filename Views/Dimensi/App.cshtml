@@ -490,6 +490,47 @@
 
         @@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         .tracking-widest { letter-spacing: 0.2em; }
+
+        /* --- Dynamic Summary List --- */
+        .summary-list-container {
+            margin-top: 25px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            max-height: 220px; /* Diatur agar pas 3 baris sebelum muncul scroll */
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-glow) rgba(0,0,0,0.2);
+        }
+        .summary-list-container::-webkit-scrollbar { width: 6px; }
+        .summary-list-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .summary-list-container::-webkit-scrollbar-thumb { background: var(--accent-glow); border-radius: 10px; }
+
+        .summary-table { width: 100%; border-collapse: collapse; }
+        .summary-table thead { position: sticky; top: 0; z-index: 10; background: #0f172a; }
+        .summary-table th { 
+            background: rgba(30, 41, 59, 0.95); padding: 12px 15px; 
+            font-size: 9px; font-weight: 900; color: #64748b; 
+            text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05);
+            text-align: left;
+        }
+        .summary-table td { padding: 15px; font-size: 13px; font-weight: 700; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .summary-row-new {
+            animation: fadeIn 0.4s ease-out;
+        }
+        .btn-add-summary {
+            background: var(--accent-glow); color: #000; border: none; padding: 8px 15px; border-radius: 6px;
+            font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-add-summary:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+        .btn-del-summary {
+            background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);
+            width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-del-summary:hover { background: #ef4444; color: #fff; }
+        .empty-summary-state { padding: 30px; text-align: center; color: #64748b; font-size: 12px; font-style: italic; }
     </style>
 }
 
@@ -902,6 +943,9 @@
     <!-- PRODUCTION DATA SECTION -->
     <div class="section-title">
         <i class="bi bi-clipboard2-data-fill"></i> PRODUCTION DATA Summary
+        <button type="button" class="btn-add-summary ms-auto" onclick="addProductionRecord()">
+            <i class="bi bi-plus-lg"></i> ADD TO LIST
+        </button>
     </div>
     <div class="prod-data-container">
         <div class="prod-grid">
@@ -966,6 +1010,29 @@
             <div style="grid-column: span 2; margin-top: 10px;">
                 <span class="field-label">REMARK / NOTES</span>
                 <textarea class="f-textarea" id="val-remark" placeholder="Enter any specific observations or production notes..."></textarea>
+            </div>
+        </div>
+
+        <!-- Dynamic List Container -->
+        <div class="summary-list-container">
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">VIN KODE</th>
+                        <th style="width: 15%;">LENGTH</th>
+                        <th style="width: 15%;">QTY OK</th>
+                        <th style="width: 15%;">NG DIM</th>
+                        <th style="width: 15%;">NG VIS</th>
+                        <th style="width: 10%; text-align: center;">ACT</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-list-body">
+                    <!-- Rows injected via JS -->
+                </tbody>
+            </table>
+            <div id="summary-empty" class="empty-summary-state">
+                <i class="bi bi-inbox mb-2" style="font-size: 24px; display: block;"></i>
+                No production records added yet for this slot.
             </div>
         </div>
     </div>
@@ -1045,12 +1112,16 @@
                 spiral = g.FirstOrDefault(x => x.PointName == "Spiral Pitch")?.R1,
                 visual = new { 
                     burry = (string?)null, line = (string?)null, bubble = (string?)null, scratch = (string?)null 
-                } // Visual labels can be expanded as needed
+                },
+                summaries = new List<object>()
             }
         })));
 
         if (!measurements || measurements.length === 0) {
-            measurements = [ { time: null, data: { vin: "@Model.VinCode", actPnjg: "@Model.ActualLength", remark: "@Model.Remark", qtyOk: "@Model.QtyOk", ngDim: "@Model.NgDimension", ngVis: "@Model.NgVisual" } } ];
+            measurements = [ { time: null, data: { 
+                vin: "@Model.VinCode", actPnjg: "@Model.ActualLength", remark: "@Model.Remark", qtyOk: "@Model.QtyOk", ngDim: "@Model.NgDimension", ngVis: "@Model.NgVisual",
+                summaries: [] 
+            } } ];
         }
 
         let currentIndex = 0;
@@ -1719,7 +1790,8 @@
                 qtyOk:   document.getElementById('val-qty-ok')?.value || '',
                 ngDim:   document.getElementById('val-ng-dimensi')?.value || '',
                 ngVis:   document.getElementById('val-ng-visual')?.value || '',
-                remark:  document.getElementById('val-remark')?.value || ''
+                remark:  document.getElementById('val-remark')?.value || '',
+                summaries: measurements[currentIndex].data?.summaries || []
             };
 
             const hasVal = ['innerDia','innerTx','innerTy','innermidTx','innermidTy','totalTx','totalTy','spiral'].some(k => current.data[k] !== '') ||
@@ -1784,8 +1856,84 @@
                 targetInput.value = '@Model.QtyTarget' || '0';
             }
 
-            // 5. Run validation for all cards
+            // 5. Render Production Summaries
+            renderSummaryList();
+            
+            // 6. Run validation for all cards
             ['inner-dia', 'inner-tx', 'inner-ty', 'innermid-tx', 'innermid-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
+        }
+
+        function addProductionRecord() {
+            const vin = document.getElementById('val-vin-kode').value.trim();
+            const act = document.getElementById('val-act-pnjg').value.trim();
+            const ok = document.getElementById('val-qty-ok').value.trim() || "0";
+            const ngD = document.getElementById('val-ng-dimensi').value.trim() || "0";
+            const ngV = document.getElementById('val-ng-visual').value.trim() || "0";
+
+            if (!vin) {
+                Swal.fire('MISSING DATA', 'Please enter at least a VIN Code.', 'warning');
+                return;
+            }
+
+            const record = { vin, act, ok, ngD, ngV };
+            
+            if (!measurements[currentIndex].data.summaries) measurements[currentIndex].data.summaries = [];
+            measurements[currentIndex].data.summaries.push(record);
+
+            // Clear inputs for next record
+            document.getElementById('val-vin-kode').value = "";
+            document.getElementById('val-act-pnjg').value = "";
+            document.getElementById('val-qty-ok').value = "0";
+            document.getElementById('val-ng-dimensi').value = "0";
+            document.getElementById('val-ng-visual').value = "0";
+            
+            renderSummaryList();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'RECORD ADDED',
+                text: 'Production data added to list.',
+                timer: 1000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+
+        function removeProductionRecord(idx) {
+            measurements[currentIndex].data.summaries.splice(idx, 1);
+            renderSummaryList();
+        }
+
+        function renderSummaryList() {
+            const body = document.getElementById('summary-list-body');
+            const empty = document.getElementById('summary-empty');
+            const list = (measurements[currentIndex] && measurements[currentIndex].data) ? (measurements[currentIndex].data.summaries || []) : [];
+
+            body.innerHTML = '';
+            if (list.length === 0) {
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+
+            if (empty) empty.style.display = 'none';
+            list.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'summary-row-new';
+                tr.innerHTML = `
+                    <td><span class="text-primary">${item.vin}</span></td>
+                    <td>${item.act || '-'}</td>
+                    <td class="text-success">${item.ok}</td>
+                    <td class="text-danger">${item.ngD}</td>
+                    <td class="text-danger">${item.ngV}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-del-summary" onclick="removeProductionRecord(${idx})">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
         }
 
         function validateCard(id) {
@@ -1808,10 +1956,11 @@
 
         async function loadMaster() {
             const code = document.getElementById('main-item-search').value;
+            const machine = document.getElementById('h-line')?.innerText || '';
             if(!code) return;
             Swal.fire({ title: 'FETCHING MASTER...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}`);
+                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}&machineCode=${encodeURIComponent(machine)}`);
                 const data = await res.json();
                 Swal.close();
                 
@@ -1851,7 +2000,7 @@
                     if(partEl) partEl.innerText = m.itemList || m.hoseType || "---";
                     
                     const stdPnjgEl = document.getElementById('disp-std-pnjg');
-                    if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
+                    if(stdPnjgEl) stdPnjgEl.value = m.cuttingLength && m.cuttingLength !== '-' ? m.cuttingLength : (m.dimensi || "-"); 
                     
                     const qtyTargetInput = document.getElementById('disp-qty-target');
                     if(qtyTargetInput && qtyTargetInput.value == "0") qtyTargetInput.value = ""; // Let user type easily
@@ -2140,12 +2289,42 @@
                 }
 
                 // Aggregate totals across all slots
-                const totalQtyOk  = measurements.reduce((s, m) => s + (parseInt(m.data.qtyOk)  || 0), 0);
-                const totalNgDim  = measurements.reduce((s, m) => s + (parseInt(m.data.ngDim)  || 0), 0);
-                const totalNgVis  = measurements.reduce((s, m) => s + (parseInt(m.data.ngVis)  || 0), 0);
-                const lastVin     = [...measurements].reverse().find(m => m.data.vin)?.data.vin     || document.getElementById('val-vin-kode')?.value  || '';
+                const totalQtyOk  = measurements.reduce((s, m) => {
+                    const slotTotal = (m.data.summaries || []).reduce((ss, item) => ss + (parseInt(item.ok) || 0), 0);
+                    return s + (parseInt(m.data.qtyOk) || 0) + slotTotal;
+                }, 0);
+                
+                const totalNgDim  = measurements.reduce((s, m) => {
+                    const slotTotal = (m.data.summaries || []).reduce((ss, item) => ss + (parseInt(item.ngD) || 0), 0);
+                    return s + (parseInt(m.data.ngDim) || 0) + slotTotal;
+                }, 0);
+
+                const totalNgVis  = measurements.reduce((s, m) => {
+                    const slotTotal = (m.data.summaries || []).reduce((ss, item) => ss + (parseInt(item.ngV) || 0), 0);
+                    return s + (parseInt(m.data.ngVis) || 0) + slotTotal;
+                }, 0);
+
+                const lastVin     = [...measurements].reverse().find(m => (m.data.summaries && m.data.summaries.length > 0) || m.data.vin)?.data.summaries?.map(s => s.vin).join(', ') || document.getElementById('val-vin-kode')?.value  || '';
                 const lastActPnjg = [...measurements].reverse().find(m => m.data.actPnjg)?.data.actPnjg || document.getElementById('val-act-pnjg')?.value || '';
                 const lastRemark  = [...measurements].reverse().find(m => m.data.remark)?.data.remark   || document.getElementById('val-remark')?.value   || '';
+
+                const allSummaries = [];
+                measurements.forEach(m => {
+                    if (m.data.summaries && m.data.summaries.length > 0) {
+                        m.data.summaries.forEach(s => {
+                            allSummaries.push({
+                                PartNumber: document.getElementById('disp-part-no')?.innerText || '',
+                                VinCode: s.vin,
+                                StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                ActualLength: s.act,
+                                QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
+                                QtyOk: parseInt(s.ok) || 0,
+                                NgDimension: parseInt(s.ngD) || 0,
+                                NgVisual: parseInt(s.ngV) || 0
+                            });
+                        });
+                    }
+                });
 
                 const payload = {
                     ReportId: @Model.Id,
@@ -2163,8 +2342,10 @@
                     Remark: lastRemark,
                     ByPass: '',
                     Shift: document.getElementById('h-shift')?.innerText || '',
-                    DimensionReadings: aggregateReadings
+                    DimensionReadings: aggregateReadings,
+                    ProductionDataSummaries: allSummaries
                 };
+
 
                 const response = await fetch('/Dimensi/SaveData', {
                     method: 'POST',

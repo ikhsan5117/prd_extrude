@@ -144,9 +144,11 @@ namespace VelastoProductionSystem.Controllers
             
             if (sps != null) return Json(sps);
 
-            // Fallback to MasterlistSpsDoubleLayers (Brief)
+            // Fallback to MasterlistSpsDoubleLayers (Brief) - Order by Id desc to get latest revision
             var master = await _context.MasterlistSpsDoubleLayers
-                .FirstOrDefaultAsync(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedCode));
+                .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedCode))
+                .OrderByDescending(m => m.Id)
+                .FirstOrDefaultAsync();
 
             if (master != null)
             {
@@ -169,7 +171,7 @@ namespace VelastoProductionSystem.Controllers
                     ScrewTempInner = master.ScrewTemp1,
                     ScrewSpeedInner = master.ScrewSpeed1,
                     PressureInner = master.Pressure1,
-                    FeedRollRatioInner = master.Feed1,
+                    FeedRollRatioInner = !string.IsNullOrEmpty(master.FeedRollRatio1) ? master.FeedRollRatio1 : master.Feed1,
                     
                     HeadTempOuter = master.HeadTemp2,
                     Cylinder1TempOuter = master.Cylinder1_2,
@@ -178,7 +180,7 @@ namespace VelastoProductionSystem.Controllers
                     ScrewTempOuter = master.ScrewTemp2,
                     ScrewSpeedOuter = master.ScrewSpeed2,
                     PressureOuter = master.Pressure2,
-                    FeedRollRatioOuter = master.Feed2,
+                    FeedRollRatioOuter = !string.IsNullOrEmpty(master.FeedRollRatio2) ? master.FeedRollRatio2 : master.Feed2,
                     
                     InnerDie = master.Nipple,
                     TubeDie = master.TubeDie,
@@ -189,7 +191,17 @@ namespace VelastoProductionSystem.Controllers
                     
                     ChillerWaterTemp = master.ChillerWaterTemp,
                     TakeupConveyorSpeed = master.TakeUpConveyorSpeed,
-                    ToleranceSpiralPitch = master.ToleranceSpiralPitch
+                    SpiralSpeed = master.SpiralSpeed,
+                    ToleranceSpiralPitch = !string.IsNullOrEmpty(master.SpiralPitchSetting) ? master.SpiralPitchSetting : master.ToleranceSpiralPitch,
+                    
+                    // Added utility mappings
+                    HoseSpeed = master.HoseSpeed,
+                    CoolConveyorSpeed = master.CoolConveyorSpeed,
+                    ConveyorRatio = master.ConveyorRatio,
+                    PresetValue = master.PresetValue,
+                    ControlValue = master.ControlValue,
+                    UnsmoothSurface = master.UnsmoothSurface,
+                    CaterpillarGap = master.CaterpillarGap
                 });
             }
 

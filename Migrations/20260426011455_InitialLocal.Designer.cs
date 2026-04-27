@@ -12,8 +12,8 @@ using VelastoProductionSystem.Data;
 namespace VelastoProductionSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260424035409_AddInnerMidMatrix")]
-    partial class AddInnerMidMatrix
+    [Migration("20260426011455_InitialLocal")]
+    partial class InitialLocal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1002,6 +1002,9 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("CompoundInner")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CompoundMiddle")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CompoundOuter")
                         .HasColumnType("nvarchar(max)");
 
@@ -1035,6 +1038,10 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("NeedKgInner")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("NeedKgMiddle")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -1086,6 +1093,9 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("CompoundInner")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CompoundMiddle")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CompoundOuter")
                         .HasColumnType("nvarchar(max)");
 
@@ -1114,6 +1124,9 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NeedKgInner")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NeedKgMiddle")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NeedKgOuter")
@@ -1839,6 +1852,15 @@ namespace VelastoProductionSystem.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<string>("AmMeter")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AmMeter2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AmMeter3")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ApprovedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1882,10 +1904,28 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<int>("Cylinder1Temp")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Cylinder1_2")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Cylinder1_3")
+                        .HasColumnType("int");
+
                     b.Property<int>("Cylinder2Temp")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Cylinder2_2")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Cylinder2_3")
+                        .HasColumnType("int");
+
                     b.Property<int>("Cylinder3Temp")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Cylinder3_2")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Cylinder3_3")
                         .HasColumnType("int");
 
                     b.Property<string>("Diameter")
@@ -1901,7 +1941,21 @@ namespace VelastoProductionSystem.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<decimal?>("FeedRollRatio2")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("FeedRollRatio3")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<int>("HeadTemp")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HeadTemp2")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HeadTemp3")
                         .HasColumnType("int");
 
                     b.Property<string>("HoseSpeed")
@@ -1946,6 +2000,12 @@ namespace VelastoProductionSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("MeshScreen2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MeshScreen3")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("MiddleDie")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -1969,6 +2029,14 @@ namespace VelastoProductionSystem.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<decimal?>("Pressure2")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Pressure3")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ProductCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -1979,7 +2047,21 @@ namespace VelastoProductionSystem.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<decimal?>("ScrewSpeed2")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewSpeed3")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<int>("ScrewTemp")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ScrewTemp2")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ScrewTemp3")
                         .HasColumnType("int");
 
                     b.Property<decimal>("SpacerDie")

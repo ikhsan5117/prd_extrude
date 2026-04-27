@@ -73,15 +73,35 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<JsonResult> GetSpsStandard(string hoseType)
+        public async Task<JsonResult> GetSpsStandard(string hoseType, string? machineCode)
         {
             if (string.IsNullOrEmpty(hoseType)) return Json(new { success = false, message = "Input empty" });
 
             var sanitized = hoseType.Trim().ToUpper();
+            var sanitizedMachine = string.IsNullOrEmpty(machineCode) ? null : machineCode.Trim().ToUpper();
 
             // 1. Try MasterlistSpsDoubleLayers FIRST - this contains the full names like VHFUNC-...
-            var standard = await _context.MasterlistSpsDoubleLayers
-                .FirstOrDefaultAsync(m => 
+            var query = _context.MasterlistSpsDoubleLayers.AsQueryable();
+            
+            if (!string.IsNullOrEmpty(sanitizedMachine))
+            {
+                // filter by machine if provided
+                query = query.Where(m => m.MachineCode != null && m.MachineCode.ToUpper() == sanitizedMachine);
+            }
+
+            var standard = await query.FirstOrDefaultAsync(m => 
+                (m.HoseType != null && m.HoseType.Trim().ToUpper() == sanitized) || 
+                (m.ItemList != null && m.ItemList.Trim().ToUpper() == sanitized) ||
+                (m.ExcelId != null && m.ExcelId.Trim().ToUpper() == sanitized) || 
+                (m.DocumentNumber != null && m.DocumentNumber.Trim().ToUpper() == sanitized) ||
+                (m.ItemList != null && m.ItemList.ToUpper().Contains(sanitized)) ||
+                (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitized))
+            );
+            
+            // Fallback: If no machine-specific SPS found, search without machine filter
+            if (standard == null && !string.IsNullOrEmpty(sanitizedMachine))
+            {
+                standard = await _context.MasterlistSpsDoubleLayers.FirstOrDefaultAsync(m => 
                     (m.HoseType != null && m.HoseType.Trim().ToUpper() == sanitized) || 
                     (m.ItemList != null && m.ItemList.Trim().ToUpper() == sanitized) ||
                     (m.ExcelId != null && m.ExcelId.Trim().ToUpper() == sanitized) || 
@@ -89,7 +109,8 @@ namespace VelastoProductionSystem.Controllers
                     (m.ItemList != null && m.ItemList.ToUpper().Contains(sanitized)) ||
                     (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitized))
                 );
-            
+            }
+
             if (standard != null)
             {
                 return Json(new { 
@@ -97,6 +118,7 @@ namespace VelastoProductionSystem.Controllers
                     data = new {
                         hoseType = standard.HoseType,
                         dimensi = standard.Dimensi,
+                        cuttingLength = standard.CuttingSpeed, // Map CuttingSpeed to length if applicable
                         innerTube = standard.InnerTube,
                         outerCover = standard.OuterCover,
                         toleranceInner = standard.ToleranceInner,
@@ -171,6 +193,7 @@ namespace VelastoProductionSystem.Controllers
             if (id == null) return NotFound();
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
+                .Include(r => r.Summaries)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
 
@@ -298,6 +321,31 @@ namespace VelastoProductionSystem.Controllers
                             RecordedTime = DateTime.Now
                         };
                         _context.DimensionMeasurements.Add(reading);
+                    }
+                }
+
+                // Process Summaries
+                var existingSummaries = _context.DimensionSummaries.Where(s => s.DimensionReportId == report.Id).ToList();
+                if (existingSummaries.Any()) _context.DimensionSummaries.RemoveRange(existingSummaries);
+
+                if (data.ProductionDataSummaries != null)
+                {
+                    foreach (var sData in data.ProductionDataSummaries)
+                    {
+                        if (sData == null) continue;
+                        var summary = new DimensionSummary
+                        {
+                            DimensionReportId = report.Id,
+                            PartNumber = sData.PartNumber,
+                            VinCode = sData.VinCode,
+                            StandardLength = sData.StandardLength,
+                            ActualLength = sData.ActualLength,
+                            QtyTarget = sData.QtyTarget ?? 0,
+                            QtyOk = sData.QtyOk ?? 0,
+                            NgDimension = sData.NgDimension ?? 0,
+                            NgVisual = sData.NgVisual ?? 0
+                        };
+                        _context.DimensionSummaries.Add(summary);
                     }
                 }
 

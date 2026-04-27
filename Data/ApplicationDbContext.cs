@@ -19,6 +19,7 @@ namespace VelastoProductionSystem.Data
         public DbSet<MasterlistSpsDoubleLayer> MasterlistSpsDoubleLayers { get; set; }
         public DbSet<DimensionReport> DimensionReports { get; set; }
         public DbSet<DimensionMeasurement> DimensionMeasurements { get; set; }
+        public DbSet<DimensionSummary> DimensionSummaries { get; set; }
         public DbSet<PlanningMaster> PlanningMasters { get; set; }
         public DbSet<DailyPlanExecution> DailyPlanExecutions { get; set; }
         public DbSet<DailyPlanActivity> DailyPlanActivities { get; set; }
@@ -49,6 +50,12 @@ namespace VelastoProductionSystem.Data
                 .HasOne(d => d.DimensionReport)
                 .WithMany(r => r.Measurements)
                 .HasForeignKey(d => d.DimensionReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DimensionSummary>()
+                .HasOne(s => s.DimensionReport)
+                .WithMany(r => r.Summaries)
+                .HasForeignKey(s => s.DimensionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LotTag>()

@@ -59,5 +59,6 @@ namespace VelastoProductionSystem.Models
 
         // Navigation
         public ICollection<DimensionMeasurement> Measurements { get; set; } = new List<DimensionMeasurement>();
+        public ICollection<DimensionSummary> Summaries { get; set; } = new List<DimensionSummary>();
     }
 }

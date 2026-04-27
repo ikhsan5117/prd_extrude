@@ -31,7 +31,7 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             ViewBag.Machines = await _context.ElwpMachines
-                .Where(m => m.IsActive && (m.AreaId == 1 || m.AreaId == 10))
+                .Where(m => m.IsActive && (m.AreaId == 1 || m.AreaId == 10) && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
                 .OrderBy(m => m.KodeMesin)
                 .ToListAsync();
 
@@ -121,7 +121,7 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             ViewBag.Machines = await _context.ElwpMachines
-                .Where(m => m.IsActive && (m.AreaId == 1 || m.AreaId == 10))
+                .Where(m => m.IsActive && (m.AreaId == 1 || m.AreaId == 10) && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
                 .OrderBy(m => m.KodeMesin)
                 .ToListAsync();
         }

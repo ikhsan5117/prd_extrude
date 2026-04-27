@@ -274,6 +274,48 @@ namespace VelastoProductionSystem.Migrations
                     b.ToTable("DimensionReports");
                 });
 
+            modelBuilder.Entity("VelastoProductionSystem.Models.DimensionSummary", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActualLength")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DimensionReportId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NgDimension")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NgVisual")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PartNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QtyOk")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QtyTarget")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StandardLength")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VinCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DimensionReportId");
+
+                    b.ToTable("DimensionSummaries");
+                });
+
             modelBuilder.Entity("VelastoProductionSystem.Models.LotTag", b =>
                 {
                     b.Property<int>("Id")
@@ -2151,6 +2193,17 @@ namespace VelastoProductionSystem.Migrations
                     b.Navigation("DimensionReport");
                 });
 
+            modelBuilder.Entity("VelastoProductionSystem.Models.DimensionSummary", b =>
+                {
+                    b.HasOne("VelastoProductionSystem.Models.DimensionReport", "DimensionReport")
+                        .WithMany("Summaries")
+                        .HasForeignKey("DimensionReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DimensionReport");
+                });
+
             modelBuilder.Entity("VelastoProductionSystem.Models.LotTag", b =>
                 {
                     b.HasOne("VelastoProductionSystem.Models.ProductionReport", "ProductionReport")
@@ -2210,6 +2263,8 @@ namespace VelastoProductionSystem.Migrations
             modelBuilder.Entity("VelastoProductionSystem.Models.DimensionReport", b =>
                 {
                     b.Navigation("Measurements");
+
+                    b.Navigation("Summaries");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.ProductionReport", b =>
