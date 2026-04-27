@@ -260,6 +260,7 @@ namespace VelastoProductionSystem.Controllers
                 var result = await ProcessSaveInternal(data);
                 
                 // Notify via SignalR for real-time dashboard updates
+                Console.WriteLine($">>> SIGNALR: Broadcasting 'ReceiveUpdate' from Dimensi module at {DateTime.Now}");
                 await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
                 
                 return Json(result);

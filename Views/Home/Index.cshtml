@@ -275,7 +275,8 @@
 
                 $('#criteriaTitle').text($('#criteriaFilter option:selected').text());
 
-                $.get(`/Home/GetSpcData?productCode=${product}&criteria=${criteria}&timeRange=${range}`, function(data) {
+                // Added timestamp (_t) to prevent AJAX caching
+                $.get(`/Home/GetSpcData?productCode=${product}&criteria=${criteria}&timeRange=${range}&_t=${new Date().getTime()}`, function(data) {
                     if (data.success) {
                         const s = data.summary;
                         $('#cpValue').text(s.cp);
@@ -403,15 +404,17 @@
             }
 
             connection.on("ReceiveUpdate", function () {
-                console.log("Real-time Update Received!");
+                console.log("%c >>> SIGNALR: Real-time Update Received!", "color: #00ccff; font-weight: bold; font-size: 12px;");
                 
                 // Show Popup Notification
-                $("#updateToast").fadeIn().delay(5000).fadeOut();
+                $("#updateToast").stop(true, true).fadeIn().delay(5000).fadeOut();
 
                 // Add a small toast or visual flash to indicate update
                 $(".glass-panel").addClass("blink-border");
                 setTimeout(() => $(".glass-panel").removeClass("blink-border"), 800);
-                loadSpcData();
+                
+                // Added 1-second delay before refresh to ensure DB commit is finished
+                setTimeout(loadSpcData, 1000);
             });
 
             connection.on("SensorDataReceived", function (data) {

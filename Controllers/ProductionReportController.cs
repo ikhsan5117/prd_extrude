@@ -571,6 +571,8 @@ namespace VelastoProductionSystem.Controllers
                 // Final Save for all added collections
                 await _context.SaveChangesAsync();
                 
+                // Notify dashboard via SignalR
+                Console.WriteLine($">>> SIGNALR: Broadcasting 'ReceiveUpdate' from ProductionReport module (Save) at {DateTime.Now}");
                 await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
                 return Json(new { success = true, id = report.Id, message = "Report archived successfully." });
             }
@@ -723,6 +725,8 @@ namespace VelastoProductionSystem.Controllers
                 await _context.SaveChangesAsync();
                 
                 // Notify via SignalR
+                // Notify via SignalR
+                Console.WriteLine($">>> SIGNALR: Broadcasting 'ReceiveUpdate' from ProductionReport module (Update) at {DateTime.Now}");
                 await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
 
                 return Json(new { success = true });
