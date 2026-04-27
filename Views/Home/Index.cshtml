@@ -32,7 +32,7 @@
     }
 
     @@keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
+        from { transform: translateX(120%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
 
@@ -61,8 +61,8 @@
 <div class="decoration-blob blob-1"></div>
 <div class="decoration-blob blob-2"></div>
 
-<!-- SignalR Notification Toast -->
-<div id="updateToast" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999; display: none;">
+<!-- SignalR Notification Toast (Moved to Top Right) -->
+<div id="updateToast" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999; display: none; margin-top: 60px;">
     <div class="glass-panel p-3 border-info border-opacity-50 shadow-lg d-flex align-items-center gap-3 animate-slideInRight" style="background: rgba(14, 165, 233, 0.2) !important; min-width: 300px;">
         <div class="status-dot pulse" style="width: 12px; height: 12px; background: #00ccff;"></div>
         <div>
