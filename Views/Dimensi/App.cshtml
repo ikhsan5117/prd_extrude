@@ -409,6 +409,21 @@
         }
         .c-input:focus { border-color: var(--accent-glow); box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
         .c-input::placeholder { color: rgba(248,250,252,0.3); }
+
+        /* Clear button wrapper */
+        .c-input-wrap { position: relative; width: 100%; }
+        .c-clear-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+            color: #ef4444; font-size: 14px; font-weight: 900;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; z-index: 5;
+            line-height: 1;
+        }
+        .c-clear-btn:hover { background: #ef4444; color: #fff; transform: translateY(-50%) scale(1.1); box-shadow: 0 0 12px rgba(239,68,68,0.5); }
+        .c-input-wrap .c-input { padding-right: 50px; }
+        .c-input-wrap.has-value .c-clear-btn { display: flex; }
         .status-badge { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.4s; }
         .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 25px var(--accent-success); }
         .status-ok .c-input { 
@@ -572,12 +587,10 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <input id="planningSearch" type="text" class="hud-input-flat" 
-                               placeholder="SEARCH PLANNING MASTER..." 
+                               placeholder="PILIH PLANNING MASTER..." 
                                oninput="filterPlanningResults(this.value)" 
-                               onfocus="showPlanningResults()" autocomplete="off" />
-                        <button type="button" class="hud-btn-side" onclick="refreshPlanningItems()" title="Refresh Planning">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
+                               onfocus="openPlanningDropdown()" autocomplete="off" readonly
+                               style="cursor:pointer;" />
                     </div>
                     <div id="planningResults" class="planning-results d-none custom-tactical-scroll"></div>
                 </div>
@@ -702,7 +715,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-inner-dia" oninput="validateCard('inner-dia')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-inner-dia">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-dia" oninput="validateCard('inner-dia'); toggleClearBtn('inner-dia')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-dia')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -729,7 +745,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-inner-tx" oninput="validateCard('inner-tx')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-inner-tx">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-tx" oninput="validateCard('inner-tx'); toggleClearBtn('inner-tx')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-tx')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -756,7 +775,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-inner-ty" oninput="validateCard('inner-ty')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-inner-ty">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-ty" oninput="validateCard('inner-ty'); toggleClearBtn('inner-ty')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-ty')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -783,7 +805,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-innermid-tx" oninput="validateCard('innermid-tx')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-innermid-tx">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-innermid-tx" oninput="validateCard('innermid-tx'); toggleClearBtn('innermid-tx')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('innermid-tx')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -810,7 +835,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-innermid-ty" oninput="validateCard('innermid-ty')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-innermid-ty">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-innermid-ty" oninput="validateCard('innermid-ty'); toggleClearBtn('innermid-ty')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('innermid-ty')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -837,7 +865,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-total-tx" oninput="validateCard('total-tx')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-total-tx">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-total-tx" oninput="validateCard('total-tx'); toggleClearBtn('total-tx')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('total-tx')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -864,7 +895,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-total-ty" oninput="validateCard('total-ty')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-total-ty">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-total-ty" oninput="validateCard('total-ty'); toggleClearBtn('total-ty')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('total-ty')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -891,7 +925,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL PITCH VALUE</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-spiral" oninput="validateCard('spiral')" placeholder="0" />
+                <div class="c-input-wrap" id="wrap-spiral">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-spiral" oninput="validateCard('spiral'); toggleClearBtn('spiral')" placeholder="0" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('spiral')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -1321,29 +1358,33 @@
                 return;
             }
 
-            // Add Header with count
+            // Header with count
             const header = document.createElement('div');
-            header.style = "padding: 10px 20px; font-size: 9px; font-weight: 900; color: var(--accent-glow); letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 8px; opacity: 0.7; display: flex; align-items: center; justify-content: space-between;";
+            header.style.cssText = 'padding:10px 20px;font-size:9px;font-weight:900;color:var(--accent-glow);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:8px;opacity:0.7;display:flex;align-items:center;justify-content:space-between;';
             header.innerHTML = `<span>PLANNING RESULTS (${items.length})</span> <i class="bi bi-funnel-fill"></i>`;
             container.appendChild(header);
 
             items.forEach((item, index) => {
+                const hasSps = item.hasSps === true;
+                const spsBadge = hasSps
+                    ? `<span style="font-size:9px;font-weight:900;color:#10b981;background:rgba(16,185,129,0.15);padding:2px 8px;border-radius:20px;border:1px solid rgba(16,185,129,0.4);white-space:nowrap;"><i class="bi bi-check-circle-fill me-1"></i>SPS ✓</span>`
+                    : `<span style="font-size:9px;font-weight:900;color:#ef4444;background:rgba(239,68,68,0.12);padding:2px 8px;border-radius:20px;border:1px solid rgba(239,68,68,0.35);white-space:nowrap;"><i class="bi bi-x-circle-fill me-1"></i>NO SPS</span>`;
+                const borderColor = hasSps ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.35)';
+
                 const div = document.createElement('div');
                 div.className = 'planning-result-item';
                 div.dataset.index = index;
+                div.style.borderLeft = `3px solid ${borderColor}`;
                 div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; width: 100%;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;gap:8px;flex-wrap:wrap;">
                         <div class="planning-result-code">${item.itemCode}</div>
-                        ${item.machineName ? `
-                            <div class="machine-badge-mini">
-                                <i class="bi bi-cpu-fill"></i>
-                                ${item.machineName}
-                            </div>` : ''}
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            ${item.machineName ? `<div class="machine-badge-mini"><i class="bi bi-cpu-fill"></i>${item.machineName}</div>` : ''}
+                            ${spsBadge}
+                        </div>
                     </div>
                     <div class="planning-result-name">${item.itemName || 'NO DESCRIPTION'}</div>
-                    <div class="planning-result-meta">
-                        <i class="bi bi-calendar3"></i> ${item.dateShift || '---'}
-                    </div>
+                    <div class="planning-result-meta"><i class="bi bi-calendar3"></i> ${item.dateShift || '---'}</div>
                 `;
                 div.onclick = () => selectPlanningItem(item);
                 div.onmouseenter = () => highlightPlanningResult(index);
@@ -1352,9 +1393,7 @@
 
             container.classList.remove('d-none');
             planningResultIndex = showAll ? 0 : -1;
-            if (showAll && items.length > 0) {
-                highlightPlanningResult(0);
-            }
+            if (showAll && items.length > 0) highlightPlanningResult(0);
         }
 
         function highlightPlanningResult(index) {
@@ -1382,34 +1421,47 @@
 
         function selectPlanningItem(item) {
             const planningInput = document.getElementById('planningSearch');
-            // Tampilkan hanya kode item + nama mesin (ringkas)
-            const displayText = item.machineName
-                ? `[${item.itemCode}] ${item.machineName}`
-                : `[${item.itemCode}]`;
-            if (planningInput) planningInput.value = displayText;
+            const displayText = item.machineName ? `[${item.itemCode}] ${item.machineName}` : `[${item.itemCode}]`;
+            if (planningInput) {
+                planningInput.value = displayText;
+                planningInput.readOnly = true;
+                planningInput.style.cursor = 'pointer';
+            }
+            window._dimSelectedLabel = displayText;
+            window._dimSelectedItemCode = item.itemCode;
             document.getElementById('planningResults')?.classList.add('d-none');
-            
-            // Update Machine / Line dynamically from Planning
+
+            // Save draft for previous item before switching
+            if (_dimCurrentItem && _dimCurrentItem !== (item.itemCode || '').toUpperCase().trim()) {
+                saveCurrentData();          // flush DOM → measurements[] first
+                dimCaptureDraft(_dimCurrentItem);  // then snapshot to localStorage
+            }
+
             const lineEl = document.getElementById('h-line');
             if (lineEl && item.machineName) {
                 lineEl.innerText = item.machineName;
                 lineEl.classList.add('animate__animated', 'animate__flash');
                 setTimeout(() => lineEl.classList.remove('animate__flash'), 1000);
             }
-
-            if (item.date) {
-                setPlanningDateAndShift(item.date, item.shift);
-            }
+            if (item.date) setPlanningDateAndShift(item.date, item.shift);
             document.getElementById('main-item-search').value = item.itemCode;
             loadMaster();
         }
 
-        function showPlanningResults() {
-            const val = document.getElementById('planningSearch')?.value || '';
-            if (planningItemsCache.length > 0) {
-                filterPlanningResults(val.replace(/^\[.*?\]\s*/, ''));
-            }
+        function openPlanningDropdown() {
+            const planningInput = document.getElementById('planningSearch');
+            if (!planningInput) return;
+            planningInput.value = '';
+            planningInput.readOnly = false;
+            planningInput.placeholder = planningItemsCache.length > 0
+                ? `KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA)`
+                : 'LOADING...';
+            filterPlanningResults('');
+            document.getElementById('planningResults')?.classList.remove('d-none');
+            if (planningItemsCache.length === 0) refreshPlanningItems();
         }
+
+        function showPlanningResults() { openPlanningDropdown(); } // alias untuk backward-compat
 
         function parseDisplayDate(displayText) {
             const monthMap = {
@@ -1635,29 +1687,121 @@
             }
         });
 
+        // ─── FORM LOCK ────────────────────────────────────────────────────────
+        function lockDimensiForm(code) {
+            clearTechnicalStandards();
+            const ws = document.getElementById('input-workspace');
+            const ph = document.getElementById('selection-placeholder');
+            if (ws) { ws.style.display = 'none'; ws.style.opacity = '0'; }
+            if (ph) {
+                ph.style.display = 'block';
+                ph.innerHTML = `
+                    <div class="mb-4"><i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:60px;opacity:0.8;"></i></div>
+                    <h3 style="color:#ef4444;font-weight:800;">SPS TIDAK DITEMUKAN</h3>
+                    <p style="color:#94a3b8;font-size:14px;">Item <b>[${code}]</b> belum memiliki data teknis (SPS).<br>Silakan pilih item lain dari Planning Master.</p>`;
+            }
+            // Reset planning input so user must pick again
+            const pi = document.getElementById('planningSearch');
+            if (pi) { pi.value = ''; pi.readOnly = true; pi.placeholder = 'PILIH PLANNING MASTER...'; }
+            window._dimSelectedLabel = null;
+            window._dimSelectedItemCode = null;
+            Swal.fire({ title: 'SPS TIDAK DITEMUKAN', text: `Item [${code}] belum terdaftar. Form dikunci.`, icon: 'warning', background: '#020617', color: '#f87171', confirmButtonColor: '#ef4444', confirmButtonText: 'PILIH ULANG' });
+        }
+
+        function unlockDimensiForm() {
+            const ws = document.getElementById('input-workspace');
+            const ph = document.getElementById('selection-placeholder');
+            if (ph) ph.style.display = 'none';
+            if (ws) { ws.style.display = 'block'; ws.style.opacity = '1'; }
+        }
+
+        // ─── DRAFT SYSTEM (Dimensi) ──────────────────────────────────────────
+        const DIM_DRAFT_PREFIX = 'velasto_dim_draft_v1_';
+        let _dimCurrentItem = null;
+        let _dimAutoSaveTimer = null;
+
+        function _dimDraftKey(itemCode) { return DIM_DRAFT_PREFIX + (itemCode || '').toUpperCase().trim(); }
+
+        function dimCaptureDraft(itemCode) {
+            if (!itemCode) return;
+            const draft = { ts: Date.now(), measurements: JSON.parse(JSON.stringify(measurements)), currentIndex };
+            try { localStorage.setItem(_dimDraftKey(itemCode), JSON.stringify(draft)); } catch(e) {}
+        }
+
+        function dimRestoreDraft(itemCode) {
+            const raw = localStorage.getItem(_dimDraftKey(itemCode));
+            if (!raw) return false;
+            let draft; try { draft = JSON.parse(raw); } catch { return false; }
+            if (!draft || !draft.measurements) return false;
+            measurements = draft.measurements;
+            currentIndex = draft.currentIndex || 0;
+            renderTimeline();
+            loadDataToUI();
+            return true;
+        }
+
+        function dimClearDraft(itemCode) {
+            try { if (itemCode) localStorage.removeItem(_dimDraftKey(itemCode)); } catch {}
+        }
+
+        function dimShowDraftBanner(itemCode, ts) {
+            let banner = document.getElementById('dimDraftBanner');
+            if (banner) banner.remove();
+            banner = document.createElement('div');
+            banner.id = 'dimDraftBanner';
+            banner.style.cssText = 'position:fixed;top:70px;right:24px;z-index:99999;background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(6,78,59,0.35));border:1px solid rgba(16,185,129,0.5);border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.6);backdrop-filter:blur(12px);';
+            const age = Math.round((Date.now() - ts) / 60000);
+            banner.innerHTML = '<i class="bi bi-cloud-arrow-down-fill" style="color:#10b981;font-size:1.6rem;"></i>'
+                + '<div><div style="color:#10b981;font-weight:900;font-size:0.75rem;letter-spacing:1px;">DRAFT DIPULIHKAN</div>'
+                + '<div style="color:#6ee7b7;font-size:0.7rem;">[' + itemCode + '] — ' + (age < 1 ? 'baru saja' : age + ' mnt lalu') + '</div></div>'
+                + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#6ee7b7;font-size:1.1rem;cursor:pointer;margin-left:8px;">✕</button>';
+            document.body.appendChild(banner);
+            setTimeout(() => { const b = document.getElementById('dimDraftBanner'); if (b) b.remove(); }, 7000);
+        }
+
+        function dimSetupAutoSave(itemCode) {
+            _dimCurrentItem = (itemCode || '').toUpperCase().trim();
+            const ws = document.getElementById('input-workspace');
+            if (!ws || !itemCode) return;
+            if (ws._dimDraftListener) ws.removeEventListener('input', ws._dimDraftListener);
+            ws._dimDraftListener = () => {
+                clearTimeout(_dimAutoSaveTimer);
+                _dimAutoSaveTimer = setTimeout(() => dimCaptureDraft(_dimCurrentItem), 1500);
+            };
+            ws.addEventListener('input', ws._dimDraftListener);
+            ws.addEventListener('change', ws._dimDraftListener);
+        }
+        // ─── END DRAFT (Dimensi) ─────────────────────────────────────────────
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('planningResults');
+            const searchInput = document.getElementById('planningSearch');
+            if (container && !container.contains(e.target) && e.target !== searchInput) {
+                container.classList.add('d-none');
+                if (window._dimSelectedLabel) {
+                    searchInput.value = window._dimSelectedLabel;
+                    searchInput.readOnly = true;
+                }
+            }
+        });
+
         // Ensure initialization
         document.addEventListener('DOMContentLoaded', () => {
             initSmartNext();
-            loadMaster();
             renderTimeline();
             refreshPlanningItems();
 
             const planningSearchInput = document.getElementById('planningSearch');
             if (planningSearchInput) {
                 planningSearchInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        movePlanningSelection(1);
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        movePlanningSelection(-1);
-                    } else if (e.key === 'Enter') {
-                        if (planningResultIndex >= 0 && planningResultItems.length) {
-                            e.preventDefault();
-                            selectHighlightedPlanningItem();
-                        }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); movePlanningSelection(1); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); movePlanningSelection(-1); }
+                    else if (e.key === 'Enter') {
+                        if (planningResultIndex >= 0 && planningResultItems.length) { e.preventDefault(); selectHighlightedPlanningItem(); }
                     } else if (e.key === 'Escape') {
                         document.getElementById('planningResults')?.classList.add('d-none');
+                        if (window._dimSelectedLabel) { planningSearchInput.value = window._dimSelectedLabel; planningSearchInput.readOnly = true; }
                     }
                 });
             }
@@ -1671,46 +1815,50 @@
         }
 
         function initSmartNext() {
-            // Global Enter key listener for Bluetooth tools and manual input
+            // Global Enter key listener — auto-advance for caliper & Bluetooth tools
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    // ONLY AUTO-NEXT IF TOOL LINK IS ACTIVE
-                    if (!isToolConnected) return;
+                if (e.key !== 'Enter') return;
 
-                    const active = document.activeElement;
-                    if (active && (active.classList.contains('c-input') || active.classList.contains('f-input'))) {
-                        e.preventDefault();
-                        
-                        // Handle Signal Prefixes (ID Filter)
-                        let val = active.value.trim();
-                        if (toolPrefix && val.startsWith(toolPrefix)) {
-                            // Strip prefix if detected (e.g. "CAL01:12.05" becomes "12.05")
-                            val = val.replace(toolPrefix, '').replace(':', '').trim();
-                        }
-                        
-                        // CLEAN VALUE: Remove + and leading zeros
-                        // Add a tiny delay to wait for tool to finish typing final digits
-                        setTimeout(() => {
-                            active.value = cleanValue(active.value);
-                            const id = active.id.replace('val-', '');
-                            validateCard(id);
+                const active = document.activeElement;
+                const isCInput = active && active.classList.contains('c-input');
+                const isFInput = active && active.classList.contains('f-input');
 
-                            // List all relevant fields in sequence
-                            const sequence = Array.from(document.querySelectorAll('.c-input, .f-input:not([readonly])'));
-                            const currentIdx = sequence.indexOf(active);
-                            
-                            if (currentIdx > -1 && currentIdx < sequence.length - 1) {
-                                const next = sequence[currentIdx + 1];
-                                next.focus();
-                                if (next.tagName === 'INPUT') next.select();
-                                const card = next.closest('.dimensi-card');
-                                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            } else if (currentIdx === sequence.length - 1) {
-                                Swal.fire({ icon: 'success', title: 'SEQUENCE COMPLETED', timer: 1000, showConfirmButton: false, position: 'top-end', toast: true });
-                            }
-                        }, 20);
+                // For f-input: only auto-next if tool connected (Bluetooth mode)
+                if (isFInput && !isToolConnected) return;
+
+                // For c-input: ALWAYS auto-next (caliper mode — Enter = send value)
+                if (!isCInput && !isFInput) return;
+
+                e.preventDefault();
+
+                // Clean value: strip + prefix and leading zeros (caliper output format)
+                setTimeout(() => {
+                    let val = active.value.trim();
+                    if (toolPrefix && val.startsWith(toolPrefix)) {
+                        val = val.replace(toolPrefix, '').replace(':', '').trim();
                     }
-                }
+                    active.value = cleanValue(active.value);
+
+                    const id = active.id.replace('val-', '');
+                    if (isCInput) {
+                        validateCard(id);
+                        toggleClearBtn(id);
+                    }
+
+                    // Sequence: all c-input then f-input (non-readonly)
+                    const sequence = Array.from(document.querySelectorAll('.c-input:not([disabled]), .f-input:not([readonly])'));
+                    const currentIdx = sequence.indexOf(active);
+
+                    if (currentIdx > -1 && currentIdx < sequence.length - 1) {
+                        const next = sequence[currentIdx + 1];
+                        next.focus();
+                        if (next.tagName === 'INPUT') next.select();
+                        const card = next.closest('.dimensi-card');
+                        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (currentIdx === sequence.length - 1) {
+                        Swal.fire({ icon: 'success', title: 'SEQUENCE COMPLETED', timer: 1000, showConfirmButton: false, position: 'top-end', toast: true });
+                    }
+                }, 20);
             });
         }
 
@@ -1920,7 +2068,10 @@
             renderSummaryList();
             
             // 6. Run validation for all cards
-            ['inner-dia', 'inner-tx', 'inner-ty', 'innermid-tx', 'innermid-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
+            ['inner-dia', 'inner-tx', 'inner-ty', 'innermid-tx', 'innermid-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => {
+                validateCard(id);
+                if (typeof toggleClearBtn === 'function') toggleClearBtn(id);
+            });
         }
 
         function addProductionRecord() {
@@ -1996,6 +2147,28 @@
             });
         }
 
+        function toggleClearBtn(id) {
+            const wrap = document.getElementById('wrap-' + id);
+            const inp  = document.getElementById('val-' + id);
+            if (!wrap || !inp) return;
+            if (inp.value && inp.value.trim() !== '') {
+                wrap.classList.add('has-value');
+            } else {
+                wrap.classList.remove('has-value');
+            }
+        }
+
+        function clearCard(id) {
+            const inp = document.getElementById('val-' + id);
+            if (!inp) return;
+            inp.value = '';
+            validateCard(id);
+            toggleClearBtn(id);
+            inp.focus();
+            saveCurrentData();
+            if (window._dimCurrentItem) dimCaptureDraft(window._dimCurrentItem);
+        }
+
         function validateCard(id) {
             const cleanId = id.toLowerCase().replace(/-/g, '');
             const card = document.getElementById(`card-${id}`), std = activeStandards[cleanId], inp = document.getElementById(`val-${id}`);
@@ -2025,15 +2198,7 @@
                 Swal.close();
                 
                 if(!data.success) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'SPS TIDAK DITEMUKAN',
-                        text: `Item [${code}] belum memiliki data teknis (SPS). Kolom standar akan dikosongkan.`,
-                        confirmButtonColor: '#f59e0b',
-                        background: '#020617',
-                        color: '#fff'
-                    });
-                    clearTechnicalStandards();
+                    lockDimensiForm(code);
                     return;
                 }
 
@@ -2167,14 +2332,25 @@
                         toast: true,
                         position: 'top-end'
                     });
-                    
-                    // Auto-focus starting point
-                    const firstInput = document.getElementById('val-inner-dia');
-                    if (firstInput) {
-                        firstInput.focus();
-                        firstInput.select();
+
+                    unlockDimensiForm();
+
+                    // Draft restore: check if this item has saved draft
+                    const normalCode = (code || '').toUpperCase().trim();
+                    const hasDraft = localStorage.getItem(_dimDraftKey(normalCode));
+                    if (hasDraft) {
+                        setTimeout(() => {
+                            let d; try { d = JSON.parse(hasDraft); } catch {}
+                            if (dimRestoreDraft(normalCode) && d) dimShowDraftBanner(normalCode, d.ts);
+                        }, 200);
+                    } else {
+                        // Auto-focus starting point only if no draft
+                        const firstInput = document.getElementById('val-inner-dia');
+                        if (firstInput) { firstInput.focus(); firstInput.select(); }
+                        loadDataToUI();
                     }
-                    loadDataToUI();
+
+                    dimSetupAutoSave(normalCode);  // begin tracking changes
                 }
             } catch (e) { 
                 console.error("LoadMaster Error:", e);
@@ -2435,6 +2611,8 @@
 
                 const result = await response.json();
                 if(result.success) {
+                    dimClearDraft(_dimCurrentItem);  // draft selesai — hapus dari storage
+
                     // Flash success message
                     const status = document.getElementById('save-status');
                     status.style.opacity = '1';
@@ -2443,6 +2621,7 @@
                     resetHUD();
                     
                     setTimeout(() => { status.style.opacity = '0'; }, 3000);
+
                 } else {
                     Swal.fire('Error', result.message || 'Failed to save', 'error');
                 }

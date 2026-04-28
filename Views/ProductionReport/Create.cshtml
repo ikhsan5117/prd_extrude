@@ -55,11 +55,8 @@
                                             </span>
                                         }
                                     </div>
-                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="showPlanningResults()" autocomplete="off" />
+                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none; cursor: pointer;" placeholder="PILIH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="openPlanningDropdown()" autocomplete="off" readonly />
                                 </div>
-                                <button type="button" onclick="refreshPlanningItems()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Refresh Planning">
-                                    <i class="bi bi-arrow-clockwise fs-4"></i>
-                                </button>
                             </div>
                         </div>
                         <div class="col-md-5">
@@ -1222,8 +1219,56 @@
             }
         }
 
+        function clearActualInputs() {
+            // Clear all operator-entered "Actual" fields (not SPS standard fields)
+            const actualIds = [
+                'InnerMaterialActual','MiddleMaterialActual','OuterMaterialActual','YarnActual',
+                'DAI_Awal','DAI_Akhir','DAC_Awal','DAC_Akhir',
+                'DRAI_Awal','DRAI_Akhir','DRAC_Awal','DRAC_Akhir',
+                'EmbossMarkContent','EmbossMarkDate',
+                'WasteInner','WasteOuter','WasteYarn','WasteTotal',
+                'TotalLength','TotalWeight','Remarks','CreatedBy'
+            ];
+            actualIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            // Clear all radio buttons
+            document.querySelectorAll('#mainFormContainer input[type="radio"]').forEach(r => r.checked = false);
+
+            // Clear all checkboxes
+            document.querySelectorAll('#mainFormContainer input[type="checkbox"]').forEach(c => c.checked = false);
+
+            // Clear all die/text inputs that are not SPS standard fields
+            ['NippleDieInitial','NippleDieFinal','TubeDieInitial','TubeDieFinal',
+             'MiddleDieInitial','MiddleDieFinal','CoverDieInitial','CoverDieFinal',
+             'SpacerDieInitial','SpacerDieFinal','ToleranceInitial','ToleranceFinal'].forEach(name => {
+                document.querySelectorAll(`input[name="${name}"]`).forEach(el => el.value = '');
+            });
+
+            // Clear dynamic lot rows
+            ['inner','middle','outer','yarn'].forEach(layer => {
+                const c = document.getElementById(layer + '-lot-list');
+                if (c) c.innerHTML = '';
+                if (materialState && materialState[layer]) materialState[layer] = [];
+            });
+
+            // Reset readings to a fresh single entry
+            pReadings = [{ id: 0, label: 'P-1', time: new Date().getHours().toString().padStart(2,'0') + ':' + new Date().getMinutes().toString().padStart(2,'0'), data: {} }];
+            currentReadingIndex = 0;
+            renderTabs();
+
+            // Clear validation highlights
+            document.querySelectorAll('#mainFormContainer .valid-success, #mainFormContainer .valid-error')
+                .forEach(el => el.classList.remove('valid-success','valid-error'));
+        }
+
         function applySpsToForm(sps) {
             console.log("Applying SPS Data:", sps);
+
+            // Clear all previous operator-entered data first
+            clearActualInputs();
 
             // UNLOCK FORM (SHOW CONTENT)
             const overlay = document.getElementById('formLockOverlay');
@@ -1467,6 +1512,21 @@
                 input.classList.add('valid-error');
                 input.classList.remove('valid-success');
             }
+        }
+
+        function revalidateAllInputs() {
+            // Re-trigger oninput on all inputs that have validators attached
+            // This restores OK/NG coloring after a programmatic value restore (draft)
+            const form = document.getElementById('mainFormContainer');
+            if (!form) return;
+            form.querySelectorAll('input[oninput], select[oninput]').forEach(el => {
+                if (el.value !== '') {
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+            form.querySelectorAll('select[onchange]').forEach(el => {
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            });
         }
 
         function checkDieStatus(specId, radioFieldName, initName, finalName) {
@@ -1922,8 +1982,10 @@
 
                 const result = await res.json();
                 if (result.success) {
+                    clearDraft(_currentDraftItem);  // draft selesai — hapus dari storage
                     Swal.fire('UPLOAD COMPLETE', 'Report archived successfully in the digital vault.', 'success')
                         .then(() => resetHUD());
+
                 } else {
                     Swal.fire('TRANSMISSION ERROR', result.message || 'The server rejected the dataset.', 'error');
                 }
@@ -1932,7 +1994,129 @@
             }
         }
 
-        // --- PLANNING SEARCH & REFRESH LOGIC (RESTORED) ---
+        // ─────────────────────────────────────────────────────────────────────
+        // DRAFT AUTO-SAVE / RESTORE  (localStorage per item code)
+        // ─────────────────────────────────────────────────────────────────────
+        const DRAFT_PREFIX = 'velasto_draft_v1_';
+        let _currentDraftItem = null;
+        let _autoSaveTimer = null;
+
+        function _draftKey(itemCode) {
+            return DRAFT_PREFIX + (itemCode || '').toUpperCase().trim();
+        }
+
+        function captureDraft(itemCode) {
+            if (!itemCode) return;
+            const form = document.getElementById('mainFormContainer');
+            if (!form) return;
+            const fields = {};
+            form.querySelectorAll('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), select, textarea').forEach(el => {
+                if (!el.id || el.id === 'planningSearch') return;
+                fields[el.id] = el.value;
+            });
+            form.querySelectorAll('input[type="radio"]:checked').forEach(el => {
+                fields['__radio_' + el.name] = el.value;
+            });
+            form.querySelectorAll('input[type="checkbox"]:checked').forEach(el => {
+                if (el.name) fields['__chk_' + el.name] = el.value;
+            });
+            const lots = {};
+            ['inner','middle','outer','yarn'].forEach(layer => {
+                const c = document.getElementById(layer + '-lot-list');
+                if (!c) return;
+                lots[layer] = Array.from(c.querySelectorAll('.row')).map(row => ({
+                    lot: row.querySelector('input[data-type="lot"]')?.value || '',
+                    sg:  row.querySelector('input[data-type="sg"]')?.value  || ''
+                })).filter(r => r.lot || r.sg);
+            });
+            const draft = { ts: Date.now(), fields, lots, readings: JSON.parse(JSON.stringify(pReadings)) };
+            try { localStorage.setItem(_draftKey(itemCode), JSON.stringify(draft)); } catch(e) {}
+        }
+
+        function restoreDraft(itemCode) {
+            const raw = localStorage.getItem(_draftKey(itemCode));
+            if (!raw) return false;
+            let draft;
+            try { draft = JSON.parse(raw); } catch { return false; }
+            if (!draft || !draft.fields) return false;
+            Object.entries(draft.fields).forEach(([id, val]) => {
+                if (id.startsWith('__radio_')) {
+                    const el = document.querySelector('input[name="' + id.replace('__radio_', '') + '"][value="' + val + '"]');
+                    if (el) el.checked = true;
+                } else if (id.startsWith('__chk_')) {
+                    const el = document.querySelector('input[name="' + id.replace('__chk_', '') + '"][value="' + val + '"]');
+                    if (el) el.checked = true;
+                } else {
+                    const el = document.getElementById(id);
+                    if (el && !el.readOnly) el.value = val;
+                }
+            });
+            if (draft.lots) {
+                Object.entries(draft.lots).forEach(([layer, rows]) => {
+                    if (!rows.length) return;
+                    const c = document.getElementById(layer + '-lot-list');
+                    if (!c) return;
+                    c.innerHTML = '';
+                    materialState[layer] = [];
+                    rows.forEach(r => {
+                        addMaterialRow(layer);
+                        const allRows = c.querySelectorAll('.row');
+                        const last = allRows[allRows.length - 1];
+                        if (last) {
+                            const lotEl = last.querySelector('input[data-type="lot"]');
+                            const sgEl  = last.querySelector('input[data-type="sg"]');
+                            if (lotEl) lotEl.value = r.lot;
+                            if (sgEl)  sgEl.value  = r.sg;
+                        }
+                    });
+                });
+            }
+            if (draft.readings && draft.readings.length) {
+                pReadings = draft.readings;
+                currentReadingIndex = pReadings.length - 1;
+                renderTabs();
+            }
+            return true;
+        }
+
+        function clearDraft(itemCode) {
+            try { if (itemCode) localStorage.removeItem(_draftKey(itemCode)); } catch {}
+        }
+
+        function showDraftBanner(itemCode, ts) {
+            let banner = document.getElementById('draftRestoredBanner');
+            if (banner) banner.remove();
+            banner = document.createElement('div');
+            banner.id = 'draftRestoredBanner';
+            banner.style.cssText = 'position:fixed;top:70px;right:24px;z-index:99999;background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(6,78,59,0.35));border:1px solid rgba(16,185,129,0.5);border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.6);backdrop-filter:blur(12px);';
+            const age = Math.round((Date.now() - ts) / 60000);
+            const ageStr = age < 1 ? 'baru saja' : age + ' mnt lalu';
+            banner.innerHTML = '<i class="bi bi-cloud-arrow-down-fill" style="color:#10b981;font-size:1.6rem;"></i>'
+                + '<div><div style="color:#10b981;font-weight:900;font-size:0.75rem;letter-spacing:1px;">DRAFT DIPULIHKAN</div>'
+                + '<div style="color:#6ee7b7;font-size:0.7rem;">[' + itemCode + '] — disimpan ' + ageStr + '</div></div>'
+                + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#6ee7b7;font-size:1.1rem;cursor:pointer;margin-left:8px;">✕</button>';
+            document.body.appendChild(banner);
+            setTimeout(() => { const b = document.getElementById('draftRestoredBanner'); if (b) b.remove(); }, 7000);
+        }
+
+        function setupAutoSave(itemCode) {
+            _currentDraftItem = itemCode ? itemCode.toUpperCase().trim() : null;
+            const form = document.getElementById('mainFormContainer');
+            if (!form || !itemCode) return;
+            if (form._draftListener) {
+                form.removeEventListener('input', form._draftListener);
+                form.removeEventListener('change', form._draftListener);
+            }
+            form._draftListener = () => {
+                clearTimeout(_autoSaveTimer);
+                _autoSaveTimer = setTimeout(() => captureDraft(_currentDraftItem), 1500);
+            };
+            form.addEventListener('input', form._draftListener);
+            form.addEventListener('change', form._draftListener);
+        }
+        // ─── END DRAFT SYSTEM ─────────────────────────────────────────────────
+
+        // --- PLANNING SEARCH & REFRESH LOGIC ---
         let planningItemsCache = [];
         let planningResultItems = [];
         let planningResultIndex = -1;
@@ -1973,15 +2157,20 @@
             }
         }
 
-        function showPlanningResults() {
-            const container = document.getElementById('planningResults');
+        function openPlanningDropdown() {
+            // Clear the displayed text so user sees the dropdown fresh
             const searchInput = document.getElementById('planningSearch');
-            
-            // Show even if cache is empty (will show "NO MATCH" or re-fetch)
-            filterPlanningResults(searchInput.value || "");
+            searchInput.value = '';
+            searchInput.readOnly = false;
+            searchInput.placeholder = planningItemsCache.length > 0
+                ? `KETIK ITEM CODE (${planningItemsCache.length} ITEM TERSEDIA)`
+                : 'LOADING...';
+
+            const container = document.getElementById('planningResults');
+            filterPlanningResults('');
             container.classList.remove('d-none');
-            
-            // Re-render if empty to show feedback
+
+            // Re-fetch if cache is empty
             if (planningItemsCache.length === 0) {
                 refreshPlanningItems();
             }
@@ -1991,10 +2180,14 @@
         document.addEventListener('click', function(e) {
             const container = document.getElementById('planningResults');
             const searchInput = document.getElementById('planningSearch');
-            const refreshBtn = document.querySelector('[onclick="refreshPlanningItems()"]');
-            
-            if (container && !container.contains(e.target) && e.target !== searchInput && (!refreshBtn || !refreshBtn.contains(e.target))) {
+
+            if (container && !container.contains(e.target) && e.target !== searchInput) {
                 container.classList.add('d-none');
+                // Restore label text if a planning was already selected
+                if (window._selectedPlanningLabel) {
+                    searchInput.value = window._selectedPlanningLabel;
+                    searchInput.readOnly = true;
+                }
             }
         });
 
@@ -2021,9 +2214,20 @@
             }
 
             items.forEach((item, index) => {
+                const hasSps = item.hasSps === true;
+                const spsBadge = hasSps
+                    ? `<span style="font-size:10px;font-weight:900;color:#10b981;background:rgba(16,185,129,0.15);padding:2px 9px;border-radius:20px;border:1px solid rgba(16,185,129,0.4);white-space:nowrap;letter-spacing:0.5px;">
+                            <i class="bi bi-check-circle-fill me-1"></i>SPS ✓
+                       </span>`
+                    : `<span style="font-size:10px;font-weight:900;color:#ef4444;background:rgba(239,68,68,0.12);padding:2px 9px;border-radius:20px;border:1px solid rgba(239,68,68,0.35);white-space:nowrap;letter-spacing:0.5px;">
+                            <i class="bi bi-x-circle-fill me-1"></i>NO SPS
+                       </span>`;
+
+                const borderColor = hasSps ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.35)';
+
                 const div = document.createElement('div');
                 div.className = "p-3 border-bottom border-white border-opacity-5 cursor-pointer transition-all planning-result-item";
-                div.style.background = "rgba(15, 23, 42, 0.98)";
+                div.style.cssText = `background:rgba(15,23,42,0.98); border-left:3px solid ${borderColor} !important;`;
                 div.dataset.index = index;
                 div.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -2031,6 +2235,7 @@
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="text-info-glow fw-900 font-monospace" style="font-size: 1.1rem; letter-spacing: 1px;">[${item.itemCode}]</span>
                                 ${item.machineName ? `<span style="font-size:10px; font-weight:800; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:20px; white-space:nowrap;"><i class="bi bi-cpu-fill"></i> ${item.machineName}</span>` : ''}
+                                ${spsBadge}
                             </div>
                             <span class="text-white small opacity-80 fw-bold">${item.itemName}</span>
                         </div>
@@ -2070,7 +2275,12 @@
             const displayText = item.machineName
                 ? `[${item.itemCode}] ${item.machineName}`
                 : `[${item.itemCode}]`;
-            document.getElementById('planningSearch').value = displayText;
+
+            const searchInput = document.getElementById('planningSearch');
+            searchInput.value = displayText;
+            searchInput.readOnly = true;
+            searchInput.style.cursor = 'pointer';
+            window._selectedPlanningLabel = displayText;   // store for restore on blur
             document.getElementById('planningResults').classList.add('d-none');
             
             // Auto-sync Date
@@ -2098,24 +2308,88 @@
             fetchSpsByItem(item.itemCode);
         }
 
+        function lockForm() {
+            const container = document.getElementById('mainFormContainer');
+            const wrapper = document.getElementById('formContentBlurWrapper');
+
+            // Re-add overlay if it was removed
+            if (container && !document.getElementById('formLockOverlay')) {
+                const overlay = document.createElement('div');
+                overlay.id = 'formLockOverlay';
+                overlay.className = 'd-flex flex-column align-items-center justify-content-center';
+                overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:20px;z-index:1000;background:rgba(2,6,23,0.75);border-radius:12px;';
+                overlay.innerHTML = `
+                    <div class="text-center p-5 rounded-4 border border-danger border-opacity-30 shadow" style="background:rgba(15,23,42,0.95);">
+                        <div class="mb-4"><i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:4rem;filter:drop-shadow(0 0 20px rgba(239,68,68,0.6));"></i></div>
+                        <h2 class="text-white fw-900 tracking-widest mb-2" style="font-size:1.4rem;">SPS TIDAK DITEMUKAN</h2>
+                        <p class="text-danger opacity-75 super-small mb-0 tracking-widest uppercase">Pilih planning lain yang sudah<br>memiliki SPS Masterlist terdaftar.</p>
+                    </div>`;
+                container.style.minHeight = '450px';
+                container.style.pointerEvents = 'none';
+                container.prepend(overlay);
+            }
+
+            // Hide the form content
+            if (wrapper) {
+                wrapper.style.display = 'none';
+            }
+
+            // Reset planning selection so user must pick again
+            const searchInput = document.getElementById('planningSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.readOnly = true;
+                searchInput.placeholder = 'PILIH PLANNING MASTER...';
+            }
+            window._selectedPlanningLabel = null;
+        }
+
         async function fetchSpsByItem(code) {
+            const normalCode = (code || '').toUpperCase().trim();
+
+            // Save draft for previous item before switching
+            if (_currentDraftItem && _currentDraftItem !== normalCode) {
+                captureDraft(_currentDraftItem);
+            }
+
             try {
                 const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
                 const data = await res.json();
                 if (data.success === false) throw new Error('PROTOCOL NOT FOUND');
-                applySpsToForm(data);
+
+                const hasDraft = localStorage.getItem(_draftKey(normalCode));
+
+                applySpsToForm(data);  // unlock form + fill SPS defaults
+
+                if (hasDraft) {
+                    // Restore draft after a short render delay, then re-trigger validators
+                    setTimeout(() => {
+                        let d; try { d = JSON.parse(hasDraft); } catch {}
+                        const restored = restoreDraft(normalCode);
+                        if (restored && d) {
+                            showDraftBanner(normalCode, d.ts);
+                            revalidateAllInputs();  // restore OK/NG coloring
+                        }
+                    }, 200);
+                }
+
+                setupAutoSave(normalCode);  // begin tracking changes
+
             } catch (e) {
                 console.warn(e.message);
+                lockForm();
                 Swal.fire({
                     title: 'PROTOCOL UNKNOWN',
-                    text: `Warning: SPS Masterlist for [${code}] is missing or not registered.`,
+                    text: `SPS Masterlist untuk item [${code}] belum terdaftar. Form dikunci — silakan pilih item lain.`,
                     icon: 'warning',
                     background: '#020617',
-                    color: '#0ea5e9',
-                    confirmButtonColor: '#0ea5e9'
+                    color: '#f87171',
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'PILIH ULANG'
                 });
             }
         }
+
 
         document.addEventListener('DOMContentLoaded', () => {
             renderTabs();
@@ -2124,7 +2398,7 @@
             const searchInput = document.getElementById('planningSearch');
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => filterPlanningResults(e.target.value));
-                searchInput.addEventListener('focus', () => showPlanningResults());
+                searchInput.addEventListener('focus', () => openPlanningDropdown());
             }
 
             // Auto-show Middle card if current machine is CHS 3 Layer
@@ -2152,6 +2426,15 @@
                     inp.value = "";
                 });
                 
+                // Reset planningSearch to default state
+                const ps = document.getElementById('planningSearch');
+                if (ps) {
+                    ps.value = '';
+                    ps.readOnly = true;
+                    ps.placeholder = 'PILIH PLANNING MASTER...';
+                }
+                window._selectedPlanningLabel = null;
+
                 // Clear Radios
                 form.querySelectorAll('input[type="radio"]').forEach(rad => rad.checked = false);
                 

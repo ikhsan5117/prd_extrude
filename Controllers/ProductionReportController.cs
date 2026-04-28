@@ -313,6 +313,26 @@ namespace VelastoProductionSystem.Controllers
                     // Tidak ada fallback ke semua data - operator hanya boleh lihat mesinnya sendiri
                 }
 
+                // Batch-check SPS availability for all item codes
+                var elwpItemCodes = elwpRows
+                    .Where(x => !string.IsNullOrEmpty(x.p.KodeItem))
+                    .Select(x => x.p.KodeItem!.Trim().ToUpper())
+                    .Distinct().ToList();
+
+                var spsItemCodes = await _context.StandardParameterSettings
+                    .Where(s => s.ItemList != null && elwpItemCodes.Any(c => s.ItemList.ToUpper().Contains(c)))
+                    .Select(s => s.ItemList!.ToUpper()).ToListAsync();
+
+                var masterItemCodes = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.ItemList != null && elwpItemCodes.Any(c => m.ItemList.ToUpper().Contains(c)))
+                    .Select(m => m.ItemList!.ToUpper()).ToListAsync();
+
+                bool HasSps(string? code) {
+                    if (string.IsNullOrEmpty(code)) return false;
+                    var u = code.Trim().ToUpper();
+                    return spsItemCodes.Any(s => s.Contains(u)) || masterItemCodes.Any(s => s.Contains(u));
+                }
+
                 var items = elwpRows.Select(x => new {
                     itemCode = x.p.KodeItem,
                     itemName = (x.p.PartName ?? "#N/A") + (string.IsNullOrEmpty(x.p.PnSap) ? "" : " | " + x.p.PnSap),
@@ -321,7 +341,8 @@ namespace VelastoProductionSystem.Controllers
                     dateShift = $"{(x.p.TanggalPlanning?.ToString("dddd, d MMMM yyyy", cultureID) ?? "").ToUpper()} SHIFT {x.p.Shift}",
                     date = x.p.TanggalPlanning?.ToString("yyyy-MM-dd"),
                     shift = x.p.Shift,
-                    isFiltered = !isAdmin && !string.IsNullOrEmpty(machineFilter)
+                    isFiltered = !isAdmin && !string.IsNullOrEmpty(machineFilter),
+                    hasSps = HasSps(x.p.KodeItem)
                 }).OrderBy(p => p.itemName).ToList();
 
                 return Json(items);
@@ -356,6 +377,26 @@ namespace VelastoProductionSystem.Controllers
                 filtered = itemRows.OrderByDescending(x => x.Id).Take(50).ToList();
             }
 
+            // Batch-check SPS for fallback items (must be outside Select)
+            var fallbackCodes = filtered
+                .Where(p => !string.IsNullOrEmpty(p.PartName1))
+                .Select(p => p.PartName1!.Trim().ToUpper())
+                .Distinct().ToList();
+
+            var fbSpsCodes = await _context.StandardParameterSettings
+                .Where(s => s.ItemList != null && fallbackCodes.Any(c => s.ItemList.ToUpper().Contains(c)))
+                .Select(s => s.ItemList!.ToUpper()).ToListAsync();
+
+            var fbMasterCodes = await _context.MasterlistSpsDoubleLayers
+                .Where(m => m.ItemList != null && fallbackCodes.Any(c => m.ItemList.ToUpper().Contains(c)))
+                .Select(m => m.ItemList!.ToUpper()).ToListAsync();
+
+            bool FbHasSps(string? code) {
+                if (string.IsNullOrEmpty(code)) return false;
+                var u = code.Trim().ToUpper();
+                return fbSpsCodes.Any(s => s.Contains(u)) || fbMasterCodes.Any(s => s.Contains(u));
+            }
+
             var result = filtered.Select(p => {
                 var parsed = ParseDateShiftString(p.DateShiftString);
                 return new {
@@ -363,11 +404,13 @@ namespace VelastoProductionSystem.Controllers
                     itemName = (p.PartName2 ?? "") + (string.IsNullOrEmpty(p.Kode) ? "" : " | " + p.Kode),
                     dateShift = p.DateShiftString,
                     date = parsed.date,
-                    shift = parsed.shift
+                    shift = parsed.shift,
+                    hasSps = FbHasSps(p.PartName1)
                 };
             }).Distinct().OrderBy(p => p.itemName).ToList();
 
             return Json(result);
+
         }
 
         private static (string date, string shift) ParseDateShiftString(string? dateShiftString)
