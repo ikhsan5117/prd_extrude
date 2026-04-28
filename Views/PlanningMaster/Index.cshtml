@@ -138,18 +138,24 @@
                             <label class="col-lbl ms-2 mb-1 d-block">Filter Date</label>
                             <input type="date" name="filterDate" value="@(ViewBag.FilterDate?.ToString("yyyy-MM-dd"))" class="form-control form-control-dark form-control-sm w-100" />
                         </div>
+                        <div class="col-md-3">
+                            <label class="col-lbl ms-2 mb-1 d-block">Filter Mesin</label>
+                            <select name="machineId" asp-items="ViewBag.ExtrudeMachines" class="form-select form-control-dark form-select-sm w-100">
+                                <option value="">Semua Mesin</option>
+                            </select>
+                        </div>
                         <div class="col-md-4">
                             <label class="col-lbl ms-2 mb-1 d-block">Search Keyword</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-transparent border-0 pe-0" style="z-index: 5;"><i class="bi bi-search text-white-50"></i></span>
-                                <input type="text" name="query" value="@ViewBag.Query" placeholder="Part code, machine, shift..." class="form-control form-control-dark border-0 ms-n3" style="padding-left: 40px;" />
+                                <input type="text" name="query" value="@ViewBag.Query" placeholder="Part code, shift..." class="form-control form-control-dark border-0 ms-n3" style="padding-left: 40px;" />
                             </div>
                         </div>
                         <div class="col-md-auto d-flex align-items-end">
                             <button type="submit" class="btn btn-sm neon-btn py-2 px-4 shadow-sm h-100" style="min-height: 38px;">
                                 <i class="bi bi-filter me-1"></i> APPLY FILTER
                             </button>
-                            @if (ViewBag.FilterDate != null || !string.IsNullOrEmpty(ViewBag.Query))
+                            @if (ViewBag.FilterDate != null || !string.IsNullOrEmpty(ViewBag.Query) || ViewBag.MachineId != null)
                             {
                                 <a asp-action="Index" class="btn btn-sm btn-link text-white-50 text-decoration-none ms-2 pb-2">Reset</a>
                             }
@@ -186,7 +192,7 @@
                 <div class="col-lg-3">
                     <!-- Action Buttons in Card -->
                     <div class="d-flex h-100 gap-2">
-                        <a asp-action="ExportCsv" asp-route-filterDate="@(ViewBag.FilterDate?.ToString("yyyy-MM-dd"))" asp-route-query="@ViewBag.Query" class="btn btn-outline-info flex-grow-1 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1" style="border-style: dashed; background: rgba(0, 150, 255, 0.05);">
+                        <a asp-action="ExportCsv" asp-route-filterDate="@(ViewBag.FilterDate?.ToString("yyyy-MM-dd"))" asp-route-query="@ViewBag.Query" asp-route-machineId="@ViewBag.MachineId" class="btn btn-outline-info flex-grow-1 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1" style="border-style: dashed; background: rgba(0, 150, 255, 0.05);">
                             <i class="bi bi-file-earmark-spreadsheet fs-5"></i>
                             <span style="font-size: 0.65rem; font-weight: 800;">EXPORT CSV</span>
                         </a>

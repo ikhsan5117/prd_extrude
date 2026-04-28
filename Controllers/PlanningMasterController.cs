@@ -113,8 +113,16 @@ namespace VelastoProductionSystem.Controllers
             }
         }
 
-        public async Task<IActionResult> Index(DateTime? filterDate, string? query)
+        public async Task<IActionResult> Index(DateTime? filterDate, string? query, int? machineId)
         {
+            // Fetch only Extrude machines (starting with EXT-) for the filter dropdown
+            var machines = await _elwpContext.ElwpMachines
+                .Where(m => m.KodeMesin != null && m.KodeMesin.ToUpper().StartsWith("EXT"))
+                .OrderBy(m => m.KodeMesin)
+                .Select(m => new { Id = m.Id, Display = (m.KodeMesin ?? m.Id.ToString()) + " - " + m.NamaMesin })
+                .ToListAsync();
+            ViewBag.ExtrudeMachines = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(machines, "Id", "Display", machineId);
+
             var machinesMap = await _elwpContext.ElwpMachines
                 .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
 
@@ -127,6 +135,11 @@ namespace VelastoProductionSystem.Controllers
                 elwpQuery = elwpQuery.Where(x => x.TanggalPlanning >= start && x.TanggalPlanning < end);
             }
 
+            if (machineId.HasValue)
+            {
+                elwpQuery = elwpQuery.Where(x => x.MesinId == machineId.Value);
+            }
+
             if (!string.IsNullOrWhiteSpace(query))
             {
                 var normalizedQuery = query.Trim().ToLower();
@@ -134,8 +147,7 @@ namespace VelastoProductionSystem.Controllers
                     (x.KodeItem != null && x.KodeItem.ToLower().Contains(normalizedQuery)) ||
                     (x.PartName != null && x.PartName.ToLower().Contains(normalizedQuery)) ||
                     (x.PnSap != null && x.PnSap.ToLower().Contains(normalizedQuery)) ||
-                    (x.Shift != null && x.Shift.ToLower().Contains(normalizedQuery)) ||
-                    (x.MesinId != null && x.MesinId.Value.ToString().Contains(normalizedQuery)));
+                    (x.Shift != null && x.Shift.ToLower().Contains(normalizedQuery)));
             }
 
             var elwpRows = await elwpQuery
@@ -160,13 +172,14 @@ namespace VelastoProductionSystem.Controllers
 
             ViewBag.FilterDate = filterDate;
             ViewBag.Query = query;
+            ViewBag.MachineId = machineId;
             ViewBag.RecordCount = data.Count;
 
             return View(data);
         }
 
         [HttpGet]
-        public async Task<IActionResult> ExportCsv(DateTime? filterDate, string? query)
+        public async Task<IActionResult> ExportCsv(DateTime? filterDate, string? query, int? machineId)
         {
             var machinesMap = await _elwpContext.ElwpMachines
                 .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
@@ -178,6 +191,11 @@ namespace VelastoProductionSystem.Controllers
                 var start = filterDate.Value.Date;
                 var end = start.AddDays(1);
                 elwpQuery = elwpQuery.Where(x => x.TanggalPlanning >= start && x.TanggalPlanning < end);
+            }
+
+            if (machineId.HasValue)
+            {
+                elwpQuery = elwpQuery.Where(x => x.MesinId == machineId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(query))
