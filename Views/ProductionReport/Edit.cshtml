@@ -827,7 +827,7 @@
         });
 
         // Load existing readings from Model
-        const initialReadings = @Html.Raw(Json.Serialize((Model.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).Select(r => new {
+        const initialReadings = @Html.Raw(Json.Serialize((Model?.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).Select(r => new {
             data = new Dictionary<string, string?> {
                 { "HeadTempInner", r.HeadTempInner?.ToString() },
                 { "Cylinder1TempInner", r.Cylinder1TempInner?.ToString() },
