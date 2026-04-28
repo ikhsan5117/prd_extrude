@@ -160,8 +160,11 @@ namespace VelastoProductionSystem.Controllers
                     DocumentNumber = master.DocumentNumber,
                     RevisionNumber = master.RevisionNumber,
                     InnerMaterial = master.InnerTube,
+                    MiddleMaterial = master.MiddleTube,
                     OuterMaterial = master.OuterCover,
                     YarnType = master.Material,
+                    // Derive LayerType: if MiddleTube is present it's a 3-layer product
+                    LayerType = !string.IsNullOrWhiteSpace(master.MiddleTube) ? "CHS 3 Layer" : "CHS 2 Layer",
                     
                     // Map Masterlist values (These are strings in the DB)
                     HeadTempInner = master.HeadTemp1,
@@ -433,6 +436,8 @@ namespace VelastoProductionSystem.Controllers
                     InnerMaterialActual = dto.InnerMaterialActual,
                     OuterMaterial = dto.OuterMaterial,
                     OuterMaterialActual = dto.OuterMaterialActual,
+                    MiddleMaterial = dto.MiddleMaterial,
+                    MiddleMaterialActual = dto.MiddleMaterialActual,
                     Yarn = dto.Yarn,
                     YarnActual = dto.YarnActual,
 
@@ -441,6 +446,8 @@ namespace VelastoProductionSystem.Controllers
                     InnerMaterialSG = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "INNER")?.SGValue,
                     OuterMaterialLotNo = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "OUTER")?.LotNumber,
                     OuterMaterialSG = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "OUTER")?.SGValue,
+                    MiddleMaterialLotNo = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "MIDDLE")?.LotNumber,
+                    MiddleMaterialSG = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "MIDDLE")?.SGValue,
                     YarnLotNo = dto.MaterialLots?.FirstOrDefault(x => x.LayerType == "YARN")?.LotNumber,
 
                     DAI_Awal = dto.DAI_Awal,

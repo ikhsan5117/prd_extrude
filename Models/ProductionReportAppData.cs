@@ -100,6 +100,9 @@ namespace VelastoProductionSystem.Models
         public string? OuterMaterial { get; set; }
         public string? OuterMaterialActual { get; set; }
         public string? OuterMaterialLotNo { get; set; }
+        public string? MiddleMaterial { get; set; }
+        public string? MiddleMaterialActual { get; set; }
+        public string? MiddleMaterialLotNo { get; set; }
         public string? Yarn { get; set; }
         public string? YarnActual { get; set; }
         public string? YarnLotNo { get; set; }

@@ -151,6 +151,17 @@
                                         </div>
                                     </td>
                                 </tr>
+                                <tr id="middleMaterialRow" style="display:none;">
+                                    <td class="ps-4"><div class="label-stack"><span class="label-sub" style="color:#a78bfa;">MIDDLE (MATERIAL)</span><span class="label-main" style="color:#c4b5fd;">COMPOUND 3L</span></div></td>
+                                    <td><input name="MiddleMaterial" id="MiddleMaterial" class="hud-input-underlined text-center" placeholder="---" value="@Model?.MiddleMaterial" /></td>
+                                    <td><input name="MiddleMaterialActual" id="MiddleMaterialActual" class="hud-input-underlined text-center" placeholder="---" value="@Model?.MiddleMaterialActual" /></td>
+                                    <td class="hud-td-scan border-start border-white border-opacity-10">
+                                        <div class="hud-scan-group" style="border-color:rgba(167,139,250,0.4);">
+                                            <input name="MiddleMaterialLotNo" id="MiddleMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." style="color:#c4b5fd;" value="@Model?.MiddleMaterialLotNo" />
+                                            <button type="button" class="hud-scan-btn" onclick="openScanner('MiddleMaterialLotNo')" style="color:#a78bfa;"><i class="bi bi-upc-scan"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
                                 <tr>
                                     <td class="ps-4"><div class="label-stack"><span class="label-sub">YARN (SUPPORT)</span><span class="label-main">POLYESTER</span></div></td>
                                     <td><input asp-for="Yarn" class="hud-input-underlined text-center" placeholder="---" /></td>
@@ -743,6 +754,19 @@
             setName('OuterMaterial', sps.outerMaterial || sps.OuterMaterial);
             setName('Yarn',          sps.yarnType || sps.Yarn);
 
+            // Show/hide Middle material row based on LayerType
+            const layerType = (sps.layerType || sps.LayerType || '').toLowerCase();
+            const is3Layer = layerType.includes('3') || layerType.includes('triple') || layerType.includes('three');
+            const middleRow = document.getElementById('middleMaterialRow');
+            if (middleRow) {
+                middleRow.style.display = is3Layer ? '' : 'none';
+                // If 3-layer, also pre-fill middle material name from SPS if available
+                if (is3Layer) {
+                    const midEl = document.getElementById('MiddleMaterial');
+                    if (midEl && !midEl.value) midEl.value = sps.middleMaterial || sps.MiddleMaterial || '';
+                }
+            }
+
             // Populate parameter standards
             const setSpec = (id, val) => {
                 const el = document.getElementById('spec_' + id);
@@ -790,6 +814,17 @@
         // ══ DYNAMIC READINGS LOGIC ══
         let pReadings = [];
         let activeTabIndex = 0;
+
+        // Auto-reveal Middle row on page load if the model already has middle material data
+        document.addEventListener('DOMContentLoaded', () => {
+            const hasMiddle = @Html.Raw(
+                (Model?.MiddleMaterial != null || Model?.MiddleMaterialActual != null || Model?.MiddleMaterialLotNo != null) ? "true" : "false"
+            );
+            if (hasMiddle) {
+                const row = document.getElementById('middleMaterialRow');
+                if (row) row.style.display = '';
+            }
+        });
 
         // Load existing readings from Model
         const initialReadings = @Html.Raw(Json.Serialize((Model.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).Select(r => new {

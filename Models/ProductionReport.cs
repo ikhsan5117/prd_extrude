@@ -55,6 +55,16 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "SG Outer")]
         public decimal? OuterMaterialSG { get; set; } 
 
+        // Middle Material (CHS 3 Layer only)
+        [Display(Name = "Material Middle")]
+        public string? MiddleMaterial { get; set; }
+
+        [Display(Name = "No. Lot Middle")]
+        public string? MiddleMaterialLotNo { get; set; }
+
+        [Display(Name = "SG Middle")]
+        public decimal? MiddleMaterialSG { get; set; }
+
         [Display(Name = "Yarn")]
         public string? Yarn { get; set; }
 
@@ -78,7 +88,8 @@ namespace VelastoProductionSystem.Models
         // Fields used in Edit/Dashboard
         public string? InnerMaterialActual { get; set; } 
         public string? OuterMaterialActual { get; set; } 
-        public string? YarnActual { get; set; } 
+        public string? YarnActual { get; set; }
+        public string? MiddleMaterialActual { get; set; } 
 
         // PRODUCTION EVALUATION (IMAGE 2)
         [Display(Name = "VIN Kode")]

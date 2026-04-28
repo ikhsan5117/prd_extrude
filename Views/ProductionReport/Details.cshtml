@@ -200,13 +200,24 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-end opacity-25">
+                            @{
+                                var middleLots = Model.MaterialLots.Where(x => x.LayerType == "MIDDLE").Select(x => x.LotNumber).ToList();
+                                var middleShow = middleLots.Any() ? string.Join(", ", middleLots) : Model.MiddleMaterialLotNo;
+                                var middleSGs = Model.MaterialLots.Where(x => x.LayerType == "MIDDLE" && x.SGValue.HasValue).Select(x => x.SGValue!.Value).ToList();
+                                var middleSGShow = middleSGs.Any() ? ((decimal)middleSGs.Average()).ToString("0.000") : (Model.MiddleMaterialSG?.ToString("0.000") ?? "-");
+                                var hasMiddle = !string.IsNullOrWhiteSpace(middleShow) || !string.IsNullOrWhiteSpace(Model.MiddleMaterial) || !string.IsNullOrWhiteSpace(Model.MiddleMaterialActual);
+                            }
+                            <div class="d-flex align-items-end @(!hasMiddle ? "opacity-25" : "")">
                                 <span class="label-main" style="width: 110px;">2) Middle :</span>
-                                <div class="dots-fill ps-3" style="min-width: 350px;"></div>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@(Model.MiddleMaterialActual ?? Model.MiddleMaterial)</span></div>
                                 <span class="label-main mx-4">No.Lot :</span>
-                                <div class="dots-fill ps-3" style="min-width: 300px;"></div>
+                                <div class="dots-fill ps-3" style="min-width: 300px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">@middleShow</span>
+                                </div>
                                 <span class="label-main mx-4">SG :</span>
-                                <div class="dots-fill ps-3" style="min-width: 150px;"></div>
+                                <div class="dots-fill ps-3" style="min-width: 150px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">@(hasMiddle ? middleSGShow : "")</span>
+                                </div>
                             </div>
                             <div class="d-flex align-items-end">
                                 <span class="label-main" style="width: 110px;">3) Outer :</span>
@@ -1389,17 +1400,23 @@
         font-size: 10px;
     }
     .input-glass-sm:focus { background: rgba(59, 130, 246, 0.1); }
-
+    
     @@media print {
+        @@page {
+            size: @(currentPortal == "identity" || currentPortal == "dimension" ? "landscape" : "portrait");
+            margin: 3mm;
+        }
         .hud-container { padding: 0; background: transparent !important; backdrop-filter: none; border: none; box-shadow: none; }
         .production-dashboard-sapphire { background: transparent !important; padding: 0; }
         .no-print { display: none !important; }
         .glass-paper { background: white !important; border: 2px solid #000 !important; color: #000 !important; }
-        /* Force A4 width on print to avoid tablet layout */
+        
+        /* Force full width on print */
         .paper-replica { 
-            width: 800px !important; 
+            width: 100% !important; 
             max-width: none !important; 
-            margin: 0 auto !important; 
+            margin: 0 !important; 
+            padding: 5px !important;
             box-shadow: none !important; 
             border: 2px solid #000 !important; 
         }
@@ -1409,19 +1426,19 @@
     /* PDF-FIT: Rules applied during html2canvas render via onclone  */
     /* MUST be outside @@media print -- html2canvas ignores print CSS  */
     /* ============================================================ */
-    .pdf-fit { font-size: 6.5px !important; line-height: 1.1 !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
-    .pdf-fit .paper-padding { padding: 8px 12px !important; }
+    .pdf-fit { font-size: 8px !important; line-height: 1.1 !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
+    .pdf-fit .paper-padding { padding: 5px 10px !important; }
     .pdf-fit .mb-1, .pdf-fit .mb-2, .pdf-fit .mb-3, .pdf-fit .mb-4, .pdf-fit .mb-5, .pdf-fit .mt-4, .pdf-fit .mt-2 { margin: 0 !important; padding: 0 !important; }
     .pdf-fit table { margin-bottom: 2px !important; table-layout: fixed !important; width: 100% !important; border-collapse: collapse !important; }
-    .pdf-fit th, .pdf-fit td { padding: 1px 2px !important; font-size: 6.5px !important; height: auto !important; line-height: 1 !important; overflow: hidden; }
-    .pdf-fit .grid-form th, .pdf-fit .grid-form td { font-size: 6px !important; padding: 1px !important; border-width: 0.3px !important; }
-    .pdf-fit input, .pdf-fit .input-transparent { font-size: 6.5px !important; height: auto !important; line-height: 1 !important; border: none !important; background: transparent !important; color: #000 !important; }
+    .pdf-fit th, .pdf-fit td { padding: 2px 3px !important; font-size: 8px !important; height: auto !important; line-height: 1 !important; overflow: hidden; }
+    .pdf-fit .grid-form th, .pdf-fit .grid-form td { font-size: 7.5px !important; padding: 2px !important; border-width: 0.3px !important; }
+    .pdf-fit input, .pdf-fit .input-transparent { font-size: 8px !important; height: auto !important; line-height: 1 !important; border: none !important; background: transparent !important; color: #000 !important; }
     .pdf-fit .row { margin: 0 !important; display: flex !important; flex-wrap: nowrap !important; width: 100% !important; }
     .pdf-fit .col-6 { width: 50% !important; flex: 0 0 50% !important; max-width: 50% !important; }
     .pdf-fit .col-3 { width: 25% !important; flex: 0 0 25% !important; max-width: 25% !important; }
-    .pdf-fit img { height: 25px !important; }
-    .pdf-fit h6 { font-size: 11px !important; margin: 0 !important; padding: 0 !important; }
-    .pdf-fit .paper-replica { width: 800px !important; max-width: none !important; margin: 0 auto !important; background: white !important; color: #000 !important; border: 2px solid #000 !important; box-shadow: none !important; padding: 20px !important; }
+    .pdf-fit img { height: 35px !important; }
+    .pdf-fit h6 { font-size: 13px !important; margin: 0 !important; padding: 0 !important; }
+    .pdf-fit .paper-replica { width: 100% !important; max-width: none !important; margin: 0 auto !important; background: white !important; color: #000 !important; border: 2px solid #000 !important; box-shadow: none !important; padding: 5px !important; }
     .pdf-fit .border-form, .pdf-fit .border-form-bold { border-width: 0.5px !important; }
     .pdf-fit .border-bottom-form, .pdf-fit .border-end-form, .pdf-fit .border-start-form, .pdf-fit .border-top-form { border-width: 0.5px !important; }
 
@@ -1448,14 +1465,17 @@
             if (!element) return;
 
             // Deteksi portal mana yang aktif
-            const isIdentity = new URLSearchParams(window.location.search).get('portal') === 'identity';
+            const portal = new URLSearchParams(window.location.search).get('portal') || 'dashboard';
+            const isIdentity = portal === 'identity';
+            const isDimension = portal === 'dimension';
+            const isDashboard = portal === 'dashboard' || portal === '';
 
             if (isIdentity) {
                 Swal.fire({ title: 'GENERATING PDF...', html: 'Mempersiapkan laporan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
                 html2pdf().set({
                     margin: [4, 3, 4, 3],
-                    filename: 'NowImProduce_@(Model.DocumentNumber.Replace("/", "_")).pdf',
+                    filename: 'IdentityCard_@(Model.DocumentNumber.Replace("/", "_")).pdf',
                     image: { type: 'png' },
                     html2canvas: {
                         scale: 2,
@@ -1469,14 +1489,14 @@
 
                             // Perkecil landscape-sheet agar muat A4 landscape
                             const sheet = clonedDoc.querySelector('.landscape-sheet');
-                            if (sheet) sheet.style.cssText = 'width:900px;min-height:auto;padding:12px;border:3px solid #000;box-shadow:none;font-size:8px;margin:0;';
+                            if (sheet) sheet.style.cssText = 'width:1000px;min-height:auto;padding:12px;border:3px solid #000;box-shadow:none;font-size:8px;margin:0;';
 
                             const inner = clonedDoc.querySelector('.inner-border');
                             if (inner) inner.style.padding = '10px';
 
-                            clonedDoc.querySelectorAll('.hand-ink').forEach(el => el.style.fontSize = '1rem');
-                            clonedDoc.querySelectorAll('.label-main').forEach(el => el.style.fontSize = '0.75rem');
-                            clonedDoc.querySelectorAll('.header-title').forEach(el => el.style.fontSize = '1.6rem');
+                            clonedDoc.querySelectorAll('.hand-ink').forEach(el => el.style.fontSize = '1.1rem');
+                            clonedDoc.querySelectorAll('.label-main').forEach(el => el.style.fontSize = '0.8rem');
+                            clonedDoc.querySelectorAll('.header-title').forEach(el => el.style.fontSize = '1.8rem');
 
                             // Fix image paths
                             clonedDoc.querySelectorAll('img').forEach(img => {
@@ -1505,9 +1525,11 @@
                 didOpen: () => Swal.showLoading()
             });
 
+            const isLandscape = portal === 'identity' || portal === 'dimension';
+
             const opt = {
-                margin:      isIdentity ? [4, 3, 4, 3] : [3, 3, 3, 3],
-                filename:    'Report_@(Model.DocumentNumber.Replace("/", "_"))_' + (isIdentity ? 'IdentityCard' : 'ParameterSetting') + '.pdf',
+                margin:      [3, 3, 3, 3],
+                filename:    'Report_@(Model.DocumentNumber.Replace("/", "_"))_' + portal.toUpperCase() + '.pdf',
                 image:       { type: 'png' },
                 html2canvas: {
                     scale: 3,
@@ -1523,48 +1545,36 @@
                             clonedEl.style.margin = '0';
                             clonedEl.style.minHeight = 'auto';
 
-                            if (isIdentity) {
-                                // Langsung perkecil landscape-sheet agar muat A4 landscape (297x210mm)
+                            if (portal === 'identity') {
                                 const sheet = clonedEl.querySelector('.landscape-sheet');
                                 if (sheet) {
-                                    sheet.style.width = '980px';
+                                    sheet.style.width = '1000px';
                                     sheet.style.minHeight = 'auto';
                                     sheet.style.padding = '15px 20px';
                                     sheet.style.fontSize = '9px';
                                     sheet.style.boxShadow = 'none';
                                 }
-                                const inner = clonedEl.querySelector('.inner-border');
-                                if (inner) {
-                                    inner.style.padding = '15px';
-                                }
-                                // Kecilkan judul utama
-                                const title = clonedEl.querySelector('.header-title');
-                                if (title) {
-                                    title.style.fontSize = '2rem';
-                                    title.style.letterSpacing = '2px';
-                                }
-                                // Kecilkan .hand-ink (tulisan biru)
-                                clonedEl.querySelectorAll('.hand-ink').forEach(el => {
-                                    el.style.fontSize = '1.2rem';
-                                });
-                                // Kecilkan label-main
-                                clonedEl.querySelectorAll('.label-main').forEach(el => {
-                                    el.style.fontSize = '0.85rem';
-                                });
                             } else {
-                                clonedEl.style.width = '800px';
+                                const isDashboardPortal = (portal === 'dashboard' || portal === '');
+                                // Apply pdf-fit to compress vertical height, and use 950px width for a good portrait fit
+                                const targetWidth = portal === 'dimension' ? '1050px' : '950px';
+                                clonedEl.style.width = targetWidth;
+                                
+                                // Always apply pdf-fit to compress table padding and fonts
                                 clonedEl.classList.add('pdf-fit');
+                                
                                 const paper = clonedEl.querySelector('.paper-replica');
                                 if (paper) {
-                                    paper.style.width = '800px';
+                                    paper.style.width = targetWidth;
                                     paper.style.maxWidth = 'none';
                                     paper.style.margin = '0 auto';
-                                    paper.style.padding = '20px';
+                                    paper.style.padding = isDashboardPortal ? '0' : '5px';
                                     paper.style.boxShadow = 'none';
+                                    paper.style.border = '2px solid #000';
                                 }
                             }
                         }
-                        // Perbaiki semua path gambar agar bisa dirender oleh html2canvas
+                        // Fix image paths
                         clonedDoc.querySelectorAll('img').forEach(img => {
                             const src = img.getAttribute('src') || '';
                             if (src && !src.startsWith('http') && !src.startsWith('data:')) {
@@ -1573,7 +1583,7 @@
                         });
                     }
                 },
-                jsPDF:       { unit: 'mm', format: 'a4', orientation: isIdentity ? 'landscape' : 'portrait' },
+                jsPDF:       { unit: 'mm', format: 'a4', orientation: isLandscape ? 'landscape' : 'portrait' },
                 pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
             };
 

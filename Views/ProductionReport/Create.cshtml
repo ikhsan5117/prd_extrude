@@ -434,7 +434,43 @@
                                     <!-- Rows will be added here -->
                                 </div>
                             </div>
-                            
+
+                            <!-- MIDDLE COMPOUND (CHS 3 LAYER ONLY - hidden by default) -->
+                            <div id="middleMaterialCard" class="hud-pill-integrated border p-3 shadow-sm" 
+                                 style="display:none; background: rgba(15, 23, 42, 0.8); border-color: rgba(167,139,250,0.35) !important;">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack">
+                                        <span class="label-sub" style="color:#a78bfa;">MIDDLE (MATERIAL)</span>
+                                        <span class="label-main" style="color:#c4b5fd;">COMPOUND 3L</span>
+                                    </div>
+                                    <button type="button" onclick="addMaterialRow('middle')" class="btn btn-sm border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(167,139,250,0.15); color:#a78bfa;">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input id="MiddleMaterial" name="MiddleMaterial" class="hud-input font-monospace w-100" style="color:rgba(196,181,253,0.6);" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small mb-1" style="color:#a78bfa;">ACTUAL BATCH NAME</label>
+                                        <div style="position: relative;">
+                                            <input id="MiddleMaterialActual" name="MiddleMaterialActual"
+                                                   class="hud-input font-monospace text-white w-100" 
+                                                   placeholder="Input Actual..." 
+                                                   onfocus="showStdSuggestion('MiddleMaterial', 'MiddleMaterialActual', 'middle-std-dropdown')"
+                                                   onblur="hideStdSuggestion('middle-std-dropdown')"
+                                                   autocomplete="off" />
+                                            <div id="middle-std-dropdown" class="std-suggestion-box"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Dynamic List for Middle -->
+                                <div id="middle-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+
                             <!-- OUTER COMPOUND -->
                             <div class="hud-pill-integrated border border-warning border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
                                 <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
@@ -1086,6 +1122,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
+        // === SESSION CONTEXT (injected from server) ===
+        window.SESSION_MACHINE_NAME = '@Html.Raw(Context.Session.GetString("MachineName") ?? "")';
+
         let html5QrCode;
 
         async function openScanner(targetId) {
@@ -1217,6 +1256,21 @@
             document.getElementById('InnerMaterial').value = sps.innerMaterial || sps.InnerMaterial || sps.innerTube || sps.InnerTube || '';
             document.getElementById('OuterMaterial').value = sps.outerMaterial || sps.OuterMaterial || sps.outerCover || sps.OuterCover || '';
             document.getElementById('Yarn').value = sps.yarnType || sps.YarnType || sps.material || sps.Material || '';
+
+            // Show/hide Middle material card based on LayerType (CHS 3 Layer)
+            const layerType3L = (sps.layerType || sps.LayerType || '').toLowerCase();
+            const machineName3L = (window.SESSION_MACHINE_NAME || '').toLowerCase();
+            const middleStd = sps.middleMaterial || sps.MiddleMaterial || sps.middleTube || sps.MiddleTube || '';
+            const is3Layer = layerType3L.includes('3') || layerType3L.includes('triple') || layerType3L.includes('three')
+                          || machineName3L.includes('3l') || machineName3L.includes('chs3') || machineName3L.includes('3 layer') || machineName3L.includes('3layer')
+                          || middleStd !== '';   // auto-detect: if SPS has a middle material, it's 3 layer
+            const middleCard = document.getElementById('middleMaterialCard');
+            const midEl = document.getElementById('MiddleMaterial');
+            if (middleCard) {
+                middleCard.style.display = is3Layer ? '' : 'none';
+            }
+            // Always populate the Standard field if data exists
+            if (midEl) midEl.value = middleStd;
 
             let spsIdEl = document.getElementById('StandardParameterSettingId');
             if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
@@ -1594,6 +1648,7 @@
         const materialState = {
             inner: [],
             outer: [],
+            middle: [],
             yarn: []
         };
 
@@ -1637,25 +1692,27 @@
 
             const rowId = `lot-${layer}-${Date.now()}`;
             const isYarn = (layer === 'yarn');
-            const themeColor = layer === 'inner' ? 'info' : (layer === 'outer' ? 'warning' : 'success');
+            const themeColor = layer === 'inner' ? 'info' : (layer === 'outer' ? 'warning' : (layer === 'middle' ? 'purple' : 'success'));
+            const themeRgb = layer === 'inner' ? '14, 165, 233' : (layer === 'outer' ? '245, 158, 11' : (layer === 'middle' ? '167, 139, 250' : '16, 185, 129'));
+            const themeHex = layer === 'inner' ? '#38bdf8' : (layer === 'outer' ? '#f59e0b' : (layer === 'middle' ? '#c4b5fd' : '#10b981'));
             
             const div = document.createElement('div');
             div.id = rowId;
             div.className = `row g-1 align-items-center animate__animated animate__fadeInLeft mb-2`;
             div.innerHTML = `
                 <div class="${isYarn ? 'col-10' : 'col-6'}">
-                    <div class="hud-scan-group p-1" style="border-color: rgba(${themeColor === 'info' ? '14, 165, 233' : (themeColor === 'warning' ? '245, 158, 11' : '16, 185, 129')}, 0.25);">
-                        <input type="text" class="hud-input-scan text-${themeColor} fw-bold w-100" style="font-size: 0.75rem" placeholder="LOT #${index + 1}..." data-layer="${layer}" data-type="lot" />
-                        <button type="button" class="hud-scan-btn ms-1 text-${themeColor}" onclick="openScannerForDynamicRow('${rowId}')"><i class="bi bi-upc-scan fs-6"></i></button>
+                    <div class="hud-scan-group p-1" style="border-color: rgba(${themeRgb}, 0.25);">
+                        <input type="text" class="hud-input-scan fw-bold w-100" style="font-size: 0.75rem; color: ${themeHex};" placeholder="LOT #${index + 1}..." data-layer="${layer}" data-type="lot" />
+                        <button type="button" class="hud-scan-btn ms-1" style="color: ${themeHex};" onclick="openScannerForDynamicRow('${rowId}')"><i class="bi bi-upc-scan fs-6"></i></button>
                     </div>
                 </div>
                 ${!isYarn ? `
                 <div class="col-4">
-                    <div class="d-flex flex-column" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 2px 8px;">
-                        <label class="font-black text-warning opacity-50 mb-0" style="font-size: 0.55rem; letter-spacing: 0.5px;">SG VALUE</label>
+                    <div class="d-flex flex-column" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(${themeRgb}, 0.3); border-radius: 6px; padding: 2px 8px;">
+                        <label class="font-black opacity-50 mb-0" style="font-size: 0.55rem; letter-spacing: 0.5px; color: ${themeHex};">SG VALUE</label>
                         <div class="d-flex align-items-center">
-                            <span class="text-warning-glow fw-900 me-1" style="font-size: 0.65rem; opacity: 0.6;">🧪</span>
-                            <input type="number" step="0.0001" class="hud-input font-monospace text-warning fw-black p-0 border-0 bg-transparent text-end flex-grow-1" style="font-size: 1rem;" placeholder="0.0000" data-layer="${layer}" data-type="sg" />
+                            <span class="fw-900 me-1" style="font-size: 0.65rem; opacity: 0.6; color: ${themeHex};">🧪</span>
+                            <input type="number" step="0.0001" class="hud-input font-monospace fw-black p-0 border-0 bg-transparent text-end flex-grow-1" style="font-size: 1rem; color: ${themeHex};" placeholder="0.0000" data-layer="${layer}" data-type="sg" />
                         </div>
                     </div>
                 </div>
@@ -1723,9 +1780,18 @@
 
         function getMaterialLotPayload() {
             const results = [];
-            ['inner', 'outer', 'yarn'].forEach(layer => {
+            const layerIdMap = {
+                inner: { std: 'InnerMaterial',  actual: 'InnerMaterialActual' },
+                outer: { std: 'OuterMaterial',  actual: 'OuterMaterialActual' },
+                middle: { std: 'MiddleMaterial', actual: 'MiddleMaterialActual' },
+                yarn:  { std: 'Yarn',           actual: 'YarnActual' }
+            };
+
+            ['inner', 'outer', 'middle', 'yarn'].forEach(layer => {
                 const container = document.getElementById(`${layer}-lot-list`);
+                if (!container) return;
                 const rows = container.querySelectorAll('.row');
+                const ids = layerIdMap[layer];
                 rows.forEach(row => {
                     const lot = row.querySelector('input[data-type="lot"]').value;
                     const sgInput = row.querySelector('input[data-type="sg"]');
@@ -1734,8 +1800,8 @@
                     if (lot || sg) {
                         results.push({
                             LayerType: layer.toUpperCase(),
-                            MaterialName: document.getElementById(layer === 'yarn' ? 'Yarn' : (layer === 'inner' ? 'InnerMaterial' : 'OuterMaterial')).value,
-                            MaterialActual: document.getElementById(layer === 'yarn' ? 'YarnActual' : (layer === 'inner' ? 'InnerMaterialActual' : 'OuterMaterialActual')).value,
+                            MaterialName: document.getElementById(ids.std)?.value || '',
+                            MaterialActual: document.getElementById(ids.actual)?.value || '',
                             LotNumber: lot,
                             SGValue: sg ? parseFloat(sg) : null
                         });
@@ -2059,6 +2125,14 @@
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => filterPlanningResults(e.target.value));
                 searchInput.addEventListener('focus', () => showPlanningResults());
+            }
+
+            // Auto-show Middle card if current machine is CHS 3 Layer
+            const mName = (window.SESSION_MACHINE_NAME || '').toLowerCase();
+            const isMachine3L = mName.includes('3l') || mName.includes('chs3') || mName.includes('3 layer') || mName.includes('3layer');
+            if (isMachine3L) {
+                const middleCard = document.getElementById('middleMaterialCard');
+                if (middleCard) middleCard.style.display = '';
             }
         });
         function resetHUD() {
