@@ -37,6 +37,10 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/ParameterHistory
         public async Task<IActionResult> ParameterHistory()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             var reports = await _context.ProductionReports
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
@@ -46,6 +50,10 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/DimensionHistory
         public async Task<IActionResult> DimensionHistory()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             var reports = await _context.ProductionReports
                 .Where(p => !string.IsNullOrEmpty(p.ActualLength) || !string.IsNullOrEmpty(p.VinCode) || p.QtyOk > 0 || p.NgDimension > 0 || p.NgVisual > 0)
                 .OrderByDescending(p => p.CreatedDate)
@@ -56,6 +64,11 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/App (New Tablet App Interface)
         public async Task<IActionResult> App(int? id)
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             if (id == null)
             {
                 // Empty report for Scanner Mode
@@ -825,6 +838,11 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/Create (The "NOW I'M PRODUCE" Form - Gambar 1)
         public async Task<IActionResult> Create()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var hoseTypes = await _context.MasterlistSpsDoubleLayers
                 .Where(m => !string.IsNullOrEmpty(m.HoseType))
                 .Select(m => m.HoseType)

@@ -1763,14 +1763,28 @@
             _dimCurrentItem = (itemCode || '').toUpperCase().trim();
             const ws = document.getElementById('input-workspace');
             if (!ws || !itemCode) return;
-            if (ws._dimDraftListener) ws.removeEventListener('input', ws._dimDraftListener);
+            
+            if (ws._dimDraftListener) {
+                ws.removeEventListener('input', ws._dimDraftListener);
+                ws.removeEventListener('change', ws._dimDraftListener);
+            }
+            
             ws._dimDraftListener = () => {
                 clearTimeout(_dimAutoSaveTimer);
-                _dimAutoSaveTimer = setTimeout(() => dimCaptureDraft(_dimCurrentItem), 1500);
+                saveCurrentData(); // CRITICAL: Sync UI to memory before capturing draft
+                _dimAutoSaveTimer = setTimeout(() => dimCaptureDraft(_dimCurrentItem), 1000);
             };
+            
             ws.addEventListener('input', ws._dimDraftListener);
             ws.addEventListener('change', ws._dimDraftListener);
         }
+
+        window.addEventListener('beforeunload', () => {
+            if (_dimCurrentItem) {
+                saveCurrentData();
+                dimCaptureDraft(_dimCurrentItem);
+            }
+        });
         // ─── END DRAFT (Dimensi) ─────────────────────────────────────────────
 
         // Close dropdown when clicking outside

@@ -192,11 +192,19 @@ namespace VelastoProductionSystem.Controllers
 
         public IActionResult App()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             return View(new DimensionReport { Measurements = new List<DimensionMeasurement>() });
         }
 
         public async Task<IActionResult> History()
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             var reports = await _context.DimensionReports
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
@@ -205,6 +213,10 @@ namespace VelastoProductionSystem.Controllers
 
         public async Task<IActionResult> Details(int? id)
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             if (id == null) return NotFound();
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
@@ -222,6 +234,10 @@ namespace VelastoProductionSystem.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
                 .FirstOrDefaultAsync(r => r.Id == id);

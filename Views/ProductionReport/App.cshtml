@@ -808,6 +808,108 @@
     <script>
         const reportId = @Model.Id;
         let isDirty = false;
+        
+        // ─────────────────────────────────────────────────────────────────────
+        // DRAFT POKAYOKE SYSTEM (localStorage per product code)
+        // ─────────────────────────────────────────────────────────────────────
+        const DRAFT_PREFIX = 'velasto_app_draft_v1_';
+        const _currentProductCode = '@(Model.StandardParameterSetting?.ProductCode ?? "NA")';
+        let _autoSaveTimer = null;
+
+        function _draftKey() { return DRAFT_PREFIX + _currentProductCode; }
+
+        function captureDraft() {
+            if (!_currentProductCode) return;
+            const draft = {
+                ts: Date.now(),
+                inputs: {},
+                visuals: {},
+                qtyType: document.querySelector('.qty-toggle-btn.active')?.dataset.type || 'ok'
+            };
+
+            // Capture all inputs (Init, J1-J5, VIN, QTY, etc)
+            document.querySelectorAll('input:not([type="hidden"])').forEach(el => {
+                if (el.id) draft.inputs[el.id] = el.value;
+                if (el.name) draft.inputs['__name_' + el.name] = el.value;
+            });
+
+            // Capture visual check states
+            document.querySelectorAll('.btn-group').forEach(group => {
+                const label = group.closest('div').querySelector('.super-small')?.innerText;
+                const activeBtn = group.querySelector('.btn.active');
+                if (label && activeBtn) {
+                    draft.visuals[label] = activeBtn.innerText;
+                }
+            });
+
+            localStorage.setItem(_draftKey(), JSON.stringify(draft));
+        }
+
+        function restoreDraft() {
+            const raw = localStorage.getItem(_draftKey());
+            if (!raw) return;
+            try {
+                const draft = JSON.parse(raw);
+                if (!draft) return;
+
+                // Restore inputs
+                Object.entries(draft.inputs).forEach(([key, val]) => {
+                    if (key.startsWith('__name_')) {
+                        const name = key.replace('__name_', '');
+                        const el = document.querySelector(`input[name="${name}"]`);
+                        if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    } else {
+                        const el = document.getElementById(key);
+                        if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    }
+                });
+
+                // Restore QTY type
+                if (draft.qtyType) {
+                    const btn = document.querySelector(`.qty-toggle-btn[data-type="${draft.qtyType}"]`);
+                    if (btn) btn.click();
+                }
+
+                // Restore visuals
+                Object.entries(draft.visuals).forEach(([label, state]) => {
+                    document.querySelectorAll('.super-small').forEach(lblEl => {
+                        if (lblEl.innerText === label) {
+                            const group = lblEl.closest('div').querySelector('.btn-group');
+                            if (group) {
+                                group.querySelectorAll('button').forEach(btn => {
+                                    if (btn.innerText === state) setVisual(btn);
+                                });
+                            }
+                        }
+                    });
+                });
+
+                showNotification('DRAFT DIPULIHKAN (POKAYOKE ACTIVE)', 'success');
+            } catch (e) { console.error("Restore failed", e); }
+        }
+
+        function setupAutoSave() {
+            const container = document.querySelector('.app-main-body');
+            if (!container) return;
+            container.addEventListener('input', () => {
+                clearTimeout(_autoSaveTimer);
+                _autoSaveTimer = setTimeout(captureDraft, 1500);
+            });
+        }
+
+        function setVisual(btn) {
+            const group = btn.closest('.btn-group');
+            group.querySelectorAll('button').forEach(b => {
+                b.classList.remove('active', 'btn-success', 'btn-danger');
+                b.classList.add(b.innerText === 'OK' ? 'btn-outline-success' : 'btn-outline-danger');
+            });
+            
+            btn.classList.remove('btn-outline-success', 'btn-outline-danger');
+            btn.classList.add('active');
+            btn.classList.add(btn.innerText === 'OK' ? 'btn-success' : 'btn-danger');
+            
+            captureDraft(); // Immediate save on visual toggle
+        }
 
         function toggleJam(key) {
             const el = document.getElementById('jam_' + key);
@@ -877,6 +979,16 @@
                     }
                 });
             }
+
+            // Restore and Setup Pokayoke
+            setTimeout(() => {
+                restoreDraft();
+                setupAutoSave();
+            }, 500);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (isDirty) captureDraft();
         });
 
         function handleScan() {

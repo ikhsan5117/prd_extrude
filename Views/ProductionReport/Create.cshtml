@@ -2007,6 +2007,10 @@
 
         function captureDraft(itemCode) {
             if (!itemCode) return;
+            
+            // BUGFIX: Sync currently visible inputs to pReadings array before saving draft
+            saveCurrentInputsToMemory();
+            
             const form = document.getElementById('mainFormContainer');
             if (!form) return;
             const fields = {};
@@ -2119,8 +2123,9 @@
             
             if (draft.readings && draft.readings.length) {
                 pReadings = draft.readings;
-                currentReadingIndex = pReadings.length - 1;
+                currentReadingIndex = 0; // Default to first reading point
                 renderTabs();
+                loadCurrentDataFromMemory(); // BUGFIX: Force load data into inputs immediately
             }
             return true;
         }
@@ -2160,6 +2165,13 @@
             form.addEventListener('input', form._draftListener);
             form.addEventListener('change', form._draftListener);
         }
+
+        // BUGFIX: Save draft immediately when leaving the page (beforeunload)
+        window.addEventListener('beforeunload', () => {
+            if (_currentDraftItem) {
+                captureDraft(_currentDraftItem);
+            }
+        });
         // ─── END DRAFT SYSTEM ─────────────────────────────────────────────────
 
         // --- PLANNING SEARCH & REFRESH LOGIC ---
