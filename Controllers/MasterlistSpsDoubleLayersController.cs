@@ -11,17 +11,47 @@ namespace VelastoProductionSystem.Controllers
     public class MasterlistSpsDoubleLayersController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ElwpDbContext _elwpContext;
         private readonly ILogger<MasterlistSpsDoubleLayersController> _logger;
 
-        public MasterlistSpsDoubleLayersController(ApplicationDbContext context, ILogger<MasterlistSpsDoubleLayersController> logger)
+        public MasterlistSpsDoubleLayersController(ApplicationDbContext context, ElwpDbContext elwpContext, ILogger<MasterlistSpsDoubleLayersController> logger)
         {
             _context = context;
+            _elwpContext = elwpContext;
             _logger = logger;
         }
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.MasterlistSpsDoubleLayers.ToListAsync());
+            // Ambil semua data SPS (tanpa filter ketat yang menyembunyikan data)
+            var data = await _context.MasterlistSpsDoubleLayers.ToListAsync();
+
+            // Ambil daftar mesin yang benar-benar ada di data SPS untuk dropdown filter
+            var machinesInData = data
+                .Select(m => m.Machine)
+                .Where(m => !string.IsNullOrEmpty(m))
+                .Distinct()
+                .OrderBy(m => m)
+                .ToList();
+
+            // Juga tambahkan MachineCode jika Machine-nya kosong tapi MC ada
+            var codesInData = data
+                .Where(m => string.IsNullOrEmpty(m.Machine) && !string.IsNullOrEmpty(m.MachineCode))
+                .Select(m => m.MachineCode)
+                .Distinct()
+                .ToList();
+
+            ViewBag.AuthorizedMachines = machinesInData.Concat(codesInData).Distinct().OrderBy(x => x).ToList();
+            
+            // Tambahkan daftar untuk autocomplete (hilangkan dash sesuai request)
+            ViewBag.ItemList = data.Select(m => m.ItemList != null ? m.ItemList.Replace("-", "") : null)
+                .Where(i => !string.IsNullOrEmpty(i))
+                .Distinct()
+                .OrderBy(i => i)
+                .ToList();
+            ViewBag.DocList = data.Select(m => m.DocumentNumber).Where(d => !string.IsNullOrEmpty(d)).Distinct().OrderBy(d => d).ToList();
+
+            return View(data);
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -34,6 +64,479 @@ namespace VelastoProductionSystem.Controllers
             if (item == null) return NotFound();
 
             return View(item);
+        }
+
+        // GET: MasterlistSpsDoubleLayers/Create
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: MasterlistSpsDoubleLayers/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(MasterlistSpsDoubleLayer item)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Add(item);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Data SPS berhasil ditambahkan!";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(item);
+        }
+
+        // GET: MasterlistSpsDoubleLayers/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var item = await _context.MasterlistSpsDoubleLayers.FindAsync(id);
+            if (item == null) return NotFound();
+
+            return View(item);
+        }
+
+        // POST: MasterlistSpsDoubleLayers/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, MasterlistSpsDoubleLayer item)
+        {
+            if (id != item.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Data SPS berhasil diperbarui!";
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ItemExists(item.Id)) return NotFound();
+                    else throw;
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(item);
+        }
+
+        // POST: MasterlistSpsDoubleLayers/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var item = await _context.MasterlistSpsDoubleLayers.FindAsync(id);
+            if (item != null)
+            {
+                _context.MasterlistSpsDoubleLayers.Remove(item);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Data SPS berhasil dihapus!";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: MasterlistSpsDoubleLayers/DeleteMultiple
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteMultiple([FromBody] int[] ids)
+        {
+            if (ids == null || ids.Length == 0)
+            {
+                return Json(new { success = false, message = "Tidak ada data yang dipilih." });
+            }
+
+            try
+            {
+                var itemsToDelete = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => ids.Contains(m.Id))
+                    .ToListAsync();
+
+                if (itemsToDelete.Any())
+                {
+                    _context.MasterlistSpsDoubleLayers.RemoveRange(itemsToDelete);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Json(new { success = true, message = $"{itemsToDelete.Count} data berhasil dihapus." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Terjadi kesalahan: " + ex.Message });
+            }
+        }
+
+        private bool ItemExists(int id)
+        {
+            return _context.MasterlistSpsDoubleLayers.Any(e => e.Id == id);
+        }
+
+        // GET: MasterlistSpsDoubleLayers/DownloadTemplate
+        public IActionResult DownloadTemplate(string type = "3L")
+        {
+            try
+            {
+                using (var package = new OfficeOpenXml.ExcelPackage())
+                {
+                    var worksheet = package.Workbook.Worksheets.Add("SPS Parameter Setting");
+                    
+                    bool is3Layer = (type == "3L");
+                    bool is2Layer = (type == "2L");
+                    bool isDoubleLayer = (type == "DL");
+                    
+                    // Determine column count and Item List position
+                    int itemColIndex;
+                    string titleText;
+                    
+                    if (is3Layer) {
+                        itemColIndex = 108;
+                        titleText = "PARAMETER SETTING CHS 3 LAYER DIGITALISASI";
+                    } else if (is2Layer) {
+                        itemColIndex = 90;
+                        titleText = "PARAMETER SETTING CHS 2 LAYER DIGITALISASI";
+                    } else { // Double Layer (Legacy/Non-CHS)
+                        itemColIndex = 51;
+                        titleText = "PARAMETER SETTING DOUBLE LAYER (NON-CHS)";
+                    }
+                    
+                    // ROW 1: Title
+                    worksheet.Cells[1, 2].Value = titleText;
+                    worksheet.Cells[1, 2].Style.Font.Bold = true;
+                    worksheet.Cells[1, 2].Style.Font.Size = 14;
+                    
+                    // ROW 2-5: Additional info (optional, can be left empty)
+                    worksheet.Cells[2, 2].Value = "Velasto Production System";
+                    
+                    // ROW 6: Column Headers (Index Row)
+                    // This helps users know which column is which during data entry
+                    for (int i = 1; i <= itemColIndex; i++)
+                    {
+                        worksheet.Cells[6, i].Value = i.ToString();
+                        worksheet.Cells[6, i].Style.Font.Bold = true;
+                        worksheet.Cells[6, i].Style.Font.Size = 8;
+                        worksheet.Cells[6, i].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        worksheet.Cells[6, i].Style.Fill.BackgroundColor.SetColor(255, 211, 211, 211); // LightGray ARGB
+                    }
+                    
+                    // ROW 5: Header Labels (Detailed column names)
+                    SetHeaderLabel(worksheet, 5, 1, "ID");
+                    SetHeaderLabel(worksheet, 5, 2, "No");
+                    SetHeaderLabel(worksheet, 5, 3, "Machine");
+                    SetHeaderLabel(worksheet, 5, 4, "No. Doc");
+                    SetHeaderLabel(worksheet, 5, 5, "");
+                    SetHeaderLabel(worksheet, 5, 6, "");
+                    SetHeaderLabel(worksheet, 5, 7, "No. Rev");
+                    SetHeaderLabel(worksheet, 5, 8, "Customer");
+                    SetHeaderLabel(worksheet, 5, 9, "Rev. Date");
+                    SetHeaderLabel(worksheet, 5, 10, "Formulasi");
+                    SetHeaderLabel(worksheet, 5, 11, "Hose Type");
+                    SetHeaderLabel(worksheet, 5, 12, "Dimensi");
+                    SetHeaderLabel(worksheet, 5, 13, "Material");
+                    SetHeaderLabel(worksheet, 5, 14, "Inner Tube");
+                    
+                    if (is3Layer)
+                    {
+                        SetHeaderLabel(worksheet, 5, 15, "Middle Tube");
+                        SetHeaderLabel(worksheet, 5, 16, "Outer Cover");
+                        SetHeaderLabel(worksheet, 5, 17, "Use Limits Inner");
+                        SetHeaderLabel(worksheet, 5, 18, "Use Limits Middle");
+                        SetHeaderLabel(worksheet, 5, 19, "Use Limits Outer");
+                        SetHeaderLabel(worksheet, 5, 20, "Yarn");
+                        SetHeaderLabel(worksheet, 5, 21, "Tension Yarn Inner");
+                        SetHeaderLabel(worksheet, 5, 22, "Tension Yarn Outer");
+                        SetHeaderLabel(worksheet, 5, 23, "Nipple");
+                        SetHeaderLabel(worksheet, 5, 24, "Tube Die");
+                        SetHeaderLabel(worksheet, 5, 25, "Middle Die");
+                        SetHeaderLabel(worksheet, 5, 26, "Cover Die");
+                        SetHeaderLabel(worksheet, 5, 27, "Spacer");
+                        SetHeaderLabel(worksheet, 5, 28, "A Distance");
+                        SetHeaderLabel(worksheet, 5, 29, "Mesh Dim 1");
+                        SetHeaderLabel(worksheet, 5, 30, "Mesh Screen 1");
+                        SetHeaderLabel(worksheet, 5, 31, "Mesh Dim 2");
+                        SetHeaderLabel(worksheet, 5, 32, "Mesh Screen 2");
+                        SetHeaderLabel(worksheet, 5, 33, "Mesh Dim 3");
+                        SetHeaderLabel(worksheet, 5, 34, "Mesh Screen 3");
+                        SetHeaderLabel(worksheet, 5, 35, "Head Temp 1");
+                        SetHeaderLabel(worksheet, 5, 36, "Cylinder 1-1");
+                        SetHeaderLabel(worksheet, 5, 37, "Cylinder 2-1");
+                        SetHeaderLabel(worksheet, 5, 38, "Cylinder 3-1");
+                        SetHeaderLabel(worksheet, 5, 39, "Screw Temp 1");
+                        SetHeaderLabel(worksheet, 5, 40, "Head Temp 2");
+                        SetHeaderLabel(worksheet, 5, 41, "Cylinder 1-2");
+                        SetHeaderLabel(worksheet, 5, 42, "Cylinder 2-2");
+                        SetHeaderLabel(worksheet, 5, 43, "Cylinder 3-2");
+                        SetHeaderLabel(worksheet, 5, 44, "Screw Temp 2");
+                        SetHeaderLabel(worksheet, 5, 45, "Head Temp 3");
+                        SetHeaderLabel(worksheet, 5, 46, "Cylinder 1-3");
+                        SetHeaderLabel(worksheet, 5, 47, "Cylinder 2-3");
+                        SetHeaderLabel(worksheet, 5, 48, "Cylinder 3-3");
+                        SetHeaderLabel(worksheet, 5, 49, "Screw Temp 3");
+                        SetHeaderLabel(worksheet, 5, 50, "Screw Speed 1");
+                        SetHeaderLabel(worksheet, 5, 51, "Screw Speed 2");
+                        SetHeaderLabel(worksheet, 5, 52, "Screw Speed 3");
+                        SetHeaderLabel(worksheet, 5, 53, "Feed Roll Ratio 1");
+                        SetHeaderLabel(worksheet, 5, 54, "Feed Roll Ratio 2");
+                        SetHeaderLabel(worksheet, 5, 55, "Feed Roll Ratio 3");
+                        SetHeaderLabel(worksheet, 5, 56, "Pressure 1");
+                        SetHeaderLabel(worksheet, 5, 57, "Pressure 2");
+                        SetHeaderLabel(worksheet, 5, 58, "Pressure 3");
+                        SetHeaderLabel(worksheet, 5, 59, "Am Meter 1");
+                        SetHeaderLabel(worksheet, 5, 60, "Am Meter 2");
+                        SetHeaderLabel(worksheet, 5, 61, "Am Meter 3");
+                        SetHeaderLabel(worksheet, 5, 62, "Preset Value");
+                        SetHeaderLabel(worksheet, 5, 63, "Control Value");
+                        SetHeaderLabel(worksheet, 5, 64, "Spiral Pitch Setting");
+                        SetHeaderLabel(worksheet, 5, 65, "Spiral Pitch Display");
+                        SetHeaderLabel(worksheet, 5, 66, "Spiral Speed");
+                        SetHeaderLabel(worksheet, 5, 67, "Hose Speed");
+                        SetHeaderLabel(worksheet, 5, 68, "Unsmooth Surface");
+                        SetHeaderLabel(worksheet, 5, 69, "Marking Sort");
+                        SetHeaderLabel(worksheet, 5, 70, "Text Marking Material");
+                        SetHeaderLabel(worksheet, 5, 71, "Marking Colour");
+                        SetHeaderLabel(worksheet, 5, 72, "Chiller Water Temp");
+                        SetHeaderLabel(worksheet, 5, 73, "Caterpillar Gap");
+                        SetHeaderLabel(worksheet, 5, 74, "Take Up Conveyor Speed");
+                        SetHeaderLabel(worksheet, 5, 75, "Cool Conveyor Speed");
+                        SetHeaderLabel(worksheet, 5, 76, "Cool Conveyor Speed 2");
+                        SetHeaderLabel(worksheet, 5, 77, "Conveyor Ratio");
+                        SetHeaderLabel(worksheet, 5, 78, "Tolerance Inner");
+                        SetHeaderLabel(worksheet, 5, 79, "Tolerance Outer");
+                        SetHeaderLabel(worksheet, 5, 80, "Tebal Inner");
+                        SetHeaderLabel(worksheet, 5, 81, "Tebal Inner+Middle");
+                        SetHeaderLabel(worksheet, 5, 82, "Tebal Total");
+                        SetHeaderLabel(worksheet, 5, 83, "Selisih Tebal");
+                        // Quality Matrix - Inner (84-95 -> index 89-94 in code = col 90-95)
+                        SetHeaderLabel(worksheet, 5, 90, "Inner Target");
+                        SetHeaderLabel(worksheet, 5, 91, "Inner Tol");
+                        SetHeaderLabel(worksheet, 5, 92, "Inner LCL");
+                        SetHeaderLabel(worksheet, 5, 93, "Inner Min");
+                        SetHeaderLabel(worksheet, 5, 94, "Inner UCL");
+                        SetHeaderLabel(worksheet, 5, 95, "Inner Max");
+                        // Quality Matrix - Inner+Mid (96-101 in code = col 96-101)
+                        SetHeaderLabel(worksheet, 5, 96, "Inner+Mid Target");
+                        SetHeaderLabel(worksheet, 5, 97, "Inner+Mid Tol");
+                        SetHeaderLabel(worksheet, 5, 98, "Inner+Mid LCL");
+                        SetHeaderLabel(worksheet, 5, 99, "Inner+Mid Min");
+                        SetHeaderLabel(worksheet, 5, 100, "Inner+Mid UCL");
+                        SetHeaderLabel(worksheet, 5, 101, "Inner+Mid Max");
+                        // Quality Matrix - Total (102-107 in code = col 102-107)
+                        SetHeaderLabel(worksheet, 5, 102, "Total Target");
+                        SetHeaderLabel(worksheet, 5, 103, "Total Tol");
+                        SetHeaderLabel(worksheet, 5, 104, "Total LCL");
+                        SetHeaderLabel(worksheet, 5, 105, "Total Min");
+                        SetHeaderLabel(worksheet, 5, 106, "Total UCL");
+                        SetHeaderLabel(worksheet, 5, 107, "Total Max");
+                        SetHeaderLabel(worksheet, 5, 108, "Item List");
+                    }
+                    else if (is2Layer) // 2 Layer
+                    {
+                        SetHeaderLabel(worksheet, 5, 15, "Outer Cover");
+                        SetHeaderLabel(worksheet, 5, 16, "Use Limits Inner");
+                        SetHeaderLabel(worksheet, 5, 17, "Use Limits Outer");
+                        SetHeaderLabel(worksheet, 5, 18, "Yarn");
+                        SetHeaderLabel(worksheet, 5, 19, "Pitch Yarn");
+                        SetHeaderLabel(worksheet, 5, 20, "Tension Yarn Inner");
+                        SetHeaderLabel(worksheet, 5, 21, "Tension Yarn Outer");
+                        SetHeaderLabel(worksheet, 5, 22, "Nipple");
+                        SetHeaderLabel(worksheet, 5, 23, "Tube Die");
+                        SetHeaderLabel(worksheet, 5, 24, "Middle Die");
+                        SetHeaderLabel(worksheet, 5, 25, "Cover Die");
+                        SetHeaderLabel(worksheet, 5, 26, "Spacer");
+                        SetHeaderLabel(worksheet, 5, 27, "A Distance");
+                        SetHeaderLabel(worksheet, 5, 28, "Mesh Dim 1");
+                        SetHeaderLabel(worksheet, 5, 29, "Mesh Screen 1");
+                        SetHeaderLabel(worksheet, 5, 30, "Mesh Dim 2");
+                        SetHeaderLabel(worksheet, 5, 31, "Mesh Screen 2");
+                        SetHeaderLabel(worksheet, 5, 32, "Head Temp 1");
+                        SetHeaderLabel(worksheet, 5, 33, "Cylinder 1-1");
+                        SetHeaderLabel(worksheet, 5, 34, "Cylinder 2-1");
+                        SetHeaderLabel(worksheet, 5, 35, "Cylinder 3-1");
+                        SetHeaderLabel(worksheet, 5, 36, "Screw Temp 1");
+                        SetHeaderLabel(worksheet, 5, 37, "Head Temp 2");
+                        SetHeaderLabel(worksheet, 5, 38, "Cylinder 1-2");
+                        SetHeaderLabel(worksheet, 5, 39, "Cylinder 2-2");
+                        SetHeaderLabel(worksheet, 5, 40, "Cylinder 3-2");
+                        SetHeaderLabel(worksheet, 5, 41, "Screw Temp 2");
+                        SetHeaderLabel(worksheet, 5, 42, "Screw Speed 1");
+                        SetHeaderLabel(worksheet, 5, 43, "Screw Speed 2");
+                        SetHeaderLabel(worksheet, 5, 44, "Feed Roll Ratio 1");
+                        SetHeaderLabel(worksheet, 5, 45, "Feed Roll Ratio 2");
+                        SetHeaderLabel(worksheet, 5, 46, "Pressure 1");
+                        SetHeaderLabel(worksheet, 5, 47, "Pressure 2");
+                        SetHeaderLabel(worksheet, 5, 48, "Current Value");
+                        SetHeaderLabel(worksheet, 5, 49, "Am Meter 1");
+                        SetHeaderLabel(worksheet, 5, 50, "Am Meter 2");
+                        SetHeaderLabel(worksheet, 5, 51, "Preset Value");
+                        SetHeaderLabel(worksheet, 5, 52, "Control Value");
+                        SetHeaderLabel(worksheet, 5, 53, "Spiral Pitch Setting");
+                        SetHeaderLabel(worksheet, 5, 54, "Spiral Pitch Display");
+                        SetHeaderLabel(worksheet, 5, 55, "Spiral Speed");
+                        SetHeaderLabel(worksheet, 5, 56, "Hose Speed");
+                        SetHeaderLabel(worksheet, 5, 57, "Unsmooth Surface");
+                        SetHeaderLabel(worksheet, 5, 58, "Marking Sort");
+                        SetHeaderLabel(worksheet, 5, 59, "Text Marking Material");
+                        SetHeaderLabel(worksheet, 5, 60, "Marking Colour");
+                        SetHeaderLabel(worksheet, 5, 61, "Chiller Water Temp");
+                        SetHeaderLabel(worksheet, 5, 62, "Dancer Position");
+                        SetHeaderLabel(worksheet, 5, 63, "Caterpillar Gap");
+                        SetHeaderLabel(worksheet, 5, 64, "Take Up Conveyor Speed");
+                        SetHeaderLabel(worksheet, 5, 65, "Cool Conveyor Speed");
+                        SetHeaderLabel(worksheet, 5, 66, "Conveyor Ratio");
+                        SetHeaderLabel(worksheet, 5, 67, "Tolerance Inner");
+                        SetHeaderLabel(worksheet, 5, 68, "Tolerance Outer");
+                        SetHeaderLabel(worksheet, 5, 69, "Tebal Inner");
+                        SetHeaderLabel(worksheet, 5, 70, "Tebal Total");
+                        SetHeaderLabel(worksheet, 5, 71, "Selisih Tebal");
+                        SetHeaderLabel(worksheet, 5, 72, "Thick Target");
+                        SetHeaderLabel(worksheet, 5, 73, "Thick Tol");
+                        SetHeaderLabel(worksheet, 5, 74, "Thick LCL");
+                        SetHeaderLabel(worksheet, 5, 75, "Thick Min");
+                        SetHeaderLabel(worksheet, 5, 76, "Thick UCL");
+                        SetHeaderLabel(worksheet, 5, 77, "Thick Max");
+                        // Quality Matrix - Inner
+                        SetHeaderLabel(worksheet, 5, 78, "Inner Target");
+                        SetHeaderLabel(worksheet, 5, 79, "Inner Tol");
+                        SetHeaderLabel(worksheet, 5, 80, "Inner LCL");
+                        SetHeaderLabel(worksheet, 5, 81, "Inner Min");
+                        SetHeaderLabel(worksheet, 5, 82, "Inner UCL");
+                        SetHeaderLabel(worksheet, 5, 83, "Inner Max");
+                        // Quality Matrix - Total
+                        SetHeaderLabel(worksheet, 5, 84, "Total Target");
+                        SetHeaderLabel(worksheet, 5, 85, "Total Tol");
+                        SetHeaderLabel(worksheet, 5, 86, "Total LCL");
+                        SetHeaderLabel(worksheet, 5, 87, "Total Min");
+                        SetHeaderLabel(worksheet, 5, 88, "Total UCL");
+                        SetHeaderLabel(worksheet, 5, 89, "Total Max");
+                        SetHeaderLabel(worksheet, 5, 90, "Item List");
+                    }
+                    else if (isDoubleLayer) // Double Layer (Legacy/Non-CHS)
+                    {
+                        SetHeaderLabel(worksheet, 5, 15, "Outer Cover");
+                        SetHeaderLabel(worksheet, 5, 16, "Use Limits Inner");
+                        SetHeaderLabel(worksheet, 5, 17, "Use Limits Outer");
+                        SetHeaderLabel(worksheet, 5, 18, "Nipple");
+                        SetHeaderLabel(worksheet, 5, 19, "Tube Die");
+                        SetHeaderLabel(worksheet, 5, 20, "Cover Die");
+                        SetHeaderLabel(worksheet, 5, 21, "Mesh Screen 1");
+                        SetHeaderLabel(worksheet, 5, 22, "Mesh Screen 2");
+                        SetHeaderLabel(worksheet, 5, 23, "Head Temp 1");
+                        SetHeaderLabel(worksheet, 5, 24, "Head Temp 2");
+                        SetHeaderLabel(worksheet, 5, 25, "Cylinder 1-1");
+                        SetHeaderLabel(worksheet, 5, 26, "Cylinder 1-2");
+                        SetHeaderLabel(worksheet, 5, 27, "Cylinder 2-1");
+                        SetHeaderLabel(worksheet, 5, 28, "Cylinder 2-2");
+                        SetHeaderLabel(worksheet, 5, 29, "Feed 1");
+                        SetHeaderLabel(worksheet, 5, 30, "Feed 2");
+                        SetHeaderLabel(worksheet, 5, 31, "Screw Temp 1");
+                        SetHeaderLabel(worksheet, 5, 32, "Screw Temp 2");
+                        SetHeaderLabel(worksheet, 5, 33, "Screw Speed 1");
+                        SetHeaderLabel(worksheet, 5, 34, "Screw Speed 2");
+                        SetHeaderLabel(worksheet, 5, 35, "Pressure 1");
+                        SetHeaderLabel(worksheet, 5, 36, "Pressure 2");
+                        SetHeaderLabel(worksheet, 5, 37, "Am Meter");
+                        SetHeaderLabel(worksheet, 5, 38, "OD Sensor");
+                        SetHeaderLabel(worksheet, 5, 39, "Marking Sort");
+                        SetHeaderLabel(worksheet, 5, 40, "Text Marking Material");
+                        SetHeaderLabel(worksheet, 5, 41, "Marking Colour");
+                        SetHeaderLabel(worksheet, 5, 42, "Chiller Water Temp");
+                        SetHeaderLabel(worksheet, 5, 43, "Cutting Speed");
+                        SetHeaderLabel(worksheet, 5, 44, "Take Up Conveyor Speed");
+                        SetHeaderLabel(worksheet, 5, 45, "Tolerance Inner");
+                        SetHeaderLabel(worksheet, 5, 46, "Tolerance Outer");
+                        SetHeaderLabel(worksheet, 5, 47, "Tebal Inner");
+                        SetHeaderLabel(worksheet, 5, 48, "Tebal Outer");
+                        SetHeaderLabel(worksheet, 5, 49, "Tebal Total");
+                        SetHeaderLabel(worksheet, 5, 50, "Selisih Tebal");
+                        SetHeaderLabel(worksheet, 5, 51, "Item List");
+                        SetHeaderLabel(worksheet, 5, 52, "MC (Machine Code)");
+                    }
+                    
+                    // ROW 7: Example Data
+                    worksheet.Cells[7, 1].Value = "1-0";
+                    worksheet.Cells[7, 2].Value = "1";
+                    worksheet.Cells[7, 3].Value = "Non-CHS (DL)";
+                    worksheet.Cells[7, 4].Value = "SOP/PROD/HOSE/SPS/24/10/01";
+                    worksheet.Cells[7, 7].Value = "0";
+                    worksheet.Cells[7, 8].Value = "PT. TMMIN";
+                    worksheet.Cells[7, 9].Value = "07-08-17";
+                    worksheet.Cells[7, 10].Value = "Hose; Breather; Ø 35 mm x 7.5 mm; TSM1649G-1";
+                    worksheet.Cells[7, 11].Value = "Hose, Breather";
+                    worksheet.Cells[7, 12].Value = "Ø 35 mm x 7.5 mm";
+                    worksheet.Cells[7, 13].Value = "TSM1649G-1";
+                    worksheet.Cells[7, 14].Value = "TSM-1649 G";
+                    
+                    if (is3Layer)
+                    {
+                        worksheet.Cells[7, 15].Value = "TSM-1649 G-2";
+                        worksheet.Cells[7, 16].Value = "TSM-1649 G";
+                        worksheet.Cells[7, 23].Value = "11.8 x 11.6";
+                        worksheet.Cells[7, 24].Value = "17.85 x 17.85";
+                        worksheet.Cells[7, 25].Value = "18.5 x 17.85";
+                        worksheet.Cells[7, 26].Value = "23.5 x 23.3";
+                        worksheet.Cells[7, 108].Value = "VHFUNC12345,VHFUNC67890";
+                    }
+                    else if (is2Layer)
+                    {
+                        worksheet.Cells[7, 15].Value = "TSM-1649 G";
+                        worksheet.Cells[7, 22].Value = "11.8 x 11.6";
+                        worksheet.Cells[7, 23].Value = "17.85 x 17.85";
+                        worksheet.Cells[7, 25].Value = "23.5 x 23.3";
+                        worksheet.Cells[7, 90].Value = "VHFUNC12345,VHFUNC67890";
+                    }
+                    else // Double Layer
+                    {
+                        worksheet.Cells[7, 15].Value = "TSM-1649 G";
+                        worksheet.Cells[7, 18].Value = "11.8 x 11.6";
+                        worksheet.Cells[7, 19].Value = "17.85 x 17.85";
+                        worksheet.Cells[7, 20].Value = "23.5 x 23.3";
+                        worksheet.Cells[7, 51].Value = "VHFUNC12345,VHFUNC67890";
+                        worksheet.Cells[7, 52].Value = "DL1";
+                    }
+                    
+                    // Auto-fit columns (wrap in try-catch in case method signature differs)
+                    try
+                    {
+                        worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+                    }
+                    catch
+                    {
+                        // If AutoFit fails, set a default width
+                        worksheet.DefaultColWidth = 12;
+                    }
+                    
+                    // Freeze panes (header rows)
+                    worksheet.View.FreezePanes(7, 1);
+                    
+                    var fileBytes = package.GetAsByteArray();
+                    string fileName;
+                    if (is3Layer) {
+                        fileName = "Template_SPS_3Layer.xlsx";
+                    } else if (is2Layer) {
+                        fileName = "Template_SPS_2Layer.xlsx";
+                    } else {
+                        fileName = "Template_SPS_DoubleLayer.xlsx";
+                    }
+                    return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuat template");
+                return StatusCode(500, "Gagal membuat template: " + ex.Message);
+            }
+        }
+        
+        private void SetHeaderLabel(OfficeOpenXml.ExcelWorksheet ws, int row, int col, string label)
+        {
+            ws.Cells[row, col].Value = label;
+            ws.Cells[row, col].Style.Font.Bold = true;
+            ws.Cells[row, col].Style.Font.Size = 9;
+            ws.Cells[row, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            ws.Cells[row, col].Style.Fill.BackgroundColor.SetColor(255, 68, 114, 196); // Blue header ARGB
+            ws.Cells[row, col].Style.Font.Color.SetColor(255, 255, 255, 255); // White ARGB
+            ws.Cells[row, col].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
         }
 
         [HttpPost]

@@ -463,6 +463,10 @@
             if (isAdminMode) {
                 $('#operatorFields').hide();
                 $('#adminFields').show();
+                // Hide Machine selection for Admin
+                $('#machineId').closest('.input-wrapper').hide();
+                $('label[for="machineId"], label:contains("MESIN PRODUKSI")').hide();
+                
                 $('#userId').removeAttr('required');
                 $('#password').val('admin123!');
                 $('#adminUsernameInput').val('admin');
@@ -471,6 +475,10 @@
             } else {
                 $('#operatorFields').show();
                 $('#adminFields').hide();
+                // Show Machine selection for Operator
+                $('#machineId').closest('.input-wrapper').show();
+                $('label:contains("MESIN PRODUKSI")').show();
+                
                 $('#userId').attr('required', 'required');
                 $('#password').val('');
                 $('#adminUsernameInput').val('');

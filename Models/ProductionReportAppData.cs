@@ -13,6 +13,7 @@ namespace VelastoProductionSystem.Models
     {
         public int ReportId { get; set; }
         public string? DocumentNumber { get; set; }
+        public string? ItemCode { get; set; }
         public string? HoseType { get; set; }
         public string? DimensionDisplay { get; set; }
         public string? CustomerName { get; set; }

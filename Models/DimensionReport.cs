@@ -20,6 +20,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Shift")]
         public string? Shift { get; set; }
 
+        [Display(Name = "Item Code")]
+        public string? ItemCode { get; set; }
+
         [Display(Name = "Customer")]
         public string? CustomerName { get; set; }
 

@@ -1,0 +1,333 @@
+@model VelastoProductionSystem.Models.MasterlistSpsDoubleLayer
+
+<div class="card bg-dark text-white border-0 shadow-lg rounded-4 overflow-hidden">
+    <div class="card-header bg-gradient-dark border-bottom border-white border-opacity-10 py-3">
+        <ul class="nav nav-pills card-header-pills" id="spsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="id-tab" data-bs-toggle="tab" data-bs-target="#id-pane" type="button" role="tab">1. Identifikasi</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="material-tab" data-bs-toggle="tab" data-bs-target="#material-pane" type="button" role="tab">2. Material & Dies</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="extruder-tab" data-bs-toggle="tab" data-bs-target="#extruder-pane" type="button" role="tab">3. Extruder Settings</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="process-tab" data-bs-toggle="tab" data-bs-target="#process-pane" type="button" role="tab">4. Proses Akhir</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="quality-tab" data-bs-toggle="tab" data-bs-target="#quality-pane" type="button" role="tab">5. Quality Matrix</button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-4">
+        <div class="tab-content" id="spsTabContent">
+            <!-- TAB 1: Identifikasi -->
+            <div class="tab-pane fade show active" id="id-pane" role="tabpanel" tabindex="0">
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <label asp-for="ExcelId" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="ExcelId" class="form-control bg-dark text-white border-secondary" placeholder="1-1" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="No" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="No" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Machine" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="Machine" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="MachineCode" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="MachineCode" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="DocumentNumber" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="DocumentNumber" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="RevisionNumber" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="RevisionNumber" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="RevisionDate" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="RevisionDate" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Customer" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="Customer" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Formulasi" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <textarea asp-for="Formulasi" class="form-control bg-dark text-white border-secondary" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ItemList" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <textarea asp-for="ItemList" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Item1, Item2..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="HoseType" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="HoseType" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Dimensi" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="Dimensi" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: Material & Dies -->
+            <div class="tab-pane fade" id="material-pane" role="tabpanel" tabindex="0">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="Material" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="Material" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="InnerTube" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="InnerTube" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="MiddleTube" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="MiddleTube" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="OuterCover" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="OuterCover" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="Yarn" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="Yarn" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+
+                    <div class="col-md-12 border-bottom border-secondary my-3"></div>
+
+                    <div class="col-md-2">
+                        <label asp-for="Nipple" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="Nipple" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="TubeDie" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="TubeDie" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="MiddleDie" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="MiddleDie" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="CoverDie" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="CoverDie" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="SpacerDie" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="SpacerDie" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="ADistance" class="form-label text-warning small fw-bold text-uppercase"></label>
+                        <input asp-for="ADistance" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Extruder Settings -->
+            <div class="tab-pane fade" id="extruder-pane" role="tabpanel" tabindex="0">
+                <div class="row g-4">
+                    <!-- Material 1 -->
+                    <div class="col-md-4 border-end border-secondary">
+                        <h6 class="text-info border-bottom pb-2 mb-3">Extruder 1 (Inner)</h6>
+                        <div class="mb-2">
+                            <label asp-for="HeadTemp1" class="form-label small fw-bold text-white-50"></label>
+                            <input asp-for="HeadTemp1" class="form-control form-control-sm bg-dark text-white" />
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label asp-for="Cylinder1_1" class="form-label small fw-bold text-white-50">Cyl 1</label>
+                                <input asp-for="Cylinder1_1" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Cylinder2_1" class="form-label small fw-bold text-white-50">Cyl 2</label>
+                                <input asp-for="Cylinder2_1" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label asp-for="Cylinder3_1" class="form-label small fw-bold text-white-50">Cyl 3</label>
+                                <input asp-for="Cylinder3_1" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="ScrewTemp1" class="form-label small fw-bold text-white-50">Screw</label>
+                                <input asp-for="ScrewTemp1" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label asp-for="ScrewSpeed1" class="form-label small fw-bold text-white-50">Speed</label>
+                                <input asp-for="ScrewSpeed1" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="Pressure1" class="form-label small fw-bold text-white-50">Press</label>
+                                <input asp-for="Pressure1" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="Feed1" class="form-label small fw-bold text-white-50">Feed</label>
+                                <input asp-for="Feed1" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Material 2 -->
+                    <div class="col-md-4 border-end border-secondary">
+                        <h6 class="text-success border-bottom pb-2 mb-3">Extruder 2 (Outer)</h6>
+                        <div class="mb-2">
+                            <label asp-for="HeadTemp2" class="form-label small fw-bold text-white-50"></label>
+                            <input asp-for="HeadTemp2" class="form-control form-control-sm bg-dark text-white" />
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label asp-for="Cylinder1_2" class="form-label small fw-bold text-white-50">Cyl 1</label>
+                                <input asp-for="Cylinder1_2" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Cylinder2_2" class="form-label small fw-bold text-white-50">Cyl 2</label>
+                                <input asp-for="Cylinder2_2" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label asp-for="Cylinder3_2" class="form-label small fw-bold text-white-50">Cyl 3</label>
+                                <input asp-for="Cylinder3_2" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="ScrewTemp2" class="form-label small fw-bold text-white-50">Screw</label>
+                                <input asp-for="ScrewTemp2" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label asp-for="ScrewSpeed2" class="form-label small fw-bold text-white-50">Speed</label>
+                                <input asp-for="ScrewSpeed2" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="Pressure2" class="form-label small fw-bold text-white-50">Press</label>
+                                <input asp-for="Pressure2" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="Feed2" class="form-label small fw-bold text-white-50">Feed</label>
+                                <input asp-for="Feed2" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Material 3 -->
+                    <div class="col-md-4">
+                        <h6 class="text-warning border-bottom pb-2 mb-3">Extruder 3 (Middle)</h6>
+                        <div class="mb-2">
+                            <label asp-for="HeadTemp3" class="form-label small fw-bold text-white-50"></label>
+                            <input asp-for="HeadTemp3" class="form-control form-control-sm bg-dark text-white" />
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label asp-for="Cylinder1_3" class="form-label small fw-bold text-white-50">Cyl 1</label>
+                                <input asp-for="Cylinder1_3" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Cylinder2_3" class="form-label small fw-bold text-white-50">Cyl 2</label>
+                                <input asp-for="Cylinder2_3" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label asp-for="Cylinder3_3" class="form-label small fw-bold text-white-50">Cyl 3</label>
+                                <input asp-for="Cylinder3_3" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="ScrewTemp3" class="form-label small fw-bold text-white-50">Screw</label>
+                                <input asp-for="ScrewTemp3" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label asp-for="ScrewSpeed3" class="form-label small fw-bold text-white-50">Speed</label>
+                                <input asp-for="ScrewSpeed3" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="Pressure3" class="form-label small fw-bold text-white-50">Press</label>
+                                <input asp-for="Pressure3" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="Feed3" class="form-label small fw-bold text-white-50">Feed</label>
+                                <input asp-for="Feed3" class="form-control form-control-sm bg-dark text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: Proses Akhir -->
+            <div class="tab-pane fade" id="process-pane" role="tabpanel" tabindex="0">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label asp-for="MarkingSort" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="MarkingSort" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="TextMarkingMaterial" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="TextMarkingMaterial" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="MarkingColour" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="MarkingColour" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="ChillerWaterTemp" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="ChillerWaterTemp" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="CuttingSpeed" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="CuttingSpeed" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="TakeUpConveyorSpeed" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="TakeUpConveyorSpeed" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="CaterpillarGap" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="CaterpillarGap" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="CoolConveyorSpeed" class="form-label text-info small fw-bold text-uppercase"></label>
+                        <input asp-for="CoolConveyorSpeed" class="form-control bg-dark text-white border-secondary" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: Quality Matrix -->
+            <div class="tab-pane fade" id="quality-pane" role="tabpanel" tabindex="0">
+                <div class="row g-4">
+                    <div class="col-md-6 border-end border-secondary">
+                        <h6 class="text-danger border-bottom pb-2 mb-3">Inner Quality Matrix</h6>
+                        <div class="row g-2">
+                            <div class="col-4"><label class="small text-white-50">Target</label><input asp-for="InnerTarget" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">Tol</label><input asp-for="InnerTol" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">Min</label><input asp-for="InnerMin" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">Max</label><input asp-for="InnerMax" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">LCL</label><input asp-for="InnerLCL" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">UCL</label><input asp-for="InnerUCL" class="form-control form-control-sm bg-dark text-white" /></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">Total Quality Matrix</h6>
+                        <div class="row g-2">
+                            <div class="col-4"><label class="small text-white-50">Target</label><input asp-for="TotalTarget" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">Tol</label><input asp-for="TotalTol" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">Min</label><input asp-for="TotalMin" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">Max</label><input asp-for="TotalMax" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">LCL</label><input asp-for="TotalLCL" class="form-control form-control-sm bg-dark text-white" /></div>
+                            <div class="col-4"><label class="small text-white-50">UCL</label><input asp-for="TotalUCL" class="form-control form-control-sm bg-dark text-white" /></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

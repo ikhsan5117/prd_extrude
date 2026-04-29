@@ -7,20 +7,25 @@
 
 @section Styles {
     <style>
+        .swal2-container {
+            z-index: 15000 !important;
+        }
+
         :root {
-            --bg-deep: #0b1120;
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(56, 189, 248, 0.15);
+            --bg-deep: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(56, 189, 248, 0.2);
             --accent-glow: #38bdf8;
             --accent-success: #10b981;
-            --accent-warning: #fbbf24;
+            --accent-warning: #f59e0b;
             --accent-danger: #ef4444;
-            --text-white: #f8fafc;
+            --text-white: #f1f5f9;
             --text-dim: #94a3b8;
+            --hud-glow: 0 0 15px rgba(56, 189, 248, 0.2);
         }
 
         body {
-            background: radial-gradient(circle at top right, #1e293b, #0b1120);
+            background: radial-gradient(circle at 50% 0%, #1e293b, #0b1120);
             color: var(--text-white);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
@@ -28,18 +33,197 @@
             letter-spacing: -0.01em;
         }
 
-        /* --- Search & Control Bar --- */
+        /* --- Header & Layout --- */
         .search-action-bar {
             display: flex; align-items: center; justify-content: center; gap: 15px;
+            flex-wrap: wrap; margin-bottom: 30px; position: relative; z-index: 50;
+        }
+        .header-title-main {
+            font-size: 26px; font-weight: 800; color: #fff; text-align: center;
+            letter-spacing: 6px; text-transform: uppercase; margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .header-subtitle {
+            font-size: 11px; font-weight: 700; color: var(--text-dim); text-align: center;
+            letter-spacing: 5px; text-transform: uppercase; margin-bottom: 40px;
+        }
+
+        /* --- Search Console --- */
+        .search-container {
             max-width: 1200px; margin: 0 auto 25px auto; width: 100%; padding: 0 15px;
         }
-        .search-input-group {
-            flex: 1; max-width: 800px; display: flex; align-items: stretch; background: rgba(30, 41, 59, 0.4);
-            border: 1px solid var(--glass-border); border-left: 5px solid var(--accent-glow);
-            border-radius: 4px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: all 0.3s; height: 48px;
+        
+        .planning-search-panel {
+            flex: 1; min-width: 320px; position: relative;
         }
-        .search-input-group:focus-within { border-color: var(--accent-glow); box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+
+        .hud-console-pill {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: visible;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .hud-console-pill:focus-within {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+
+        .hud-label-mini {
+            font-size: 8px;
+            font-weight: 900;
+            color: var(--accent-glow);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            background: rgba(56, 189, 248, 0.1);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-input-flat {
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+            width: 100%;
+            height: 44px;
+            letter-spacing: 0.5px;
+        }
+
+        .hud-btn-side {
+            width: 50px;
+            background: rgba(56, 189, 248, 0.05);
+            color: var(--accent-glow);
+            border: none;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .hud-btn-side:hover {
+            background: var(--accent-glow);
+            color: #000;
+        }
+
+        .planning-results {
+            position: absolute; top: calc(100% + 5px); left: 0; right: 0; 
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent-glow); 
+            border-radius: 12px; 
+            z-index: 1000;
+            max-height: 450px; overflow-y: auto; 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.1);
+            animation: dropdownFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 8px;
+        }
+
+        @@keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Custom Scrollbar --- */
+        .custom-tactical-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-tactical-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb { 
+            background: rgba(56, 189, 248, 0.3); border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent-glow); }
+
+        .planning-result-item {
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .planning-result-item:last-child { margin-bottom: 0; }
+
+        .planning-result-item:hover, .planning-result-highlight {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateX(5px);
+        }
+
+        .planning-result-highlight {
+            background: rgba(56, 189, 248, 0.15) !important;
+            border-color: var(--accent-glow) !important;
+            box-shadow: inset 4px 0 0 var(--accent-glow);
+        }
+
+        .planning-result-code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--accent-glow);
+            letter-spacing: 0.5px;
+        }
+
+        .planning-result-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f1f5f9;
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .planning-result-meta {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .planning-result-meta i { font-size: 12px; opacity: 0.5; }
+
+        .machine-badge-mini {
+            font-size: 10px; 
+            font-weight: 900; 
+            color: #000;
+            background: var(--accent-warning); 
+            padding: 3px 10px; 
+            border-radius: 50px; 
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
+
+        @@media (max-width: 1200px) {
+            .tech-header-ribbon { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .header-cluster { min-height: 80px; padding: 15px; }
+            .planning-search-panel { width: 100%; min-width: 0; }
+        }
         
         .cam-btn {
             width: 55px; background: rgba(255,255,255,0.03); color: var(--accent-glow); border: none;
@@ -61,10 +245,16 @@
         .search-trigger-btn:hover { background: #fff; box-shadow: 0 0 15px var(--accent-glow); }
         
         .bt-icon-btn {
-            width: 48px; height: 48px; border-radius: 50%; background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: #94a3b8; cursor: pointer; transition: all 0.4s; position: relative;
+            width: 48px; height: 48px; border-radius: 50%;
         }
+        .info-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 30%, #020617 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; padding: 18px 25px; transition: all 0.4s;
+            display: flex; flex-direction: column; gap: 8px; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(15px);
+        }
+        .info-card:hover { border-color: var(--accent-glow); transform: translateY(-2px); }
         .bt-icon-btn.active {
             color: var(--accent-success); border-color: var(--accent-success);
             box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
@@ -80,7 +270,6 @@
         }
         .tool-link-btn.active .t-dot { background: var(--accent-success); box-shadow: 0 0 10px var(--accent-success); animation: pulse 1s infinite; }
         .tool-link-btn.active .t-text { color: var(--accent-success); }
-
         .t-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; transition: 0.3s; }
         .t-text { font-size: 10px; color: #94a3b8; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; transition: 0.3s; }
         .t-icon { font-size: 14px; color: #94a3b8; }
@@ -136,64 +325,119 @@
         }
         .jam-btn.active {
             background: var(--accent-glow); color: #000; border-color: transparent;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); transform: scale(1.05);
+            box-shadow: var(--hud-glow), 0 0 30px rgba(0, 242, 254, 0.3); transform: scale(1.05);
         }
-        .add-btn { background: rgba(56, 189, 248, 0.05); border-style: dashed; }
+        .add-btn { background: rgba(0, 242, 254, 0.05); border-style: dashed; }
         .slot-delete-btn {
-            position: absolute; top: -10px; right: -10px; width: 20px; height: 20px;
-            border-radius: 50%; background: var(--accent-danger); border: 2px solid var(--bg-deep);
-            display: flex; align-items: center; justify-content: center; font-size: 10px;
-            color: #fff; opacity: 0; transition: 0.3s; z-index: 5;
+            position: absolute; 
+            top: -12px; 
+            right: -12px; 
+            width: 28px; 
+            height: 28px;
+            border-radius: 50%; 
+            background: #ef4444; 
+            border: 2px solid #020617;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 12px;
+            color: #fff; 
+            opacity: 1; 
+            transition: all 0.2s ease; 
+            z-index: 50;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
         }
-        .jam-btn:hover .slot-delete-btn { opacity: 1; }
+        .jam-btn:active .slot-delete-btn { transform: scale(0.8); }
 
         /* --- Card Styles --- */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
         .dimensi-card {
-            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(56, 189, 248, 0.1);
-            border-radius: 12px; padding: 25px; transition: all 0.4s;
-            backdrop-filter: blur(15px); position: relative; overflow: hidden;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.5) 0%, rgba(30, 64, 175, 0.4) 30%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px; padding: 25px; transition: all 0.4s;
+            backdrop-filter: blur(20px); position: relative; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+        }
+        .dimensi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+        .dimensi-card:hover { 
+            border-color: var(--accent-glow); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            transform: translateY(-4px);
         }
         .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .card-point { font-weight: 800; font-size: 14px; color: #fff; letter-spacing: 2px; }
-        .card-icon { font-size: 20px; color: var(--accent-glow); opacity: 0.5; }
-        
+        .card-point { font-weight: 800; font-size: 14px; color: #fff; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .card-icon { font-size: 20px; color: var(--accent-glow); opacity: 0.8; filter: drop-shadow(0 0 5px var(--accent-glow)); }
+
         .std-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-        .std-label { font-size: 9px; color: var(--text-dim); font-weight: 900; letter-spacing: 1.5px; opacity: 0.6; }
-        .std-value { font-size: 16px; color: var(--accent-glow); font-weight: 900; }
+        .std-label { font-size: 10px; color: #64748b; font-weight: 900; letter-spacing: 2px; opacity: 0.8; margin-bottom: 4px; }
+        .std-value { 
+            font-size: 18px; color: var(--accent-glow); font-weight: 950; 
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.5); 
+            letter-spacing: 1px;
+        }
+        .std-container::after {
+            content: ''; width: 40px; height: 2px; background: var(--accent-glow);
+            margin-top: 8px; border-radius: 2px; box-shadow: 0 0 10px var(--accent-glow);
+        }
 
         .limit-row { display: flex; gap: 12px; margin-bottom: 20px; }
         .limit-pill { 
-            flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
-            padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; justify-content: space-between;
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08);
+            padding: 10px 15px; border-radius: 50px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
         }
-        .limit-label { font-size: 9px; color: var(--text-dim); font-weight: 900; }
-        .limit-val { font-size: 14px; font-weight: 900; }
-        .limit-val.min { color: var(--accent-success); }
-        .limit-val.max { color: var(--accent-warning); }
+        .limit-label { font-size: 10px; color: #94a3b8; font-weight: 900; letter-spacing: 1px; }
+        .limit-val { font-size: 15px; font-weight: 950; }
+        .limit-val.min { color: var(--accent-success); text-shadow: 0 0 12px rgba(0, 255, 157, 0.5); }
+        .limit-val.max { color: var(--accent-warning); text-shadow: 0 0 12px rgba(255, 234, 0, 0.5); }
 
         .input-group-custom { display: flex; flex-direction: column; gap: 10px; }
-        .input-group-custom label { font-size: 10px; color: var(--text-dim); font-weight: 900; text-align: center; }
+        .input-group-custom label { font-size: 11px; color: #64748b; font-weight: 900; text-align: center; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
         .c-input {
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
-            color: #fff; padding: 15px; font-size: 28px; font-weight: 900; text-align: center; outline: none;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
+            color: #fff; padding: 18px; font-size: 32px; font-weight: 800; text-align: center; outline: none;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); width: 100%; transition: all 0.3s;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0px;
         }
+        .c-input:focus { border-color: var(--accent-glow); box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+        .c-input::placeholder { color: rgba(248,250,252,0.3); }
+
+        /* Clear button wrapper */
+        .c-input-wrap { position: relative; width: 100%; }
+        .c-clear-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+            color: #ef4444; font-size: 14px; font-weight: 900;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; z-index: 5;
+            line-height: 1;
+        }
+        .c-clear-btn:hover { background: #ef4444; color: #fff; transform: translateY(-50%) scale(1.1); box-shadow: 0 0 12px rgba(239,68,68,0.5); }
+        .c-input-wrap .c-input { padding-right: 50px; }
+        .c-input-wrap.has-value .c-clear-btn { display: flex; }
         .status-badge { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.4s; }
-        .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 20px var(--accent-success); }
+        .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 25px var(--accent-success); }
         .status-ok .c-input { 
-            color: #10b981 !important; 
-            border-color: rgba(16, 185, 129, 0.5) !important;
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); 
-            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.1);
+            color: var(--accent-success) !important; 
+            border-color: var(--accent-success) !important;
+            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); 
+            box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.1), var(--hud-glow);
         }
-        .status-ng .status-badge { background: #ff4d4d; box-shadow: 0 0 25px #ff4d4d; }
+        .status-ng .status-badge { background: var(--accent-danger); box-shadow: 0 0 30px var(--accent-danger); }
         .status-ng .c-input { 
-            color: #ff4d4d !important; 
-            background: rgba(255, 77, 77, 0.15) !important;
-            border-color: rgba(255, 77, 77, 0.6) !important;
-            text-shadow: 0 0 15px rgba(255, 77, 77, 0.5); 
-            box-shadow: inset 0 0 25px rgba(255, 77, 77, 0.2), 0 0 15px rgba(255, 77, 77, 0.2);
+            color: var(--accent-danger) !important; 
+            background: rgba(255, 0, 85, 0.1) !important;
+            border-color: var(--accent-danger) !important;
+            text-shadow: 0 0 20px rgba(255, 0, 85, 0.7); 
+            box-shadow: inset 0 0 30px rgba(255, 0, 85, 0.2), 0 0 20px rgba(255, 0, 85, 0.3);
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
         
@@ -216,70 +460,42 @@
             flex: 1; border: none; background: transparent; color: var(--text-dim);
             font-size: 10px; font-weight: 900; padding: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s;
         }
-        .seg-btn.active-ok { background: var(--accent-success); color: #000; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
-        .seg-btn.active-ng { background: var(--accent-danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
-        .visual-item i { font-size: 20px; transition: 0.3s; }
-        .visual-item:hover i { transform: scale(1.2); filter: drop-shadow(0 0 10px var(--accent-glow)); }
-        .v-quick-ok {
-            background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
-            color: var(--accent-success); padding: 4px 12px; border-radius: 50px; font-size: 9px;
-            font-weight: 900; cursor: pointer; transition: 0.3s;
-        }
-        .v-quick-ok:hover { background: var(--accent-success); color: #000; }
+        .seg-btn.active-ok { background: var(--accent-success); color: #000; box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
+        .seg-btn.active-ng { background: var(--accent-danger); color: #fff; box-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
 
         .section-title {
-            font-size: 11px; font-weight: 900; color: var(--accent-glow);
-            letter-spacing: 2px; display: flex; align-items: center; gap: 10px;
-            margin: 40px 0 20px 0; padding-left: 15px; border-left: 4px solid var(--accent-glow);
+            font-size: 12px; font-weight: 800; color: var(--text-dim);
+            letter-spacing: 3px; display: flex; align-items: center; gap: 12px;
+            margin: 50px 0 25px 0; padding-left: 15px; border-left: 4px solid var(--text-dim);
             text-transform: uppercase;
         }
         .prod-data-container {
-            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(56, 189, 248, 0.1);
-            border-radius: 12px; padding: 25px; backdrop-filter: blur(15px);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 35px; backdrop-filter: blur(20px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7);
         }
         .prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         .field-column { display: flex; flex-direction: column; gap: 20px; }
         .field-box { display: flex; flex-direction: column; gap: 8px; }
         .field-label { font-size: 9px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
         .field-input-wrap {
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 8px; padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; padding: 16px 20px; transition: 0.3s;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
         }
-        .f-input { background: transparent; border: none; color: #fff; width: 100%; font-size: 14px; font-weight: 700; outline: none; }
+        .field-input-wrap:focus-within { border-color: var(--accent-glow); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); background: #000; }
+        .f-input { background: transparent; border: none; color: #fff; width: 100%; font-size: 15px; font-weight: 700; outline: none; }
         .qty-row { display: flex; gap: 10px; }
-        .jam-nav { 
-            display: flex; gap: 10px; margin-bottom: 25px; 
-            overflow-x: auto; padding: 10px 5px; 
-            scrollbar-width: thin; scrollbar-color: var(--accent-glow) transparent;
-        }
-        .jam-nav::-webkit-scrollbar { height: 4px; }
-        .jam-nav::-webkit-scrollbar-thumb { background: var(--accent-glow); border-radius: 10px; }
-        .jam-btn { 
-            flex: 0 0 auto; 
-            min-width: 80px; height: 50px; 
-            background: rgba(30, 41, 59, 0.4); 
-            border: 1px solid var(--glass-border); 
-            border-radius: 8px; color: var(--text-dim); 
-            font-weight: 800; font-size: 14px; 
-            cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center; position: relative;
-        }
-
         .qty-btn {
-            flex: 1; height: 50px; border-radius: 12px; border: 1px solid var(--glass-border);
-            background: rgba(30, 41, 59, 0.3); color: var(--text-dim);
-            font-size: 11px; font-weight: 900; letter-spacing: 1px; transition: 0.3s;
-            display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+            flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03); color: var(--text-dim);
+            font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .qty-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .qty-btn.active-ok { 
-            background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); 
-            color: var(--accent-success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); 
-        }
-        .qty-btn.active-ng { 
-            background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); 
-            color: var(--accent-danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); 
-        }
+        .qty-btn:hover { border-color: var(--accent-glow); color: #fff; }
+        .qty-btn.active-ok { border-color: var(--accent-success); color: var(--accent-success); background: rgba(16,185,129,0.05); }
+        .qty-btn.active-ng { border-color: var(--accent-danger); color: var(--accent-danger); background: rgba(239,68,68,0.05); }
 
         .finalize-action-hub {
             position: fixed; bottom: 30px; right: 30px; z-index: 1000;
@@ -320,40 +536,60 @@
     <!-- Main Header -->
     <div class="text-center mb-3 animate__animated animate__fadeInDown">
         <h2 class="display-6 fw-bold tracking-widest text-uppercase" style="letter-spacing: 6px;">EXTRUDER PRODUCTION REPORT</h2>
-        <div class="text-primary fw-bold" style="font-size: 13px; letter-spacing: 4px;">( DIMENSION )</div>
+        <div class="text-primary fw-bold" style="font-size: 13px; letter-spacing: 4px;">( EDIT MODE )</div>
     </div>
 
-    <!-- Item List Scanner Action Bar -->
-    <div class="search-action-bar animate__animated animate__fadeInDown">
-        <!-- 3-Part Smart Search Bar -->
-        <div class="search-input-group">
-            <button class="cam-btn" title="Open Camera Scanner" onclick="openScanner()">
-                <i class="bi bi-qr-code-scan"></i>
-            </button>
-            <input type="text" id="main-item-search" placeholder="MANUAL INPUT / SCAN ITEM LIST..." autocomplete="off" onkeypress="if(event.key === 'Enter') loadMaster()" value="@(Model.DimensionDisplay ?? Model.HoseType)">
-            <button class="search-trigger-btn" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
-                <i class="bi bi-search"></i>
-            </button>
-        </div>
-        
-        <!-- History Shortcut -->
-        <a href="/Dimensi/History" class="bt-icon-btn" style="text-decoration: none;" title="View Inspection History">
-            <i class="bi bi-clock-history"></i>
-        </a>
-        
-        <!-- Compact Bluetooth Tool Control -->
-        <div class="bt-icon-btn" id="toolLinkBtn" onclick="showBluetoothSettings()" title="Bluetooth Tool Settings">
-            <i class="bi bi-bluetooth"></i>
+    <!-- Dual Search Console -->
+    <div class="search-container no-print">
+        <div class="row g-3 animate__animated animate__fadeInUp">
+            <!-- Left Console: Planning Master -->
+            <div class="col-md-7">
+                <div class="hud-console-pill">
+                    <div class="hud-label-mini" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <div><i class="bi bi-list-check"></i> PLANNING MASTER</div>
+                        <span class="badge" style="font-size:8px; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);"><i class="bi bi-shield-check"></i> ALL MACHINES</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input id="planningSearch" type="text" class="hud-input-flat" 
+                               placeholder="KETIK ITEM CODE..." 
+                               value="@(string.IsNullOrEmpty(Model.ItemCode) || Model.ItemCode == "---" ? Model.HoseType : $"[{Model.ItemCode}] {Model.HoseType}")"
+                               oninput="filterPlanningResults(this.value)" 
+                               onfocus="openPlanningDropdown()" autocomplete="off" readonly
+                               style="cursor:pointer;" />
+                    </div>
+                    <div id="planningResults" class="planning-results d-none custom-tactical-scroll"></div>
+                </div>
+            </div>
+
+            <!-- Right Console: Masterlist SPS -->
+            <div class="col-md-5">
+                <div class="hud-console-pill">
+                    <div class="hud-label-mini">
+                        <i class="bi bi-search"></i>
+                        <span>SPS MASTERLIST</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input type="text" id="main-item-search" class="hud-input-flat" 
+                               placeholder="SEARCH SPS MASTERLIST..." 
+                               value="@(string.IsNullOrEmpty(Model.ItemCode) || Model.ItemCode == "---" ? Model.HoseType : Model.ItemCode)"
+                               autocomplete="off" 
+                               onkeypress="if(event.key === 'Enter') loadMaster()" />
+                        <button class="hud-btn-side" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
+                            <i class="bi bi-lightning-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Unified Technical HUD Dashboard -->
     <div class="tech-header-ribbon animate__animated animate__fadeIn">
-        <!-- CLUSTER 1: LINE -->
-        <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-gear-fill m-icon"></i> PRODUCTION LINE</span>
+        <!-- CLUSTER 1: MACHINE -->
+        <div class="header-cluster" style="border-left-color: #fca311;">
+            <span class="m-lbl"><i class="bi bi-gear-wide-connected m-icon" style="color: #fca311;"></i> PRODUCTION MACHINE</span>
             <div class="m-row">
-                <span class="m-val m-accent" id="h-line">DL01 ENGINE</span>
+                <span class="m-val" id="h-line" style="color: #fca311;">@(Model.MachineName ?? "---")</span>
             </div>
         </div>
         <!-- CLUSTER 2: DOC -->
@@ -366,24 +602,25 @@
         </div>
         <!-- CLUSTER 3: TIMING -->
         <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-clock-fill m-icon"></i> TIME / SHIFT</span>
+            <span class="m-lbl"><i class="bi bi-clock-fill m-icon"></i> DATE / SHIFT</span>
             <div class="m-row">
-                <span class="m-val" style="font-size: 11px;">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
+                <span class="m-val" id="h-date" style="font-size: 11px;">@Model.CreatedDate.ToString("dd MMM yyyy").ToUpper()</span>
                 <span class="m-divider"></span>
                 <span class="m-val m-accent" id="h-shift" onclick="toggleShift()" style="cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
             </div>
         </div>
-        <!-- CLUSTER 4: PRODUCT -->
-        <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-cpu-fill m-icon"></i> CUSTOMER / SPEC</span>
+        <!-- CLUSTER 4: OPERATOR & SPEC -->
+        <div class="header-cluster" style="border-left-color: #0d6efd;">
+            <span class="m-lbl"><i class="bi bi-person-badge-fill m-icon" style="color: #0d6efd;"></i> OPERATOR / SPEC</span>
             <div class="m-row">
                 <div id="h-row-hose" style="display: flex; align-items: center; gap: 8px;">
-                    <span class="m-val" id="h-customer">@(Model.CustomerName ?? "---")</span>
+                    <span class="m-val" id="h-operator" style="color: #0d6efd;">@(Model.CreatedBy ?? "---")</span>
                     <span class="m-divider"></span>
-                    <span class="m-val m-accent" id="h-hose" style="font-size: 11px;">@(Model.HoseType ?? "---")</span>
+                    <span class="m-val m-accent" id="h-itemcode" style="font-size: 11px;">@(Model.ItemCode ?? "---")</span>
+                    <span class="m-divider"></span>
+                    <span class="m-val" id="h-hose" style="font-size: 11px;">@(Model.HoseType ?? "---")</span>
                 </div>
             </div>
-        </div>
         </div>
     </div>
 </div>
@@ -428,7 +665,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-inner-dia" oninput="validateCard('inner-dia')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-inner-dia">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-dia" oninput="validateCard('inner-dia'); toggleClearBtn('inner-dia')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-dia')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -455,7 +695,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-inner-tx" oninput="validateCard('inner-tx')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-inner-tx">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-tx" oninput="validateCard('inner-tx'); toggleClearBtn('inner-tx')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-tx')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -482,7 +725,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-inner-ty" oninput="validateCard('inner-ty')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-inner-ty">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-ty" oninput="validateCard('inner-ty'); toggleClearBtn('inner-ty')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-ty')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -509,7 +755,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-total-tx" oninput="validateCard('total-tx')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-total-tx">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-total-tx" oninput="validateCard('total-tx'); toggleClearBtn('total-tx')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('total-tx')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -536,7 +785,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL MEASUREMENT</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-total-ty" oninput="validateCard('total-ty')" placeholder="0.00" />
+                <div class="c-input-wrap" id="wrap-total-ty">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-total-ty" oninput="validateCard('total-ty'); toggleClearBtn('total-ty')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('total-ty')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -563,7 +815,10 @@
             </div>
             <div class="input-group-custom">
                 <label>ACTUAL PITCH VALUE</label>
-                <input type="text" inputmode="decimal" class="c-input" id="val-spiral" oninput="validateCard('spiral')" placeholder="0" />
+                <div class="c-input-wrap" id="wrap-spiral">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-spiral" oninput="validateCard('spiral'); toggleClearBtn('spiral')" placeholder="0" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('spiral')" tabindex="-1" title="Clear">✕</button>
+                </div>
             </div>
             <span class="status-badge"></span>
         </div>
@@ -617,10 +872,7 @@
 
     <!-- FLOATING ACTION HUB -->
     <div class="finalize-action-hub">
-        <div id="save-status" style="color: #10b981; font-size: 11px; opacity: 0; transition: 0.5s; font-weight: 800; background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 50px;">
-            <i class="bi bi-check2-circle"></i> AUTO_SAVING_ENABLED
-        </div>
-        <button type="button" onclick="submitEntry()" class="submit-btn" title="Finalize and Sync Inspection">
+        <button type="button" onclick="finalize()" class="submit-btn" title="Finalize and Sync Inspection">
             <div class="d-flex flex-column align-items-start">
                 <span style="font-size: 8px; opacity: 0.7; letter-spacing: 1px;">PRODUCTION QUALITY HUB</span>
                 <span>UPDATE INSPECTION</span>
@@ -638,7 +890,7 @@
             <div class="field-column">
                 <div class="field-box">
                     <span class="field-label">PART NUMBER</span>
-                    <div class="field-input-wrap"><div class="f-input" id="disp-part-no">-</div></div>
+                    <div class="field-input-wrap"><div class="f-input" id="disp-part-no">@Model.DimensionDisplay</div></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">STD PNJG</span>
@@ -652,11 +904,11 @@
             <div class="field-column">
                 <div class="field-box">
                     <span class="field-label">VIN KODE</span>
-                    <div class="field-input-wrap"><input type="text" class="f-input" id="val-vin-kode" placeholder="Enter VIN Code"></div>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="val-vin-kode" value="@Model.VinCode" placeholder="Enter VIN Code"></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">ACT PNJG</span>
-                    <div class="field-input-wrap"><input type="number" class="f-input" id="val-act-pnjg" placeholder="Enter length"></div>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="val-act-pnjg" value="@Model.ActualLength" placeholder="Enter length"></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY ACTUAL STATUS</span>
@@ -670,7 +922,7 @@
                         <div id="okPanel" style="display: none; text-align: center;">
                             <span style="font-size: 8px; color: #10b981; font-weight: 800; display: block; margin-bottom: 5px;">TOTAL QTY OK</span>
                             <div class="field-input-wrap" style="max-width: 250px; margin: 0 auto; border-color: rgba(16, 185, 129, 0.4);">
-                                <input type="number" class="f-input" id="val-qty-ok" value="0">
+                                <input type="number" class="f-input" id="val-qty-ok" value="@Model.QtyOk">
                             </div>
                         </div>
 
@@ -679,13 +931,13 @@
                             <div>
                                 <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG DIMENSI</span>
                                 <div class="field-input-wrap" style="border-color: #ef4444;">
-                                    <input type="number" class="f-input" id="val-ng-dimensi" value="0">
+                                    <input type="number" class="f-input" id="val-ng-dimensi" value="@Model.NgDimension">
                                 </div>
                             </div>
                             <div>
                                 <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG VISUAL</span>
                                 <div class="field-input-wrap" style="border-color: #ef4444;">
-                                    <input type="number" class="f-input" id="val-ng-visual" value="0">
+                                    <input type="number" class="f-input" id="val-ng-visual" value="@Model.NgVisual">
                                 </div>
                             </div>
                         </div>
@@ -695,7 +947,7 @@
             <!-- Full Width Remark -->
             <div style="grid-column: span 2; margin-top: 10px;">
                 <span class="field-label">REMARK / NOTES</span>
-                <textarea class="f-textarea" id="val-remark" placeholder="Enter any specific observations or production notes..."></textarea>
+                <textarea class="f-textarea" id="val-remark" placeholder="Enter any specific observations or production notes...">@Model.Remark</textarea>
             </div>
         </div>
     </div>
@@ -705,6 +957,269 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
+        // === GLOBAL STATE ===
+        let currentIndex = 0;
+        let activeStandards = {};
+        let isToolConnected = false;
+        let toolPrefix = "";
+
+        // === PLANNING SEARCH VARIABLES ===
+        let planningItemsCache = [];
+        let planningResultItems = [];
+        let planningResultIndex = -1;
+
+        // === PLANNING SEARCH FUNCTIONS ===
+        async function refreshPlanningItems() {
+            const dateText = document.getElementById('h-date')?.innerText || '';
+            const shiftText = document.getElementById('h-shift')?.innerText || '';
+            const date = parseDisplayDate(dateText);
+            const planningInput = document.getElementById('planningSearch');
+            if (!date || !shiftText || !planningInput) return;
+
+            planningInput.placeholder = 'LOADING PLANNING...';
+            planningInput.disabled = true;
+            document.getElementById('planningResults')?.classList.add('d-none');
+
+            try {
+                const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shiftText)}`);
+                planningItemsCache = await res.json();
+                planningResultItems = planningItemsCache;
+                planningResultIndex = -1;
+
+                const isFiltered = planningItemsCache.length > 0 && planningItemsCache[0].isFiltered;
+                const machineCtx = isFiltered && planningItemsCache[0].machineName
+                    ? ` [${planningItemsCache[0].machineName}]`
+                    : '';
+
+                planningInput.disabled = false;
+                if (planningItemsCache.length > 0) {
+                    planningInput.placeholder = `SEARCH PLANNING (${planningItemsCache.length} ITEM${planningItemsCache.length > 1 ? 'S' : ''}${machineCtx})`;
+                } else {
+                    planningInput.placeholder = 'NO ITEMS IN PLAN FOR THIS MACHINE/DAY';
+                }
+                planningInput.value = '';
+            } catch (error) {
+                console.error('Failed to refresh planning items:', error);
+                planningInput.disabled = false;
+                planningInput.placeholder = 'ERROR LOADING PLANNING';
+            }
+        }
+
+        function filterPlanningResults(query) {
+            const sanitizedQuery = query.trim().toUpperCase();
+            const results = sanitizedQuery.length === 0
+                ? planningItemsCache
+                : planningItemsCache.filter(item =>
+                    (item.itemCode && item.itemCode.toUpperCase().includes(sanitizedQuery)) ||
+                    (item.itemName && item.itemName.toUpperCase().includes(sanitizedQuery))
+                );
+
+            planningResultItems = results;
+            planningResultIndex = -1;
+            renderPlanningResults(results, sanitizedQuery.length === 0);
+        }
+
+        function renderPlanningResults(items, showAll = false) {
+            const container = document.getElementById('planningResults');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="planning-result-item" style="text-align:center; opacity:0.5; pointer-events:none;">
+                    <div class="planning-result-code">--- NO MATCHES FOUND ---</div>
+                </div>`;
+                container.classList.remove('d-none');
+                return;
+            }
+
+            const header = document.createElement('div');
+            header.style.cssText = 'padding:10px 20px;font-size:9px;font-weight:900;color:var(--accent-glow);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:8px;opacity:0.7;display:flex;align-items:center;justify-content:space-between;';
+            header.innerHTML = `<span>PLANNING RESULTS (${items.length})</span> <i class="bi bi-funnel-fill"></i>`;
+            container.appendChild(header);
+
+            items.forEach((item, index) => {
+                const hasSps = item.hasSps === true;
+                const spsBadge = hasSps
+                    ? `<span style="font-size:9px;font-weight:900;color:#10b981;background:rgba(16,185,129,0.15);padding:2px 8px;border-radius:20px;border:1px solid rgba(16,185,129,0.4);white-space:nowrap;"><i class="bi bi-check-circle-fill me-1"></i>SPS ✓</span>`
+                    : `<span style="font-size:9px;font-weight:900;color:#ef4444;background:rgba(239,68,68,0.12);padding:2px 8px;border-radius:20px;border:1px solid rgba(239,68,68,0.35);white-space:nowrap;"><i class="bi bi-x-circle-fill me-1"></i>NO SPS</span>`;
+                const borderColor = hasSps ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.35)';
+
+                const div = document.createElement('div');
+                div.className = 'planning-result-item';
+                div.dataset.index = index;
+                div.style.borderLeft = `3px solid ${borderColor}`;
+                div.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;gap:8px;flex-wrap:wrap;">
+                        <div class="planning-result-code">${item.itemCode}</div>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            ${item.machineName ? `<div class="machine-badge-mini"><i class="bi bi-cpu-fill"></i>${item.machineName}</div>` : ''}
+                            ${spsBadge}
+                        </div>
+                    </div>
+                    <div class="planning-result-name">${item.itemName || 'NO DESCRIPTION'}</div>
+                    <div class="planning-result-meta"><i class="bi bi-calendar3"></i> ${item.dateShift || '---'}</div>
+                `;
+                div.onclick = () => selectPlanningItem(item);
+                div.onmouseenter = () => highlightPlanningResult(index);
+                container.appendChild(div);
+            });
+
+            container.classList.remove('d-none');
+            planningResultIndex = showAll ? 0 : -1;
+            if (showAll && items.length > 0) highlightPlanningResult(0);
+        }
+
+        function highlightPlanningResult(index) {
+            const container = document.getElementById('planningResults');
+            if (!container) return;
+            const options = Array.from(container.querySelectorAll('.planning-result-item'));
+            options.forEach(opt => opt.classList.remove('planning-result-highlight'));
+            const target = options[index];
+            if (!target) return;
+            target.classList.add('planning-result-highlight');
+            planningResultIndex = index;
+            target.scrollIntoView({ block: 'nearest' });
+        }
+
+        function selectPlanningItem(item) {
+            const planningInput = document.getElementById('planningSearch');
+            const displayText = item.machineName ? `[${item.itemCode}] ${item.machineName}` : `[${item.itemCode}]`;
+            if (planningInput) {
+                planningInput.value = displayText;
+                planningInput.readOnly = true;
+                planningInput.style.cursor = 'pointer';
+            }
+            document.getElementById('planningResults')?.classList.add('d-none');
+
+            const lineEl = document.getElementById('h-line');
+            if (lineEl && item.machineName) {
+                lineEl.innerText = item.machineName;
+                lineEl.classList.add('animate__animated', 'animate__flash');
+                setTimeout(() => lineEl.classList.remove('animate__flash'), 1000);
+            }
+            if (item.date) setPlanningDateAndShift(item.date, item.shift);
+            document.getElementById('main-item-search').value = item.itemCode;
+            loadMaster();
+        }
+
+        function openPlanningDropdown() {
+            const planningInput = document.getElementById('planningSearch');
+            if (!planningInput) return;
+            planningInput.value = '';
+            planningInput.readOnly = false;
+            planningInput.placeholder = planningItemsCache.length > 0
+                ? `KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA)`
+                : 'LOADING...';
+            filterPlanningResults('');
+            document.getElementById('planningResults')?.classList.remove('d-none');
+            if (planningItemsCache.length === 0) refreshPlanningItems();
+        }
+
+        function parseDisplayDate(displayText) {
+            const monthMap = {
+                JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06',
+                JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12'
+            };
+            const parts = (displayText || '').trim().split(' ');
+            if (parts.length !== 3) return null;
+            const [day, month, year] = parts;
+            const monthNum = monthMap[month.toUpperCase()];
+            if (!monthNum) return null;
+            return `${year}-${monthNum}-${day.padStart(2, '0')}`;
+        }
+
+        function formatDisplayDate(dateValue) {
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return '';
+            const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day} ${month} ${year}`;
+        }
+
+        function setPlanningDateAndShift(dateValue, shiftValue) {
+            const dateEl = document.getElementById('h-date');
+            const shiftEl = document.getElementById('h-shift');
+            if (dateEl) {
+                const formatted = formatDisplayDate(dateValue);
+                if (formatted) dateEl.innerText = formatted;
+            }
+            if (shiftEl && shiftValue) {
+                const normalized = shiftValue.toUpperCase();
+                if (normalized === 'I') shiftEl.innerText = 'Shift 1';
+                else if (normalized === 'II') shiftEl.innerText = 'Shift 2';
+                else if (normalized === 'III') shiftEl.innerText = 'Shift 3';
+                else shiftEl.innerText = shiftValue;
+            }
+        }
+
+        function toggleShift() {
+            const el = document.getElementById('h-shift');
+            const current = el.innerText;
+            let next = "Shift 1";
+            if (current === "Shift 1") next = "Shift 2";
+            else if (current === "Shift 2") next = "Shift 3";
+            el.innerText = next;
+            
+            el.classList.remove('animate__animated', 'animate__pulse');
+            setTimeout(() => el.classList.add('animate__animated', 'animate__pulse'), 10);
+            
+            Swal.fire({ 
+                icon: 'info', 
+                title: 'SHIFT UPDATED', 
+                text: `Toggled to ${next}`, 
+                timer: 1000, 
+                showConfirmButton: false, 
+                toast: true, 
+                position: 'top-end' 
+            });
+
+            refreshPlanningItems();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const planningResults = document.getElementById('planningResults');
+            const planningSearch = document.getElementById('planningSearch');
+            if (planningResults && !planningResults.classList.contains('d-none')) {
+                if (!planningResults.contains(e.target) && e.target !== planningSearch) {
+                    planningResults.classList.add('d-none');
+                }
+            }
+        });
+
+        // Keyboard navigation for planning dropdown
+        document.addEventListener('keydown', function(e) {
+            const planningResults = document.getElementById('planningResults');
+            const planningSearch = document.getElementById('planningSearch');
+            
+            if (!planningResults || planningResults.classList.contains('d-none')) return;
+            if (document.activeElement !== planningSearch) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                movePlanningSelection(1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                movePlanningSelection(-1);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (planningResultIndex >= 0 && planningResultIndex < planningResultItems.length) {
+                    selectPlanningItem(planningResultItems[planningResultIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                planningResults.classList.add('d-none');
+            }
+        });
+
+        function movePlanningSelection(direction) {
+            if (!planningResultItems.length) return;
+            planningResultIndex = Math.max(0, Math.min(planningResultItems.length - 1, planningResultIndex + direction));
+            highlightPlanningResult(planningResultIndex);
+        }
+
+        // === ORIGINAL EDIT FORM SCRIPT ===
         // RENDER DATABASE DATAsafely by selecting only needed properties (BREAKS CYCLE)
         const rawMeasurements = @Html.Raw(Json.Serialize(Model.Measurements.Select(m => new {
             pointName = m.PointName,
@@ -723,7 +1238,11 @@
         const timeParts = timeHeader.split(',').map(s => s.trim());
 
         for (let i = 1; i <= 5; i++) {
-            const hasData = rawMeasurements.some(m => m[`r${i}`] !== null && m[`r${i}`] !== "");
+            const hasData = rawMeasurements.some(m => {
+                const v = m[`r${i}`] !== undefined ? m[`r${i}`] : m[`R${i}`];
+                return v !== null && v !== "" && v !== undefined;
+            });
+            
             if (hasData || i === 1) {
                 const getVal = (exactName) => {
                     const search = exactName.toLowerCase().trim();
@@ -749,13 +1268,15 @@
                     if (!row && !isThick) {
                         row = rawMeasurements.find(m => (m.pointName || "").trim().toLowerCase().includes(search.split(' ')[0]));
                     }
-                    return row ? row[`r${i}`] : "";
+                    if (!row) return "";
+                    const val = row[`r${i}`] !== undefined ? row[`r${i}`] : row[`R${i}`];
+                    return (val !== null && val !== undefined) ? val : "";
                 };
                 
                 const getVState = (itemName) => {
                     let row = rawMeasurements.find(m => (m.pointName || "").includes(itemName));
                     if (!row) row = rawMeasurements.find(m => (m.pointName || "").trim() === "Visual Check");
-                    const val = row ? row[`r${i}`] : null;
+                    const val = row ? (row[`r${i}`] !== undefined ? row[`r${i}`] : row[`R${i}`]) : null;
                     return (val == 1) ? "ok" : (val == 0 && val !== null ? "ng" : null);
                 };
 
@@ -782,17 +1303,7 @@
         let currentIndex = 0;
         let activeStandards = {};
 
-        window.onload = () => {
-            // Priority 1: Render existing data from measurements array
-            renderTimeline();
-            loadDataToUI();
-
-            // Priority 2: Load standards (Tolerances) from master, 
-            // but DO NOT overwrite current Summary values (Header info)
-            loadMaster(true); // 'true' means STANDARDS ONLY MODE
-            
-            initSmartNext();
-        };
+        // window.onload removed to avoid conflict with DOMContentLoaded
 
         async function openScanner() {
             const res = await Swal.fire({
@@ -1022,9 +1533,11 @@
 
         // Ensure initialization
         document.addEventListener('DOMContentLoaded', () => {
-            initSmartNext();
-            loadMaster();
             renderTimeline();
+            loadDataToUI();
+            loadMaster(true); // Load standards only to avoid overwriting header info on load
+            refreshPlanningItems();
+            initSmartNext();
         });
 
         function cleanValue(raw) {
@@ -1130,6 +1643,29 @@
             currentIndex = idx;
             loadDataToUI();
             renderTimeline();
+        }
+
+        function toggleClearBtn(id) {
+            const wrap = document.getElementById(`wrap-${id}`);
+            const inp = document.getElementById(`val-${id}`);
+            if (wrap && inp) {
+                if (inp.value && inp.value !== "0" && inp.value !== "0.00") {
+                    wrap.classList.add('has-value');
+                } else {
+                    wrap.classList.remove('has-value');
+                }
+            }
+        }
+
+        function clearCard(id) {
+            const inp = document.getElementById(`val-${id}`);
+            if (inp) {
+                inp.value = "";
+                toggleClearBtn(id);
+                validateCard(id);
+                inp.focus();
+                saveCurrentData();
+            }
         }
 
         function setQtyStatus(state) {
@@ -1288,7 +1824,10 @@
             if (targetInput) targetInput.value = "@Model.QtyTarget" || "0";
 
             // Run validation for all cards
-            ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
+            ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => {
+                validateCard(id);
+                toggleClearBtn(id);
+            });
         }
 
         function validateCard(id) {
@@ -1352,12 +1891,10 @@
                     // ONLY UPDATE HEADER IF NOT IN STANDARDS-ONLY MODE
                     if (!standardsOnly) {
                         const lineEl = document.getElementById('h-line');
-                        const custEl = document.getElementById('h-customer');
                         const hoseEl = document.getElementById('h-hose');
                         const docEl = document.getElementById('h-doc');
 
-                        if(lineEl) lineEl.innerText = "DL01 ENGINE LINE"; 
-                        if(custEl) custEl.innerText = m.customer || "GENERAL";
+                        if(lineEl) lineEl.innerText = m.machineName || "---"; 
                         if(hoseEl) hoseEl.innerText = m.hoseType || "---";
                         if(docEl) docEl.innerText = m.docNo || "---";
 
@@ -1503,8 +2040,9 @@
                 const payload = {
                     reportId: parseInt("@Model.Id") || 0,
                     documentNumber: document.getElementById('h-doc')?.innerText || '---',
+                    itemCode: document.getElementById('h-itemcode')?.innerText || '',
                     hoseType: document.getElementById('h-hose')?.innerText || '',
-                    customerName: document.getElementById('h-customer')?.innerText || '',
+                    customerName: "@(Model.CustomerName ?? "")",
                     dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
                     vinCode: document.getElementById('val-vin-kode')?.value || '',
                     standardLength: document.getElementById('disp-std-pnjg')?.value || '',

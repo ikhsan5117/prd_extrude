@@ -20,7 +20,7 @@ namespace VelastoProductionSystem.Controllers
             // Filter area Extrude (ID 1) dan TPE (ID 10)
             var machines = await _context.ElwpMachines
                 .Include(m => m.Area)
-                .Where(m => m.AreaId == 1 || m.AreaId == 10)
+                .Where(m => m.AreaId == 1)
                 .OrderBy(m => m.AreaId)
                 .ThenBy(m => m.KodeMesin)
                 .ToListAsync();

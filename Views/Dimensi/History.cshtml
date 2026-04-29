@@ -26,8 +26,8 @@
     .fade-in { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
     @@keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-    .history-page { padding: 40px 20px 100px; }
-    .history-container { max-width: 1400px; margin: 0 auto; }
+    .history-page { padding: 20px 15px 60px; }
+    .history-container { max-width: 100%; margin: 0 auto; }
 
     /* ─── HEADER HUD ─── */
     .page-header {
@@ -57,7 +57,7 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-left: 3px solid var(--accent);
         border-radius: 0px; 
-        padding: 0 18px; height: 50px;
+        padding: 0 15px; height: 42px;
         transition: all 0.3s ease;
     }
     .control-item:focus-within {
@@ -73,9 +73,9 @@
 
     .control-item input, .control-item select {
         background: transparent; border: none; color: #fff;
-        width: 100%; height: 100%; font-size: 0.85rem;
+        width: 100%; height: 100%; font-size: 0.8rem;
         font-weight: 600; outline: none;
-        text-transform: uppercase; letter-spacing: 1px;
+        text-transform: uppercase; letter-spacing: 0.5px;
     }
     .control-item select { cursor: pointer; color: #8b949e; }
     .control-item select:focus { color: #fff; }
@@ -95,13 +95,13 @@
 
     .intel-card { 
         display: flex; align-items: center; justify-content: space-between;
-        padding: 15px 25px;
+        padding: 12px 20px;
         background: linear-gradient(145deg, rgba(21, 27, 38, 0.7), rgba(1, 4, 9, 0.8));
         border: 1px solid rgba(255, 255, 255, 0.05); 
         border-radius: 2px; /* MATCHING SHARP THEME */
         backdrop-filter: blur(20px);
         transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
     .intel-card:hover { transform: translateY(-3px); border-color: var(--accent); }
     
@@ -111,8 +111,8 @@
 
     .intel-data { display: flex; flex-direction: column; }
     .intel-val { 
-        font-size: 2.22rem; font-weight: 1000; line-height: 1; 
-        letter-spacing: -2px;
+        font-size: 1.8rem; font-weight: 1000; line-height: 1; 
+        letter-spacing: -1.5px;
     }
     .intel-lbl { font-size: 0.55rem; font-weight: 800; color: #484f58; text-transform: uppercase; margin-top: 3px; letter-spacing: 1.5px; }
     
@@ -121,9 +121,9 @@
     .intel-val.red { background: linear-gradient(135deg, #ff4d4d, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
     .intel-ico {
-        width: 42px; height: 42px; border-radius: 12px; 
+        width: 36px; height: 36px; border-radius: 10px; 
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem; background: rgba(0,0,0,0.2);
+        font-size: 1.1rem; background: rgba(0,0,0,0.2);
         border: 1px solid rgba(255,255,255,0.02);
     }
     .intel-ico.cyan { color: #00ccff; }
@@ -152,69 +152,291 @@
     }
     .filter-input:focus { border-color: var(--accent); }
 
-    /* ─── MASONRY GRID ─── */
-    .history-grid {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 30px;
+    /* ─── MODERN DATA TABLE ─── */
+    .table-container {
+        background: rgba(21, 27, 38, 0.4);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        backdrop-filter: blur(20px);
+        max-height: 650px;
+        overflow-x: auto;
+        overflow-y: auto;
+        position: relative;
     }
 
-    .hist-tile {
-        background: var(--tile-bg); border: 1px solid var(--border);
-        border-radius: 32px; padding: 35px; position: relative;
-        backdrop-filter: blur(20px); transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        display: flex; flex-direction: column; gap: 25px; overflow: hidden;
-    }
-    .hist-tile:hover { 
-        transform: translateY(-15px); 
-        border-color: rgba(255,255,255,0.1);
-        box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+    /* Custom Scrollbar Styling */
+    .table-container::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
     }
 
-    .tile-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .doc-num { font-size: 1rem; font-weight: 900; color: var(--accent); letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; }
-    .date-stamp { font-size: 0.8rem; color: #484f58; font-weight: 700; }
-
-    .product-info { border-left: 2px solid var(--accent); padding-left: 20px; }
-    .hose-type { font-size: 1.8rem; font-weight: 1000; color: #fff; line-height: 1.1; margin-bottom: 5px; }
-    .cust-name { font-size: 0.9rem; font-weight: 700; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
-
-    .telemetry-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .stat-box {
-        background: rgba(0,0,0,0.2); border-radius: 20px; padding: 20px;
-        text-align: center; border: 1px solid rgba(255,255,255,0.02);
+    .table-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
     }
-    .stat-val { font-size: 2.22rem; font-weight: 1000; line-height: 1; }
-    .stat-val.ok { color: var(--success); }
-    .stat-val.ng { color: var(--danger); }
-    .stat-lbl { font-size: 0.6rem; font-weight: 950; color: #484f58; text-transform: uppercase; margin-top: 8px; letter-spacing: 2px; }
 
-    .trace-info { display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid var(--border); }
-    .trace-item { display: flex; flex-direction: column; gap: 4px; }
-    .trace-lbl { font-size: 0.65rem; font-weight: 800; color: #484f58; text-transform: uppercase; }
-    .trace-val { font-size: 1rem; font-weight: 900; color: #fff; }
-
-    .actions-row { display: flex; gap: 10px; margin-top: 10px; }
-    .btn-circle {
-        flex: 1; height: 50px; border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-        color: #fff; font-size: 1.2rem; transition: 0.3s; text-decoration: none;
+    .table-container::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--accent), rgba(0, 102, 255, 0.5));
+        border-radius: 10px;
+        border: 2px solid rgba(0, 0, 0, 0.2);
     }
-    .btn-circle:hover { background: var(--accent); border-color: var(--accent); transform: scale(1.05); color: #fff; }
-    .btn-circle.del:hover { background: var(--danger); border-color: var(--danger); }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #0080ff, var(--accent));
+    }
+
+    .data-table {
+        width: 100%;
+        min-width: 1400px;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .data-table thead {
+        background: linear-gradient(180deg, rgba(0, 102, 255, 0.08), rgba(0, 102, 255, 0.02));
+        border-bottom: 2px solid rgba(0, 102, 255, 0.3);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+    }
+
+    .data-table th {
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 900;
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #8b949e;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+        border-right: 1px solid var(--border);
+    }
+
+    .data-table th:last-child {
+        border-right: none;
+    }
+
+    .data-table th:hover {
+        color: var(--accent);
+        background: rgba(0, 102, 255, 0.05);
+    }
+
+    .data-table th i {
+        margin-left: 6px;
+        font-size: 0.7rem;
+        opacity: 0.4;
+        transition: opacity 0.2s;
+    }
+
+    .data-table th:hover i {
+        opacity: 1;
+    }
+
+    .data-table tbody tr {
+        border-bottom: 1px solid var(--border);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.01);
+    }
+
+    .data-table tbody tr:hover {
+        background: rgba(0, 102, 255, 0.04);
+        border-color: rgba(0, 102, 255, 0.2);
+        transform: scale(1.005);
+        box-shadow: 0 8px 24px rgba(0, 102, 255, 0.08);
+    }
+
+    .data-table td {
+        padding: 12px 15px;
+        color: #e6edf3;
+        vertical-align: middle;
+        border-right: 1px solid var(--border);
+    }
+
+    .data-table td:last-child {
+        border-right: none;
+    }
+
+    .doc-num {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 900;
+        color: var(--accent);
+        font-size: 0.82rem;
+        letter-spacing: 0.2px;
+    }
+
+    .date-stamp {
+        font-size: 0.8rem;
+        color: #8b949e;
+        font-weight: 600;
+    }
+
+    .hose-type {
+        font-size: 0.85rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .cust-name {
+        font-size: 0.8rem;
+        color: #8b949e;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-val {
+        font-size: 1.25rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .stat-val.ok {
+        color: var(--success);
+    }
+
+    .stat-val.ng {
+        color: var(--danger);
+    }
+
+    .trace-val {
+        font-weight: 800;
+        color: #fff;
+        font-size: 0.9rem;
+    }
+
+    .planning-name {
+        font-weight: 900;
+        color: #00ccff;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .machine-name {
+        font-weight: 700;
+        color: #fbbf24;
+        font-size: 0.85rem;
+    }
+
+    .user-name {
+        font-weight: 700;
+        color: #8b949e;
+        font-size: 0.85rem;
+    }
 
     .status-badge {
-        position: absolute; top: 0; left: 0; padding: 6px 15px;
-        font-size: 0.6rem; font-weight: 900; letter-spacing: 1px;
-        border-radius: 0 0 15px 0;
+        display: inline-block;
+        padding: 5px 12px;
+        font-size: 0.6rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        border-radius: 8px;
     }
-    .st-comp { background: rgba(0, 255, 136, 0.15); color: var(--success); }
-    .st-active { background: rgba(0, 102, 255, 0.15); color: var(--accent); }
 
-    .no-results { grid-column: 1 / -1; text-align: center; padding: 100px; color: #484f58; font-weight: 900; font-size: 1.5rem; border: 1px dashed var(--border); border-radius: 32px; }
+    .st-comp {
+        background: rgba(0, 255, 136, 0.15);
+        color: var(--success);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .st-active {
+        background: rgba(0, 102, 255, 0.15);
+        color: var(--accent);
+        border: 1px solid rgba(0, 102, 255, 0.3);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .btn-action-sm {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        color: #fff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-action-sm:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: translateY(-2px) scale(1.1);
+        box-shadow: 0 8px 20px var(--accent-glow);
+        color: #fff;
+    }
+
+    .btn-action-sm.del {
+        border: none;
+        background: rgba(255, 77, 77, 0.1);
+    }
+
+    .btn-action-sm.del:hover {
+        background: var(--danger);
+        border-color: var(--danger);
+        box-shadow: 0 8px 20px rgba(255, 77, 77, 0.4);
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 100px 20px;
+        color: #484f58;
+        font-weight: 900;
+        font-size: 1.5rem;
+        border: 1px dashed var(--border);
+        border-radius: 16px;
+        margin-top: 20px;
+    }
 
     @@media (max-width: 900px) {
         .control-hub { grid-template-columns: 1fr; }
+        .intel-hub { grid-template-columns: 1fr; }
         .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+        
+        .table-container {
+            max-height: 500px;
+            border-radius: 12px;
+        }
+        
+        .data-table {
+            font-size: 0.75rem;
+            min-width: 1200px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px 10px;
+            white-space: nowrap;
+        }
+        
+        .hose-type {
+            font-size: 0.85rem;
+        }
+        
+        .stat-val {
+            font-size: 1.2rem;
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
     }
 </style>
 
@@ -283,65 +505,95 @@
             </div>
         </div>
 
-        <!-- ── MASONRY TILES ── -->
-        <div class="history-grid" id="historyGrid">
-            @foreach (var item in Model.OrderByDescending(x => x.CreatedDate))
-            {
-                <div class="hist-tile record-item fade-in" 
-                     data-date="@item.CreatedDate.ToString("yyyy-MM-dd")"
-                     data-type="@item.HoseType"
-                     data-ok="@item.QtyOk"
-                     data-ng="@item.NgDimension"
-                     style="animation-delay: 0.2s;">
-                    
-                    <span class="status-badge @(item.Status == "COMPLETED" ? "st-comp" : "st-active")">
-                        @(item.Status == "COMPLETED" ? "SYNCED" : "PENDING")
-                    </span>
+        <!-- ── MODERN DATA TABLE ── -->
+        <div class="table-container fade-in" style="animation-delay: 0.2s;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Document <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(1)">Date/Time <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(2)">Planning <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(3)">Input By <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(4)">Machine <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(5)">Product Info <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(6)" style="text-align: center;">Passed <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(7)" style="text-align: center;">Failed <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(8)">VIN Code <i class="bi bi-arrow-down-up"></i></th>
+                        <th onclick="sortTable(9)" style="text-align: center;">Shift <i class="bi bi-arrow-down-up"></i></th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    @foreach (var item in Model.OrderByDescending(x => x.CreatedDate))
+                    {
+                        <tr class="record-item"
+                            data-date="@item.CreatedDate.ToString("yyyy-MM-dd")"
+                            data-type="@item.HoseType"
+                            data-ok="@item.QtyOk"
+                            data-ng="@item.NgDimension">
 
-                    <div class="tile-header">
-                        <div class="doc-num">#@item.DocumentNumber</div>
-                        <div class="date-stamp">@item.CreatedDate.ToString("dd MMM yyyy, HH:mm")</div>
-                    </div>
+                            <td>
+                                <div class="doc-num">#@item.DocumentNumber</div>
+                            </td>
 
-                    <div class="product-info">
-                        <div class="hose-type">@(item.HoseType ?? "UNDEFINED_PART")</div>
-                        <div class="cust-name">@(item.CustomerName ?? "UNKNOWN_CLIENT")</div>
-                    </div>
+                            <td>
+                                <div class="date-stamp">@item.CreatedDate.ToString("dd MMM yyyy")</div>
+                                <div class="date-stamp" style="color: #484f58; font-size: 0.7rem;">@item.CreatedDate.ToString("HH:mm")</div>
+                            </td>
 
-                    <div class="telemetry-row">
-                        <div class="stat-box">
-                            <div class="stat-val ok">@item.QtyOk.ToString("G29")</div>
-                            <div class="stat-lbl">PASSED</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val ng">@item.NgDimension.ToString("G29")</div>
-                            <div class="stat-lbl">FAILED</div>
-                        </div>
-                    </div>
+                            <td>
+                                <div class="planning-name">@(item.ItemCode ?? "---")</div>
+                            </td>
 
-                    <div class="trace-info">
-                        <div class="trace-item">
-                            <span class="trace-lbl">VIN_CODE</span>
-                            <span class="trace-val">@(item.VinCode ?? "---")</span>
-                        </div>
-                        <div class="trace-item text-end">
-                            <span class="trace-lbl">SHIFT</span>
-                            <span class="trace-val">@(item.Shift ?? "-")</span>
-                        </div>
-                    </div>
+                            <td>
+                                <div class="user-name">@(item.CreatedBy ?? "SYSTEM")</div>
+                            </td>
 
-                    <div class="actions-row">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-circle" title="View"><i class="bi bi-eye"></i></a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-circle" title="Edit"><i class="bi bi-sliders"></i></a>
-                        <form asp-action="Delete" method="post" onsubmit="return confirm('ERASE DOSSIER?');" style="flex:1; display:flex;">
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn-circle del" style="width:100%; border:none;" title="Delete">
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            }
+                            <td>
+                                <div class="machine-name">@(item.MachineName ?? "---")</div>
+                            </td>
+
+                            <td>
+                                <div class="hose-type" style="margin-bottom: 3px;">@(item.HoseType ?? "UNDEFINED_PART")</div>
+                                <div class="cust-name">@(item.CustomerName ?? "UNKNOWN_CLIENT")</div>
+                            </td>
+
+                            <td style="text-align: center;">
+                                <div class="stat-val ok">@item.QtyOk.ToString("G29")</div>
+                            </td>
+
+                            <td style="text-align: center;">
+                                <div class="stat-val ng">@item.NgDimension.ToString("G29")</div>
+                            </td>
+
+                            <td>
+                                <div class="trace-val">@(item.VinCode ?? "---")</div>
+                            </td>
+
+                            <td style="text-align: center;">
+                                <div class="trace-val">Shift @(item.Shift ?? "-")</div>
+                            </td>
+
+                            <td>
+                                <div class="action-buttons">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn-action-sm" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action-sm" title="Edit">
+                                        <i class="bi bi-sliders"></i>
+                                    </a>
+                                    <form asp-action="Delete" method="post" onsubmit="return confirm('ERASE DOSSIER?');" style="display:inline;">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-action-sm del" title="Delete">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
             <div id="noResults" class="no-results" style="display: none;">NO MATCHING RECORDS FOUND</div>
         </div>
     </div>
@@ -368,7 +620,7 @@
             const matchesType = typeVal === 'ALL' || type === typeVal;
 
             if (matchesSearch && matchesDate && matchesType) {
-                item.style.display = 'flex';
+                item.style.display = '';
                 visibleCount++;
                 totalOk += parseInt(item.getAttribute('data-ok') || 0);
                 totalNg += parseInt(item.getAttribute('data-ng') || 0);
@@ -380,7 +632,72 @@
         document.getElementById('totalReports').innerText = visibleCount;
         document.getElementById('totalOk').innerText = totalOk;
         document.getElementById('totalNg').innerText = totalNg;
-        document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        
+        const noResults = document.getElementById('noResults');
+        const tableBody = document.getElementById('tableBody');
+        if (visibleCount === 0) {
+            noResults.style.display = 'block';
+            tableBody.style.display = 'none';
+        } else {
+            noResults.style.display = 'none';
+            tableBody.style.display = '';
+        }
+    }
+
+    // Table sorting function
+    let sortDirections = {}; // Track sort direction for each column
+
+    function sortTable(columnIndex) {
+        const table = document.querySelector('.data-table');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr.record-item'));
+        
+        // Toggle sort direction
+        if (!sortDirections[columnIndex]) {
+            sortDirections[columnIndex] = 'asc';
+        } else {
+            sortDirections[columnIndex] = sortDirections[columnIndex] === 'asc' ? 'desc' : 'asc';
+        }
+        
+        const direction = sortDirections[columnIndex];
+        
+        rows.sort((a, b) => {
+            let aValue = a.cells[columnIndex].innerText.trim();
+            let bValue = b.cells[columnIndex].innerText.trim();
+            
+            // Handle numeric values
+            const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+            const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+            
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                return direction === 'asc' ? aNum - bNum : bNum - aNum;
+            }
+            
+            // Handle string values
+            if (direction === 'asc') {
+                return aValue.localeCompare(bValue);
+            } else {
+                return bValue.localeCompare(aValue);
+            }
+        });
+        
+        // Reappend sorted rows
+        rows.forEach(row => tbody.appendChild(row));
+        
+        // Update header indicators
+        const headers = table.querySelectorAll('th');
+        headers.forEach((header, index) => {
+            const icon = header.querySelector('i');
+            if (icon) {
+                if (index === columnIndex) {
+                    icon.className = direction === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+                    icon.style.opacity = '1';
+                } else {
+                    icon.className = 'bi bi-arrow-down-up';
+                    icon.style.opacity = '0.4';
+                }
+            }
+        });
     }
 
     // Initial run

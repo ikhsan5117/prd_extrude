@@ -48,6 +48,7 @@ namespace VelastoProductionSystem.Controllers
                 ProductionDate = DateTime.Now,
                 Shift = GetCurrentShift(),
                 Status = "DRAFT",
+                ItemCode = "",
                 CreatedBy = HttpContext.Session.GetString("UserName") ?? "QC Operator",
                 MachineName = HttpContext.Session.GetString("MachineName")
             };
@@ -314,6 +315,7 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 report.HoseType = data.HoseType ?? "";
+                report.ItemCode = data.ItemCode ?? "";
                 report.DimensionDisplay = data.DimensionDisplay ?? "";
                 report.VinCode = data.VinCode ?? "";
                 report.StandardLength = data.StandardLength ?? "";

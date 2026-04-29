@@ -31,7 +31,7 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             ViewBag.Machines = await _context.ElwpMachines
-                .Where(m => m.IsActive && (m.AreaId == 1 || m.AreaId == 10) && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
+                .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
                 .OrderBy(m => m.KodeMesin)
                 .ToListAsync();
 
@@ -53,19 +53,24 @@ namespace VelastoProductionSystem.Controllers
                     return View();
                 }
 
-                // Ambil mesin pertama yang tersedia untuk sesi
-                var anyMachine = await _context.ElwpMachines
-                    .Where(m => m.IsActive)
-                    .OrderBy(m => m.KodeMesin)
-                    .FirstOrDefaultAsync();
+                // Jika admin tidak memilih mesin, default ke "ADMIN"
+                string machineName = "ADMIN";
+                int machineIdValue = 0;
 
                 if (machineId.HasValue && machineId > 0)
-                    anyMachine = await _context.ElwpMachines.FindAsync(machineId);
+                {
+                    var selectedMachine = await _context.ElwpMachines.FindAsync(machineId.Value);
+                    if (selectedMachine != null)
+                    {
+                        machineName = selectedMachine.KodeMesin ?? "ADMIN";
+                        machineIdValue = selectedMachine.Id;
+                    }
+                }
 
                 HttpContext.Session.SetString("UserName", "Administrator");
                 HttpContext.Session.SetString("IsAdmin", "true");
-                HttpContext.Session.SetString("MachineName", anyMachine?.KodeMesin ?? "ADMIN");
-                HttpContext.Session.SetInt32("MachineId", anyMachine?.Id ?? 0);
+                HttpContext.Session.SetString("MachineName", machineName);
+                HttpContext.Session.SetInt32("MachineId", machineIdValue);
 
                 return RedirectToAction("Index", "Home");
             }
@@ -121,7 +126,7 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             ViewBag.Machines = await _context.ElwpMachines
-                .Where(m => m.IsActive && (m.AreaId == 1 || m.AreaId == 10) && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
+                .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
                 .OrderBy(m => m.KodeMesin)
                 .ToListAsync();
         }

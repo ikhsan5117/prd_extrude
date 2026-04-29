@@ -5,10 +5,16 @@ using VelastoProductionSystem.Data;
 using VelastoProductionSystem.WebSockets;
 using VelastoProductionSystem.Hubs;
 
+// Set EPPlus License globally for version 8+
+OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization("Velasto");
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<VelastoProductionSystem.Filters.SessionCheckFilter>();
+});
 builder.Services.AddSignalR();
 
 // Configure Entity Framework Core with SQL Server or SQLite

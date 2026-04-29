@@ -229,6 +229,10 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("HoseType")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ItemCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("MachineName")
                         .HasColumnType("nvarchar(max)");
 

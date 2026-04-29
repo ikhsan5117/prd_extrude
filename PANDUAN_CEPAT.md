@@ -39,7 +39,7 @@
 ## 📋 Cara Menggunakan
 
 ### Step 1: Buka SPS Masterlist Page
-Navigate ke: **MASTER DATA → SPS Double Layer**
+Navigate ke: **MASTER DATA → SPS Master**
 
 ### Step 2: Klik "Sinkronisasi Excel"
 Button hijau di kanan atas: **"🔼 Sinkronisasi Excel"**
