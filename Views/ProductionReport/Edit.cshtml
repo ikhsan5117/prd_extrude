@@ -945,7 +945,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             renderTabs();
             loadCurrentReadingToInputs();
-            @if (Model.StandardParameterSetting != null) {
+            @if (Model?.StandardParameterSetting != null) {
                 <text>applySpsToForm(@Html.Raw(Json.Serialize(Model.StandardParameterSetting)));</text>
             }
         });

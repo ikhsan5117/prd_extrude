@@ -2010,16 +2010,44 @@
             const form = document.getElementById('mainFormContainer');
             if (!form) return;
             const fields = {};
+            
+            // Capture regular inputs (by ID or NAME for dies dimension)
             form.querySelectorAll('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), select, textarea').forEach(el => {
-                if (!el.id || el.id === 'planningSearch') return;
-                fields[el.id] = el.value;
+                if (el.id && el.id !== 'planningSearch') {
+                    fields[el.id] = el.value;
+                } else if (el.name && !el.id) {
+                    // Capture dies dimension inputs (NippleDieInitial, etc) yang hanya punya name
+                    fields['__name_' + el.name] = el.value;
+                }
             });
-            form.querySelectorAll('input[type="radio"]:checked').forEach(el => {
-                fields['__radio_' + el.name] = el.value;
+            
+            // Capture ALL radio buttons with their state (not just checked ones)
+            const radioGroups = {};
+            form.querySelectorAll('input[type="radio"]').forEach(el => {
+                if (!el.name) return;
+                if (!radioGroups[el.name]) {
+                    radioGroups[el.name] = { checked: false, value: '' };
+                }
+                if (el.checked) {
+                    radioGroups[el.name] = { checked: true, value: el.value };
+                }
             });
-            form.querySelectorAll('input[type="checkbox"]:checked').forEach(el => {
-                if (el.name) fields['__chk_' + el.name] = el.value;
+            Object.entries(radioGroups).forEach(([name, state]) => {
+                if (state.checked) {
+                    fields['__radio_' + name] = state.value;
+                } else {
+                    fields['__radio_' + name] = '__NONE__';
+                }
             });
+            
+            // Capture ALL checkboxes with their state (not just checked ones)
+            form.querySelectorAll('input[type="checkbox"]').forEach(el => {
+                if (el.name || el.id) {
+                    const key = el.name || el.id;
+                    fields['__chk_' + key] = el.checked ? (el.value || 'true') : '__UNCHECKED__';
+                }
+            });
+            
             const lots = {};
             ['inner','middle','outer','yarn'].forEach(layer => {
                 const c = document.getElementById(layer + '-lot-list');
@@ -2039,18 +2067,35 @@
             let draft;
             try { draft = JSON.parse(raw); } catch { return false; }
             if (!draft || !draft.fields) return false;
+            
             Object.entries(draft.fields).forEach(([id, val]) => {
                 if (id.startsWith('__radio_')) {
-                    const el = document.querySelector('input[name="' + id.replace('__radio_', '') + '"][value="' + val + '"]');
-                    if (el) el.checked = true;
+                    const name = id.replace('__radio_', '');
+                    // Uncheck all radios in this group first
+                    document.querySelectorAll('input[name="' + name + '"]').forEach(r => r.checked = false);
+                    // Then check the saved one
+                    if (val !== '__NONE__') {
+                        const el = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
+                        if (el) el.checked = true;
+                    }
                 } else if (id.startsWith('__chk_')) {
-                    const el = document.querySelector('input[name="' + id.replace('__chk_', '') + '"][value="' + val + '"]');
-                    if (el) el.checked = true;
+                    const key = id.replace('__chk_', '');
+                    const el = document.querySelector('input[type="checkbox"][name="' + key + '"]') 
+                            || document.querySelector('input[type="checkbox"][id="' + key + '"]');
+                    if (el) {
+                        el.checked = (val !== '__UNCHECKED__');
+                    }
+                } else if (id.startsWith('__name_')) {
+                    // Restore dies dimension inputs by name
+                    const name = id.replace('__name_', '');
+                    const el = document.querySelector('input[name="' + name + '"]');
+                    if (el && !el.readOnly) el.value = val;
                 } else {
                     const el = document.getElementById(id);
                     if (el && !el.readOnly) el.value = val;
                 }
             });
+            
             if (draft.lots) {
                 Object.entries(draft.lots).forEach(([layer, rows]) => {
                     if (!rows.length) return;
@@ -2071,6 +2116,7 @@
                     });
                 });
             }
+            
             if (draft.readings && draft.readings.length) {
                 pReadings = draft.readings;
                 currentReadingIndex = pReadings.length - 1;
