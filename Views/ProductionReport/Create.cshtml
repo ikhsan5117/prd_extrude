@@ -999,6 +999,8 @@
 
                         <!-- OPERATIONAL SIGN-OFF (Hidden as name is from login) -->
                         <input type="hidden" asp-for="CreatedBy" />
+                        <input type="hidden" asp-for="StandardParameterSettingId" />
+                        <input type="hidden" asp-for="ItemCode" />
 
                         
                         <!-- FINAL CONTROL TERMINAL -->
@@ -1231,7 +1233,7 @@
                 'DRAI_Awal','DRAI_Akhir','DRAC_Awal','DRAC_Akhir',
                 'EmbossMarkContent','EmbossMarkDate',
                 'WasteInner','WasteOuter','WasteYarn','WasteTotal',
-                'TotalLength','TotalWeight','Remarks','CreatedBy'
+                'TotalLength','TotalWeight','Remarks'
             ];
             actualIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -1309,6 +1311,10 @@
                 wrapper.classList.remove('d-none');
                 wrapper.classList.add('animate__animated', 'animate__fadeInUp');
             }
+
+            // SET THE ID TO LINK WITH HISTORY
+            document.getElementById('StandardParameterSettingId').value = sps.id || sps.Id || 0;
+            document.getElementById('ItemCode').value = sps.itemList || sps.itemCode || sps.productCode || '';
 
             const itemCode = sps.itemList || sps.itemCode || sps.productCode || '';
             document.getElementById('manualItemSearch').value = itemCode;
@@ -2028,6 +2034,7 @@
                 DRAC_Akhir: document.getElementById('DRAC_Akhir').value,
 
                 StandardParameterSettingId: document.getElementById('StandardParameterSettingId')?.value ? parseInt(document.getElementById('StandardParameterSettingId').value) : null,
+                ItemCode: document.getElementById('ItemCode')?.value,
 
                 NippleDieOK: document.querySelector('input[name="NippleDieOK"]:checked')?.value === 'true',
                 NippleDieInitial: document.querySelector('input[name="NippleDieInitial"]')?.value,

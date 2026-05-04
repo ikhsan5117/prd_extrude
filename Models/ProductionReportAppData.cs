@@ -29,6 +29,8 @@ namespace VelastoProductionSystem.Models
         public string? ByPass { get; set; }
         public string? Shift { get; set; }
         public int RevisionNumber { get; set; }
+        public string? CreatedBy { get; set; }
+        public int? StandardParameterSettingId { get; set; }
         
         // Dimension readings array
         public List<DimensionReadingData> DimensionReadings { get; set; } = new List<DimensionReadingData>();
@@ -119,6 +121,7 @@ namespace VelastoProductionSystem.Models
         
         // --- NEW FIELDS ---
         public int? StandardParameterSettingId { get; set; }
+        public string? ItemCode { get; set; }
         
         // Dies
         public bool NippleDieOK { get; set; }

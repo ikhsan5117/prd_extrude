@@ -282,6 +282,254 @@ namespace VelastoProductionSystem.Data
                 context.LotTags.Add(lotTag);
                 context.SaveChanges();
             }
+
+            // Seed Dimension Reports & Measurements for Chart Analysis
+            if (!context.DimensionReports.Any(d => d.DocumentNumber == "DIM-NA2060-REF"))
+            {
+                var dimReport = new DimensionReport
+                {
+                    DocumentNumber = "DIM-NA2060-REF",
+                    RevisionNumber = 1,
+                    ProductionDate = DateTime.Now.AddDays(-1),
+                    Shift = "Shift 1",
+                    ItemCode = "ITEM-001",
+                    CustomerName = "TOYOTA",
+                    HoseType = "Fuel Hose 8mm",
+                    MachineName = "EXT-01",
+                    DimensionDisplay = "8.0 x 12.0",
+                    Yarn = "Polyester 1500D",
+                    VinCode = "VIN-FH8",
+                    StandardLength = "1000mm",
+                    ActualLength = "1000mm",
+                    QtyTarget = 500,
+                    QtyOk = 485,
+                    NgDimension = 10,
+                    NgVisual = 5,
+                    Remark = "Sample dimension report for chart analysis",
+                    CreatedBy = "System Seed",
+                    CreatedDate = DateTime.Now.AddDays(-1)
+                };
+
+                context.DimensionReports.Add(dimReport);
+                context.SaveChanges();
+
+                // Add DimensionMeasurements with varying data for chart
+                var measurements = new List<DimensionMeasurement>();
+                decimal[] innerThicknessValues = { 1.45m, 1.48m, 1.50m, 1.52m, 1.49m, 1.47m, 1.51m, 1.48m, 1.46m, 1.49m };
+                decimal[] innerDiameterValues = { 8.05m, 8.08m, 8.10m, 8.12m, 8.09m, 8.07m, 8.11m, 8.08m, 8.06m, 8.09m };
+
+                for (int i = 0; i < 10; i++)
+                {
+                    var recordTime = DateTime.Now.AddHours(-10 + i);
+                    
+                    // Inner Thickness measurements
+                    measurements.Add(new DimensionMeasurement
+                    {
+                        DimensionReportId = dimReport.Id,
+                        TimeSection = recordTime.ToString("HH:mm"),
+                        PointName = "Inner Tube Thickness",
+                        Frequency = "30m Sekali",
+                        StandardDimension = "1.50",
+                        Initial = "0",
+                        ScaleValue = 0.01m,
+                        R1 = innerThicknessValues[i],
+                        R2 = innerThicknessValues[i] + 0.01m,
+                        R3 = innerThicknessValues[i] - 0.01m,
+                        Status = (i % 10) < 9 ? "OK" : "OK",
+                        RecordedTime = recordTime
+                    });
+
+                    // Inner Diameter measurements
+                    measurements.Add(new DimensionMeasurement
+                    {
+                        DimensionReportId = dimReport.Id,
+                        TimeSection = recordTime.ToString("HH:mm"),
+                        PointName = "Inner Tube Diameter",
+                        Frequency = "30m Sekali",
+                        StandardDimension = "8.10",
+                        Initial = "0",
+                        ScaleValue = 0.01m,
+                        R1 = innerDiameterValues[i],
+                        R2 = innerDiameterValues[i] + 0.02m,
+                        R3 = innerDiameterValues[i] - 0.02m,
+                        Status = "OK",
+                        RecordedTime = recordTime
+                    });
+
+                    // Outer Cover Thickness (Total Thickness)
+                    measurements.Add(new DimensionMeasurement
+                    {
+                        DimensionReportId = dimReport.Id,
+                        TimeSection = recordTime.ToString("HH:mm"),
+                        PointName = "Outer Cover Total Thickness",
+                        Frequency = "30m Sekali",
+                        StandardDimension = "3.20",
+                        Initial = "0",
+                        ScaleValue = 0.01m,
+                        R1 = 3.18m + (i * 0.01m),
+                        R2 = 3.20m + (i * 0.01m),
+                        R3 = 3.22m + (i * 0.01m),
+                        Status = (i % 10) < 8 ? "OK" : "NG",
+                        RecordedTime = recordTime
+                    });
+
+                    // Spiral Pitch measurements
+                    measurements.Add(new DimensionMeasurement
+                    {
+                        DimensionReportId = dimReport.Id,
+                        TimeSection = recordTime.ToString("HH:mm"),
+                        PointName = "Spiral Pitch Distance",
+                        Frequency = "30m Sekali",
+                        StandardDimension = "25.0",
+                        Initial = "0",
+                        ScaleValue = 0.1m,
+                        R1 = 24.8m + (i * 0.05m),
+                        R2 = 25.0m + (i * 0.05m),
+                        R3 = 25.2m + (i * 0.05m),
+                        Status = "OK",
+                        RecordedTime = recordTime
+                    });
+                }
+
+                context.DimensionMeasurements.AddRange(measurements);
+                context.SaveChanges();
+            }
+
+            // Seed ProductionReports with ProductionReadings for ChartAnalysis
+            if (!context.ProductionReports.Any(p => p.DocumentNumber == "VI-SOP-PROD-133"))
+            {
+                var prodReport = new ProductionReport
+                {
+                    DocumentNumber = "VI-SOP-PROD-133",
+                    RevisionNumber = 0,
+                    ProductionDate = DateTime.Now.AddDays(-1),
+                    Shift = "Shift 1",
+                    CustomerName = "TOYOTA AUTOMOTIVE",
+                    HoseType = "Radiator Hose",
+                    MachineName = "EXT-01",
+                    Dimension = "28mm x 35mm",
+                    InnerMaterial = "NBR Grade A",
+                    InnerMaterialLotNo = "NBR-20260428-001",
+                    InnerMaterialSG = 1.18m,
+                    OuterMaterial = "EPDM Premium",
+                    OuterMaterialLotNo = "EPDM-20260428-001",
+                    OuterMaterialSG = 1.22m,
+                    Yarn = "Polyester 2000D",
+                    Status = "Completed",
+                    VinCode = "VIN-RAD-28",
+                    CreatedBy = "Operator A",
+                    CreatedDate = DateTime.Now.AddDays(-1)
+                };
+
+                context.ProductionReports.Add(prodReport);
+                context.SaveChanges();
+
+                // Add ProductionReadings (hourly for 10 hours) - MUST be after SaveChanges
+                var readings = new List<ProductionReading>();
+                for (int i = 0; i < 10; i++)
+                {
+                    var readingTime = DateTime.Now.AddHours(-10 + i);
+                    readings.Add(new ProductionReading
+                    {
+                        ProductionReportId = prodReport.Id,
+                        ReadingTime = readingTime,
+                        IntervalMinutes = 60,
+                        HeadTempInner = 180 + (i % 3) - 1,
+                        Cylinder1TempInner = 175 + (i % 2),
+                        Cylinder2TempInner = 172 + (i % 2),
+                        Cylinder3TempInner = 170 + (i % 2),
+                        ScrewTempInner = 165 + (i % 3),
+                        HeadTempOuter = 175 + (i % 2),
+                        Cylinder1TempOuter = 170 + (i % 2),
+                        Cylinder2TempOuter = 168 + (i % 2),
+                        Cylinder3TempOuter = 165 + (i % 2),
+                        ScrewTempOuter = 160 + (i % 3),
+                        ScrewSpeedInner = 45.5m + (i * 0.5m),
+                        ScrewSpeedOuter = 42.0m + (i * 0.3m),
+                        FeedRollRatioInner = 85 + (i % 5),
+                        FeedRollRatioOuter = 88 + (i % 5),
+                        PressureInner = 12.5m + (i * 0.1m),
+                        PressureOuter = 11.8m + (i * 0.1m),
+                        HoseSpeed = 18.5m + (i * 0.2m),
+                        SpiralSpeed = 150 + (i % 10),
+                        SpiralPitchSetting = 25.0m,
+                        SpiralPitchDisplay = 25.1m + (i * 0.05m),
+                        InnerDiameter = 28.2m + (i * 0.05m),
+                        TotalThicknessX = 3.5m + (i * 0.02m),
+                        TotalThicknessY = 3.48m + (i * 0.02m)
+                    });
+                }
+                context.ProductionReadings.AddRange(readings);
+                context.SaveChanges();
+            }
+
+            // Add one more sample report
+            if (!context.ProductionReports.Any(p => p.DocumentNumber == "PR-HOSE-FH8-001"))
+            {
+                var prodReport2 = new ProductionReport
+                {
+                    DocumentNumber = "PR-HOSE-FH8-001",
+                    RevisionNumber = 0,
+                    ProductionDate = DateTime.Now.AddDays(-2),
+                    Shift = "Shift 2",
+                    CustomerName = "HONDA MOTORS",
+                    HoseType = "Fuel Hose 8mm",
+                    MachineName = "EXT-02",
+                    Dimension = "8mm x 12mm",
+                    InnerMaterial = "NBR Grade B",
+                    InnerMaterialLotNo = "NBR-20260427-002",
+                    InnerMaterialSG = 1.19m,
+                    OuterMaterial = "CR Premium",
+                    OuterMaterialLotNo = "CR-20260427-001",
+                    OuterMaterialSG = 1.20m,
+                    Yarn = "Polyester 1500D",
+                    Status = "Completed",
+                    VinCode = "VIN-FH8-001",
+                    CreatedBy = "Operator B",
+                    CreatedDate = DateTime.Now.AddDays(-2)
+                };
+
+                context.ProductionReports.Add(prodReport2);
+                context.SaveChanges();
+
+                // Add readings for second report - MUST be after SaveChanges
+                var readings2 = new List<ProductionReading>();
+                for (int i = 0; i < 8; i++)
+                {
+                    var readingTime = DateTime.Now.AddDays(-2).AddHours(-8 + i);
+                    readings2.Add(new ProductionReading
+                    {
+                        ProductionReportId = prodReport2.Id,
+                        ReadingTime = readingTime,
+                        IntervalMinutes = 60,
+                        HeadTempInner = 185 + (i % 4) - 1,
+                        Cylinder1TempInner = 180 + (i % 2),
+                        Cylinder2TempInner = 177 + (i % 2),
+                        Cylinder3TempInner = 175 + (i % 2),
+                        ScrewTempInner = 170 + (i % 3),
+                        HeadTempOuter = 180 + (i % 2),
+                        Cylinder1TempOuter = 175 + (i % 2),
+                        Cylinder2TempOuter = 173 + (i % 2),
+                        Cylinder3TempOuter = 170 + (i % 2),
+                        ScrewTempOuter = 165 + (i % 3),
+                        ScrewSpeedInner = 42.0m + (i * 0.4m),
+                        ScrewSpeedOuter = 40.0m + (i * 0.2m),
+                        FeedRollRatioInner = 90 + (i % 5),
+                        FeedRollRatioOuter = 92 + (i % 5),
+                        PressureInner = 10.5m + (i * 0.1m),
+                        PressureOuter = 10.0m + (i * 0.1m),
+                        HoseSpeed = 16.5m + (i * 0.15m),
+                        SpiralSpeed = 145 + (i % 8),
+                        SpiralPitchSetting = 22.0m,
+                        SpiralPitchDisplay = 22.05m + (i * 0.03m),
+                        InnerDiameter = 8.1m + (i * 0.02m),
+                        TotalThicknessX = 2.5m + (i * 0.01m),
+                        TotalThicknessY = 2.48m + (i * 0.01m)
+                    });
+                }
+                context.ProductionReadings.AddRange(readings2);
+                context.SaveChanges();
+            }
         }
     }
 }

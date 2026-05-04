@@ -267,12 +267,7 @@
             border-left: 4px solid #ef4444;
         }
 
-        @@media (max-width: 992px) {
-            .login-card { width: 95%; max-width: 800px; height: auto; flex-direction: column; }
-            .left-panel { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
-            .right-panel-header { display: none; }
-            .right-panel { padding: 30px 40px; }
-        }
+
 
         /* --- 3D SHARDS BACKGROUND --- */
         .shard-container {
@@ -326,6 +321,68 @@
             transform: rotate(45deg);
             opacity: 0.6;
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)) blur(2px);
+        }
+
+        .role-btn:hover {
+            background: rgba(0, 210, 254, 0.1) !important;
+            border-color: var(--accent-cyan) !important;
+            transform: translateX(5px);
+        }
+
+        .role-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* --- TABLET OPTIMIZATION (768px - 1200px) --- */
+        @@media screen and (min-width: 768px) and (max-width: 1200px) {
+            body {
+                padding: 20px 10px !important;
+            }
+            .login-card { 
+                width: 98% !important;
+                max-width: 98% !important;
+                margin: 0 auto !important;
+            }
+            .left-panel {
+                width: 42% !important;
+                padding: 30px 25px !important;
+            }
+            .right-panel {
+                padding: 30px 30px !important;
+                flex: 1 !important;
+            }
+            .left-panel h1 {
+                font-size: 1.4rem;
+            }
+            .main-heading {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* --- MOBILE OPTIMIZATION (below 768px) --- */
+        @@media screen and (max-width: 767px) {
+            body { display: flex !important; padding: 20px 0 !important; height: auto !important; overflow-y: auto !important; align-items: flex-start !important; justify-content: center !important; }
+            .login-card { 
+                width: 99% !important; 
+                max-width: none !important; 
+                min-width: 0 !important; 
+                margin: 10px auto !important; 
+                border-radius: 20px !important; 
+                flex-direction: column !important; 
+                display: flex !important;
+                border: 1px solid rgba(255,255,255,0.08) !important;
+                box-shadow: 0 40px 100px rgba(0,0,0,0.8) !important;
+            }
+            .left-panel, .right-panel { 
+                width: 100% !important; 
+                min-width: 0 !important; 
+                max-width: 100% !important; 
+                flex: none !important;
+                padding: 40px 15px !important;
+            }
+            .left-panel { border-bottom: 1px solid rgba(255,255,255,0.05) !important; border-right: none !important; }
+            .main-heading { font-size: 1.8rem; }
+            .logo-container img { height: 32px; }
         }
     </style>
 </head>
@@ -443,6 +500,33 @@
             </button>
         </form>
 
+        <!-- CREDENTIALS GUIDE -->
+        <div id="credentialsGuide" style="margin-top: 25px; display: none;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="role-btn" onclick="autoFillAdmin('admin', 'admin123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s;">
+                    <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Super Admin</span>
+                    <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
+                        <span style="color: var(--accent-cyan);">admin</span>
+                        <span style="color: #fff; opacity: 0.5;">admin123!</span>
+                    </div>
+                </div>
+                <div class="role-btn" onclick="autoFillAdmin('adm_prod', 'produksi123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s;">
+                    <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Admin Prod</span>
+                    <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
+                        <span style="color: var(--accent-cyan);">adm_prod</span>
+                        <span style="color: #fff; opacity: 0.5;">produksi123!</span>
+                    </div>
+                </div>
+                <div class="role-btn" onclick="autoFillAdmin('adm_eng', 'engineering123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s;">
+                    <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Admin Eng</span>
+                    <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
+                        <span style="color: var(--accent-cyan);">adm_eng</span>
+                        <span style="color: #fff; opacity: 0.5;">engineering123!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="footer-links">
             <a href="#"><i class="bi bi-headset"></i> Support</a>
             <a href="/"><i class="bi bi-house"></i> Home</a>
@@ -461,6 +545,7 @@
             e.preventDefault();
             isAdminMode = !isAdminMode;
             if (isAdminMode) {
+                $('.main-heading').text('Login Admin');
                 $('#operatorFields').hide();
                 $('#adminFields').show();
                 // Hide Machine selection for Admin
@@ -470,9 +555,11 @@
                 $('#userId').removeAttr('required');
                 $('#password').val('admin123!');
                 $('#adminUsernameInput').val('admin');
+                $('#credentialsGuide').fadeIn();
                 $(this).html('<i class="bi bi-person"></i> Login Operator').css('color', 'var(--accent-cyan)');
                 $('#adminUsernameInput').focus();
             } else {
+                $('.main-heading').text('Login Operator');
                 $('#operatorFields').show();
                 $('#adminFields').hide();
                 // Show Machine selection for Operator
@@ -483,6 +570,7 @@
                 $('#password').val('');
                 $('#adminUsernameInput').val('');
                 $('#adminUsername').val('');
+                $('#credentialsGuide').hide();
                 $(this).html('<i class="bi bi-person-badge"></i> Login Admin').css('color', '');
             }
         });
@@ -526,6 +614,29 @@
             }
         });
     });
+
+    function autoFillAdmin(user, pass) {
+        $('#adminUsernameInput').val(user).css('border-color', 'var(--accent-cyan)');
+        $('#password').val(pass).css('border-color', 'var(--accent-cyan)');
+        
+        // Flash effect
+        setTimeout(() => {
+            $('#adminUsernameInput, #password').css('border-color', '');
+        }, 600);
+        
+        // Show notification
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true
+        });
+        Toast.fire({
+            icon: 'success',
+            title: 'Kredensial ' + user + ' diterapkan'
+        });
+    }
 </script>
 
 </body>

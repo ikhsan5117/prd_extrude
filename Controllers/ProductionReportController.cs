@@ -42,6 +42,7 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction("Login", "Account");
             }
             var reports = await _context.ProductionReports
+                .Include(p => p.StandardParameterSetting)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
             return View(reports);
@@ -55,6 +56,7 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction("Login", "Account");
             }
             var reports = await _context.ProductionReports
+                .Include(p => p.StandardParameterSetting)
                 .Where(p => !string.IsNullOrEmpty(p.ActualLength) || !string.IsNullOrEmpty(p.VinCode) || p.QtyOk > 0 || p.NgDimension > 0 || p.NgVisual > 0)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
@@ -114,6 +116,9 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction(nameof(App));
             }
             
+            var sps = await _context.StandardParameterSettings
+                .FirstOrDefaultAsync(s => s.ItemList == itemCode || s.ProductCode == itemCode);
+
             var report = new ProductionReport {
                 Id = 0,
                 DocumentNumber = master.DocumentNumber ?? "-",
@@ -123,7 +128,9 @@ namespace VelastoProductionSystem.Controllers
                 HoseType = master.HoseType ?? "-",
                 Dimension = master.Dimensi ?? "-",
                 Yarn = master.InnerTube ?? "-",
-                Shift = "Shift 1"
+                Shift = "Shift 1",
+                StandardParameterSettingId = sps?.Id,
+                CreatedBy = HttpContext.Session.GetString("UserName") ?? "Operator"
             };
             
             ViewBag.Masterlist = master;
@@ -518,6 +525,7 @@ namespace VelastoProductionSystem.Controllers
                     CreatedDate = DateTime.Now,
                     Status = "COMPLETED",
                     StandardParameterSettingId = dto.StandardParameterSettingId,
+                    ItemCode = dto.ItemCode,
                     NippleDieOK = dto.NippleDieOK, NippleDieInitial = dto.NippleDieInitial, NippleDieFinal = dto.NippleDieFinal,
                     TubeDieOK = dto.TubeDieOK, TubeDieInitial = dto.TubeDieInitial, TubeDieFinal = dto.TubeDieFinal,
                     MiddleDieOK = dto.MiddleDieOK, MiddleDieInitial = dto.MiddleDieInitial, MiddleDieFinal = dto.MiddleDieFinal,
@@ -1252,8 +1260,10 @@ namespace VelastoProductionSystem.Controllers
                         InnerMaterialActual = "-",
                         OuterMaterialActual = "-",
                         YarnActual = "-",
-                        CreatedBy = "Operator 1",
-                        Shift = "Shift 1"
+                        CreatedBy = data.CreatedBy ?? "Operator",
+                        Shift = data.Shift ?? "I",
+                        ItemCode = data.ItemCode,
+                        StandardParameterSettingId = data.StandardParameterSettingId
                     };
                     _context.ProductionReports.Add(report);
                 }
@@ -1365,6 +1375,194 @@ namespace VelastoProductionSystem.Controllers
                 return Json(new { success = true });
             }
             return Json(new { success = false });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  CHART ANALYSIS — Page + API
+        // ═══════════════════════════════════════════════════════════════
+
+        // GET: ProductionReport/ChartAnalysis
+        public IActionResult ChartAnalysis()
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+                return RedirectToAction("Login", "Account");
+
+            return View();
+        }
+
+        // GET: ProductionReport/GetChartData?documentNumber=XXX
+        [HttpGet]
+        public async Task<IActionResult> GetChartData(string documentNumber)
+        {
+            if (string.IsNullOrWhiteSpace(documentNumber))
+                return BadRequest(new { success = false, message = "Document number is required." });
+
+            var docNum = documentNumber.Trim();
+
+            // 1. Find ProductionReport
+            var report = await _context.ProductionReports
+                .Include(r => r.ProductionReadings)
+                .FirstOrDefaultAsync(r => r.DocumentNumber == docNum);
+
+            if (report == null)
+                return Json(new { success = false, message = $"Production Report '{docNum}' tidak ditemukan." });
+
+            // 2. Find matching SPS Master (cascade: DocNumber → ItemList/VinCode → HoseType+Dimensi)
+            MasterlistSpsDoubleLayer? sps = null;
+
+            // Try exact DocumentNumber match
+            sps = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
+
+            // Fallback: match by VinCode in ItemList
+            if (sps == null && !string.IsNullOrEmpty(report.VinCode))
+            {
+                var vin = report.VinCode.Trim().ToUpper();
+                sps = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(vin))
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+            }
+
+            // Fallback: match by HoseType + Dimensi
+            if (sps == null && !string.IsNullOrEmpty(report.HoseType))
+            {
+                sps = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.HoseType == report.HoseType &&
+                                (report.Dimension == null || m.Dimensi == report.Dimension))
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+            }
+
+            // 3. Load sensor data linked to this report
+            var sensorData = await _context.SensorIngestLogs
+                .Where(s => s.ProductionReportId == report.Id && s.Status == "OK")
+                .OrderBy(s => s.SensorTimestamp)
+                .Select(s => new {
+                    s.MetricType,
+                    value = s.MetricValue,
+                    time = s.SensorTimestamp.ToString("HH:mm:ss"),
+                    s.Unit,
+                    s.Quality
+                })
+                .Take(500)
+                .ToListAsync();
+
+            // 4. Build readings time-series
+            var readings = report.ProductionReadings
+                .OrderBy(r => r.ReadingTime)
+                .Select(r => new {
+                    readingTime = r.ReadingTime.ToString("yyyy-MM-dd HH:mm"),
+                    timeLabel = r.ReadingTime.ToString("HH:mm"),
+                    r.HeadTempInner, r.HeadTempOuter,
+                    r.Cylinder1TempInner, r.Cylinder1TempOuter,
+                    r.Cylinder2TempInner, r.Cylinder2TempOuter,
+                    r.Cylinder3TempInner, r.Cylinder3TempOuter,
+                    r.ScrewTempInner, r.ScrewTempOuter,
+                    r.ScrewSpeedInner, r.ScrewSpeedOuter,
+                    r.FeedRollRatioInner, r.FeedRollRatioOuter,
+                    r.PressureInner, r.PressureOuter,
+                    r.HoseSpeed, r.SpiralSpeed,
+                    r.SpiralPitchSetting, r.SpiralPitchDisplay,
+                    r.ControlValue, r.PresetValue,
+                    r.ChillerWaterTemp, r.CaterpillarGap,
+                    r.TakeupConveyorSpeed, r.CoolConveyorSpeed,
+                    r.InnerDiameter,
+                    r.TotalThicknessX, r.TotalThicknessY,
+                    r.SpiralPitch
+                }).ToList();
+
+            // 5. Build result
+            return Json(new {
+                success = true,
+                report = new {
+                    report.Id,
+                    report.DocumentNumber,
+                    report.HoseType,
+                    report.VinCode,
+                    report.MachineName,
+                    report.Dimension,
+                    report.CustomerName,
+                    report.Shift,
+                    productionDate = report.ProductionDate.ToString("yyyy-MM-dd"),
+                    report.Status
+                },
+                spsFound = sps != null,
+                spsStandard = sps == null ? null : new {
+                    sps.HeadTemp1, sps.HeadTemp2, sps.HeadTemp3,
+                    sps.Cylinder1_1, sps.Cylinder1_2, sps.Cylinder1_3,
+                    sps.Cylinder2_1, sps.Cylinder2_2, sps.Cylinder2_3,
+                    sps.Cylinder3_1, sps.Cylinder3_2, sps.Cylinder3_3,
+                    sps.ScrewTemp1, sps.ScrewTemp2, sps.ScrewTemp3,
+                    sps.ScrewSpeed1, sps.ScrewSpeed2, sps.ScrewSpeed3,
+                    sps.Pressure1, sps.Pressure2, sps.Pressure3,
+                    sps.FeedRollRatio1, sps.FeedRollRatio2, sps.FeedRollRatio3,
+                    sps.Feed1, sps.Feed2, sps.Feed3,
+                    sps.HoseSpeed, sps.SpiralSpeed,
+                    sps.SpiralPitchSetting, sps.SpiralPitchDisplay,
+                    sps.PresetValue, sps.ControlValue,
+                    sps.ChillerWaterTemp, sps.CaterpillarGap,
+                    sps.TakeUpConveyorSpeed, sps.CoolConveyorSpeed,
+                    sps.ConveyorRatio, sps.UnsmoothSurface,
+                    // Quality Matrix
+                    sps.InnerTarget, sps.InnerTol, sps.InnerLCL, sps.InnerMin, sps.InnerUCL, sps.InnerMax,
+                    sps.ThickTarget, sps.ThickTol, sps.ThickLCL, sps.ThickMin, sps.ThickUCL, sps.ThickMax,
+                    sps.TotalTarget, sps.TotalTol, sps.TotalLCL, sps.TotalMin, sps.TotalUCL, sps.TotalMax,
+                    sps.ToleranceSpiralPitch,
+                    sps.ToleranceInner, sps.ToleranceOuter,
+                    sps.ItemList, sps.DocumentNumber, sps.HoseType, sps.Dimensi
+                },
+                initials = new {
+                    report.InitHeadTempInner, report.InitHeadTempOuter,
+                    report.InitCylinder1TempInner, report.InitCylinder1TempOuter,
+                    report.InitCylinder2TempInner, report.InitCylinder2TempOuter,
+                    report.InitCylinder3TempInner, report.InitCylinder3TempOuter,
+                    report.InitScrewTempInner, report.InitScrewTempOuter,
+                    report.InitScrewSpeedInner, report.InitScrewSpeedOuter,
+                    report.InitFeedRollRatioInner, report.InitFeedRollRatioOuter,
+                    report.InitPressureInner, report.InitPressureOuter,
+                    report.InitHoseSpeed, report.InitSpiralSpeed,
+                    report.InitSpiralPitchSetting, report.InitSpiralPitchDisplay,
+                    report.InitPresetValue, report.InitControlValue,
+                    report.InitChillerWaterTemp, report.InitCaterpillarGap,
+                    report.InitTakeupConveyorSpeed, report.InitCoolConveyorSpeed,
+                    report.InitUnsmoothSurface
+                },
+                readings,
+                sensorData
+            });
+        }
+
+        // GET: ProductionReport/GetDocumentList — for autocomplete search
+        [HttpGet]
+        public async Task<IActionResult> GetDocumentList(string? q = null)
+        {
+            var query = _context.ProductionReports.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var search = q.Trim().ToUpper();
+                query = query.Where(r =>
+                    (r.DocumentNumber != null && r.DocumentNumber.ToUpper().Contains(search)) ||
+                    (r.VinCode != null && r.VinCode.ToUpper().Contains(search)) ||
+                    (r.HoseType != null && r.HoseType.ToUpper().Contains(search)));
+            }
+
+            var docs = await query
+                .OrderByDescending(r => r.ProductionReadings.Count)
+                .ThenByDescending(r => r.CreatedDate)
+                .Take(30)
+                .Select(r => new {
+                    r.DocumentNumber,
+                    r.HoseType,
+                    r.VinCode,
+                    r.MachineName,
+                    date = r.ProductionDate.ToString("dd MMM yyyy"),
+                    readingsCount = r.ProductionReadings.Count
+                })
+                .ToListAsync();
+
+            return Json(docs);
         }
     }
 }

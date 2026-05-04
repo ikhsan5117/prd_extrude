@@ -32,6 +32,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Dimensi")]
         public string? Dimension { get; set; } 
 
+        [Display(Name = "Item Code (Planning)")]
+        public string? ItemCode { get; set; }
+
         [Display(Name = "Parameter Setting ID")]
         public int? StandardParameterSettingId { get; set; }
         public StandardParameterSetting? StandardParameterSetting { get; set; }

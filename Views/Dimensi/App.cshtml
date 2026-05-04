@@ -614,6 +614,7 @@
                     </div>
                 </div>
             </div>
+            <input type="hidden" id="itemCode" value="@Model.ItemCode" />
         </div>
     </div>
 
@@ -1429,6 +1430,8 @@
             }
             window._dimSelectedLabel = displayText;
             window._dimSelectedItemCode = item.itemCode;
+            const itemCodeInput = document.getElementById('itemCode');
+            if (itemCodeInput) itemCodeInput.value = item.itemCode;
             document.getElementById('planningResults')?.classList.add('d-none');
 
             // Save draft for previous item before switching
@@ -2599,6 +2602,7 @@
                 const payload = {
                     ReportId: @Model.Id,
                     DocumentNumber: document.getElementById('h-doc')?.innerText || '---',
+                    ItemCode: document.getElementById('itemCode')?.value || window._dimSelectedItemCode || '',
                     HoseType: document.getElementById('h-hose')?.innerText || '',
                     CustomerName: document.getElementById('h-customer')?.innerText || '',
                     DimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',

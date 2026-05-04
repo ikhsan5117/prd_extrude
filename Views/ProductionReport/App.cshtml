@@ -1009,12 +1009,16 @@
                 DimensionDisplay: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Dimension ?? "")),
                 CustomerName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName ?? "")),
                 Yarn: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Yarn ?? "")),
+                ItemCode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ItemCode ?? "")),
                 VinCode: document.getElementById('vinCode')?.value || '',
                 ActualLength: document.getElementById('actualLength')?.value || '',
                 QtyOk: parseInt(document.getElementById('qtyOk')?.value) || 0,
                 NgDimension: parseInt(document.getElementById('ngDim')?.value) || 0,
                 NgVisual: parseInt(document.getElementById('ngVis')?.value) || 0,
                 Remark: document.getElementById('remark')?.value || '',
+                Shift: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Shift ?? "I")),
+                CreatedBy: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CreatedBy ?? "Operator")),
+                StandardParameterSettingId: @(Model.StandardParameterSettingId ?? 0),
                 DimensionReadings: []
             };
 
