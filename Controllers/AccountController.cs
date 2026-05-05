@@ -44,11 +44,48 @@ namespace VelastoProductionSystem.Controllers
         public async Task<IActionResult> Login(int? userId, int? machineId, string password, string? adminUsername)
         {
             // --- ADMIN LOGIN ---
-            if (!string.IsNullOrEmpty(adminUsername) && adminUsername.ToLower() == "admin")
+            if (!string.IsNullOrEmpty(adminUsername))
             {
-                if (password != "admin123!")
+                string lowerAdmin = adminUsername.ToLower();
+                string userRole = "SUPERADMIN";
+                string displayName = "Administrator";
+
+                if (lowerAdmin == "admin")
                 {
-                    ModelState.AddModelError("", "Password admin salah!");
+                    if (password != "admin123!")
+                    {
+                        ModelState.AddModelError("", "Password Super Admin salah!");
+                        await PrepareLoginViewData();
+                        return View();
+                    }
+                    userRole = "SUPERADMIN";
+                    displayName = "Super Admin";
+                }
+                else if (lowerAdmin == "adm_prod")
+                {
+                    if (password != "produksi123!")
+                    {
+                        ModelState.AddModelError("", "Password Admin Produksi salah!");
+                        await PrepareLoginViewData();
+                        return View();
+                    }
+                    userRole = "ADMIN_PROD";
+                    displayName = "Admin Produksi";
+                }
+                else if (lowerAdmin == "adm_eng")
+                {
+                    if (password != "engineering123!")
+                    {
+                        ModelState.AddModelError("", "Password Admin Engineering salah!");
+                        await PrepareLoginViewData();
+                        return View();
+                    }
+                    userRole = "ADMIN_ENG";
+                    displayName = "Admin Engineering";
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Username Admin tidak dikenal!");
                     await PrepareLoginViewData();
                     return View();
                 }
@@ -67,8 +104,9 @@ namespace VelastoProductionSystem.Controllers
                     }
                 }
 
-                HttpContext.Session.SetString("UserName", "Administrator");
+                HttpContext.Session.SetString("UserName", displayName);
                 HttpContext.Session.SetString("IsAdmin", "true");
+                HttpContext.Session.SetString("UserRole", userRole);
                 HttpContext.Session.SetString("MachineName", machineName);
                 HttpContext.Session.SetInt32("MachineId", machineIdValue);
 
@@ -105,6 +143,7 @@ namespace VelastoProductionSystem.Controllers
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("UserName", user.FullName ?? user.Username ?? "");
             HttpContext.Session.SetString("IsAdmin", "false");
+            HttpContext.Session.SetString("UserRole", "OPERATOR");
             HttpContext.Session.SetInt32("MachineId", machine.Id);
             HttpContext.Session.SetString("MachineName", machine.KodeMesin ?? machine.NamaMesin ?? "");
 

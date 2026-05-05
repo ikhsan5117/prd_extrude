@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VelastoProductionSystem.Data;
 
@@ -11,9 +12,11 @@ using VelastoProductionSystem.Data;
 namespace VelastoProductionSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504033412_RenameSpsIdColumn")]
+    partial class RenameSpsIdColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1459,12 +1462,6 @@ namespace VelastoProductionSystem.Migrations
 
                     b.Property<string>("DRAI_Awal")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DandoriEndEndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DandoriEndStartTime")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DandoriEndTime")
                         .HasColumnType("datetime2");

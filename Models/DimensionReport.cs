@@ -23,6 +23,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Item Code")]
         public string? ItemCode { get; set; }
 
+        [Display(Name = "SPS ID")]
+        public int? SpsId { get; set; }
+
         [Display(Name = "Customer")]
         public string? CustomerName { get; set; }
 
@@ -61,6 +64,7 @@ namespace VelastoProductionSystem.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         // Navigation
+        public StandardParameterSetting? StandardParameterSetting { get; set; }
         public ICollection<DimensionMeasurement> Measurements { get; set; } = new List<DimensionMeasurement>();
         public ICollection<DimensionSummary> Summaries { get; set; } = new List<DimensionSummary>();
     }

@@ -46,8 +46,8 @@
                 {
                     <div class="d-flex align-items-center me-2 me-md-3 border-end pe-2 pe-md-3 border-white border-opacity-10">
                         <div class="text-end me-3 d-none d-md-block">
-                            <div class="text-white-50 super-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">Operator</div>
-                            <div class="text-info fw-bold" style="font-size: 0.85rem;">@Context.Session.GetString("UserName")</div>
+                            <div class="text-white-50 super-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">Role / Operator</div>
+                            <div class="text-info fw-bold" style="font-size: 0.85rem;">@(Context.Session.GetString("UserRole")?.Replace("_", " ") ?? "Operator") / @Context.Session.GetString("UserName")</div>
                         </div>
                         <div class="text-end me-2 me-md-3">
                             <div class="text-white-50 super-small text-uppercase fw-bold d-none d-md-block" style="font-size: 0.6rem; letter-spacing: 1px;">Machine</div>
@@ -101,14 +101,13 @@
                         <i class="bi bi-calendar-check"></i>
                         <span>Planning Master</span>
                     </a>
-                    <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
-                        <i class="bi bi-layers"></i>
-                        <span>SPS Master</span>
-                    </a>
-                    <a asp-controller="PartMaster" asp-action="Index" class="nav-item sub">
-                        <i class="bi bi-gear"></i>
-                        <span>Part Master</span>
-                    </a>
+                    @if (Context.Session.GetString("UserRole") != "ADMIN_PROD")
+                    {
+                        <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
+                            <i class="bi bi-layers"></i>
+                            <span>SPS Master</span>
+                        </a>
+                    }
                     <a asp-controller="ExtrudeUser" asp-action="Index" class="nav-item sub">
                         <i class="bi bi-people"></i>
                         <span>Users</span>
@@ -132,22 +131,29 @@
                         <i class="bi bi-rulers"></i>
                         <span>Input Dimensi</span>
                     </a>
+                    <a asp-controller="ProductionReport" asp-action="ChartAnalysis" class="nav-item sub">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Chart Analysis</span>
+                    </a>
                 </div>
 
-                <div class="nav-group">
-                    <div class="nav-group-title">
-                        <i class="bi bi-archive-fill"></i>
-                        <span>History Archive</span>
+                @if (Context.Session.GetString("UserRole") != "ADMIN_ENG")
+                {
+                    <div class="nav-group">
+                        <div class="nav-group-title">
+                            <i class="bi bi-archive-fill"></i>
+                            <span>History Archive</span>
+                        </div>
+                        <a asp-controller="ProductionReport" asp-action="ParameterHistory" class="nav-item sub">
+                            <i class="bi bi-sliders"></i>
+                            <span>Parameter History</span>
+                        </a>
+                        <a asp-controller="Dimensi" asp-action="History" class="nav-item sub">
+                            <i class="bi bi-rulers"></i>
+                            <span>Dimension History</span>
+                        </a>
                     </div>
-                    <a asp-controller="ProductionReport" asp-action="ParameterHistory" class="nav-item sub">
-                        <i class="bi bi-sliders"></i>
-                        <span>Parameter History</span>
-                    </a>
-                    <a asp-controller="Dimensi" asp-action="History" class="nav-item sub">
-                        <i class="bi bi-rulers"></i>
-                        <span>Dimension History</span>
-                    </a>
-                </div>
+                }
 
                 <div class="nav-group">
                     <div class="nav-group-title">

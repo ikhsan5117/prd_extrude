@@ -876,14 +876,14 @@
                             <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var outerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder1Temp, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2Temp, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder3Temp, "", "±5"), U = "°C" },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, std.ScrewTemp, "", "±5"), U = "°C" },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, std.ScrewSpeed, "", "±2.5"), U = "rpm" },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, std.FeedRollRatio, "MAX ", ""), U = "%" },
-                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, std.Pressure, "MAX ", ""), U = "MPa" }
+                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp2 ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder1_2 ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2_2 ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder3_2 ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, std.ScrewTemp2 ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, std.ScrewSpeed2 ?? 0, "", "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, std.FeedRollRatio2 ?? 0, "MAX ", ""), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, std.Pressure2 ?? 0, "MAX ", ""), U = "MPa" }
                                 };
                             }
                             @for(int r = 0; r < outerRows.Length; r++) {
