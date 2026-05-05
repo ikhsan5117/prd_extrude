@@ -660,7 +660,7 @@
                     <div class="d-flex align-items-center">
                         <input id="planningSearch" type="text" class="hud-input-flat" 
                                placeholder="KETIK ITEM CODE..." 
-                               value="@(string.IsNullOrEmpty(Model.ItemCode) || Model.ItemCode == "---" ? Model.HoseType : $"[{Model.ItemCode}] {Model.HoseType}")"
+                               value="@(string.IsNullOrEmpty(Model?.ItemCode) || Model?.ItemCode == "---" ? (Model?.HoseType ?? "") : $"[{Model?.ItemCode}] {Model?.HoseType}")"
                                oninput="filterPlanningResults(this.value)" 
                                onfocus="openPlanningDropdown()" autocomplete="off"
                                style="cursor:text;" />
@@ -704,7 +704,7 @@
         <div class="header-cluster">
             <span class="m-lbl"><i class="bi bi-tag-fill m-icon"></i> DOC NO.</span>
             <div class="m-row">
-                <span class="m-val" id="h-doc">@(string.IsNullOrEmpty(Model?.DocumentNumber) ? "---" : Model.DocumentNumber)</span>
+                <span class="m-val" id="h-doc">@(string.IsNullOrEmpty(Model?.DocumentNumber) ? "---" : (Model?.DocumentNumber ?? "---"))</span>
                 <span class="m-sub" id="h-rev">REV.0</span>
             </div>
         </div>
@@ -990,25 +990,25 @@
             <div class="field-column">
                 <div class="field-box">
                     <span class="field-label">PART NUMBER</span>
-                    <div class="field-input-wrap"><div class="f-input" id="disp-part-no">@Model.DimensionDisplay</div></div>
+                    <div class="field-input-wrap"><div class="f-input" id="disp-part-no">@(Model?.DimensionDisplay ?? "")</div></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">STD PNJG</span>
-                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="@Model.StandardLength"></div>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="@(Model?.StandardLength ?? "")"></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY TARGET</span>
-                    <div class="field-input-wrap"><input type="number" class="f-input" id="disp-qty-target" value="@Model.QtyTarget"></div>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="disp-qty-target" value="@(Model?.QtyTarget ?? 0)"></div>
                 </div>
             </div>
             <div class="field-column">
                 <div class="field-box">
                     <span class="field-label">VIN KODE</span>
-                    <div class="field-input-wrap"><input type="text" class="f-input" id="val-vin-kode" value="@Model.VinCode" placeholder="Enter VIN Code"></div>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="val-vin-kode" value="@(Model?.VinCode ?? "")" placeholder="Enter VIN Code"></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">ACT PNJG</span>
-                    <div class="field-input-wrap"><input type="number" class="f-input" id="val-act-pnjg" value="@Model.ActualLength" placeholder="Enter length"></div>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="val-act-pnjg" value="@(Model?.ActualLength ?? "")" placeholder="Enter length"></div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY ACTUAL STATUS</span>
@@ -1022,7 +1022,7 @@
                         <div id="okPanel" style="display: none; text-align: center;">
                             <span style="font-size: 8px; color: #10b981; font-weight: 800; display: block; margin-bottom: 5px;">TOTAL QTY OK</span>
                             <div class="field-input-wrap" style="max-width: 250px; margin: 0 auto; border-color: rgba(16, 185, 129, 0.4);">
-                                <input type="number" class="f-input" id="val-qty-ok" value="@Model.QtyOk">
+                                <input type="number" class="f-input" id="val-qty-ok" value="@(Model?.QtyOk ?? 0)">
                             </div>
                         </div>
 
@@ -1031,13 +1031,13 @@
                             <div>
                                 <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG DIMENSI</span>
                                 <div class="field-input-wrap" style="border-color: #ef4444;">
-                                    <input type="number" class="f-input" id="val-ng-dimensi" value="@Model.NgDimension">
+                                    <input type="number" class="f-input" id="val-ng-dimensi" value="@(Model?.NgDimension ?? 0)">
                                 </div>
                             </div>
                             <div>
                                 <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG VISUAL</span>
                                 <div class="field-input-wrap" style="border-color: #ef4444;">
-                                    <input type="number" class="f-input" id="val-ng-visual" value="@Model.NgVisual">
+                                    <input type="number" class="f-input" id="val-ng-visual" value="@(Model?.NgVisual ?? 0)">
                                 </div>
                             </div>
                         </div>
@@ -1047,7 +1047,7 @@
             <!-- Full Width Remark -->
             <div style="grid-column: span 2; margin-top: 10px;">
                 <span class="field-label">REMARK / NOTES</span>
-                <textarea class="f-textarea" id="val-remark" placeholder="Enter any specific observations or production notes...">@Model.Remark</textarea>
+                <textarea class="f-textarea" id="val-remark" placeholder="Enter any specific observations or production notes...">@(Model?.Remark ?? "")</textarea>
             </div>
         </div>
 
@@ -1109,7 +1109,7 @@
         let userHasSelectedData = false; // Flag to prevent auto-fetch override
 
         // Load existing summaries from server
-        @if (Model.Summaries != null && Model.Summaries.Any())
+        @if (Model?.Summaries != null && Model.Summaries.Any())
         {
             <text>
         productionRecords = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
@@ -1671,7 +1671,7 @@
             @if (Model?.StandardParameterSetting == null && !string.IsNullOrWhiteSpace(Model?.ItemCode))
             {
                 <text>
-                const autoItemCode = '@Model.ItemCode';
+                const autoItemCode = '@(Model?.ItemCode ?? "")';
                 console.log('🚀 Auto-fetching SPS for ItemCode:', autoItemCode);
                 if (autoItemCode && autoItemCode !== '---' && !userHasSelectedData) {
                     setTimeout(() => {
@@ -2302,7 +2302,7 @@
             if (stdPnjgInput) stdPnjgInput.value = "@(Model?.StandardLength ?? "-")";
             
             const targetInput = document.getElementById('disp-qty-target');
-            if (targetInput) targetInput.value = "@Model.QtyTarget" || "0";
+            if (targetInput) targetInput.value = "@(Model?.QtyTarget ?? 0)";
 
             // Run validation for all cards
             ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => {
@@ -2624,13 +2624,13 @@
                 console.log('═══════════════════════════════════════');
 
                 const payload = {
-                    reportId: parseInt("@Model.Id") || 0,
+                    reportId: parseInt("@(Model?.Id ?? 0)") || 0,
                     documentNumber: document.getElementById('h-doc')?.innerText || '---',
                     machineName: document.getElementById('h-line')?.innerText || '',
                     itemCode: document.getElementById('h-itemcode')?.innerText || '',
                     SpsId: spsIdInt,
                     hoseType: document.getElementById('h-hose')?.innerText || '',
-                    customerName: "@(Model.CustomerName ?? "")",
+                    customerName: "@(Model?.CustomerName ?? "")",
                     dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
                     vinCode: document.getElementById('val-vin-kode')?.value || '',
                     standardLength: document.getElementById('disp-std-pnjg')?.value || '',
