@@ -56,7 +56,7 @@ namespace VelastoProductionSystem.Controllers
         // POST: StandardParameterSetting/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("DocumentNumber,RevisionNumber,CustomerName,LayerType,EffectiveDate,HoseType,Diameter,ProductCode,InnerMaterial,OuterMaterial,YarnType,InnerDie,OuterDie,TubeDie,MiddleDie,CoverDie,SpacerDie,ToleranceDie,Tol_TubeDie,Tol_MiddleDie,Tol_OuterDie,Tol_CoverDie,Tol_SpiralPitch,MeshScreen,HeadTemp,Cylinder1Temp,Cylinder2Temp,Cylinder3Temp,ScrewTemp,ScrewSpeed,FeedRollRatio,Pressure,AirPressureA,PresetValve,SpiralSpeed,SpiralPitch,SpiralSpeedDisplay,SpiralPitchDisplay,PresetTemp,ControlValue,HoseSpeed,TakeupConveyorSpeed,CoolConveyorSpeed,ConveyorRatio,UnsmoothSurface,ChillerWaterTemp,CaterpillarGap,MarkingMaterialColor,MarkingMaterialInner,MarkingMaterialOuter,CreatedBy")] StandardParameterSetting setting)
+        public async Task<IActionResult> Create([Bind("DocumentNumber,RevisionNumber,CustomerName,LayerType,EffectiveDate,HoseType,Diameter,ProductCode,InnerMaterial,OuterMaterial,YarnType,InnerDie,OuterDie,TubeDie,MiddleDie,CoverDie,SpacerDie,ToleranceDie,Tol_TubeDie,Tol_MiddleDie,Tol_OuterDie,Tol_CoverDie,Tol_SpiralPitch,MeshScreen,MeshScreen2,MeshScreen3,HeadTemp,Cylinder1Temp,Cylinder2Temp,Cylinder3Temp,ScrewTemp,ScrewSpeed,FeedRollRatio,Pressure,AmMeter,HeadTemp2,Cylinder1_2,Cylinder2_2,Cylinder3_2,ScrewTemp2,ScrewSpeed2,FeedRollRatio2,Pressure2,AmMeter2,HeadTemp3,Cylinder1_3,Cylinder2_3,Cylinder3_3,ScrewTemp3,ScrewSpeed3,FeedRollRatio3,Pressure3,AmMeter3,AirPressureA,PresetValve,SpiralSpeed,SpiralPitch,SpiralSpeedDisplay,SpiralPitchDisplay,PresetTemp,ControlValue,HoseSpeed,TakeupConveyorSpeed,CoolConveyorSpeed,ConveyorRatio,UnsmoothSurface,ChillerWaterTemp,CaterpillarGap,MarkingMaterialColor,MarkingMaterialInner,MarkingMaterialOuter,ItemList,MachineCode,CreatedBy")] StandardParameterSetting setting)
         {
             try
             {
@@ -106,7 +106,7 @@ namespace VelastoProductionSystem.Controllers
         // POST: StandardParameterSetting/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,DocumentNumber,RevisionNumber,CustomerName,LayerType,EffectiveDate,HoseType,Diameter,ProductCode,InnerMaterial,OuterMaterial,YarnType,InnerDie,OuterDie,TubeDie,MiddleDie,CoverDie,SpacerDie,ToleranceDie,Tol_TubeDie,Tol_MiddleDie,Tol_OuterDie,Tol_CoverDie,Tol_SpiralPitch,MeshScreen,HeadTemp,Cylinder1Temp,Cylinder2Temp,Cylinder3Temp,ScrewTemp,ScrewSpeed,FeedRollRatio,Pressure,AirPressureA,PresetValve,SpiralSpeed,SpiralPitch,SpiralSpeedDisplay,SpiralPitchDisplay,PresetTemp,ControlValue,HoseSpeed,TakeupConveyorSpeed,CoolConveyorSpeed,ConveyorRatio,UnsmoothSurface,ChillerWaterTemp,CaterpillarGap,MarkingMaterialColor,MarkingMaterialInner,MarkingMaterialOuter,IsActive")] StandardParameterSetting setting)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,DocumentNumber,RevisionNumber,CustomerName,LayerType,EffectiveDate,HoseType,Diameter,ProductCode,InnerMaterial,OuterMaterial,YarnType,InnerDie,OuterDie,TubeDie,MiddleDie,CoverDie,SpacerDie,ToleranceDie,Tol_TubeDie,Tol_MiddleDie,Tol_OuterDie,Tol_CoverDie,Tol_SpiralPitch,MeshScreen,MeshScreen2,MeshScreen3,HeadTemp,Cylinder1Temp,Cylinder2Temp,Cylinder3Temp,ScrewTemp,ScrewSpeed,FeedRollRatio,Pressure,AmMeter,HeadTemp2,Cylinder1_2,Cylinder2_2,Cylinder3_2,ScrewTemp2,ScrewSpeed2,FeedRollRatio2,Pressure2,AmMeter2,HeadTemp3,Cylinder1_3,Cylinder2_3,Cylinder3_3,ScrewTemp3,ScrewSpeed3,FeedRollRatio3,Pressure3,AmMeter3,AirPressureA,PresetValve,SpiralSpeed,SpiralPitch,SpiralSpeedDisplay,SpiralPitchDisplay,PresetTemp,ControlValue,HoseSpeed,TakeupConveyorSpeed,CoolConveyorSpeed,ConveyorRatio,UnsmoothSurface,ChillerWaterTemp,CaterpillarGap,MarkingMaterialColor,MarkingMaterialInner,MarkingMaterialOuter,ItemList,MachineCode,IsActive")] StandardParameterSetting setting)
         {
             if (id != setting.Id)
             {
@@ -153,7 +153,8 @@ namespace VelastoProductionSystem.Controllers
 
 
 
-                    // Map process fields
+                    // Map process fields - Extruder 1
+                    existingSetting.MeshScreen = setting.MeshScreen;
                     existingSetting.HeadTemp = setting.HeadTemp;
                     existingSetting.Cylinder1Temp = setting.Cylinder1Temp;
                     existingSetting.Cylinder2Temp = setting.Cylinder2Temp;
@@ -162,8 +163,51 @@ namespace VelastoProductionSystem.Controllers
                     existingSetting.ScrewSpeed = setting.ScrewSpeed;
                     existingSetting.FeedRollRatio = setting.FeedRollRatio;
                     existingSetting.Pressure = setting.Pressure;
+                    existingSetting.AmMeter = setting.AmMeter;
+
+                    // Extruder 2
+                    existingSetting.MeshScreen2 = setting.MeshScreen2;
+                    existingSetting.HeadTemp2 = setting.HeadTemp2;
+                    existingSetting.Cylinder1_2 = setting.Cylinder1_2;
+                    existingSetting.Cylinder2_2 = setting.Cylinder2_2;
+                    existingSetting.Cylinder3_2 = setting.Cylinder3_2;
+                    existingSetting.ScrewTemp2 = setting.ScrewTemp2;
+                    existingSetting.ScrewSpeed2 = setting.ScrewSpeed2;
+                    existingSetting.FeedRollRatio2 = setting.FeedRollRatio2;
+                    existingSetting.Pressure2 = setting.Pressure2;
+                    existingSetting.AmMeter2 = setting.AmMeter2;
+
+                    // Extruder 3
+                    existingSetting.MeshScreen3 = setting.MeshScreen3;
+                    existingSetting.HeadTemp3 = setting.HeadTemp3;
+                    existingSetting.Cylinder1_3 = setting.Cylinder1_3;
+                    existingSetting.Cylinder2_3 = setting.Cylinder2_3;
+                    existingSetting.Cylinder3_3 = setting.Cylinder3_3;
+                    existingSetting.ScrewTemp3 = setting.ScrewTemp3;
+                    existingSetting.ScrewSpeed3 = setting.ScrewSpeed3;
+                    existingSetting.FeedRollRatio3 = setting.FeedRollRatio3;
+                    existingSetting.Pressure3 = setting.Pressure3;
+                    existingSetting.AmMeter3 = setting.AmMeter3;
+
+                    existingSetting.AirPressureA = setting.AirPressureA;
+                    existingSetting.PresetValve = setting.PresetValve;
+                    existingSetting.SpiralSpeed = setting.SpiralSpeed;
+                    existingSetting.SpiralSpeedDisplay = setting.SpiralSpeedDisplay;
+                    existingSetting.SpiralPitchDisplay = setting.SpiralPitchDisplay;
                     existingSetting.PresetTemp = setting.PresetTemp;
+                    existingSetting.ControlValue = setting.ControlValue;
                     existingSetting.HoseSpeed = setting.HoseSpeed;
+                    existingSetting.TakeupConveyorSpeed = setting.TakeupConveyorSpeed;
+                    existingSetting.CoolConveyorSpeed = setting.CoolConveyorSpeed;
+                    existingSetting.ConveyorRatio = setting.ConveyorRatio;
+                    existingSetting.UnsmoothSurface = setting.UnsmoothSurface;
+                    existingSetting.ChillerWaterTemp = setting.ChillerWaterTemp;
+                    existingSetting.CaterpillarGap = setting.CaterpillarGap;
+                    existingSetting.MarkingMaterialColor = setting.MarkingMaterialColor;
+                    existingSetting.MarkingMaterialInner = setting.MarkingMaterialInner;
+                    existingSetting.MarkingMaterialOuter = setting.MarkingMaterialOuter;
+                    existingSetting.ItemList = setting.ItemList;
+                    existingSetting.MachineCode = setting.MachineCode;
                     existingSetting.IsActive = setting.IsActive;
 
                     _context.Update(existingSetting);

@@ -1,0 +1,2109 @@
+@model VelastoProductionSystem.Models.DimensionReport
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Dimension Input Hub";
+}
+
+@section Styles {
+    <style>
+        .swal2-container {
+            z-index: 15000 !important;
+        }
+
+        :root {
+            --bg-deep: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(56, 189, 248, 0.2);
+            --accent-glow: #38bdf8;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-white: #f1f5f9;
+            --text-dim: #94a3b8;
+            --hud-glow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #1e293b, #0b1120);
+            color: var(--text-white);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 0; margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        /* --- Header & Layout --- */
+        .search-action-bar {
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            flex-wrap: wrap; margin-bottom: 30px; position: relative; z-index: 50;
+        }
+        .header-title-main {
+            font-size: 26px; font-weight: 800; color: #fff; text-align: center;
+            letter-spacing: 6px; text-transform: uppercase; margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .header-subtitle {
+            font-size: 11px; font-weight: 700; color: var(--text-dim); text-align: center;
+            letter-spacing: 5px; text-transform: uppercase; margin-bottom: 40px;
+        }
+
+        /* --- Search Console --- */
+        .search-container {
+            max-width: 1200px; margin: 0 auto 25px auto; width: 100%; padding: 0 15px;
+        }
+        
+        .planning-search-panel {
+            flex: 1; min-width: 320px; position: relative;
+        }
+
+        .hud-console-pill {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: visible;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .hud-console-pill:focus-within {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+
+        .hud-label-mini {
+            font-size: 8px;
+            font-weight: 900;
+            color: var(--accent-glow);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            background: rgba(56, 189, 248, 0.1);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-input-flat {
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+            width: 100%;
+            height: 44px;
+            letter-spacing: 0.5px;
+        }
+
+        .hud-btn-side {
+            width: 50px;
+            background: rgba(56, 189, 248, 0.05);
+            color: var(--accent-glow);
+            border: none;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .hud-btn-side:hover {
+            background: var(--accent-glow);
+            color: #000;
+        }
+
+        .planning-results {
+            position: absolute; top: calc(100% + 5px); left: 0; right: 0; 
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent-glow); 
+            border-radius: 12px; 
+            z-index: 1000;
+            max-height: 450px; overflow-y: auto; 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.1);
+            animation: dropdownFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 8px;
+        }
+
+        @@keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Custom Scrollbar --- */
+        .custom-tactical-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-tactical-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb { 
+            background: rgba(56, 189, 248, 0.3); border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent-glow); }
+
+        .planning-result-item {
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .planning-result-item:last-child { margin-bottom: 0; }
+
+        .planning-result-item:hover, .planning-result-highlight {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateX(5px);
+        }
+
+        .planning-result-highlight {
+            background: rgba(56, 189, 248, 0.15) !important;
+            border-color: var(--accent-glow) !important;
+            box-shadow: inset 4px 0 0 var(--accent-glow);
+        }
+
+        .planning-result-code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--accent-glow);
+            letter-spacing: 0.5px;
+        }
+
+        .planning-result-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f1f5f9;
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .planning-result-meta {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .planning-result-meta i { font-size: 12px; opacity: 0.5; }
+
+        .machine-badge-mini {
+            font-size: 10px; 
+            font-weight: 900; 
+            color: #000;
+            background: var(--accent-warning); 
+            padding: 3px 10px; 
+            border-radius: 50px; 
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
+
+        @@media (max-width: 1200px) {
+            .tech-header-ribbon { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .header-cluster { min-height: 80px; padding: 15px; }
+            .planning-search-panel { width: 100%; min-width: 0; }
+        }
+        
+        .cam-btn {
+            width: 55px; background: rgba(255,255,255,0.03); color: var(--accent-glow); border: none;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
+            transition: 0.3s; border-right: 1px solid rgba(255,255,255,0.05);
+        }
+        .cam-btn:hover { background: rgba(56, 189, 248, 0.1); color: #fff; }
+
+        .search-input-group input {
+            flex: 1; background: transparent; border: none; outline: none; padding: 0 20px;
+            color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+        }
+        
+        .search-trigger-btn {
+            width: 55px; background: var(--accent-glow); color: #000; border: none;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
+            transition: 0.3s;
+        }
+        .search-trigger-btn:hover { background: #fff; box-shadow: 0 0 15px var(--accent-glow); }
+        
+        .bt-icon-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+        }
+        .info-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 30%, #020617 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; padding: 18px 25px; transition: all 0.4s;
+            display: flex; flex-direction: column; gap: 8px; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(15px);
+        }
+        .info-card:hover { border-color: var(--accent-glow); transform: translateY(-2px); }
+        .bt-icon-btn.active {
+            color: var(--accent-success); border-color: var(--accent-success);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+        .bt-icon-btn.active::after {
+            content: ''; position: absolute; top: -2px; right: -2px; width: 10px; height: 10px;
+            background: var(--accent-success); border-radius: 50%; border: 2px solid var(--bg-deep);
+            box-shadow: 0 0 10px var(--accent-success); animation: pulse 1s infinite;
+        }
+        .tool-link-btn.active {
+            border-color: var(--accent-success);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+        .tool-link-btn.active .t-dot { background: var(--accent-success); box-shadow: 0 0 10px var(--accent-success); animation: pulse 1s infinite; }
+        .tool-link-btn.active .t-text { color: var(--accent-success); }
+        .t-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; transition: 0.3s; }
+        .t-text { font-size: 10px; color: #94a3b8; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; transition: 0.3s; }
+        .t-icon { font-size: 14px; color: #94a3b8; }
+        .tool-link-btn.active .t-icon { color: var(--accent-success); }
+
+        /* --- New Modular Dashboard Widgets (Non-Table) --- */
+        .tech-header-ribbon {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 15px; max-width: 1400px; margin: 0 auto 30px auto; width: 100%;
+            padding: 0 15px;
+        }
+        .header-cluster {
+            background: rgba(30, 41, 59, 0.4); border: 1px solid var(--glass-border);
+            border-left: 4px solid var(--accent-glow); border-radius: 8px;
+            padding: 15px 20px; display: flex; flex-direction: column; justify-content: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .header-cluster:hover {
+            transform: translateY(-3px); border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.15);
+            background: rgba(30, 41, 59, 0.6);
+        }
+        
+        /* --- Responsive Cockpit (Tablet Mode) --- */
+        @@media (max-width: 1200px) {
+            .tech-header-ribbon { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .header-cluster { min-height: 80px; padding: 15px; }
+        }
+        
+        @@media (max-width: 900px) {
+            .search-input-group { width: 100%; max-width: none; }
+        }
+
+        @@media (max-width: 600px) {
+            .tech-header-ribbon { grid-template-columns: 1fr; }
+        }
+        .header-cluster:last-child { border-right: none; }
+        .m-lbl { font-size: 8px; color: var(--text-dim); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; opacity: 0.6; white-space: nowrap; }
+        .m-row { display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-top: 4px; overflow: hidden; }
+        .m-val { font-size: 11px; color: #fff; font-weight: 900; letter-spacing: 0.2px; line-height: 1; }
+        .m-accent { color: var(--accent-glow); text-shadow: 0 0 10px rgba(56, 189, 248, 0.1); }
+        .m-sub { font-size: 9px; color: rgba(255,255,255,0.25); font-weight: 800; text-transform: uppercase; margin-left: 4px; }
+        .m-icon { font-size: 10px; color: var(--accent-glow); opacity: 0.5; }
+        .m-divider { width: 1px; height: 10px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+
+        .jam-nav { display: flex; gap: 15px; margin-bottom: 30px; justify-content: center; }
+        .jam-btn {
+            background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(56, 189, 248, 0.15);
+            color: var(--text-dim); padding: 12px 28px; border-radius: 4px;
+            font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: visible;
+        }
+        .jam-btn.active {
+            background: var(--accent-glow); color: #000; border-color: transparent;
+            box-shadow: var(--hud-glow), 0 0 30px rgba(0, 242, 254, 0.3); transform: scale(1.05);
+        }
+        .add-btn { background: rgba(0, 242, 254, 0.05); border-style: dashed; }
+        .slot-delete-btn {
+            position: absolute; 
+            top: -12px; 
+            right: -12px; 
+            width: 28px; 
+            height: 28px;
+            border-radius: 50%; 
+            background: #ef4444; 
+            border: 2px solid #020617;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 12px;
+            color: #fff; 
+            opacity: 1; 
+            transition: all 0.2s ease; 
+            z-index: 50;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+        .jam-btn:active .slot-delete-btn { transform: scale(0.8); }
+
+        /* --- Card Styles --- */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        .dimensi-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.5) 0%, rgba(30, 64, 175, 0.4) 30%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px; padding: 25px; transition: all 0.4s;
+            backdrop-filter: blur(20px); position: relative; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+        }
+        .dimensi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+        .dimensi-card:hover { 
+            border-color: var(--accent-glow); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            transform: translateY(-4px);
+        }
+        .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-point { font-weight: 800; font-size: 14px; color: #fff; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .card-icon { font-size: 20px; color: var(--accent-glow); opacity: 0.8; filter: drop-shadow(0 0 5px var(--accent-glow)); }
+
+        .std-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+        .std-label { font-size: 10px; color: #64748b; font-weight: 900; letter-spacing: 2px; opacity: 0.8; margin-bottom: 4px; }
+        .std-value { 
+            font-size: 18px; color: var(--accent-glow); font-weight: 950; 
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.5); 
+            letter-spacing: 1px;
+        }
+        .std-container::after {
+            content: ''; width: 40px; height: 2px; background: var(--accent-glow);
+            margin-top: 8px; border-radius: 2px; box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .limit-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .limit-pill { 
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08);
+            padding: 10px 15px; border-radius: 50px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
+        }
+        .limit-label { font-size: 10px; color: #94a3b8; font-weight: 900; letter-spacing: 1px; }
+        .limit-val { font-size: 15px; font-weight: 950; }
+        .limit-val.min { color: var(--accent-success); text-shadow: 0 0 12px rgba(0, 255, 157, 0.5); }
+        .limit-val.max { color: var(--accent-warning); text-shadow: 0 0 12px rgba(255, 234, 0, 0.5); }
+
+        .input-group-custom { display: flex; flex-direction: column; gap: 10px; }
+        .input-group-custom label { font-size: 11px; color: #64748b; font-weight: 900; text-align: center; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+        .c-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
+            color: #fff; padding: 18px; font-size: 32px; font-weight: 800; text-align: center; outline: none;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); width: 100%; transition: all 0.3s;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0px;
+        }
+        .c-input:focus { border-color: var(--accent-glow); box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+        .c-input::placeholder { color: rgba(248,250,252,0.3); }
+
+        /* Clear button wrapper */
+        .c-input-wrap { position: relative; width: 100%; }
+        .c-clear-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+            color: #ef4444; font-size: 14px; font-weight: 900;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; z-index: 5;
+            line-height: 1;
+        }
+        .c-clear-btn:hover { background: #ef4444; color: #fff; transform: translateY(-50%) scale(1.1); box-shadow: 0 0 12px rgba(239,68,68,0.5); }
+        .c-input-wrap .c-input { padding-right: 50px; }
+        .c-input-wrap.has-value .c-clear-btn { display: flex; }
+        .status-badge { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.4s; }
+        .status-ok .status-badge { background: var(--accent-success); box-shadow: 0 0 25px var(--accent-success); }
+        .status-ok .c-input { 
+            color: var(--accent-success) !important; 
+            border-color: var(--accent-success) !important;
+            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); 
+            box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.1), var(--hud-glow);
+        }
+        .status-ng .status-badge { background: var(--accent-danger); box-shadow: 0 0 30px var(--accent-danger); }
+        .status-ng .c-input { 
+            color: var(--accent-danger) !important; 
+            background: rgba(255, 0, 85, 0.1) !important;
+            border-color: var(--accent-danger) !important;
+            text-shadow: 0 0 20px rgba(255, 0, 85, 0.7); 
+            box-shadow: inset 0 0 30px rgba(255, 0, 85, 0.2), 0 0 20px rgba(255, 0, 85, 0.3);
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        @@keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* --- Visual Check & Summary --- */
+        .visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .visual-item { 
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+            padding: 12px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px;
+        }
+        .visual-label { font-size: 9px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px; }
+        .segmented-control { display: flex; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px; gap: 4px; }
+        .seg-btn {
+            flex: 1; border: none; background: transparent; color: var(--text-dim);
+            font-size: 10px; font-weight: 900; padding: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .seg-btn.active-ok { background: var(--accent-success); color: #000; box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
+        .seg-btn.active-ng { background: var(--accent-danger); color: #fff; box-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
+
+        .section-title {
+            font-size: 12px; font-weight: 800; color: var(--text-dim);
+            letter-spacing: 3px; display: flex; align-items: center; gap: 12px;
+            margin: 50px 0 25px 0; padding-left: 15px; border-left: 4px solid var(--text-dim);
+            text-transform: uppercase;
+        }
+        .prod-data-container {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 35px; backdrop-filter: blur(20px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+        }
+        .prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .field-column { display: flex; flex-direction: column; gap: 20px; }
+        .field-box { display: flex; flex-direction: column; gap: 8px; }
+        .field-label { font-size: 9px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .field-input-wrap {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; padding: 16px 20px; transition: 0.3s;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .field-input-wrap:focus-within { border-color: var(--accent-glow); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); background: #000; }
+        .f-input { background: transparent; border: none; color: #fff; width: 100%; font-size: 15px; font-weight: 700; outline: none; }
+        .qty-row { display: flex; gap: 10px; }
+        .qty-btn {
+            flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03); color: var(--text-dim);
+            font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .qty-btn:hover { border-color: var(--accent-glow); color: #fff; }
+        .qty-btn.active-ok { border-color: var(--accent-success); color: var(--accent-success); background: rgba(16,185,129,0.05); }
+        .qty-btn.active-ng { border-color: var(--accent-danger); color: var(--accent-danger); background: rgba(239,68,68,0.05); }
+
+        .finalize-action-hub {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #000; padding: 20px 40px; border: none; border-radius: 50px;
+            font-weight: 1000; font-size: 14px; cursor: pointer;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.3);
+            display: flex; align-items: center; gap: 15px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase; letter-spacing: 2px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+        .submit-btn:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.5);
+            background: #fff; color: #10b981;
+        }
+        .submit-btn i { font-size: 24px; }
+        .submit-btn:active { transform: scale(0.95); }
+
+        .f-textarea {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+            color: #fff; padding: 15px; width: 100%; font-size: 13px; outline: none; height: 80px; resize: none;
+        }
+
+        @@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .tracking-widest { letter-spacing: 0.2em; }
+    </style>
+}
+
+
+
+<!-- NEW REPORT HEADER (AS PER IMAGE) -->
+<div class="app-container pt-3">
+    <!-- Main Header -->
+    <div class="text-center mb-3 animate__animated animate__fadeInDown">
+        <h2 class="display-6 fw-bold tracking-widest text-uppercase" style="letter-spacing: 6px;">EXTRUDER PRODUCTION REPORT</h2>
+        <div class="text-primary fw-bold" style="font-size: 13px; letter-spacing: 4px;">( EDIT MODE )</div>
+    </div>
+
+    <!-- Dual Search Console -->
+    <div class="search-container no-print">
+        <div class="row g-3 animate__animated animate__fadeInUp">
+            <!-- Left Console: Planning Master -->
+            <div class="col-md-7">
+                <div class="hud-console-pill">
+                    <div class="hud-label-mini" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <div><i class="bi bi-list-check"></i> PLANNING MASTER</div>
+                        <span class="badge" style="font-size:8px; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);"><i class="bi bi-shield-check"></i> ALL MACHINES</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input id="planningSearch" type="text" class="hud-input-flat" 
+                               placeholder="KETIK ITEM CODE..." 
+                               value="@(string.IsNullOrEmpty(Model.ItemCode) || Model.ItemCode == "---" ? Model.HoseType : $"[{Model.ItemCode}] {Model.HoseType}")"
+                               oninput="filterPlanningResults(this.value)" 
+                               onfocus="openPlanningDropdown()" autocomplete="off" readonly
+                               style="cursor:pointer;" />
+                    </div>
+                    <div id="planningResults" class="planning-results d-none custom-tactical-scroll"></div>
+                </div>
+            </div>
+
+            <!-- Right Console: Masterlist SPS -->
+            <div class="col-md-5">
+                <div class="hud-console-pill">
+                    <div class="hud-label-mini">
+                        <i class="bi bi-search"></i>
+                        <span>SPS MASTERLIST</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input type="text" id="main-item-search" class="hud-input-flat" 
+                               placeholder="SEARCH SPS MASTERLIST..." 
+                               value="@(string.IsNullOrEmpty(Model.ItemCode) || Model.ItemCode == "---" ? Model.HoseType : Model.ItemCode)"
+                               autocomplete="off" 
+                               onkeypress="if(event.key === 'Enter') loadMaster()" />
+                        <button class="hud-btn-side" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
+                            <i class="bi bi-lightning-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Technical HUD Dashboard -->
+    <div class="tech-header-ribbon animate__animated animate__fadeIn">
+        <!-- CLUSTER 1: MACHINE -->
+        <div class="header-cluster" style="border-left-color: #fca311;">
+            <span class="m-lbl"><i class="bi bi-gear-wide-connected m-icon" style="color: #fca311;"></i> PRODUCTION MACHINE</span>
+            <div class="m-row">
+                <span class="m-val" id="h-line" style="color: #fca311;">@(Model.MachineName ?? "---")</span>
+            </div>
+        </div>
+        <!-- CLUSTER 2: DOC -->
+        <div class="header-cluster">
+            <span class="m-lbl"><i class="bi bi-tag-fill m-icon"></i> DOC NO.</span>
+            <div class="m-row">
+                <span class="m-val" id="h-doc">@(string.IsNullOrEmpty(Model.DocumentNumber) ? "---" : Model.DocumentNumber)</span>
+                <span class="m-sub" id="h-rev">REV.0</span>
+            </div>
+        </div>
+        <!-- CLUSTER 3: TIMING -->
+        <div class="header-cluster">
+            <span class="m-lbl"><i class="bi bi-clock-fill m-icon"></i> DATE / SHIFT</span>
+            <div class="m-row">
+                <span class="m-val" id="h-date" style="font-size: 11px;">@Model.CreatedDate.ToString("dd MMM yyyy").ToUpper()</span>
+                <span class="m-divider"></span>
+                <span class="m-val m-accent" id="h-shift" onclick="toggleShift()" style="cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
+            </div>
+        </div>
+        <!-- CLUSTER 4: OPERATOR & SPEC -->
+        <div class="header-cluster" style="border-left-color: #0d6efd;">
+            <span class="m-lbl"><i class="bi bi-person-badge-fill m-icon" style="color: #0d6efd;"></i> OPERATOR / SPEC</span>
+            <div class="m-row">
+                <div id="h-row-hose" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="m-val" id="h-operator" style="color: #0d6efd;">@(Model.CreatedBy ?? "---")</span>
+                    <span class="m-divider"></span>
+                    <span class="m-val m-accent" id="h-itemcode" style="font-size: 11px;">@(Model.ItemCode ?? "---")</span>
+                    <span class="m-divider"></span>
+                    <span class="m-val" id="h-hose" style="font-size: 11px;">@(Model.HoseType ?? "---")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SMART DIMENSION HUB -->
+<div class="p-3">
+    <!-- DIMENSION SECTION -->
+    <div class="section-title">
+        <i class="bi bi-rulers"></i>
+        DIMENSION INSPECTION
+    </div>
+
+    <!-- Dynamic Timeline Navigator -->
+    <div class="jam-nav" id="timelineContainer">
+        <!-- Buttons will be generated here -->
+        <button class="jam-btn add-btn" onclick="addNewSlot()">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="card-grid" id="cardContainer">
+        <!-- Inner Diameter Card -->
+        <div class="dimensi-card" id="card-inner-dia">
+            <div class="card-header-flex">
+                <div class="card-point">INNER DIAMETER</div>
+                <i class="bi bi-circle card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-inner-dia">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-inner-dia-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-inner-dia-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <div class="c-input-wrap" id="wrap-inner-dia">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-dia" oninput="validateCard('inner-dia'); toggleClearBtn('inner-dia')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-dia')" tabindex="-1" title="Clear">✕</button>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Inner Thick X Card -->
+        <div class="dimensi-card" id="card-inner-tx">
+            <div class="card-header-flex">
+                <div class="card-point">INNER THICK (X)</div>
+                <i class="bi bi-arrows-expand card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-inner-tx">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-inner-tx-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-inner-tx-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <div class="c-input-wrap" id="wrap-inner-tx">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-tx" oninput="validateCard('inner-tx'); toggleClearBtn('inner-tx')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-tx')" tabindex="-1" title="Clear">✕</button>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Inner Thick Y Card -->
+        <div class="dimensi-card" id="card-inner-ty">
+            <div class="card-header-flex">
+                <div class="card-point">INNER THICK (Y)</div>
+                <i class="bi bi-arrows-vertical card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-inner-ty">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-inner-ty-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-inner-ty-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <div class="c-input-wrap" id="wrap-inner-ty">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-inner-ty" oninput="validateCard('inner-ty'); toggleClearBtn('inner-ty')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('inner-ty')" tabindex="-1" title="Clear">✕</button>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Total Thick X Card -->
+        <div class="dimensi-card" id="card-total-tx">
+            <div class="card-header-flex">
+                <div class="card-point">TOTAL THICK (X)</div>
+                <i class="bi bi-arrows-expand card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-total-tx">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-total-tx-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-total-tx-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <div class="c-input-wrap" id="wrap-total-tx">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-total-tx" oninput="validateCard('total-tx'); toggleClearBtn('total-tx')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('total-tx')" tabindex="-1" title="Clear">✕</button>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Total Thick Y Card -->
+        <div class="dimensi-card" id="card-total-ty">
+            <div class="card-header-flex">
+                <div class="card-point">TOTAL THICK (Y)</div>
+                <i class="bi bi-arrows-vertical card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-total-ty">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-total-ty-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-total-ty-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL MEASUREMENT</label>
+                <div class="c-input-wrap" id="wrap-total-ty">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-total-ty" oninput="validateCard('total-ty'); toggleClearBtn('total-ty')" placeholder="0.00" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('total-ty')" tabindex="-1" title="Clear">✕</button>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- Spiral Pitch Card -->
+        <div class="dimensi-card" id="card-spiral">
+            <div class="card-header-flex">
+                <div class="card-point">SPIRAL PITCH</div>
+                <i class="bi bi-hr card-icon"></i>
+            </div>
+            <div class="std-container">
+                 <div class="std-label">STANDARD</div>
+                 <div class="std-value" id="std-spiral">---</div>
+            </div>
+            <div class="limit-row">
+                <div class="limit-pill">
+                    <span class="limit-label">MIN</span>
+                    <span class="limit-val min" id="limit-spiral-min">---</span>
+                </div>
+                <div class="limit-pill">
+                    <span class="limit-label">MAX</span>
+                    <span class="limit-val max" id="limit-spiral-max">---</span>
+                </div>
+            </div>
+            <div class="input-group-custom">
+                <label>ACTUAL PITCH VALUE</label>
+                <div class="c-input-wrap" id="wrap-spiral">
+                    <input type="text" inputmode="decimal" class="c-input" id="val-spiral" oninput="validateCard('spiral'); toggleClearBtn('spiral')" placeholder="0" />
+                    <button type="button" class="c-clear-btn" onclick="clearCard('spiral')" tabindex="-1" title="Clear">✕</button>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+
+        <!-- VISUAL CHECK CARD -->
+        <div class="dimensi-card" id="card-visual">
+            <div class="card-header-flex">
+                <div class="card-point">VISUAL CHECK</div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="v-quick-ok" onclick="setAllVisualOK()">SET ALL OK</button>
+                    <i class="bi bi-eye-fill" style="color: var(--accent-glow); font-size: 20px;"></i>
+                </div>
+            </div>
+            <div class="visual-grid">
+                <div class="visual-item">
+                    <i class="bi bi-eraser-fill text-primary mb-1"></i>
+                    <span class="visual-label">BURRY</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-burry-ok" onclick="toggleVisual('burry', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-burry-ng" onclick="toggleVisual('burry', 'ng')">NG</button>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <i class="bi bi-border-width text-primary mb-1"></i>
+                    <span class="visual-label">LINE</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-line-ok" onclick="toggleVisual('line', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-line-ng" onclick="toggleVisual('line', 'ng')">NG</button>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <i class="bi bi-droplet-fill text-primary mb-1"></i>
+                    <span class="visual-label">BUBBLE</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-bubble-ok" onclick="toggleVisual('bubble', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-bubble-ng" onclick="toggleVisual('bubble', 'ng')">NG</button>
+                    </div>
+                </div>
+                <div class="visual-item">
+                    <i class="bi bi-scissors text-primary mb-1"></i>
+                    <span class="visual-label">SCRATCH</span>
+                    <div class="segmented-control">
+                        <button class="seg-btn" id="v-scratch-ok" onclick="toggleVisual('scratch', 'ok')">OK</button>
+                        <button class="seg-btn" id="v-scratch-ng" onclick="toggleVisual('scratch', 'ng')">NG</button>
+                    </div>
+                </div>
+            </div>
+            <span class="status-badge"></span>
+        </div>
+    </div> <!-- END CARD GRID -->
+
+    <!-- FLOATING ACTION HUB -->
+    <div class="finalize-action-hub">
+        <button type="button" onclick="finalize()" class="submit-btn" title="Finalize and Sync Inspection">
+            <div class="d-flex flex-column align-items-start">
+                <span style="font-size: 8px; opacity: 0.7; letter-spacing: 1px;">PRODUCTION QUALITY HUB</span>
+                <span>UPDATE INSPECTION</span>
+            </div>
+            <i class="bi bi-shield-check"></i>
+        </button>
+    </div>
+
+    <!-- PRODUCTION DATA SECTION -->
+    <div class="section-title">
+        <i class="bi bi-clipboard2-data-fill"></i> PRODUCTION DATA Summary
+    </div>
+    <div class="prod-data-container">
+        <div class="prod-grid">
+            <div class="field-column">
+                <div class="field-box">
+                    <span class="field-label">PART NUMBER</span>
+                    <div class="field-input-wrap"><div class="f-input" id="disp-part-no">@Model.DimensionDisplay</div></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">STD PNJG</span>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="@Model.StandardLength"></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">QTY TARGET</span>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="disp-qty-target" value="@Model.QtyTarget"></div>
+                </div>
+            </div>
+            <div class="field-column">
+                <div class="field-box">
+                    <span class="field-label">VIN KODE</span>
+                    <div class="field-input-wrap"><input type="text" class="f-input" id="val-vin-kode" value="@Model.VinCode" placeholder="Enter VIN Code"></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">ACT PNJG</span>
+                    <div class="field-input-wrap"><input type="number" class="f-input" id="val-act-pnjg" value="@Model.ActualLength" placeholder="Enter length"></div>
+                </div>
+                <div class="field-box">
+                    <span class="field-label">QTY ACTUAL STATUS</span>
+                    <div class="qty-row">
+                        <button type="button" class="qty-btn" id="qty-ok" onclick="setQtyStatus('ok')"><i class="bi bi-check-circle-fill"></i> ALL OK</button>
+                        <button type="button" class="qty-btn" id="qty-ng" onclick="setQtyStatus('ng')"><i class="bi bi-x-circle-fill"></i> CONTAINS NG</button>
+                    </div>
+                    
+                    <div id="qtyContentArea" style="margin-top: 15px; min-height: 50px;">
+                        <!-- OK PANEL: Muncul 1 Input di Tengah -->
+                        <div id="okPanel" style="display: none; text-align: center;">
+                            <span style="font-size: 8px; color: #10b981; font-weight: 800; display: block; margin-bottom: 5px;">TOTAL QTY OK</span>
+                            <div class="field-input-wrap" style="max-width: 250px; margin: 0 auto; border-color: rgba(16, 185, 129, 0.4);">
+                                <input type="number" class="f-input" id="val-qty-ok" value="@Model.QtyOk">
+                            </div>
+                        </div>
+
+                        <!-- NG PANEL: Muncul 2 Input Berjejer -->
+                        <div id="ngPanel" style="display: none; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG DIMENSI</span>
+                                <div class="field-input-wrap" style="border-color: #ef4444;">
+                                    <input type="number" class="f-input" id="val-ng-dimensi" value="@Model.NgDimension">
+                                </div>
+                            </div>
+                            <div>
+                                <span style="font-size: 8px; color: #ef4444; font-weight: 800; display: block; text-align: center; margin-bottom: 5px;">NG VISUAL</span>
+                                <div class="field-input-wrap" style="border-color: #ef4444;">
+                                    <input type="number" class="f-input" id="val-ng-visual" value="@Model.NgVisual">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Full Width Remark -->
+            <div style="grid-column: span 2; margin-top: 10px;">
+                <span class="field-label">REMARK / NOTES</span>
+                <textarea class="f-textarea" id="val-remark" placeholder="Enter any specific observations or production notes...">@Model.Remark</textarea>
+            </div>
+        </div>
+    </div>
+</div> <!-- END SMART DIMENSION HUB --></div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+        // === GLOBAL STATE ===
+        let currentIndex = 0;
+        let activeStandards = {};
+        let isToolConnected = false;
+        let toolPrefix = "";
+
+        // === PLANNING SEARCH VARIABLES ===
+        let planningItemsCache = [];
+        let planningResultItems = [];
+        let planningResultIndex = -1;
+
+        // === PLANNING SEARCH FUNCTIONS ===
+        async function refreshPlanningItems() {
+            const dateText = document.getElementById('h-date')?.innerText || '';
+            const shiftText = document.getElementById('h-shift')?.innerText || '';
+            const date = parseDisplayDate(dateText);
+            const planningInput = document.getElementById('planningSearch');
+            if (!date || !shiftText || !planningInput) return;
+
+            planningInput.placeholder = 'LOADING PLANNING...';
+            planningInput.disabled = true;
+            document.getElementById('planningResults')?.classList.add('d-none');
+
+            try {
+                const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shiftText)}`);
+                planningItemsCache = await res.json();
+                planningResultItems = planningItemsCache;
+                planningResultIndex = -1;
+
+                const isFiltered = planningItemsCache.length > 0 && planningItemsCache[0].isFiltered;
+                const machineCtx = isFiltered && planningItemsCache[0].machineName
+                    ? ` [${planningItemsCache[0].machineName}]`
+                    : '';
+
+                planningInput.disabled = false;
+                if (planningItemsCache.length > 0) {
+                    planningInput.placeholder = `SEARCH PLANNING (${planningItemsCache.length} ITEM${planningItemsCache.length > 1 ? 'S' : ''}${machineCtx})`;
+                } else {
+                    planningInput.placeholder = 'NO ITEMS IN PLAN FOR THIS MACHINE/DAY';
+                }
+                planningInput.value = '';
+            } catch (error) {
+                console.error('Failed to refresh planning items:', error);
+                planningInput.disabled = false;
+                planningInput.placeholder = 'ERROR LOADING PLANNING';
+            }
+        }
+
+        function filterPlanningResults(query) {
+            const sanitizedQuery = query.trim().toUpperCase();
+            const results = sanitizedQuery.length === 0
+                ? planningItemsCache
+                : planningItemsCache.filter(item =>
+                    (item.itemCode && item.itemCode.toUpperCase().includes(sanitizedQuery)) ||
+                    (item.itemName && item.itemName.toUpperCase().includes(sanitizedQuery))
+                );
+
+            planningResultItems = results;
+            planningResultIndex = -1;
+            renderPlanningResults(results, sanitizedQuery.length === 0);
+        }
+
+        function renderPlanningResults(items, showAll = false) {
+            const container = document.getElementById('planningResults');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="planning-result-item" style="text-align:center; opacity:0.5; pointer-events:none;">
+                    <div class="planning-result-code">--- NO MATCHES FOUND ---</div>
+                </div>`;
+                container.classList.remove('d-none');
+                return;
+            }
+
+            const header = document.createElement('div');
+            header.style.cssText = 'padding:10px 20px;font-size:9px;font-weight:900;color:var(--accent-glow);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:8px;opacity:0.7;display:flex;align-items:center;justify-content:space-between;';
+            header.innerHTML = `<span>PLANNING RESULTS (${items.length})</span> <i class="bi bi-funnel-fill"></i>`;
+            container.appendChild(header);
+
+            items.forEach((item, index) => {
+                const hasSps = item.hasSps === true;
+                const spsBadge = hasSps
+                    ? `<span style="font-size:9px;font-weight:900;color:#10b981;background:rgba(16,185,129,0.15);padding:2px 8px;border-radius:20px;border:1px solid rgba(16,185,129,0.4);white-space:nowrap;"><i class="bi bi-check-circle-fill me-1"></i>SPS ✓</span>`
+                    : `<span style="font-size:9px;font-weight:900;color:#ef4444;background:rgba(239,68,68,0.12);padding:2px 8px;border-radius:20px;border:1px solid rgba(239,68,68,0.35);white-space:nowrap;"><i class="bi bi-x-circle-fill me-1"></i>NO SPS</span>`;
+                const borderColor = hasSps ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.35)';
+
+                const div = document.createElement('div');
+                div.className = 'planning-result-item';
+                div.dataset.index = index;
+                div.style.borderLeft = `3px solid ${borderColor}`;
+                div.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;gap:8px;flex-wrap:wrap;">
+                        <div class="planning-result-code">${item.itemCode}</div>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            ${item.machineName ? `<div class="machine-badge-mini"><i class="bi bi-cpu-fill"></i>${item.machineName}</div>` : ''}
+                            ${spsBadge}
+                        </div>
+                    </div>
+                    <div class="planning-result-name">${item.itemName || 'NO DESCRIPTION'}</div>
+                    <div class="planning-result-meta"><i class="bi bi-calendar3"></i> ${item.dateShift || '---'}</div>
+                `;
+                div.onclick = () => selectPlanningItem(item);
+                div.onmouseenter = () => highlightPlanningResult(index);
+                container.appendChild(div);
+            });
+
+            container.classList.remove('d-none');
+            planningResultIndex = showAll ? 0 : -1;
+            if (showAll && items.length > 0) highlightPlanningResult(0);
+        }
+
+        function highlightPlanningResult(index) {
+            const container = document.getElementById('planningResults');
+            if (!container) return;
+            const options = Array.from(container.querySelectorAll('.planning-result-item'));
+            options.forEach(opt => opt.classList.remove('planning-result-highlight'));
+            const target = options[index];
+            if (!target) return;
+            target.classList.add('planning-result-highlight');
+            planningResultIndex = index;
+            target.scrollIntoView({ block: 'nearest' });
+        }
+
+        function selectPlanningItem(item) {
+            const planningInput = document.getElementById('planningSearch');
+            const displayText = item.machineName ? `[${item.itemCode}] ${item.machineName}` : `[${item.itemCode}]`;
+            if (planningInput) {
+                planningInput.value = displayText;
+                planningInput.readOnly = true;
+                planningInput.style.cursor = 'pointer';
+            }
+            document.getElementById('planningResults')?.classList.add('d-none');
+
+            const lineEl = document.getElementById('h-line');
+            if (lineEl && item.machineName) {
+                lineEl.innerText = item.machineName;
+                lineEl.classList.add('animate__animated', 'animate__flash');
+                setTimeout(() => lineEl.classList.remove('animate__flash'), 1000);
+            }
+            if (item.date) setPlanningDateAndShift(item.date, item.shift);
+            document.getElementById('main-item-search').value = item.itemCode;
+            loadMaster();
+        }
+
+        function openPlanningDropdown() {
+            const planningInput = document.getElementById('planningSearch');
+            if (!planningInput) return;
+            planningInput.value = '';
+            planningInput.readOnly = false;
+            planningInput.placeholder = planningItemsCache.length > 0
+                ? `KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA)`
+                : 'LOADING...';
+            filterPlanningResults('');
+            document.getElementById('planningResults')?.classList.remove('d-none');
+            if (planningItemsCache.length === 0) refreshPlanningItems();
+        }
+
+        function parseDisplayDate(displayText) {
+            const monthMap = {
+                JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06',
+                JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12'
+            };
+            const parts = (displayText || '').trim().split(' ');
+            if (parts.length !== 3) return null;
+            const [day, month, year] = parts;
+            const monthNum = monthMap[month.toUpperCase()];
+            if (!monthNum) return null;
+            return `${year}-${monthNum}-${day.padStart(2, '0')}`;
+        }
+
+        function formatDisplayDate(dateValue) {
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return '';
+            const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day} ${month} ${year}`;
+        }
+
+        function setPlanningDateAndShift(dateValue, shiftValue) {
+            const dateEl = document.getElementById('h-date');
+            const shiftEl = document.getElementById('h-shift');
+            if (dateEl) {
+                const formatted = formatDisplayDate(dateValue);
+                if (formatted) dateEl.innerText = formatted;
+            }
+            if (shiftEl && shiftValue) {
+                const normalized = shiftValue.toUpperCase();
+                if (normalized === 'I') shiftEl.innerText = 'Shift 1';
+                else if (normalized === 'II') shiftEl.innerText = 'Shift 2';
+                else if (normalized === 'III') shiftEl.innerText = 'Shift 3';
+                else shiftEl.innerText = shiftValue;
+            }
+        }
+
+        function toggleShift() {
+            const el = document.getElementById('h-shift');
+            const current = el.innerText;
+            let next = "Shift 1";
+            if (current === "Shift 1") next = "Shift 2";
+            else if (current === "Shift 2") next = "Shift 3";
+            el.innerText = next;
+            
+            el.classList.remove('animate__animated', 'animate__pulse');
+            setTimeout(() => el.classList.add('animate__animated', 'animate__pulse'), 10);
+            
+            Swal.fire({ 
+                icon: 'info', 
+                title: 'SHIFT UPDATED', 
+                text: `Toggled to ${next}`, 
+                timer: 1000, 
+                showConfirmButton: false, 
+                toast: true, 
+                position: 'top-end' 
+            });
+
+            refreshPlanningItems();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const planningResults = document.getElementById('planningResults');
+            const planningSearch = document.getElementById('planningSearch');
+            if (planningResults && !planningResults.classList.contains('d-none')) {
+                if (!planningResults.contains(e.target) && e.target !== planningSearch) {
+                    planningResults.classList.add('d-none');
+                }
+            }
+        });
+
+        // Keyboard navigation for planning dropdown
+        document.addEventListener('keydown', function(e) {
+            const planningResults = document.getElementById('planningResults');
+            const planningSearch = document.getElementById('planningSearch');
+            
+            if (!planningResults || planningResults.classList.contains('d-none')) return;
+            if (document.activeElement !== planningSearch) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                movePlanningSelection(1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                movePlanningSelection(-1);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (planningResultIndex >= 0 && planningResultIndex < planningResultItems.length) {
+                    selectPlanningItem(planningResultItems[planningResultIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                planningResults.classList.add('d-none');
+            }
+        });
+
+        function movePlanningSelection(direction) {
+            if (!planningResultItems.length) return;
+            planningResultIndex = Math.max(0, Math.min(planningResultItems.length - 1, planningResultIndex + direction));
+            highlightPlanningResult(planningResultIndex);
+        }
+
+        // === ORIGINAL EDIT FORM SCRIPT ===
+        // RENDER DATABASE DATAsafely by selecting only needed properties (BREAKS CYCLE)
+        const rawMeasurements = @Html.Raw(Json.Serialize(Model.Measurements.Select(m => new {
+            pointName = m.PointName,
+            r1 = m.R1,
+            r2 = m.R2,
+            r3 = m.R3,
+            r4 = m.R4,
+            r5 = m.R5,
+            timeSection = m.TimeSection,
+            status = m.Status
+        })));
+        let measurements = [];
+
+        // Build slots with independent times
+        const timeHeader = "@(Model.Measurements.FirstOrDefault()?.TimeSection ?? "")";
+        const timeParts = timeHeader.split(',').map(s => s.trim());
+
+        for (let i = 1; i <= 5; i++) {
+            const hasData = rawMeasurements.some(m => {
+                const v = m[`r${i}`] !== undefined ? m[`r${i}`] : m[`R${i}`];
+                return v !== null && v !== "" && v !== undefined;
+            });
+            
+            if (hasData || i === 1) {
+                const getVal = (exactName) => {
+                    const search = exactName.toLowerCase().trim();
+                    const isInner = search.includes('inner');
+                    const isTotal = search.includes('total');
+                    const isThick = search.includes('thick');
+                    
+                    let row = rawMeasurements.find(m => (m.pointName || "").trim().toLowerCase() === search);
+                    if (!row && isThick) {
+                        row = rawMeasurements.find(m => {
+                            const dbName = (m.pointName || "").trim().toLowerCase();
+                            const dbIsInner = dbName.includes('inner');
+                            const dbIsTotal = dbName.includes('total');
+                            const hasX = search.includes('(x)');
+                            const hasY = search.includes('(y)');
+                            if (isInner && !dbIsInner) return false;
+                            if (isTotal && !dbIsTotal) return false;
+                            if (hasX && !dbName.includes('(x)')) return false;
+                            if (hasY && !dbName.includes('(y)')) return false;
+                            return dbName.includes('thick');
+                        });
+                    }
+                    if (!row && !isThick) {
+                        row = rawMeasurements.find(m => (m.pointName || "").trim().toLowerCase().includes(search.split(' ')[0]));
+                    }
+                    if (!row) return "";
+                    const val = row[`r${i}`] !== undefined ? row[`r${i}`] : row[`R${i}`];
+                    return (val !== null && val !== undefined) ? val : "";
+                };
+                
+                const getVState = (itemName) => {
+                    let row = rawMeasurements.find(m => (m.pointName || "").includes(itemName));
+                    if (!row) row = rawMeasurements.find(m => (m.pointName || "").trim() === "Visual Check");
+                    const val = row ? (row[`r${i}`] !== undefined ? row[`r${i}`] : row[`R${i}`]) : null;
+                    return (val == 1) ? "ok" : (val == 0 && val !== null ? "ng" : null);
+                };
+
+                measurements.push({
+                    time: timeParts[i-1] || "",
+                    data: {
+                        innerDia: getVal("Inner Diameter"),
+                        innerTx: getVal("Inner Thickness (x)"),
+                        innerTy: getVal("Inner Thickness (y)"),
+                        totalTx: getVal("Total Thickness (x)"),
+                        totalTy: getVal("Total Thickness (y)"),
+                        spiral: getVal("Spiral Pitch"),
+                        visual: { 
+                            burry: getVState("Burry"), 
+                            line: getVState("Line"), 
+                            bubble: getVState("Bubble"), 
+                            scratch: getVState("Scratch") 
+                        }
+                    }
+                });
+            }
+        }
+
+        let currentIndex = 0;
+        let activeStandards = {};
+
+        // window.onload removed to avoid conflict with DOMContentLoaded
+
+        async function openScanner() {
+            const res = await Swal.fire({
+                title: 'SCAN ITEM LIST CODE',
+                html: '<div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>',
+                showCancelButton: true,
+                confirmButtonText: 'CANCEL',
+                showConfirmButton: false,
+                didOpen: () => {
+                    html5QrCode = new Html5Qrcode("qr-reader");
+                    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                        document.getElementById('main-item-search').value = decodedText;
+                        Swal.close();
+                        loadMaster();
+                    };
+                    const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+                    html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+                        .catch(err => {
+                            Swal.showValidationMessage(`Camera failed: ${err}`);
+                        });
+                },
+                willClose: () => {
+                    if (html5QrCode) {
+                        html5QrCode.stop().catch(e => console.error(e));
+                    }
+                }
+            });
+        }
+
+        let isToolConnected = false;
+        let toolPrefix = "";
+        let linkedDeviceName = "NONE / MANUAL";
+
+        function toggleShift() {
+            const el = document.getElementById('h-shift');
+            const current = el.innerText;
+            let next = "Shift 1";
+            if (current === "Shift 1") next = "Shift 2";
+            else if (current === "Shift 2") next = "Shift 3";
+            el.innerText = next;
+            
+            // Pulse effect
+            el.classList.remove('animate__animated', 'animate__pulse');
+            setTimeout(() => el.classList.add('animate__animated', 'animate__pulse'), 10);
+            
+            Swal.fire({ 
+                icon: 'info', 
+                title: 'SHIFT UPDATED', 
+                text: `Toggled to ${next}`, 
+                timer: 1000, 
+                showConfirmButton: false, 
+                toast: true, 
+                position: 'top-end' 
+            });
+        }
+
+        async function scanForTool() {
+            try {
+                if (!navigator.bluetooth) {
+                    Swal.fire({ icon: 'error', title: 'NOT SUPPORTED', text: 'Browser Anda tidak mendukung Web Bluetooth API.' });
+                    return;
+                }
+                
+                const filterVal = document.getElementById('bt-filter-name')?.value.trim();
+                const options = filterVal 
+                    ? { filters: [{ namePrefix: filterVal }] } 
+                    : { acceptAllDevices: true };
+
+                const device = await navigator.bluetooth.requestDevice(options);
+                linkedDeviceName = device.name || "UNNAMED DEVICE";
+                
+                // Update UI in popup if still open
+                const nameEl = document.getElementById('val-device-name');
+                if(nameEl) nameEl.innerText = linkedDeviceName;
+                
+                Swal.fire({ icon: 'success', title: 'TOOL ASSIGNED', text: `${linkedDeviceName} Linked`, timer: 1500, showConfirmButton: false, position: 'top-end', toast: true });
+            } catch (e) {
+                console.error("Discovery Cancelled", e);
+            }
+        }
+
+        async function showBluetoothSettings() {
+            const res = await Swal.fire({
+                title: 'BLUETOOTH TOOL CONTROL',
+                html: `
+                    <div style="text-align: left; background: rgba(15, 23, 42, 0.5); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        
+                        <!-- NEW SEARCH / FILTER AREA -->
+                        <div style="margin-bottom: 20px; background: rgba(30, 41, 59, 0.6); padding: 15px; border-radius: 10px; border-bottom: 3px solid var(--accent-glow);">
+                            <label style="color: #64748b; font-size: 9px; font-weight: 900; display: block; margin-bottom: 8px; letter-spacing: 1px;">SEARCH BY NAME PREFIX</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="bt-filter-name" placeholder="Contoh: SYLVAC / MIT..." 
+                                    style="flex: 1; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; padding: 0 12px; font-size: 11px; font-weight: 700;">
+                                <button onclick="scanForTool()" style="background: var(--accent-glow); border: none; color: #000; padding: 0 15px; border-radius: 4px; font-size: 10px; font-weight: 800; cursor: pointer; transition: 0.3s;">
+                                    <i class="bi bi-search"></i> SCAN
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px; padding: 0 10px;">
+                            <h6 style="color: #64748b; margin: 0 0 5px 0; font-size: 10px; font-weight: 900;">CURRENT ASSIGNED DEVICE</h6>
+                            <div id="device-badge" style="color: #fff; font-size: 15px; font-weight: 800; letter-spacing: 1px;">
+                                <i class="bi bi-cpu" style="color: var(--accent-glow);"></i> <span id="val-device-name">${linkedDeviceName}</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px; display: flex; align-items: start; gap: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <i class="bi bi-fingerprint" style="color: #38bdf8; font-size: 20px;"></i>
+                            <div>
+                                <h6 style="color: #fff; margin: 0 0 5px 0;">TOOL FINGERPRINT (ID)</h6>
+                                <p style="color: #94a3b8; font-size: 11px; margin: 0;">Sinkronisasi ID prefix dari sinyal alat.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <input type="text" id="bt-test-field" placeholder="Tekan DATA pada alat untuk deteksi ID..." 
+                                style="width: 100%; height: 45px; background: rgba(30, 41, 59, 0.4); border: 1px dashed rgba(56, 189, 248, 0.3); border-radius: 6px; color: #38bdf8; text-align: center; font-weight: 700; font-size: 16px;">
+                            <div id="prefix-badge" style="margin-top:10px; font-size: 10px; color: #10b981; font-weight: 800; ${toolPrefix ? '' : 'display: none;'}">
+                                <i class="bi bi-check-circle-fill"></i> DETECTED PREFIX: <span id="val-tool-prefix">${toolPrefix || 'NONE'}</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
+                            <div>
+                                <h6 style="color: #fff; margin: 0;">ACTIVATE SMART LINK</h6>
+                                <p style="color: #64748b; font-size: 10px; margin: 0;">Hanya terima data jika ID Cocok.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="bt-active-toggle" ${isToolConnected ? 'checked' : ''} style="width: 50px; height: 25px; cursor: pointer;">
+                            </div>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'SAVE & LOCK TOOL',
+                confirmButtonColor: '#10b981',
+                cancelButtonText: 'DISCONNECT',
+                didOpen: () => {
+                    const testInput = document.getElementById('bt-test-field');
+                    testInput.onkeyup = (e) => {
+                        if (e.key === 'Enter') {
+                            const raw = testInput.value.trim();
+                            const match = raw.match(/^([A-Za-z0-9]+)[:]/);
+                            if (match) {
+                                toolPrefix = match[1];
+                                document.getElementById('prefix-badge').style.display = 'block';
+                                document.getElementById('val-tool-prefix').innerText = toolPrefix;
+                            }
+                        }
+                    }
+                },
+                preConfirm: () => {
+                    return document.getElementById('bt-active-toggle').checked;
+                }
+            });
+
+            if (res.isConfirmed) {
+                isToolConnected = res.value;
+                updateBtUI();
+            } else if (res.dismiss === Swal.DismissReason.cancel) {
+                isToolConnected = false;
+                toolPrefix = "";
+                linkedDeviceName = "NONE / MANUAL";
+                updateBtUI();
+            }
+        }
+
+        function updateBtUI() {
+            const btn = document.getElementById('toolLinkBtn');
+            if (isToolConnected) {
+                btn.classList.add('active');
+                Swal.fire({ icon: 'success', title: 'TOOL SYNCED', text: 'Smart-Link is now ACTIVE', timer: 1200, showConfirmButton: false, position: 'top-end', toast: true });
+            } else {
+                btn.classList.remove('active');
+                Swal.fire({ icon: 'info', title: 'DISCONNECTED', text: 'Switched to Manual Mode', timer: 1200, showConfirmButton: false, position: 'top-end', toast: true });
+            }
+        }
+
+        // TURBO BACKGROUND SCRUBBER: For stubborn bluetooth tools 
+        setInterval(() => {
+            document.querySelectorAll('.c-input').forEach(input => {
+                const raw = input.value;
+                if (!raw || raw === "0" || raw === "0.00") return;
+                
+                // If it contains raw tool symbols (+ or leading 000)
+                if (raw.includes('+') || (raw.startsWith('0') && raw.length > 4)) {
+                    // FORCE CLEAN: No matter if focused or not
+                    let n = parseFloat(raw.toString().replace(/[+]/g, ''));
+                    if (!isNaN(n)) {
+                        input.value = n.toFixed(2);
+                        const id = input.id.replace('val-', '');
+                        validateCard(id);
+                    }
+                }
+            });
+        }, 200);
+
+        // DEEP CLEAN ON BLUR: When operator moves to next field
+        document.addEventListener('blur', (e) => {
+            if (e.target.classList.contains('c-input')) {
+                const input = e.target;
+                let n = parseFloat(input.value.toString().replace(/[+]/g, ''));
+                if (!isNaN(n)) {
+                    input.value = n.toFixed(2);
+                    validateCard(input.id.replace('val-', ''));
+                }
+            }
+        }, true);
+
+        // IMMEDIATE DELEGATE: For live updates        // --- THE ATOMIC INSTANT SCRUBBER ---
+        // Handles text fields and cleans tool output (+006.10 -> 6.10) instantly
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('c-input')) {
+                const input = e.target;
+                let val = input.value;
+                
+                // Nuclear Regex: Strip PLUS and stripping leading zeros before any digits
+                let cleaned = val.replace(/[+]/g, '').replace(/^0+(?=\d)/, '');
+                
+                if (input.value !== cleaned) {
+                    input.value = cleaned;
+                }
+                
+                validateCard(input.id.replace('val-', ''));
+            }
+        });
+
+        // Ensure initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTimeline();
+            loadDataToUI();
+            loadMaster(true); // Load standards only to avoid overwriting header info on load
+            refreshPlanningItems();
+            initSmartNext();
+        });
+
+        function cleanValue(raw) {
+            if(!raw || raw === "0" || raw === "0.00") return "0.00";
+            let cleaned = raw.toString().replace(/[+]/g, '').trim();
+            let n = parseFloat(cleaned);
+            return isNaN(n) ? cleaned : n.toFixed(2);
+        }
+
+        function initSmartNext() {
+            // Global Enter key listener for Bluetooth tools and manual input
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    // ONLY AUTO-NEXT IF TOOL LINK IS ACTIVE
+                    if (!isToolConnected) return;
+
+                    const active = document.activeElement;
+                    if (active && (active.classList.contains('c-input') || active.classList.contains('f-input'))) {
+                        e.preventDefault();
+                        
+                        // Handle Signal Prefixes (ID Filter)
+                        let val = active.value.trim();
+                        if (toolPrefix && val.startsWith(toolPrefix)) {
+                            // Strip prefix if detected (e.g. "CAL01:12.05" becomes "12.05")
+                            val = val.replace(toolPrefix, '').replace(':', '').trim();
+                        }
+                        
+                        // CLEAN VALUE: Remove + and leading zeros
+                        // Add a tiny delay to wait for tool to finish typing final digits
+                        setTimeout(() => {
+                            active.value = cleanValue(active.value);
+                            const id = active.id.replace('val-', '');
+                            validateCard(id);
+
+                            // List all relevant fields in sequence
+                            const sequence = Array.from(document.querySelectorAll('.c-input, .f-input:not([readonly])'));
+                            const currentIdx = sequence.indexOf(active);
+                            
+                            if (currentIdx > -1 && currentIdx < sequence.length - 1) {
+                                const next = sequence[currentIdx + 1];
+                                next.focus();
+                                if (next.tagName === 'INPUT') next.select();
+                                const card = next.closest('.dimensi-card');
+                                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            } else if (currentIdx === sequence.length - 1) {
+                                Swal.fire({ icon: 'success', title: 'SEQUENCE COMPLETED', timer: 1000, showConfirmButton: false, position: 'top-end', toast: true });
+                            }
+                        }, 20);
+                    }
+                }
+            });
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineContainer');
+            const btns = container.querySelectorAll('.jam-btn:not(.add-btn)');
+            btns.forEach(b => b.remove());
+
+            measurements.forEach((slot, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `jam-btn ${idx === currentIndex ? 'active' : ''}`;
+                btn.innerText = slot.time || `P-${idx + 1}`;
+                btn.onclick = () => switchSlot(idx);
+                
+                if (measurements.length > 1) {
+                    const del = document.createElement('div');
+                    del.className = 'slot-delete-btn';
+                    del.innerHTML = '<i class="bi bi-x-lg"></i>';
+                    del.onclick = (e) => { e.stopPropagation(); removeSlot(idx); };
+                    btn.appendChild(del);
+                }
+                container.insertBefore(btn, container.querySelector('.add-btn'));
+            });
+        }
+
+        async function removeSlot(idx) {
+            const result = await Swal.fire({
+                title: 'Hapus Sesi?', text: "Data pada sesi ini akan hilang!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus'
+            });
+            if (result.isConfirmed) {
+                measurements.splice(idx, 1);
+                if (currentIndex >= measurements.length) currentIndex = measurements.length - 1;
+                loadDataToUI();
+                renderTimeline();
+            }
+        }
+
+        function addNewSlot() {
+            saveCurrentData();
+            // Default new slot to "OK" for visual check as it's the most common case
+            measurements.push({ 
+                time: null, 
+                data: { 
+                    visual: { burry: 'ok', line: 'ok', bubble: 'ok', scratch: 'ok' } 
+                } 
+            });
+            switchSlot(measurements.length - 1);
+        }
+
+        function switchSlot(idx) {
+            saveCurrentData();
+            currentIndex = idx;
+            loadDataToUI();
+            renderTimeline();
+        }
+
+        function toggleClearBtn(id) {
+            const wrap = document.getElementById(`wrap-${id}`);
+            const inp = document.getElementById(`val-${id}`);
+            if (wrap && inp) {
+                if (inp.value && inp.value !== "0" && inp.value !== "0.00") {
+                    wrap.classList.add('has-value');
+                } else {
+                    wrap.classList.remove('has-value');
+                }
+            }
+        }
+
+        function clearCard(id) {
+            const inp = document.getElementById(`val-${id}`);
+            if (inp) {
+                inp.value = "";
+                toggleClearBtn(id);
+                validateCard(id);
+                inp.focus();
+                saveCurrentData();
+            }
+        }
+
+        function setQtyStatus(state) {
+            const okBtn = document.getElementById('qty-ok');
+            const ngBtn = document.getElementById('qty-ng');
+            const okPanel = document.getElementById('okPanel');
+            const ngPanel = document.getElementById('ngPanel');
+
+            if(!okBtn || !ngBtn || !okPanel || !ngPanel) return;
+
+            // Reset UI
+            okBtn.classList.remove('active-ok');
+            ngBtn.classList.remove('active-ng');
+            okPanel.style.display = 'none';
+            ngPanel.style.display = 'none';
+
+            if(state === 'ok') {
+                okBtn.classList.add('active-ok');
+                okPanel.style.display = 'block';
+            } else if(state === 'ng') {
+                ngBtn.classList.add('active-ng');
+                ngPanel.style.display = 'grid';
+            }
+            saveCurrentData();
+        }
+
+        function toggleVisual(item, state) {
+            const okBtn = document.getElementById(`v-${item}-ok`);
+            const ngBtn = document.getElementById(`v-${item}-ng`);
+            okBtn.classList.remove('active-ok');
+            ngBtn.classList.remove('active-ng');
+            if (state === 'ok') okBtn.classList.add('active-ok');
+            else ngBtn.classList.add('active-ng');
+            renderVisualStatus();
+            saveCurrentData();
+        }
+
+        function renderVisualStatus() {
+            const card = document.getElementById('card-visual');
+            const items = ['burry', 'line', 'bubble', 'scratch'];
+            let allOK = true, anyNG = false, anySelected = false;
+
+            items.forEach(it => {
+                const okBtn = document.getElementById(`v-${it}-ok`);
+                const ngBtn = document.getElementById(`v-${it}-ng`);
+                if(!okBtn || !ngBtn) return;
+                
+                const isOK = okBtn.classList.contains('active-ok');
+                const isNG = ngBtn.classList.contains('active-ng');
+                
+                if (isOK || isNG) anySelected = true;
+                if (isNG) anyNG = true;
+                if (!isOK) allOK = false;
+                
+                // Update icon color and glow
+                const icon = okBtn.closest('.visual-item').querySelector('i');
+                if(icon) {
+                    if (isNG) {
+                        icon.style.color = "#ff4d4d";
+                        icon.style.filter = "drop-shadow(0 0 8px rgba(255, 77, 77, 0.6))";
+                        icon.style.opacity = "1";
+                    } else if (isOK) {
+                        icon.style.color = "#10b981";
+                        icon.style.filter = "drop-shadow(0 0 8px rgba(16, 185, 129, 0.6))";
+                        icon.style.opacity = "1";
+                    } else {
+                        icon.style.color = "var(--accent-glow)";
+                        icon.style.filter = "none";
+                        icon.style.opacity = "0.5";
+                    }
+                }
+            });
+
+            card.classList.remove('status-ok', 'status-ng');
+            if (anySelected) {
+                if (anyNG) card.classList.add('status-ng');
+                else if (allOK) card.classList.add('status-ok');
+            }
+        }
+        
+        function setAllVisualOK() {
+            ['burry', 'line', 'bubble', 'scratch'].forEach(it => toggleVisual(it, 'ok'));
+        }
+
+        function saveCurrentData() {
+            const current = measurements[currentIndex];
+            if(!current) return;
+
+            const vStates = {};
+            ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
+                const ok = document.getElementById(`v-${it}-ok`).classList.contains('active-ok');
+                const ng = document.getElementById(`v-${it}-ng`).classList.contains('active-ng');
+                vStates[it] = ok ? 'ok' : (ng ? 'ng' : null);
+            });
+
+            current.data = {
+                innerDia: document.getElementById('val-inner-dia').value,
+                innerTx: document.getElementById('val-inner-tx').value,
+                innerTy: document.getElementById('val-inner-ty').value,
+                totalTx: document.getElementById('val-total-tx').value,
+                totalTy: document.getElementById('val-total-ty').value,
+                spiral: document.getElementById('val-spiral').value,
+                visual: vStates
+            };
+
+            const hasVal = Object.values(current.data).some(v => v !== "" && v !== "0" && v !== null && typeof v !== 'object') || 
+                           Object.values(vStates).some(v => v !== null);
+
+            if (hasVal && !current.time) {
+                const now = new Date();
+                current.time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            }
+        }
+
+        function loadDataToUI() {
+            const data = measurements[currentIndex].data || {};
+            
+            // 1. Per-slot measurements
+            const fmt = (v) => (v !== null && v !== "" && !isNaN(v)) ? parseFloat(v).toFixed(2) : (v || '');
+            document.getElementById('val-inner-dia').value = fmt(data.innerDia);
+            document.getElementById('val-inner-tx').value = fmt(data.innerTx);
+            document.getElementById('val-inner-ty').value = fmt(data.innerTy);
+            document.getElementById('val-total-tx').value = fmt(data.totalTx);
+            document.getElementById('val-total-ty').value = fmt(data.totalTy);
+            document.getElementById('val-spiral').value = fmt(data.spiral);
+
+            // 2. Per-slot Visual Check UI refresh
+            const v = data.visual || {};
+            ['burry', 'line', 'bubble', 'scratch'].forEach(it => {
+                const okBtn = document.getElementById(`v-${it}-ok`);
+                const ngBtn = document.getElementById(`v-${it}-ng`);
+                okBtn.classList.remove('active-ok');
+                ngBtn.classList.remove('active-ng');
+                if (v[it] === 'ok') okBtn.classList.add('active-ok');
+                else if (v[it] === 'ng') ngBtn.classList.add('active-ng');
+            });
+            renderVisualStatus();
+
+            // 3. GLOBAL PRODUCTION DATA
+            document.getElementById('val-vin-kode').value = "@Model.VinCode" || "";
+            document.getElementById('val-act-pnjg').value = "@Model.ActualLength" || "";
+            document.getElementById('val-qty-ok').value = "@Model.QtyOk" || "0";
+            document.getElementById('val-ng-dimensi').value = "@Model.NgDimension" || "0";
+            document.getElementById('val-ng-visual').value = "@Model.NgVisual" || "0";
+            document.getElementById('val-remark').value = `@Html.Raw(Model.Remark)` || "";
+            
+            // Auto Set Qty Status Panel
+            const hasNG = parseInt("@Model.NgDimension" || "0") > 0 || parseInt("@Model.NgVisual" || "0") > 0;
+            setQtyStatus(hasNG ? 'ng' : 'ok');
+            
+            // 4. Header / Fixed Inputs
+            const stdPnjgInput = document.getElementById('disp-std-pnjg');
+            if (stdPnjgInput) stdPnjgInput.value = "@Model.StandardLength" || "-";
+            
+            const targetInput = document.getElementById('disp-qty-target');
+            if (targetInput) targetInput.value = "@Model.QtyTarget" || "0";
+
+            // Run validation for all cards
+            ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => {
+                validateCard(id);
+                toggleClearBtn(id);
+            });
+        }
+
+        function validateCard(id) {
+            // Map shorthand element IDs to activeStandards keys
+            const map = {
+                'inner-dia': 'innerdiameter',
+                'inner-tx': 'innerthicknessx',
+                'inner-ty': 'innerthicknessy',
+                'total-tx': 'totalthicknessx',
+                'total-ty': 'totalthicknessy',
+                'spiral': 'spiralpitch'
+            };
+            const cleanId = map[id] || id.toLowerCase().replace(/-/g, '');
+            const card = document.getElementById(`card-${id}`);
+            const std = activeStandards[cleanId];
+            const inp = document.getElementById(`val-${id}`);
+            
+            if(!card || !inp) return;
+            
+            card.classList.remove('status-ok', 'status-ng');
+            
+            // Clean local value for parsing
+            const rawValue = inp.value.toString().replace(/[+]/g, '').trim();
+            if(!rawValue) return; // Silent if empty
+
+            const val = parseFloat(rawValue);
+            if (isNaN(val)) return;
+
+            // If we have a valid standard (val > 0), validate against it. 
+            // If std.val is 0 (No Data), we leave the card neutral (White).
+            if (std && std.val > 0) {
+                const min = std.val - std.tol;
+                const max = std.val + std.tol;
+                // Use a tiny buffer for precision
+                const isOK = (val >= (min - 0.005) && val <= (max + 0.005)); 
+                card.classList.add(isOK ? 'status-ok' : 'status-ng');
+            } else {
+                // No standard found or target is 0: remain neutral
+                card.classList.remove('status-ok', 'status-ng');
+            }
+        }
+
+        async function loadMaster(standardsOnly = false) {
+            const code = document.getElementById('main-item-search').value;
+            if(!code) return;
+            
+            // Show loading overlay only if NOT in standards-only mode (prevent flicker on load)
+            if(!standardsOnly) {
+                Swal.fire({ title: 'FETCHING MASTER...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            }
+
+            try {
+                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}`);
+                const data = await res.json();
+                
+                if(!standardsOnly) Swal.close();
+
+                if(data.success) {
+                    const m = data.data;
+                    
+                    // ONLY UPDATE HEADER IF NOT IN STANDARDS-ONLY MODE
+                    if (!standardsOnly) {
+                        const lineEl = document.getElementById('h-line');
+                        const hoseEl = document.getElementById('h-hose');
+                        const docEl = document.getElementById('h-doc');
+
+                        if(lineEl) lineEl.innerText = m.machineName || "---"; 
+                        if(hoseEl) hoseEl.innerText = m.hoseType || "---";
+                        if(docEl) docEl.innerText = m.docNo || "---";
+
+                        const partEl = document.getElementById('disp-part-no');
+                        if(partEl) partEl.innerText = m.itemList || "---";
+                        
+                        const stdPnjgEl = document.getElementById('disp-std-pnjg');
+                        if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
+                        
+                        const qtyTargetInput = document.getElementById('disp-qty-target');
+                        if(qtyTargetInput && qtyTargetInput.value == "0") qtyTargetInput.value = "";
+                        
+                        document.getElementById('h-row-hose')?.classList.add('animate__animated', 'animate__pulse');
+                    }
+                    
+                    // ALWAYS UPDATE STANDARDS (Min/Max Tresholds) - DOES NOT TOUCH ACTUAL INPUTS
+                    const parseV = (str, def = 0) => {
+                        if(!str || str === '---') return def;
+                        const m = str.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                        return m ? parseFloat(m[0]) : def;
+                    };
+                    const parseT = (str, def = 0.1) => {
+                        if(!str || str === '---') return def;
+                        const m = str.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                        if (!m) return def;
+                        let val = parseFloat(m[m.length - 1]);
+                        return val > 2.0 ? def : val;
+                    };
+
+                    const configs = [
+                        { id: 'innerdiameter', v: m.dimensi, t: m.toleranceInner, el: 'inner-dia', dt: 0.1 },
+                        { id: 'innerthicknessx', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                        { id: 'innerthicknessy', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                        { id: 'totalthicknessx', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                        { id: 'totalthicknessy', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                        { id: 'spiralpitch', v: m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
+                    ];
+
+                    configs.forEach(p => {
+                        const target = parseV(p.v);
+                        const tol = parseT(p.t, p.dt);
+                        activeStandards[p.id] = { id: p.id, val: target, tol: tol };
+                        
+                        const stdEl = document.getElementById(`std-${p.el}`);
+                        if (stdEl) {
+                            stdEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)} ± ${tol.toFixed(2)}`;
+                        }
+                        
+                        const minEl = document.getElementById(`limit-${p.el}-min`);
+                        const maxEl = document.getElementById(`limit-${p.el}-max`);
+                        if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
+                        if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
+                    });
+                    
+                    if(!standardsOnly) Swal.fire({ icon: 'success', title: 'MASTER LOADED', timer: 800, showConfirmButton: false });
+                    
+                    // RE-VALIDATE COLORS ONLY (NOT VALUES)
+                    ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
+                }
+            } catch (e) { }
+        }
+        async function submitEntry() {
+            saveCurrentData();
+            const btn = document.querySelector('.submit-btn');
+            if(btn) btn.disabled = true;
+
+            try {
+                const aggregateReadings = [];
+
+                // === MEASUREMENT POINTS ===
+                const pointMap = [
+                    { name: 'Inner Diameter',       key: 'innerDia', stdKey: 'innerdiameter'  },
+                    { name: 'Inner Thickness (x)',  key: 'innerTx',  stdKey: 'innerthicknessx'},
+                    { name: 'Inner Thickness (y)',  key: 'innerTy',  stdKey: 'innerthicknessy'},
+                    { name: 'Total Thickness (x)',  key: 'totalTx',  stdKey: 'totalthicknessx'},
+                    { name: 'Total Thickness (y)',  key: 'totalTy',  stdKey: 'totalthicknessy'},
+                    { name: 'Spiral Pitch',         key: 'spiral',   stdKey: 'spiralpitch'    }
+                ];
+
+                for (const point of pointMap) {
+                    const std = activeStandards[point.stdKey];
+                    const stdText = (std && std.val > 0)
+                        ? (std.val.toFixed(2) + ' \u00b1 ' + std.tol.toFixed(2))
+                        : '-';
+
+                    const allTimes = measurements.map(m => m.time || '').join(',');
+                    const row = {
+                        PointName: point.name,
+                        TimeSection: allTimes,
+                        Frequency: '30m Sekali',
+                        StandardDimension: stdText,
+                        Initial: '',
+                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '',
+                        Status: 'OK'
+                    };
+
+                    for (let idx = 0; idx < Math.min(measurements.length, 5); idx++) {
+                        const val = measurements[idx].data[point.key];
+                        row[`Reading${idx + 1}`] = (val !== null && val !== undefined && val !== '') ? val : '';
+                        if (std && std.val > 0 && val !== '' && val !== null && val !== undefined) {
+                            const v = parseFloat(val);
+                            if (!isNaN(v) && (v < (std.val - std.tol - 0.001) || v > (std.val + std.tol + 0.001))) {
+                                row.Status = 'NG';
+                            }
+                        }
+                    }
+                    aggregateReadings.push(row);
+                }
+
+                // === VISUAL CHECK POINTS (per item) ===
+                const visualItems = [
+                    { name: 'Visual Check - Burry',   key: 'burry'   },
+                    { name: 'Visual Check - Line',    key: 'line'    },
+                    { name: 'Visual Check - Bubble',  key: 'bubble'  },
+                    { name: 'Visual Check - Scratch', key: 'scratch' }
+                ];
+
+                for (const vIt of visualItems) {
+                    const allTimes = measurements.map(m => m.time || '').join(',');
+                    const vRow = {
+                        PointName: vIt.name,
+                        TimeSection: allTimes,
+                        Frequency: '30m Sekali',
+                        StandardDimension: 'NORMAL',
+                        Initial: 'OK',
+                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '',
+                        Status: 'OK'
+                    };
+                    for (let idx = 0; idx < Math.min(measurements.length, 5); idx++) {
+                        const state = measurements[idx].data.visual?.[vIt.key];
+                        vRow[`Reading${idx + 1}`] = state === 'ok' ? '1' : (state === 'ng' ? '0' : '');
+                        if (state === 'ng') vRow.Status = 'NG';
+                    }
+                    aggregateReadings.push(vRow);
+                }
+
+                // === PAYLOAD ===
+                const safeInt = (id) => {
+                    const v = parseInt(document.getElementById(id)?.value || '0');
+                    return isNaN(v) ? 0 : v;
+                };
+
+                const payload = {
+                    reportId: parseInt("@Model.Id") || 0,
+                    documentNumber: document.getElementById('h-doc')?.innerText || '---',
+                    itemCode: document.getElementById('h-itemcode')?.innerText || '',
+                    hoseType: document.getElementById('h-hose')?.innerText || '',
+                    customerName: "@(Model.CustomerName ?? "")",
+                    dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
+                    vinCode: document.getElementById('val-vin-kode')?.value || '',
+                    standardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                    actualLength: document.getElementById('val-act-pnjg')?.value || '',
+                    qtyTarget: safeInt('disp-qty-target'),
+                    qtyOk: safeInt('val-qty-ok'),
+                    ngDimension: safeInt('val-ng-dimensi'),
+                    ngVisual: safeInt('val-ng-visual'),
+                    remark: document.getElementById('val-remark')?.value || '',
+                    byPass: '',
+                    shift: document.getElementById('h-shift')?.innerText || '',
+                    dimensionReadings: aggregateReadings.map(r => ({
+                        pointName: String(r.PointName || ''),
+                        timeSection: String(r.TimeSection || ''),
+                        frequency: String(r.Frequency || ''),
+                        standardDimension: String(r.StandardDimension || ''),
+                        initial: String(r.Initial || ''),
+                        reading1: String(r.Reading1 ?? ''),
+                        reading2: String(r.Reading2 ?? ''),
+                        reading3: String(r.Reading3 ?? ''),
+                        reading4: String(r.Reading4 ?? ''),
+                        reading5: String(r.Reading5 ?? ''),
+                        status: String(r.Status || 'OK')
+                    }))
+                };
+
+                const response = await fetch('/Dimensi/SaveData', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'UPDATE SUCCESSFUL', text: 'Data berhasil diperbarui.', timer: 1500, showConfirmButton: false });
+                    setTimeout(() => window.location.href = '/Dimensi/History', 1500);
+                } else {
+                    Swal.fire('Error', result.message || 'Gagal menyimpan', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Sistem Gagal Menyimpan: ' + err.message, 'error');
+            } finally {
+                if(btn) btn.disabled = false;
+            }
+        }
+
+        function finalize() {
+            saveCurrentData();
+            Swal.fire({
+                icon: 'question',
+                title: 'SUBMIT CHANGES?',
+                text: 'Setelah disubmit, perubahan akan muncul di laporan.',
+                showCancelButton: true,
+                confirmButtonText: 'YA, UPDATE',
+                confirmButtonColor: '#10b981'
+            }).then(r => {
+                 if(r.isConfirmed) {
+                     submitEntry();
+                 }
+            });
+        }
+    </script>
+}

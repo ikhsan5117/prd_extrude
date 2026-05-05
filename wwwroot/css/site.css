@@ -69,7 +69,7 @@ body {
     background: rgba(10, 14, 23, 0.8);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border);
-    z-index: 1000;
+    z-index: 10001 !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -176,29 +176,18 @@ body {
     background: rgba(10, 14, 23, 0.6);
     backdrop-filter: blur(20px);
     border-right: 1px solid var(--glass-border);
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     transition: all 0.3s ease;
-    z-index: 999;
+    z-index: 10000 !important;
 }
 
 .sidebar.collapsed {
     transform: translateX(-100%);
 }
 
-.sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: var(--glass-border);
-    border-radius: 3px;
-}
-
 .sidebar-header {
+    flex-shrink: 0;
     padding: 0.8rem 0.5rem;
     text-align: center;
     border-bottom: 1px solid var(--glass-border);
@@ -234,7 +223,21 @@ body {
 
 /* Sidebar Navigation */
 .sidebar-nav {
+    flex-grow: 1;
+    overflow-y: auto;
     padding: 1rem 0;
+}
+
+/* Custom Scrollbar specifically for sidebar-nav */
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 3px;
 }
 
 .nav-group {
@@ -280,8 +283,17 @@ body {
 
 .nav-item:hover,
 .nav-item.active {
-    background: rgba(0, 102, 255, 0.1);
-    color: var(--velasto-blue);
+    background: rgba(0, 102, 255, 0.12);
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 102, 255, 0.5);
+}
+
+.nav-item:hover i,
+.nav-item:hover svg,
+.nav-item.active i,
+.nav-item.active svg {
+    transform: scale(1.15) rotate(3deg);
+    filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.8));
 }
 
 .nav-item:hover::before,
@@ -298,14 +310,23 @@ body {
     font-size: 1.2rem;
     width: 24px;
     text-align: center;
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+}
+
+.nav-item svg {
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    fill: url(#nav-icon-gradient);
 }
 
 /* Sidebar Footer */
 .sidebar-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    flex-shrink: 0;
     padding: 1rem 1.2rem;
     border-top: 1px solid var(--glass-border);
     background: rgba(10, 14, 23, 0.4);
@@ -540,6 +561,7 @@ textarea.form-control {
     border-radius: 10px;
     padding: 0.7rem 1rem;
     transition: all 0.3s ease;
+    color-scheme: dark;
 }
 
 .form-control:focus,
@@ -696,9 +718,18 @@ textarea.form-control:focus {
    RESPONSIVE
    ================================ */
 
-@media (max-width: 768px) {
+/* ================================
+   RESPONSIVE (TABLET & MOBILE)
+   ================================ */
+@media (max-width: 991.98px) {
+    :root {
+        --sidebar-width: 260px;
+    }
+
     .sidebar {
         transform: translateX(-100%);
+        z-index: 2000;
+        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
     }
     
     .sidebar.show {
@@ -706,27 +737,61 @@ textarea.form-control:focus {
     }
     
     .main-content {
-        margin-left: 0;
+        margin-left: 0 !important;
+        padding: 10px;
     }
     
     .navbar-content {
         padding: 0 1rem;
     }
-    
+
+    /* Hide Brand Text on small tablets, keep icon */
     .brand span {
-        display: none;
+        font-size: 1.1rem;
     }
     
     .navbar-right {
-        gap: 1rem;
+        gap: 0.8rem;
     }
     
-    .status-indicator span {
+    /* Simplify navbar info for tablets */
+    .datetime, .status-indicator span {
+        display: none !important;
+    }
+
+    .status-indicator {
+        padding: 0.5rem;
+        background: transparent;
+        border: none;
+    }
+
+    .border-end.pe-md-3 {
+        border: none !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 1999;
         display: none;
     }
-    
-    .datetime span {
-        font-size: 0.85rem;
+
+    .sidebar-backdrop.show {
+        display: block;
+    }
+}
+
+@media (max-width: 576px) {
+    .brand span {
+        display: none;
+    }
+    .navbar-right .text-info, .navbar-right .text-warning {
+        font-size: 0.75rem !important;
     }
 }
 

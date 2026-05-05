@@ -1,0 +1,305 @@
+@model IEnumerable<VelastoProductionSystem.Models.StandardParameterSetting>
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "EXTRUDER - Parameter Setting Report";
+}
+
+@section Styles {
+<style>
+    :root {
+        --tech-bg: #0a0f1e;
+        --tech-card: #0d1526;
+        --tech-border: rgba(59, 130, 246, 0.2);
+        --tech-accent: #3b82f6;
+        --tech-text: #e2e8f0;
+        --tech-muted: #64748b;
+        --tech-green: #10b981;
+    }
+
+    .report-wrap {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 15px;
+        font-family: 'Inter', sans-serif;
+        color: var(--tech-text);
+    }
+
+    /* ── HEADER STYLE ── */
+    .report-header {
+        display: grid;
+        grid-template-columns: 250px 1fr 300px;
+        border: 1px solid var(--tech-border);
+        background: var(--tech-card);
+        margin-bottom: 15px;
+    }
+    .header-logo {
+        padding: 15px; border-right: 1px solid var(--tech-border);
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column;
+    }
+    .header-center {
+        padding: 10px; text-align: center; border-right: 1px solid var(--tech-border);
+    }
+    .header-center h1 { font-size: 18px; font-weight: 800; margin: 0; letter-spacing: 1px; }
+    .header-center p { font-size: 11px; color: var(--tech-muted); margin: 3px 0; }
+    
+    .header-right { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; font-size: 10px; }
+    .sig-box { border-left: 1px solid var(--tech-border); display: flex; flex-direction: column; }
+    .sig-title { padding: 4px; border-bottom: 1px solid var(--tech-border); background: rgba(255,255,255,0.03); }
+    .sig-space { flex: 1; min-height: 40px; }
+
+    /* ── INFO GRID ── */
+    .info-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 0; border: 1px solid var(--tech-border); border-top: none;
+        background: var(--tech-card); margin-bottom: 15px;
+    }
+    .info-item { padding: 6px 12px; border-right: 1px solid var(--tech-border); border-bottom: 1px solid var(--tech-border); font-size: 11px; }
+    .info-item:last-child { border-right: none; }
+    .info-label { color: var(--tech-muted); font-weight: 700; display: inline-block; min-width: 80px; }
+
+    /* ── TABLE STYLES ── */
+    .tech-table {
+        width: 100%; border-collapse: collapse; font-size: 11px;
+        margin-bottom: 15px; background: var(--tech-card);
+    }
+    .tech-table th, .tech-table td {
+        border: 1px solid var(--tech-border); padding: 5px 8px;
+    }
+    .tech-table th {
+        background: rgba(59, 130, 246, 0.1); color: var(--tech-accent);
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .section-title {
+        writing-mode: vertical-lr; transform: rotate(180deg);
+        text-align: center; font-weight: 800; font-size: 9px;
+        background: rgba(255,255,255,0.03) !important;
+    }
+
+    input[type="text"], input[type="number"] {
+        width: 100%; background: transparent; border: none; color: white;
+        text-align: center; font-family: inherit; font-size: 11px; outline: none;
+    }
+    input:focus { background: rgba(59,130,246,0.1); }
+
+    /* ── MONITORING GRID ── */
+    .scroll-x { overflow-x: auto; border: 1px solid var(--tech-border); }
+    .monitoring-table { min-width: 1200px; }
+    .sticky-col { position: sticky; left: 0; background: var(--tech-card) !important; z-index: 2; width: 180px; text-align: left !important; }
+
+    .btn-check {
+        padding: 2px 6px; font-size: 9px; border: 1px solid var(--tech-border);
+        background: transparent; color: var(--tech-muted); cursor: pointer;
+    }
+    .btn-check.active { background: var(--tech-accent); color: white; border-color: var(--tech-accent); }
+
+    .waste-box {
+        display: grid; grid-template-columns: 1fr 400px; gap: 15px;
+    }
+
+</style>
+}
+
+<div class="report-wrap">
+    
+    <!-- HEADER -->
+    <div class="report-header">
+        <div class="header-logo">
+            <span style="font-weight:900; font-size:24px; color:white;">VELASTO</span>
+            <span style="font-size:10px; letter-spacing:3px; color:var(--tech-muted)">INDONESIA</span>
+        </div>
+        <div class="header-center">
+            <h1>Extruder Production Report</h1>
+            <p>(Parameter Setting)</p>
+        </div>
+        <div class="header-right">
+            <div class="sig-box"><div class="sig-title">Disetujui</div><div class="sig-space"></div></div>
+            <div class="sig-box"><div class="sig-title">Diperiksa</div><div class="sig-space"></div></div>
+            <div class="sig-box"><div class="sig-title">Dibuat</div><div class="sig-space"></div></div>
+        </div>
+    </div>
+
+    <!-- DOC INFO -->
+    <div class="info-grid">
+        <div class="info-item"><span class="info-label">No. Doc. :</span> <input type="text" value="VI-SOP-PROD" style="text-align:left; width:auto;"></div>
+        <div class="info-item"><span class="info-label">Date :</span> <input type="text" value="@DateTime.Now.ToString("dd-MM-yyyy")" style="text-align:left; width:auto;"></div>
+        <div class="info-item"><span class="info-label">Shift :</span> <input type="text" value="II" style="text-align:left; width:auto;"></div>
+        <div class="info-item"><span class="info-label">No. Rev :</span> <input type="text" value="0" style="text-align:left; width:auto;"></div>
+        <div class="info-item" style="grid-column: span 2;"><span class="info-label">Cust. :</span> <input type="text" value="PT. ADM" style="text-align:left; width:auto;"></div>
+        <div class="info-item" style="grid-column: span 2;"><span class="info-label">Type :</span> <input type="text" value="Hose, Ventilation, Ø 11 mm x 18 mm" style="text-align:left; width:auto;"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <!-- MATERIAL SECTION -->
+        <table class="tech-table">
+            <thead>
+                <tr>
+                    <th rowspan="4" class="section-title">MATERIAL</th>
+                    <th>Content</th>
+                    <th>Standard</th>
+                    <th>Actual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Inner (Material)</td><td><input type="text" value="P-1765"></td><td><input type="text" value="p1765"></td></tr>
+                <tr><td>Outer (Material)</td><td><input type="text" value="P-1765"></td><td><input type="text" value="p1765"></td></tr>
+                <tr><td>Yarn</td><td><input type="text" value="ARAMID"></td><td><input type="text" value="ARAMID"></td></tr>
+            </tbody>
+        </table>
+
+        <!-- MESH & MARKING -->
+        <table class="tech-table">
+            <thead>
+                <tr>
+                    <th>Tipe Mesh</th>
+                    <th>Content</th>
+                    <th>Ø96 #10</th>
+                    <th>Ø96 #40</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Mesh Checking</td><td>Inner</td><td><div class="btn-check active">✔</div></td><td><div class="btn-check">-</div></td></tr>
+                <tr><td>Emboss Marking</td><td>OK/NG</td><td><div class="btn-check active">OK</div></td><td><div class="btn-check">NG</div></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- DIES DIMENSION -->
+    <table class="tech-table">
+        <thead>
+            <tr>
+                <th rowspan="7" class="section-title">DIES DIMENSION</th>
+                <th>Dies</th>
+                <th>Cek Visual</th>
+                <th>Standard</th>
+                <th>Before</th>
+                <th>After</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var dies = new[] { 
+                    new { n = "Nipple Die", s = "8.8 ± 0.1" },
+                    new { n = "Tube Die", s = "11.1 ± 0.1" },
+                    new { n = "Middle Die", s = "14.2 ± 0.1" },
+                    new { n = "Cover Die", s = "15.1 ± 0.1" },
+                    new { n = "Spacer Die", s = "7.3 ± 0.1" },
+                    new { n = "A Distance", s = "0.4 ± 0.1" }
+                };
+            }
+            @foreach(var die in dies) {
+                <tr>
+                    <td>@die.n</td>
+                    <td style="text-align:center"><div class="btn-check active">OK</div> <div class="btn-check">NG</div></td>
+                    <td>@die.s</td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- MAIN MONITORING GRID -->
+    <div class="scroll-x">
+        <table class="tech-table monitoring-table">
+            <thead>
+                <tr>
+                    <th class="sticky-col">Parameter</th>
+                    <th>Standard</th>
+                    <th style="background:#1e293b">Initial</th>
+                    @for(int i=1; i<=7; i++) { <th>@i</th> }
+                </tr>
+            </thead>
+            <tbody>
+                <!-- INNER TUBE -->
+                <tr><th colspan="10" style="text-align:left; background:rgba(255,255,255,0.05)">INNER (Tube 1)</th></tr>
+                @{
+                    var innerParams = new[] { 
+                        new { p = "Head Temp. (°C)", s = "90±5" },
+                        new { p = "Cylinder 1 (°C)", s = "90±5" },
+                        new { p = "Cylinder 2 (°C)", s = "90±5" },
+                        new { p = "Cylinder 3 (°C)", s = "90±5" },
+                        new { p = "Screw Temp. (°C)", s = "90±5" },
+                        new { p = "Screw Speed (rpm)", s = "6.1±2.5" },
+                        new { p = "Feed Roll Ratio (%)", s = "Max. 120" },
+                        new { p = "Pressure (MPa)", s = "Max. 50" }
+                    };
+                }
+                @foreach(var item in innerParams) {
+                    <tr>
+                        <td class="sticky-col">@item.p</td>
+                        <td>@item.s</td>
+                        <td style="background:rgba(59,130,246,0.05)"><input type="text"></td>
+                        @for(int i=1; i<=7; i++) { <td><input type="text"></td> }
+                    </tr>
+                }
+
+                <!-- OUTER COVER -->
+                <tr><th colspan="10" style="text-align:left; background:rgba(255,255,255,0.05)">OUTER (Cover)</th></tr>
+                @foreach(var item in innerParams) { // Reuse same labels
+                    <tr>
+                        <td class="sticky-col">@item.p</td>
+                        <td>@item.s</td>
+                        <td style="background:rgba(59,130,246,0.05)"><input type="text"></td>
+                        @for(int i=1; i<=7; i++) { <td><input type="text"></td> }
+                    </tr>
+                }
+
+                <!-- SPIRAL -->
+                <tr><th colspan="10" style="text-align:left; background:rgba(255,255,255,0.05)">SPIRAL</th></tr>
+                <tr><td class="sticky-col">Spiral Speed (rpm)</td><td>98±20</td><td style="background:rgba(59,130,246,0.05)"><input type="text"></td>@for(int i=1; i<=7; i++) { <td><input type="text"></td> }</tr>
+                <tr><td class="sticky-col">Spiral Pitch (Setting)</td><td>35±5</td><td style="background:rgba(59,130,246,0.05)"><input type="text"></td>@for(int i=1; i<=7; i++) { <td><input type="text"></td> }</tr>
+
+                <!-- OTHER -->
+                <tr><th colspan="10" style="text-align:left; background:rgba(255,255,255,0.05)">OTHER</th></tr>
+                @{
+                    var otherParams = new[] { 
+                        new { p = "Preset Value (Ø mm)", s = "18.5±0.2" },
+                        new { p = "Control Value (Ø mm)", s = "18.5±0.2" },
+                        new { p = "Hose Speed (m/min)", s = "3.4 ± 2" },
+                        new { p = "Conveyor Ratio", s = "100% ± 10" },
+                        new { p = "Chiller Temp (°C)", s = "Max. 15" }
+                    };
+                }
+                @foreach(var item in otherParams) {
+                    <tr>
+                        <td class="sticky-col">@item.p</td>
+                        <td>@item.s</td>
+                        <td style="background:rgba(59,130,246,0.05)"><input type="text"></td>
+                        @for(int i=1; i<=7; i++) { <td><input type="text"></td> }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- WASTE & NOTE -->
+    <div class="waste-box" style="margin-top:15px;">
+        <table class="tech-table">
+            <thead>
+                <tr>
+                    <th rowspan="4" class="section-title">WASTE</th>
+                    <th>Initial Setting</th>
+                    <th>Awal</th>
+                    <th>Akhir</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Berat (kg) - Inner</td><td><input type="text"></td><td><input type="text"></td></tr>
+                <tr><td>Berat (kg) - Cover</td><td><input type="text"></td><td><input type="text"></td></tr>
+            </tbody>
+        </table>
+        <div style="border:1px solid var(--tech-border); padding:10px; background:rgba(239,68,68,0.05); font-size:10px;">
+            <strong style="color:#ef4444">NOTE:</strong><br>
+            Lakukan pengecekan parameter pada saat awal, tengah & akhir proses.
+        </div>
+    </div>
+
+    <div style="margin-top:20px; text-align:right;">
+        <button class="eps-btn eps-btn-primary" style="padding:10px 25px;">
+            <i class="bi bi-save"></i> SIMPAN REPORT
+        </button>
+    </div>
+
+</div>

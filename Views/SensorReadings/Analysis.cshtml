@@ -1,0 +1,918 @@
+@{
+    ViewData["Title"] = "Analisis Sensor vs Standar";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var machines  = ViewBag.Machines as List<string> ?? new List<string>();
+    var spsJson   = ViewBag.SpsList as string ?? "[]";
+}
+
+@section Styles {
+<style>
+    .step-badge { width:28px;height:28px;border-radius:50%;font-size:.8rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .sps-card   { border:2px solid rgba(255,255,255,.08);border-radius:10px;cursor:pointer;transition:all .2s; }
+    .sps-card:hover { border-color:rgba(13,202,240,.5); background:rgba(13,202,240,.05); }
+    .sps-card.selected { border-color:#0dcaf0; background:rgba(13,202,240,.1); }
+    .param-pill { display:inline-block;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:2px; }
+    .param-pill .pp-label { color:rgba(255,255,255,.5);font-size:.68rem;display:block;line-height:1; }
+    .param-pill .pp-val   { font-weight:700;font-size:.88rem; }
+    .std-highlight { background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.3);border-radius:8px;padding:12px 16px; }
+    .std-target { font-size:2.2rem;font-weight:800;color:#ffc107;line-height:1; }
+    .std-ucl    { font-size:1.3rem;font-weight:700;color:#198754; }
+    .std-lcl    { font-size:1.3rem;font-weight:700;color:#dc3545; }
+    .std-tol    { font-size:1rem;color:rgba(255,255,255,.6); }
+    .stat-box   { border-radius:8px;padding:12px 16px;border:1px solid rgba(255,255,255,.08); }
+    .stat-value { font-size:1.5rem;font-weight:700;line-height:1; }
+    .stat-label { font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-top:3px; }
+    .status-ok  { color:#198754; }
+    .status-ng  { color:#dc3545; }
+    #analysisChart { height:400px !important; }
+    .table-analysis td, .table-analysis th { font-size:.8rem;vertical-align:middle; }
+    .legend-dash { width:22px;height:3px;display:inline-block;vertical-align:middle;margin-right:4px; }
+    .no-data-placeholder { padding:60px 20px;text-align:center;color:rgba(255,255,255,.3); }
+    .zone-ng { background:rgba(220,53,69,.12); }
+    .auto-refresh-active { animation: spin 1.5s linear infinite; display:inline-block; }
+    @@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .sps-search { background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#fff; }
+    .sps-search:focus { background:rgba(255,255,255,.07);border-color:#0dcaf0;color:#fff;box-shadow:none; }
+    .sps-search::placeholder { color:rgba(255,255,255,.35); }
+</style>
+}
+
+<div class="container-fluid py-3">
+
+    <!-- HEADER -->
+    <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+        <div>
+            <h4 class="mb-0"><i class="bi bi-graph-up-arrow text-info me-2"></i>Analisis Sensor vs Standar</h4>
+            <small class="text-muted">Pilih standar SPS &rarr; pilih sensor &rarr; klik Analisis untuk melihat perbandingan di grafik</small>
+        </div>
+        <div class="ms-auto d-flex gap-2 flex-wrap">
+            <a href="/SensorReadings/Monitor" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-broadcast me-1"></i>Live Monitor
+            </a>
+            <button class="btn btn-sm btn-outline-info" id="btnAutoRefresh" onclick="toggleAutoRefresh()">
+                <i class="bi bi-arrow-repeat" id="autoRefreshIcon"></i> Auto
+            </button>
+        </div>
+    </div>
+
+    <!-- LANGKAH 1: Pilih SPS -->
+    <div class="card mb-3">
+        <div class="card-header d-flex align-items-center gap-2 py-2">
+            <span class="step-badge bg-info text-dark">1</span>
+            <span class="fw-semibold">Pilih Standar Parameter (SPS)</span>
+            <span class="badge bg-secondary ms-auto" id="spsCountBadge">memuat...</span>
+        </div>
+        <div class="card-body pb-2">
+            <input type="text" class="form-control form-control-sm sps-search mb-3"
+                   id="spsSearch" placeholder="Cari SPS (No. Dokumen, Produk, Item, Customer...)"
+                   oninput="filterSps(this.value)">
+            <div id="spsGrid" class="row g-2" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <!-- PANEL SPS TERPILIH -->
+    <div id="stdSelectedPanel" class="card mb-3 d-none border-info">
+        <div class="card-header d-flex align-items-center gap-2 py-2 bg-info bg-opacity-10">
+            <i class="bi bi-file-earmark-check text-info"></i>
+            <span class="fw-semibold text-info">Standar Terpilih</span>
+            <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSpsSelection()">
+                <i class="bi bi-x-circle me-1"></i>Ganti SPS
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-start">
+                <div class="col-md-4">
+                    <div class="d-flex flex-column gap-1">
+                        <div><span class="text-muted small">No. Dokumen:</span> <strong id="selDocNum">-</strong></div>
+                        <div><span class="text-muted small">Produk:</span> <strong class="text-info" id="selProductCode">-</strong></div>
+                        <div><span class="text-muted small">Item List:</span> <span class="badge bg-warning text-dark" id="selItemList">-</span></div>
+                        <div><span class="text-muted small">Customer:</span> <span id="selCustomer">-</span></div>
+                        <div><span class="text-muted small">Mesin:</span> <span class="badge bg-secondary" id="selMachineCode">-</span></div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="std-highlight">
+                        <div class="small text-warning fw-semibold mb-2">
+                            <i class="bi bi-rulers me-1"></i>Nilai Standar untuk Metrik yang Dipilih:
+                        </div>
+                        <div class="d-flex flex-wrap gap-4 align-items-end">
+                            <div>
+                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Target</div>
+                                <div class="std-target" id="dispTarget">-</div>
+                                <div class="std-tol" id="dispTol"></div>
+                            </div>
+                            <div class="vr opacity-25 d-none d-md-block"></div>
+                            <div>
+                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">UCL (Batas Atas)</div>
+                                <div class="std-ucl" id="dispUcl">-</div>
+                                <div class="small text-muted" id="dispUclNote"></div>
+                            </div>
+                            <div class="vr opacity-25 d-none d-md-block"></div>
+                            <div>
+                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">LCL (Batas Bawah)</div>
+                                <div class="std-lcl" id="dispLcl">-</div>
+                                <div class="small text-muted" id="dispLclNote"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2" id="allParamPills"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LANGKAH 2: Filter Sensor -->
+    <div class="card mb-3">
+        <div class="card-header d-flex align-items-center gap-2 py-2">
+            <span class="step-badge bg-primary text-white">2</span>
+            <span class="fw-semibold">Pilih Data Sensor &amp; Rentang Waktu</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-6 col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Mesin</label>
+                    <select class="form-select form-select-sm" id="selMachine" onchange="onMetricOrMachineChange()">
+                        <option value="">-- Semua Mesin --</option>
+                        @foreach (var m in machines) {
+                            <option value="@m">@m</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Parameter / Metrik Sensor</label>
+                    <select class="form-select form-select-sm" id="selMetric" onchange="onMetricOrMachineChange()">
+                        <option value="outer_diameter">Outer Diameter (OD) — mm</option>
+                        <option value="inner_diameter">Inner Diameter (ID) — mm</option>
+                        <option value="hose_speed">Hose Speed — m/min</option>
+                        <option value="head_temp_inner">Head Temp Inner — C</option>
+                        <option value="head_temp_outer">Head Temp Outer — C</option>
+                        <option value="chiller_water_temp">Chiller Water Temp — C</option>
+                        <option value="screw_speed_inner">Screw Speed Inner — rpm</option>
+                        <option value="screw_speed_outer">Screw Speed Outer — rpm</option>
+                        <option value="pressure_inner">Pressure Inner — MPa</option>
+                        <option value="pressure_outer">Pressure Outer — MPa</option>
+                        <option value="spiral_pitch">Spiral Pitch — mm</option>
+                        <option value="caterpillar_gap">Caterpillar Gap — mm</option>
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label class="form-label small fw-semibold mb-1">Preset Waktu</label>
+                    <select class="form-select form-select-sm" id="selDatePreset" onchange="applyDatePreset(this.value)">
+                        <option value="today" selected>Hari Ini</option>
+                        <option value="week">Minggu Ini</option>
+                        <option value="month">Bulan Ini</option>
+                        <option value="custom">Kustom</option>
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label class="form-label small fw-semibold mb-1">Tanggal Awal</label>
+                    <input type="date" class="form-control form-control-sm" id="startDate" onchange="onDateInputChanged()" />
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label class="form-label small fw-semibold mb-1">Tanggal Akhir</label>
+                    <input type="date" class="form-control form-control-sm" id="endDate" onchange="onDateInputChanged()" />
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label class="form-label small fw-semibold mb-1 d-block">Tampilkan Garis</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check form-check-sm">
+                            <input class="form-check-input" type="checkbox" id="chkTarget" checked>
+                            <label class="form-check-label small" for="chkTarget">Target</label>
+                        </div>
+                        <div class="form-check form-check-sm">
+                            <input class="form-check-input" type="checkbox" id="chkLimits" checked>
+                            <label class="form-check-label small" for="chkLimits">UCL/LCL</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-success w-100 btn-sm" onclick="loadAnalysis()" id="btnAnalysis">
+                        <i class="bi bi-bar-chart-line me-1"></i>Analisis
+                    </button>
+                </div>
+            </div>
+            <div id="noSpsWarning" class="alert alert-warning alert-sm py-2 small mt-2 mb-0 d-none">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Belum memilih SPS standar. Garis standar tidak akan ditampilkan di grafik.
+            </div>
+        </div>
+    </div>
+
+    <!-- HASIL -->
+    <div id="resultSection" class="d-none">
+
+        <!-- Stat Cards -->
+        <div class="row g-2 mb-3">
+            <div class="col-6 col-sm-4 col-md-2">
+                <div class="stat-box text-center">
+                    <div class="stat-value text-white" id="statCount">-</div>
+                    <div class="stat-label text-muted">Total Data</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                <div class="stat-box text-center">
+                    <div class="stat-value text-info" id="statAvg">-</div>
+                    <div class="stat-label text-muted">Rata-rata</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                <div class="stat-box text-center">
+                    <div class="stat-value text-danger" id="statMax">-</div>
+                    <div class="stat-label text-muted">Max</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                <div class="stat-box text-center">
+                    <div class="stat-value text-success" id="statMin">-</div>
+                    <div class="stat-label text-muted">Min</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                <div class="stat-box text-center">
+                    <div class="stat-value text-warning" id="statRange">-</div>
+                    <div class="stat-label text-muted">Range</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                <div class="stat-box text-center">
+                    <div class="stat-value" id="statOkNg">-</div>
+                    <div class="stat-label text-muted">OK / NG</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex align-items-center flex-wrap gap-2">
+                <i class="bi bi-graph-up text-info"></i>
+                <span class="fw-semibold small" id="chartTitle">-</span>
+                <div class="ms-auto d-flex gap-3 align-items-center small flex-wrap">
+                    <span class="d-none" id="legActual">
+                        <span class="legend-dash" style="background:#0d6efd;height:3px;border-radius:2px;"></span>Data Aktual
+                    </span>
+                    <span class="text-warning d-none" id="legTarget">
+                        <span class="legend-dash" style="height:0;border-top:2px dashed #ffc107;"></span>Target
+                    </span>
+                    <span class="text-success d-none" id="legUcl">
+                        <span class="legend-dash" style="height:0;border-top:2px dashed #198754;"></span>UCL
+                    </span>
+                    <span class="text-danger d-none" id="legLcl">
+                        <span class="legend-dash" style="height:0;border-top:2px dashed #dc3545;"></span>LCL
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-2">
+                <canvas id="analysisChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabel -->
+        <div class="card">
+            <div class="card-header py-2 d-flex align-items-center">
+                <span class="fw-semibold small"><i class="bi bi-table me-1"></i>Detail Data Sensor</span>
+                <span class="badge bg-secondary ms-2" id="tableCount">0</span>
+                <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="exportCsv()">
+                    <i class="bi bi-download me-1"></i>Export CSV
+                </button>
+            </div>
+            <div class="card-body p-0" style="max-height:320px;overflow-y:auto;">
+                <table class="table table-sm table-hover table-analysis mb-0">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>#</th>
+                            <th>Waktu</th>
+                            <th class="text-end">Nilai Aktual</th>
+                            <th class="text-end">Target SPS</th>
+                            <th class="text-end">Deviasi</th>
+                            <th class="text-end">UCL</th>
+                            <th class="text-end">LCL</th>
+                            <th>Status</th>
+                            <th>Device</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Placeholder -->
+    <div id="placeholder" class="no-data-placeholder">
+        <i class="bi bi-bar-chart-line" style="font-size:3rem;opacity:.2;"></i>
+        <p class="mt-3">Pilih SPS standar di atas, lalu klik <strong>Analisis</strong></p>
+    </div>
+
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// =================================================================
+//  DATA & STATE
+// =================================================================
+const SPS_LIST = @Html.Raw(spsJson);
+let selectedSps  = null;
+let chart        = null;
+let autoTimer    = null;
+let isAuto       = false;
+let exportRows   = [];
+
+// Mapping metricType -> field MasterlistSpsDoubleLayer (camelCase)
+const METRIC_MAP = {
+    outer_diameter:    { field:'toleranceOuter',    tol:'toleranceOuter',       label:'Outer Diameter',    unit:'mm'    },
+    inner_diameter:    { field:'innerTarget',        tol:'innerTol',             label:'Inner Diameter',    unit:'mm'    },
+    hose_speed:        { field:'hoseSpeed',          tol:null,                   label:'Hose Speed',        unit:'m/min' },
+    head_temp_inner:   { field:'headTemp1',          tol:5,                      label:'Head Temp Inner',   unit:'°C'    },
+    head_temp_outer:   { field:'headTemp2',          tol:5,                      label:'Head Temp Outer',   unit:'°C'    },
+    chiller_water_temp:{ field:'chillerWaterTemp',   tol:2,                      label:'Chiller Water Temp',unit:'°C'    },
+    screw_speed_inner: { field:'screwSpeed1',        tol:null,                   label:'Screw Speed Inner', unit:'rpm'   },
+    screw_speed_outer: { field:'screwSpeed2',        tol:null,                   label:'Screw Speed Outer', unit:'rpm'   },
+    pressure_inner:    { field:'pressure1',          tol:null,                   label:'Pressure Inner',    unit:'MPa'   },
+    pressure_outer:    { field:'pressure2',          tol:null,                   label:'Pressure Outer',    unit:'MPa'   },
+    spiral_pitch:      { field:'spiralPitchSetting', tol:'toleranceSpiralPitch', label:'Spiral Pitch',      unit:'mm'    },
+    caterpillar_gap:   { field:'caterpillarGap',     tol:null,                   label:'Caterpillar Gap',   unit:'mm'    },
+};
+
+// =================================================================
+//  SPS GRID
+// =================================================================
+function initSpsGrid() {
+    document.getElementById('spsCountBadge').textContent = SPS_LIST.length + ' SPS tersedia';
+    renderSpsGrid(SPS_LIST);
+}
+
+function getFilteredList() {
+    const kw = document.getElementById('spsSearch').value.trim().toLowerCase();
+    if (!kw) return SPS_LIST;
+    return SPS_LIST.filter(s =>
+        (s.documentNumber || '').toLowerCase().includes(kw) ||
+        (s.itemList       || '').toLowerCase().includes(kw) ||
+        (s.customer       || '').toLowerCase().includes(kw) ||
+        (s.machineCode    || '').toLowerCase().includes(kw) ||
+        (s.no             || '').toLowerCase().includes(kw)
+    );
+}
+
+function renderSpsGrid(list) {
+    const grid = document.getElementById('spsGrid');
+    if (!list || list.length === 0) {
+        grid.innerHTML = '<div class="col-12 text-center text-muted fst-italic py-4">Tidak ada SPS aktif ditemukan.</div>';
+        return;
+    }
+    grid.innerHTML = list.map(s => `
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="sps-card p-3 h-100 ${selectedSps && selectedSps.id === s.id ? 'selected' : ''}" onclick="selectSps(${s.id})">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="badge bg-info text-dark" style="font-size:.7rem;">${s.documentNumber || '-'}</span>
+                    ${s.machineCode ? `<span class="badge bg-secondary" style="font-size:.7rem;">${s.machineCode}</span>` : ''}
+                </div>
+                <div class="fw-bold small text-white mb-1">${s.itemList || '-'}</div>
+                <div class="text-muted" style="font-size:.72rem;">${s.customer || ''}</div>
+                <div class="d-flex flex-wrap gap-1 mt-2">
+                    ${s.odSensor ? `<span class="param-pill"><span class="pp-label">OD Sensor</span><span class="pp-val text-warning">${s.odSensor}</span></span>` : ''}
+                    ${s.toleranceOuter ? `<span class="param-pill"><span class="pp-label">Tol. Outer</span><span class="pp-val">±${s.toleranceOuter}</span></span>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterSps(keyword) {
+    renderSpsGrid(getFilteredList());
+}
+
+function selectSps(id) {
+    selectedSps = SPS_LIST.find(s => s.id === id) || null;
+    renderSpsGrid(getFilteredList());
+    updateSelectedPanel();
+}
+
+function clearSpsSelection() {
+    selectedSps = null;
+    renderSpsGrid(getFilteredList());
+    document.getElementById('stdSelectedPanel').classList.add('d-none');
+}
+
+function updateSelectedPanel() {
+    if (!selectedSps) {
+        document.getElementById('stdSelectedPanel').classList.add('d-none');
+        return;
+    }
+    const s = selectedSps;
+    document.getElementById('stdSelectedPanel').classList.remove('d-none');
+    document.getElementById('selDocNum').textContent      = s.documentNumber || '-';
+    document.getElementById('selProductCode').textContent = s.no ? 'No. ' + s.no : '-';
+    document.getElementById('selItemList').textContent    = s.itemList || '-';
+    document.getElementById('selCustomer').textContent    = s.customer || '-';
+    document.getElementById('selMachineCode').textContent = s.machineCode || '-';
+
+    updateMetricStdDisplay();
+    buildAllParamPills(s);
+
+    // Auto-set dropdown mesin jika SPS punya machine code
+    if (s.machineCode) {
+        const mSel = document.getElementById('selMachine');
+        for (let opt of mSel.options) {
+            if (opt.value === s.machineCode) { mSel.value = s.machineCode; break; }
+        }
+    }
+}
+
+function onMetricOrMachineChange() {
+    updateMetricStdDisplay();
+}
+
+function updateMetricStdDisplay() {
+    if (!selectedSps) return;
+    const metric = document.getElementById('selMetric').value;
+    const map    = METRIC_MAP[metric];
+    if (!map) return;
+
+    const s      = selectedSps;
+    const outerSource = s.toleranceOuter || s.controlValue || s.odSensor;
+    // Untuk OD, data di lapangan kadang tersimpan di kolom berbeda.
+    // Prioritas tetap Tol. Outer, lalu fallback ke ControlValue/OdSensor.
+    const rawVal = metric === 'outer_diameter'
+        ? outerSource
+        : s[map.field];
+
+    let target = parseFirst(rawVal);
+    let tolRaw = typeof map.tol === 'number' ? map.tol : (map.tol ? parseTolerance(map.tol ? s[map.tol] : null) : null);
+
+    // Khusus OD: parse target+tolerance dari string yang sama (contoh: "17.0±0.2").
+    if (metric === 'outer_diameter') {
+        const parsed = parseTargetAndTolerance(rawVal);
+        target = parsed.target;
+        tolRaw = parsed.tolerance;
+    }
+
+    // Fallback global: jika metrik terpilih kosong, pakai Tol. Outer SPS agar tidak N/A.
+    if (target == null) {
+        const parsedOuter = parseTargetAndTolerance(outerSource);
+        if (parsedOuter.target != null) {
+            target = parsedOuter.target;
+            tolRaw = parsedOuter.tolerance;
+        }
+    }
+    const unit   = map.unit;
+
+    if (target == null) {
+        document.getElementById('dispTarget').textContent  = 'N/A';
+        document.getElementById('dispTol').textContent     = 'Nilai tidak ada di SPS ini untuk metrik ini';
+        document.getElementById('dispUcl').textContent     = 'N/A';
+        document.getElementById('dispLcl').textContent     = 'N/A';
+        document.getElementById('dispUclNote').textContent = '';
+        document.getElementById('dispLclNote').textContent = '';
+        return;
+    }
+
+    const ucl = tolRaw != null ? target + tolRaw : null;
+    const lcl = tolRaw != null ? target - tolRaw : null;
+
+    document.getElementById('dispTarget').textContent  = target.toFixed(3) + ' ' + unit;
+    document.getElementById('dispTol').textContent     = tolRaw != null ? 'Toleransi: +/- ' + tolRaw + ' ' + unit : 'Toleransi tidak terdefinisi di SPS';
+    document.getElementById('dispUcl').textContent     = ucl != null ? ucl.toFixed(3) + ' ' + unit : 'N/A';
+    document.getElementById('dispLcl').textContent     = lcl != null ? lcl.toFixed(3) + ' ' + unit : 'N/A';
+    document.getElementById('dispUclNote').textContent = ucl != null ? '= ' + target.toFixed(3) + ' + ' + tolRaw : '';
+    document.getElementById('dispLclNote').textContent = lcl != null ? '= ' + target.toFixed(3) + ' - ' + tolRaw : '';
+}
+
+function buildAllParamPills(s) {
+    const params = [
+        { l:'OD Target',       v:s.controlValue,    u:'mm'    },
+        { l:'Tol OD',          v:s.toleranceDie,    u:'+-mm'  },
+        { l:'Inner Die',       v:s.innerDie,         u:'mm'    },
+        { l:'Tol Tube',        v:s.tol_TubeDie,      u:'+-mm'  },
+        { l:'Head Temp 1',     v:s.headTemp,         u:'C'     },
+        { l:'Head Temp 2',     v:s.headTemp2,        u:'C'     },
+        { l:'Screw Spd 1',     v:s.screwSpeed,       u:'rpm'   },
+        { l:'Screw Spd 2',     v:s.screwSpeed2,      u:'rpm'   },
+        { l:'Pressure 1',      v:s.pressure,         u:'MPa'   },
+        { l:'Pressure 2',      v:s.pressure2,        u:'MPa'   },
+        { l:'Spiral Pitch',    v:s.spiralPitch,      u:'mm'    },
+        { l:'Tol Spiral',      v:s.tol_SpiralPitch,  u:'+-mm'  },
+        { l:'Caterpillar Gap', v:s.caterpillarGap,   u:'mm'    },
+        { l:'Hose Speed',      v:s.hoseSpeed,        u:'m/min' },
+        { l:'Chiller Temp',    v:s.chillerWaterTemp, u:'C'     },
+    ];
+    const html = params
+        .filter(p => p.v != null && p.v !== 0 && p.v !== '')
+        .map(p => `<span class="param-pill"><span class="pp-label">${p.l}</span><span class="pp-val">${p.v} <small class="text-muted fw-normal">${p.u}</small></span></span>`)
+        .join('');
+    document.getElementById('allParamPills').innerHTML =
+        '<div class="small text-muted mt-1 mb-1">Semua parameter SPS:</div>' + (html || '<span class="text-muted small">-</span>');
+}
+
+function parseFirst(val) {
+    if (val == null || val === '') return null;
+    if (typeof val === 'number') return val;
+    const m = String(val).replace(',', '.').match(/[\d.]+/);
+    if (!m) return null;
+    const n = parseFloat(m[0]);
+    return isNaN(n) ? null : n;
+}
+
+// Parse angka SETELAH ± dari string SPS, mis. "40.5±0.05" → 0.05
+function parseTolerance(val) {
+    if (val == null || val === '') return null;
+    if (typeof val === 'number') return val;
+    const s = String(val).replace(',', '.');
+    const pmIdx = s.indexOf('\u00b1');
+    if (pmIdx !== -1) {
+        const after = s.slice(pmIdx + 1).match(/[\d.]+/);
+        if (after) { const n = parseFloat(after[0]); return isNaN(n) ? null : n; }
+    }
+    const m = s.match(/[\d.]+/);
+    return m ? (isNaN(parseFloat(m[0])) ? null : parseFloat(m[0])) : null;
+}
+
+// Parse pasangan target+toleransi dari satu string.
+// Contoh: "17.0±0.2", "17,0 +- 0,2", "17.0+/-0.2"
+function parseTargetAndTolerance(val) {
+    if (val == null || val === '') return { target: null, tolerance: null };
+    const s = String(val).replace(/,/g, '.').trim();
+
+    const nums = (s.match(/-?\d+(?:\.\d+)?/g) || []).map(n => parseFloat(n)).filter(n => !isNaN(n));
+    if (!nums.length) return { target: null, tolerance: null };
+
+    const target = nums[0];
+    let tolerance = null;
+
+    if (s.includes('±') || s.includes('+/-') || s.includes('+-')) {
+        tolerance = nums.length > 1 ? Math.abs(nums[1]) : null;
+    } else if (nums.length > 1) {
+        // Fallback jika separator toleransi tidak standar.
+        tolerance = Math.abs(nums[1]);
+    }
+
+    return { target, tolerance };
+}
+
+function toDateInputValue(d) {
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const dd   = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function getWeekStartMonday(d) {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const day = x.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    x.setDate(x.getDate() + diff);
+    return x;
+}
+
+function applyDatePreset(preset) {
+    const now = new Date();
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let start = new Date(end);
+
+    if (preset === 'today') {
+        start = new Date(end);
+    } else if (preset === 'week') {
+        start = getWeekStartMonday(now);
+    } else if (preset === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else {
+        return;
+    }
+
+    document.getElementById('startDate').value = toDateInputValue(start);
+    document.getElementById('endDate').value   = toDateInputValue(end);
+}
+
+function onDateInputChanged() {
+    document.getElementById('selDatePreset').value = 'custom';
+}
+
+// =================================================================
+//  LOAD ANALYSIS
+// =================================================================
+async function loadAnalysis() {
+    const machine = document.getElementById('selMachine').value;
+    const metric  = document.getElementById('selMetric').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate   = document.getElementById('endDate').value;
+
+    if (!startDate || !endDate) {
+        alert('Tanggal awal dan tanggal akhir wajib diisi.');
+        return;
+    }
+    if (startDate > endDate) {
+        alert('Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
+        return;
+    }
+
+    document.getElementById('noSpsWarning').classList.toggle('d-none', !!selectedSps);
+
+    let url = `/api/sensor-readings/analysis-data?metricType=${encodeURIComponent(metric)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+    if (machine)     url += `&machineCode=${encodeURIComponent(machine)}`;
+    if (selectedSps) url += `&spsId=${selectedSps.id}`;
+
+    const btn = document.getElementById('btnAnalysis');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Memuat...';
+
+    try {
+        const res = await fetch(url);
+        if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(`Server error ${res.status}: ${txt.substring(0, 200)}`);
+        }
+        const data = await res.json();
+        renderResult(data);
+        document.getElementById('resultSection').classList.remove('d-none');
+        document.getElementById('placeholder').classList.add('d-none');
+    } catch (e) {
+        alert('Gagal memuat data: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-bar-chart-line me-1"></i>Analisis';
+    }
+}
+
+// =================================================================
+//  RENDER HASIL
+// =================================================================
+function renderResult(data) {
+    updateStats(data);
+    renderChart(data);
+    renderTable(data);
+}
+
+function updateStats(data) {
+    const st  = data.stats;
+    const std = data.standard;
+    const sd  = data.sensorData || [];
+
+    if (!st) {
+        ['statCount','statAvg','statMax','statMin','statRange','statOkNg']
+            .forEach(id => document.getElementById(id).textContent = '-');
+        return;
+    }
+
+    document.getElementById('statCount').textContent = st.count;
+    document.getElementById('statAvg').textContent   = (+st.avg).toFixed(3);
+    document.getElementById('statMax').textContent   = (+st.max).toFixed(3);
+    document.getElementById('statMin').textContent   = (+st.min).toFixed(3);
+    document.getElementById('statRange').textContent = (+st.range).toFixed(3);
+
+    let ok = 0, ng = 0;
+    sd.forEach(d => {
+        const v = +d.y;
+        let isNg = false;
+        if (std && std.ucl != null && v > +std.ucl) isNg = true;
+        if (std && std.lcl != null && v < +std.lcl) isNg = true;
+        isNg ? ng++ : ok++;
+    });
+    document.getElementById('statOkNg').innerHTML =
+        `<span class="status-ok">${ok}</span><span class="text-muted"> / </span><span class="status-ng">${ng}</span>`;
+}
+
+function renderChart(data) {
+    const sd      = data.sensorData || [];
+    const std     = data.standard;
+    const showTgt = document.getElementById('chkTarget').checked;
+    const showLim = document.getElementById('chkLimits').checked;
+    const metricSel = document.getElementById('selMetric');
+    const mLabel    = metricSel.options[metricSel.selectedIndex].text.replace(/ — .+$/, '').trim();
+
+    ['legActual','legTarget','legUcl','legLcl'].forEach(id => document.getElementById(id).classList.add('d-none'));
+
+    if (sd.length === 0) {
+        if (chart) { chart.destroy(); chart = null; }
+        document.getElementById('chartTitle').textContent = 'Tidak ada data sensor dalam rentang waktu ini';
+        return;
+    }
+
+    const labels  = sd.map(d => formatSensorTimeLabel(d.x));
+    const actuals = sd.map(d => +d.y);
+    const unit    = std?.unit || '';
+
+    const pointColors = sd.map(d => {
+        if (!std) return '#0d6efd';
+        const v = +d.y;
+        if (std.ucl != null && v > +std.ucl) return '#dc3545';
+        if (std.lcl != null && v < +std.lcl) return '#dc3545';
+        return '#0d6efd';
+    });
+
+    const datasets = [{
+        label: 'Aktual Sensor',
+        data: actuals,
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13,110,253,.07)',
+        pointBackgroundColor: pointColors,
+        pointBorderColor: pointColors,
+        pointRadius: actuals.length <= 200 ? 4 : 2,
+        tension: 0.3,
+        fill: true,
+        order: 1
+    }];
+
+    document.getElementById('legActual').classList.remove('d-none');
+
+    if (std) {
+        const n = actuals.length;
+        if (showTgt && std.target != null) {
+            datasets.push({
+                label: 'Target (' + (+std.target).toFixed(3) + ' ' + unit + ')',
+                data: Array(n).fill(+std.target),
+                borderColor: '#ffc107', borderDash:[6,4], borderWidth:2.5, pointRadius:0, fill:false, order:2
+            });
+            document.getElementById('legTarget').classList.remove('d-none');
+        }
+        if (showLim) {
+            if (std.ucl != null) {
+                datasets.push({
+                    label: 'UCL (' + (+std.ucl).toFixed(3) + ' ' + unit + ')',
+                    data: Array(n).fill(+std.ucl),
+                    borderColor: '#198754', borderDash:[4,3], borderWidth:1.5, pointRadius:0, fill:false, order:3
+                });
+                document.getElementById('legUcl').classList.remove('d-none');
+            }
+            if (std.lcl != null) {
+                datasets.push({
+                    label: 'LCL (' + (+std.lcl).toFixed(3) + ' ' + unit + ')',
+                    data: Array(n).fill(+std.lcl),
+                    borderColor: '#dc3545', borderDash:[4,3], borderWidth:1.5, pointRadius:0, fill:false, order:4
+                });
+                document.getElementById('legLcl').classList.remove('d-none');
+            }
+        }
+    }
+
+    document.getElementById('chartTitle').textContent =
+        mLabel + ' | ' + (data.machineCode || 'Semua Mesin') + ' | ' + (data.rangeLabel || '-') + ' | ' +
+        sd.length + ' titik' + (std ? ' | SPS: ' + (std.documentNumber || '-') : ' | tanpa standar');
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('analysisChart').getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 400 },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    display: true, position: 'top',
+                    labels: { usePointStyle: true, font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            let lbl = ctx.dataset.label + ': ' + (+ctx.parsed.y).toFixed(4) + (unit ? ' ' + unit : '');
+                            if (ctx.datasetIndex === 0 && std) {
+                                const v = ctx.parsed.y;
+                                if (std.ucl != null && v > +std.ucl)
+                                    lbl += '  NG (melebihi UCL)';
+                                else if (std.lcl != null && v < +std.lcl)
+                                    lbl += '  NG (di bawah LCL)';
+                                else if (std.target != null) {
+                                    const dev = (v - +std.target).toFixed(4);
+                                    lbl += ' (dev: ' + (dev > 0 ? '+' : '') + dev + ')';
+                                }
+                            }
+                            return lbl;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        font:{size:10},
+                        maxTicksLimit:20,
+                        maxRotation:30,
+                        callback: function(value, index, ticks) {
+                            // Format ulang label sebelum ditampilkan di chart
+                            const lbl = labels[index];
+                            return lbl || '';
+                        }
+                    }
+                },
+                y: {
+                    ticks: { font:{size:10}, callback: v => (+v).toFixed(2) + (unit ? ' '+unit : '') },
+                    title: { display: true, text: mLabel + (unit ? ' (' + unit + ')' : ''), font:{size:11} }
+                }
+            }
+        }
+    });
+}
+
+// Ekstrak HH:mm:ss dari timestamp server
+// Input: "2026-05-02 07:42:49" atau "2026-05-02T07:42:49.123Z" atau timestamp lain
+// Output: "07:42:49"
+function formatSensorTimeLabel(raw) {
+    if (!raw) return '-';
+    const s = String(raw).trim();
+
+    // Cari pola jam:menit:detik di string
+    const match = s.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+    if (match) {
+        const hh = match[1].padStart(2, '0');
+        const mm = match[2];
+        const ss = match[3];
+        return hh + ':' + mm + ':' + ss;
+    }
+
+    // Jika tidak ketemu pola, try parse sebagai Date
+    // (menangani case format tidak expected)
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        const ss = String(d.getSeconds()).padStart(2, '0');
+        return hh + ':' + mm + ':' + ss;
+    }
+
+    // Fallback final
+    return String(s).substring(0, 20);
+}
+
+function renderTable(data) {
+    const sd  = data.sensorData || [];
+    const std = data.standard;
+    const tbody = document.getElementById('tableBody');
+    exportRows  = [];
+
+    document.getElementById('tableCount').textContent = sd.length;
+
+    if (!sd.length) { tbody.innerHTML = ''; return; }
+
+    const unit = std?.unit || '';
+    tbody.innerHTML = sd.slice().reverse().map((d, i) => {
+        const v   = +d.y;
+        const idx = sd.length - i;
+        const tgt = std?.target != null ? +std.target : null;
+        const ucl = std?.ucl    != null ? +std.ucl    : null;
+        const lcl = std?.lcl    != null ? +std.lcl    : null;
+
+        let isNg = false;
+        if (ucl != null && v > ucl) isNg = true;
+        if (lcl != null && v < lcl) isNg = true;
+
+        const dev    = tgt != null ? (v - tgt) : null;
+        const devStr = dev != null ? (dev >= 0 ? '+' : '') + dev.toFixed(4) : '-';
+        const devCls = dev == null ? '' : isNg ? 'text-danger fw-bold' : Math.abs(dev) < 0.005 ? 'text-success' : 'text-warning';
+
+        exportRows.push([idx, d.x, v, tgt ?? '', dev != null ? dev.toFixed(4) : '', ucl ?? '', lcl ?? '', isNg ? 'NG' : 'OK', d.device || '']);
+
+        return '<tr class="' + (isNg ? 'zone-ng' : '') + '">' +
+            '<td class="text-muted">' + idx + '</td>' +
+            '<td>' + d.x + '</td>' +
+            '<td class="text-end fw-semibold">' + v.toFixed(4) + (unit ? ' <small class="text-muted">' + unit + '</small>' : '') + '</td>' +
+            '<td class="text-end text-warning">' + (tgt != null ? tgt.toFixed(3) : '-') + '</td>' +
+            '<td class="text-end ' + devCls + '">' + devStr + '</td>' +
+            '<td class="text-end text-success">' + (ucl != null ? ucl.toFixed(3) : '-') + '</td>' +
+            '<td class="text-end text-danger">' + (lcl != null ? lcl.toFixed(3) : '-') + '</td>' +
+            '<td><span class="badge ' + (isNg ? 'bg-danger' : 'bg-success') + '">' + (isNg ? 'NG' : 'OK') + '</span></td>' +
+            '<td class="text-muted">' + (d.device || '') + '</td>' +
+            '</tr>';
+    }).join('');
+}
+
+// =================================================================
+//  EXPORT CSV
+// =================================================================
+function exportCsv() {
+    if (!exportRows.length) return;
+    const header = ['No','Waktu','Nilai Aktual','Target SPS','Deviasi','UCL','LCL','Status','Device'];
+    const csv = [header, ...exportRows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'sensor_analysis_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+}
+
+// =================================================================
+//  AUTO REFRESH
+// =================================================================
+function toggleAutoRefresh() {
+    isAuto = !isAuto;
+    const btn  = document.getElementById('btnAutoRefresh');
+    const icon = document.getElementById('autoRefreshIcon');
+    if (isAuto) {
+        btn.classList.replace('btn-outline-info', 'btn-info');
+        icon.classList.add('auto-refresh-active');
+        autoTimer = setInterval(loadAnalysis, 15000);
+        loadAnalysis();
+    } else {
+        btn.classList.replace('btn-info', 'btn-outline-info');
+        icon.classList.remove('auto-refresh-active');
+        clearInterval(autoTimer);
+    }
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+    initSpsGrid();
+    applyDatePreset('today');
+});
+</script>
+}

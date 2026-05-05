@@ -1,0 +1,511 @@
+@{
+    ViewData["Title"] = "Sensor Monitor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var apiKey    = ViewBag.ApiKey as string ?? "VS-SENSOR-KEY-2026";
+    var ingestUrl = ViewBag.IngestUrl as string ?? "/api/sensor-readings/ingest";
+    var batchUrl  = ViewBag.BatchUrl  as string ?? "/api/sensor-readings/ingest/batch";
+}
+
+@section Styles {
+<style>
+    .sensor-card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 16px;
+        background: #fff;
+        transition: box-shadow .2s;
+        min-height: 130px;
+    }
+    .sensor-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+    .device-badge-online  { background: #198754; }
+    .device-badge-offline { background: #6c757d; }
+    .metric-label {
+        font-size: .7rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+    .metric-value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .metric-unit  { font-size: .85rem; color: #6c757d; }
+    .live-table td { font-size: .82rem; vertical-align: middle; }
+    .quality-ok   { color: #198754; }
+    .quality-warn { color: #ffc107; }
+    .quality-error{ color: #dc3545; }
+    .badge-metric { font-size: .7rem; padding: 3px 7px; }
+    #liveChart    { height: 200px !important; }
+    .api-code     { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; font-size: .78rem; }
+    .pulse-dot    { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .pulse-online { background: #198754; animation: pulse 1.5s infinite; }
+    .pulse-offline{ background: #6c757d; }
+    @@keyframes pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(25,135,84,.6); }
+        70%  { box-shadow: 0 0 0 8px rgba(25,135,84,0); }
+        100% { box-shadow: 0 0 0 0 rgba(25,135,84,0); }
+    }
+</style>
+}
+
+<div class="container-fluid py-3">
+
+    <!-- ── Header ─────────────────────────────────────── -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div>
+            <h4 class="mb-0"><i class="bi bi-broadcast text-success me-2"></i>Sensor Monitor</h4>
+            <small class="text-muted">Real-time sensor data ingestion &amp; live dashboard</small>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <select id="filterMachine" class="form-select form-select-sm" style="width:auto;">
+                <option value="">All Machines</option>
+            </select>
+            <select id="filterMetric" class="form-select form-select-sm" style="width:auto;">
+                <option value="">All Metrics</option>
+                <option value="outer_diameter">Outer Diameter</option>
+                <option value="inner_diameter">Inner Diameter</option>
+                <option value="hose_speed">Hose Speed</option>
+                <option value="head_temp_inner">Head Temp Inner</option>
+                <option value="head_temp_outer">Head Temp Outer</option>
+                <option value="chiller_water_temp">Chiller Water Temp</option>
+                <option value="screw_speed_inner">Screw Speed Inner</option>
+                <option value="screw_speed_outer">Screw Speed Outer</option>
+                <option value="pressure_inner">Pressure Inner</option>
+                <option value="pressure_outer">Pressure Outer</option>
+                <option value="spiral_pitch">Spiral Pitch</option>
+                <option value="caterpillar_gap">Caterpillar Gap</option>
+            </select>
+            <button class="btn btn-sm btn-outline-secondary" onclick="refreshAll()">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Device Status Cards ────────────────────────── -->
+    <div class="row g-3 mb-4" id="deviceStatusRow">
+        <div class="col-12">
+            <div class="text-muted fst-italic small" id="deviceLoadingMsg">
+                <i class="bi bi-hourglass-split me-1"></i>Memuat status perangkat...
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Live Chart + Metrics Summary ─────────────── -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center gap-2 py-2">
+                    <i class="bi bi-activity text-primary"></i>
+                    <span class="fw-semibold small">Live Trend</span>
+                    <span class="badge bg-success ms-auto" id="liveIndicator">● LIVE</span>
+                </div>
+                <div class="card-body p-2">
+                    <canvas id="liveChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header py-2">
+                    <span class="fw-semibold small"><i class="bi bi-bar-chart-line me-1"></i>Metrics Summary (30 min)</span>
+                </div>
+                <div class="card-body p-0" style="overflow-y:auto; max-height:220px;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th class="small">Metric</th>
+                                <th class="small text-end">Latest</th>
+                                <th class="small text-end">Avg</th>
+                                <th class="small text-end">n</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTableBody">
+                            <tr><td colspan="4" class="text-center text-muted fst-italic small py-3">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Live Feed Table ────────────────────────────── -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center py-2">
+            <span class="fw-semibold small"><i class="bi bi-table me-1"></i>Live Feed (last 50)</span>
+            <span class="badge bg-secondary ms-auto" id="rowCount">0 records</span>
+        </div>
+        <div class="card-body p-0" style="overflow-x:auto;">
+            <table class="table table-sm table-hover live-table mb-0" id="liveTable">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th>#</th>
+                        <th>Device</th>
+                        <th>Machine</th>
+                        <th>Metric</th>
+                        <th class="text-end">Value</th>
+                        <th>Unit</th>
+                        <th>Quality</th>
+                        <th>Sensor Time</th>
+                        <th>Ingested</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="liveTableBody">
+                    <tr><td colspan="10" class="text-center text-muted py-4 fst-italic small">Menunggu data sensor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── API Documentation ─────────────────────────── -->
+    <div class="card mb-4">
+        <div class="card-header py-2">
+            <span class="fw-semibold small"><i class="bi bi-code-slash me-1"></i>API Integration Guide</span>
+            <button class="btn btn-sm btn-outline-secondary ms-auto float-end" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#apiDocs">
+                Toggle
+            </button>
+        </div>
+        <div class="collapse show" id="apiDocs">
+            <div class="card-body">
+                <div class="row g-4">
+
+                    <!-- Single Ingest -->
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">📡 Single Metric Ingest</h6>
+                        <p class="small text-muted mb-2">Kirim satu pengukuran per request:</p>
+                        <pre class="api-code p-3 mb-2"><code>POST @ingestUrl
+X-Api-Key: @apiKey
+Content-Type: application/json
+
+{
+  "deviceId":    "SENSOR-OD-EXT01",
+  "machineCode": "EXT-01",
+  "timestamp":   "2026-04-22T10:30:15",
+  "metricType":  "outer_diameter",
+  "metricValue": 25.42,
+  "unit":        "mm",
+  "quality":     "OK"
+}</code></pre>
+                        <h6 class="fw-bold mt-3">📦 Batch Ingest</h6>
+                        <pre class="api-code p-3"><code>POST @batchUrl
+X-Api-Key: @apiKey
+Content-Type: application/json
+
+{
+  "deviceId":    "SENSOR-EXT01",
+  "machineCode": "EXT-01",
+  "metrics": [
+    { "metricType": "outer_diameter",  "metricValue": 25.42, "unit": "mm" },
+    { "metricType": "hose_speed",      "metricValue": 3.5,   "unit": "m/min" },
+    { "metricType": "head_temp_inner", "metricValue": 185.0, "unit": "°C" }
+  ]
+}</code></pre>
+                    </div>
+
+                    <!-- Metric Types + Test Form -->
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Metric Types yang Didukung</h6>
+                        <table class="table table-sm table-bordered small mb-3">
+                            <thead class="table-light"><tr><th>metricType</th><th>Unit</th><th>Keterangan</th></tr></thead>
+                            <tbody>
+                                <tr><td>outer_diameter</td><td>mm</td><td>Outer diameter (mirrored ke SPC)</td></tr>
+                                <tr><td>inner_diameter</td><td>mm</td><td>Inner diameter (mirrored ke SPC)</td></tr>
+                                <tr><td>hose_speed</td><td>m/min</td><td>Kecepatan selang</td></tr>
+                                <tr><td>head_temp_inner</td><td>°C</td><td>Suhu head dalam</td></tr>
+                                <tr><td>head_temp_outer</td><td>°C</td><td>Suhu head luar</td></tr>
+                                <tr><td>chiller_water_temp</td><td>°C</td><td>Suhu air chiller</td></tr>
+                                <tr><td>screw_speed_inner</td><td>rpm</td><td>Kecepatan screw dalam</td></tr>
+                                <tr><td>screw_speed_outer</td><td>rpm</td><td>Kecepatan screw luar</td></tr>
+                                <tr><td>pressure_inner</td><td>MPa</td><td>Tekanan ekstrusi dalam</td></tr>
+                                <tr><td>pressure_outer</td><td>MPa</td><td>Tekanan ekstrusi luar</td></tr>
+                                <tr><td>spiral_pitch</td><td>mm</td><td>Pitch spiral (mirrored ke SPC)</td></tr>
+                                <tr><td>caterpillar_gap</td><td>mm</td><td>Celah caterpillar</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Live Test Form -->
+                        <h6 class="fw-bold">🧪 Test Kirim Data</h6>
+                        <div class="border rounded p-3" style="background:#2d2d2d;">
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <input type="text" class="form-control form-control-sm" id="testDeviceId"
+                                           placeholder="Device ID" value="TEST-DEVICE-01"
+                                           style="background:#3a3a3a; color:#f8f9fa; border-color:#555;">
+                                </div>
+                                <div class="col-6">
+                                    <input type="text" class="form-control form-control-sm" id="testMachineCode"
+                                           placeholder="Machine Code" value="EXT-01"
+                                           style="background:#3a3a3a; color:#f8f9fa; border-color:#555;">
+                                </div>
+                                <div class="col-6">
+                                    <select class="form-select form-select-sm" id="testMetricType"
+                                            style="background:#3a3a3a; color:#f8f9fa; border-color:#555;">
+                                        <option value="outer_diameter">outer_diameter</option>
+                                        <option value="inner_diameter">inner_diameter</option>
+                                        <option value="hose_speed">hose_speed</option>
+                                        <option value="head_temp_inner">head_temp_inner</option>
+                                        <option value="chiller_water_temp">chiller_water_temp</option>
+                                        <option value="screw_speed_inner">screw_speed_inner</option>
+                                        <option value="pressure_inner">pressure_inner</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" id="testMetricValue"
+                                           placeholder="Value" value="25.42" step="0.01"
+                                           style="background:#3a3a3a; color:#f8f9fa; border-color:#555;">
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-success w-100" onclick="testIngest()">
+                                <i class="bi bi-send me-1"></i>Kirim Test Data
+                            </button>
+                            <div id="testResult" class="mt-2 small"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // ── Chart Setup ──────────────────────────────────────────────────
+    const ctx = document.getElementById('liveChart').getContext('2d');
+    const liveChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Sensor Value',
+                data: [],
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13,110,253,.08)',
+                pointRadius: 3,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 300 },
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: false, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
+                x: { ticks: { maxTicksLimit: 10, font: { size: 9 }, maxRotation: 0 } }
+            }
+        }
+    });
+
+    // ── SignalR ──────────────────────────────────────────────────────
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl('/hub/dashboard')
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on('SensorDataReceived', (data) => {
+        addChartPoint(data.timestamp, parseFloat(data.metricValue));
+        refreshLiveTable();
+        refreshDeviceStatus();
+    });
+
+    connection.on('ReceiveUpdate', () => {
+        // refresh handled by SensorDataReceived for sensor events
+    });
+
+    connection.start().catch(e => console.warn('SignalR connect error:', e));
+
+    // ── Chart helpers ────────────────────────────────────────────────
+    function addChartPoint(label, value) {
+        liveChart.data.labels.push(label);
+        liveChart.data.datasets[0].data.push(value);
+        if (liveChart.data.labels.length > 40) {
+            liveChart.data.labels.shift();
+            liveChart.data.datasets[0].data.shift();
+        }
+        liveChart.update('none');
+    }
+
+    // ── Device Status ────────────────────────────────────────────────
+    async function refreshDeviceStatus() {
+        const res = await fetch('/api/sensor-readings/device-status');
+        const devices = await res.json();
+        const container = document.getElementById('deviceStatusRow');
+        const msg = document.getElementById('deviceLoadingMsg');
+        if (msg) msg.remove();
+
+        // Remove existing cards, keep the container
+        container.innerHTML = '';
+
+        if (devices.length === 0) {
+            container.innerHTML = '<div class="col-12"><div class="alert alert-secondary small py-2 mb-0"><i class="bi bi-wifi-off me-1"></i>Belum ada data dari device sensor. Kirim data pertama untuk memulai monitoring.</div></div>';
+            return;
+        }
+
+        // Update machine filter
+        const sel = document.getElementById('filterMachine');
+        const existing = Array.from(sel.options).map(o => o.value);
+        devices.forEach(d => {
+            if (d.machineCode && !existing.includes(d.machineCode)) {
+                const opt = document.createElement('option');
+                opt.value = d.machineCode;
+                opt.text  = d.machineCode;
+                sel.appendChild(opt);
+            }
+        });
+
+        devices.forEach(d => {
+            const col = document.createElement('div');
+            col.className = 'col-sm-6 col-md-4 col-lg-3';
+            const isOnline = d.isOnline;
+            col.innerHTML = `
+                <div class="sensor-card">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="pulse-dot ${isOnline ? 'pulse-online' : 'pulse-offline'}"></span>
+                        <span class="badge ${isOnline ? 'device-badge-online' : 'device-badge-offline'} text-white small px-2 py-1">
+                            ${isOnline ? 'ONLINE' : 'OFFLINE'}
+                        </span>
+                        <small class="text-muted ms-auto">${d.lastSeen}</small>
+                    </div>
+                    <div class="fw-bold small text-truncate" title="${d.deviceId}">${d.deviceId}</div>
+                    <div class="metric-label">${d.machineCode || '—'}</div>
+                    <div class="d-flex align-items-end mt-2 gap-1">
+                        <span class="metric-value text-primary">${(+d.lastValue).toFixed(2)}</span>
+                        <span class="metric-unit">${d.lastUnit || ''}</span>
+                    </div>
+                    <div class="metric-label mt-1">${d.lastMetric}</div>
+                    <div class="mt-2">
+                        <span class="badge bg-light text-dark border badge-metric">Today: ${d.totalToday}</span>
+                        ${!isOnline ? `<span class="badge bg-warning text-dark badge-metric">${d.lastSeenSeconds}s ago</span>` : ''}
+                    </div>
+                </div>`;
+            container.appendChild(col);
+        });
+    }
+
+    // ── Live Table ───────────────────────────────────────────────────
+    async function refreshLiveTable() {
+        const machine = document.getElementById('filterMachine').value;
+        const metric  = document.getElementById('filterMetric').value;
+        let url = '/api/sensor-readings/live?last=50';
+        if (machine) url += `&machineCode=${encodeURIComponent(machine)}`;
+        if (metric)  url += `&metricType=${encodeURIComponent(metric)}`;
+
+        const res  = await fetch(url);
+        const rows = await res.json();
+        const tbody = document.getElementById('liveTableBody');
+        document.getElementById('rowCount').textContent = `${rows.length} records`;
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4 fst-italic small">Tidak ada data</td></tr>';
+            return;
+        }
+
+        // Show newest first
+        const sorted = [...rows].reverse();
+        tbody.innerHTML = sorted.map((r, i) => `
+            <tr>
+                <td class="text-muted">${i + 1}</td>
+                <td><span class="badge bg-light text-dark border small">${r.deviceId}</span></td>
+                <td>${r.machineCode || '—'}</td>
+                <td><span class="badge bg-info text-dark badge-metric">${r.metricType}</span></td>
+                <td class="text-end fw-semibold">${(+r.metricValue).toFixed(4)}</td>
+                <td class="text-muted">${r.unit || '—'}</td>
+                <td class="${qualityClass(r.quality)}"><i class="bi ${qualityIcon(r.quality)}"></i> ${r.quality}</td>
+                <td>${r.timestamp}</td>
+                <td class="text-muted">${r.ingestedAt}</td>
+                <td><span class="badge ${statusBadge(r.status)}">${r.status}</span></td>
+            </tr>`).join('');
+
+        // Update chart from latest batch
+        if (rows.length > 0) {
+            const latest = rows.slice(-20);
+            liveChart.data.labels   = latest.map(r => r.timestamp);
+            liveChart.data.datasets[0].data = latest.map(r => r.metricValue);
+            liveChart.data.datasets[0].label = metric || 'All Metrics';
+            liveChart.update('none');
+        }
+    }
+
+    // ── Metrics Summary ──────────────────────────────────────────────
+    async function refreshSummary() {
+        const machine = document.getElementById('filterMachine').value;
+        let url = '/api/sensor-readings/metrics-summary?minutes=30';
+        if (machine) url += `&machineCode=${encodeURIComponent(machine)}`;
+
+        const res  = await fetch(url);
+        const rows = await res.json();
+        const tbody = document.getElementById('summaryTableBody');
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted fst-italic small py-3">Belum ada data</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = rows.map(r => `
+            <tr>
+                <td class="small">${r.metricType}</td>
+                <td class="text-end fw-semibold small">${(+r.latest).toFixed(2)} <span class="text-muted">${r.unit||''}</span></td>
+                <td class="text-end text-muted small">${(+r.avg).toFixed(2)}</td>
+                <td class="text-end text-muted small">${r.count}</td>
+            </tr>`).join('');
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+    function qualityClass(q) { return q === 'OK' ? 'quality-ok' : q === 'WARN' ? 'quality-warn' : 'quality-error'; }
+    function qualityIcon(q)  { return q === 'OK' ? 'bi-check-circle-fill' : q === 'WARN' ? 'bi-exclamation-triangle-fill' : 'bi-x-circle-fill'; }
+    function statusBadge(s)  { return s === 'OK' ? 'bg-success' : s === 'DUPLICATE' ? 'bg-warning text-dark' : 'bg-danger'; }
+
+    function refreshAll() {
+        refreshDeviceStatus();
+        refreshLiveTable();
+        refreshSummary();
+    }
+
+    // ── Test Ingest Form ─────────────────────────────────────────────
+    async function testIngest() {
+        const btn = event.target.closest('button');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Mengirim...';
+        const result = document.getElementById('testResult');
+
+        const payload = {
+            deviceId:    document.getElementById('testDeviceId').value,
+            machineCode: document.getElementById('testMachineCode').value,
+            metricType:  document.getElementById('testMetricType').value,
+            metricValue: parseFloat(document.getElementById('testMetricValue').value),
+            quality:     'OK'
+        };
+
+        try {
+            const res  = await fetch('@ingestUrl', {
+                method:  'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Api-Key': '@apiKey'
+                },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            result.innerHTML = res.ok
+                ? `<div class="alert alert-success py-1 mb-0 small"><i class="bi bi-check-circle me-1"></i>${json.message} (Log ID: ${json.logId || json.status})</div>`
+                : `<div class="alert alert-danger py-1 mb-0 small"><i class="bi bi-x-circle me-1"></i>${json.message}</div>`;
+        } catch (e) {
+            result.innerHTML = `<div class="alert alert-danger py-1 mb-0 small">Error: ${e.message}</div>`;
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send me-1"></i>Kirim Test Data';
+    }
+
+    // ── Filter Change ─────────────────────────────────────────────────
+    document.getElementById('filterMachine').addEventListener('change', refreshAll);
+    document.getElementById('filterMetric').addEventListener('change', refreshLiveTable);
+
+    // ── Auto refresh setiap 15 detik ─────────────────────────────────
+    refreshAll();
+    setInterval(refreshAll, 15000);
+</script>
+}

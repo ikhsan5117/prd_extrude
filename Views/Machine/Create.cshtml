@@ -1,0 +1,150 @@
+@model VelastoProductionSystem.Models.Machine
+@{
+    ViewData["Title"] = "Tambah Mesin";
+    bool isEdit = Model.Id > 0;
+}
+
+<style>
+    .form-card {
+        background: #1e2229;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.06);
+        padding: 30px;
+        max-width: 750px;
+        margin: 0 auto;
+    }
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #64748b;
+        font-weight: 700;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .form-label { color: #94a3b8; font-size: 0.82rem; font-weight: 600; margin-bottom: 5px; }
+    .form-control, .form-select {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #f8fafc;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .form-control:focus, .form-select:focus {
+        background: rgba(0,0,0,0.5);
+        border-color: #3b82f6;
+        color: #fff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        outline: none;
+    }
+    .form-select option { background: #1e2229; }
+    .status-opt-aktif    { color: #34d399; }
+    .status-opt-maint    { color: #fcd34d; }
+    .status-opt-nonaktif { color: #f87171; }
+</style>
+
+<div class="fade-in">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Kembali
+        </a>
+    </div>
+    
+    <div class="form-card shadow-lg">
+        <h4 class="text-white fw-bold mb-1">
+            <i class="bi bi-gear-wide-connected text-info me-2"></i>
+            @(isEdit ? "Edit Data Mesin" : "Tambah Mesin Baru")
+        </h4>
+        <p class="text-white-50 small mb-4">@(isEdit ? "Perbarui informasi mesin yang sudah terdaftar." : "Daftarkan mesin baru ke sistem manajemen.")</p>
+
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="CreatedAt" />
+
+            <!-- Identitas Mesin -->
+            <div class="section-title"><i class="bi bi-info-circle me-2"></i>Identitas Mesin</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="MachineCode" class="form-label"></label>
+                    <input asp-for="MachineCode" class="form-control" placeholder="Cth: DL01" />
+                    <span asp-validation-for="MachineCode" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="MachineName" class="form-label"></label>
+                    <input asp-for="MachineName" class="form-control" placeholder="Cth: DL01 engine" />
+                    <span asp-validation-for="MachineName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Line" class="form-label"></label>
+                    <input asp-for="Line" class="form-control" placeholder="Cth: DL Line / Area 1" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="MachineType" class="form-label"></label>
+                    <input asp-for="MachineType" class="form-control" placeholder="Cth: Extruder DL" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Status" class="form-label"></label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="AKTIF">✅ AKTIF</option>
+                        <option value="MAINTENANCE">⚠️ MAINTENANCE</option>
+                        <option value="NON-AKTIF">🔴 NON-AKTIF</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Detail Teknis -->
+            <div class="section-title"><i class="bi bi-tools me-2"></i>Detail Teknis</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label asp-for="Brand" class="form-label"></label>
+                    <input asp-for="Brand" class="form-control" placeholder="Cth: LABTECH" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="YearMade" class="form-label"></label>
+                    <input asp-for="YearMade" class="form-control" placeholder="Cth: 2019" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SerialNumber" class="form-label"></label>
+                    <input asp-for="SerialNumber" class="form-control" placeholder="S/N" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="CapacityPerHour" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="CapacityPerHour" type="number" class="form-control" placeholder="0" />
+                        <span class="input-group-text bg-black border-secondary text-white-50 small">pcs/jam</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jadwal Maintenance -->
+            <div class="section-title"><i class="bi bi-calendar-check me-2"></i>Jadwal Preventive Maintenance</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="LastMaintenanceDate" class="form-label"></label>
+                    <input asp-for="LastMaintenanceDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NextMaintenanceDate" class="form-label"></label>
+                    <input asp-for="NextMaintenanceDate" type="date" class="form-control" />
+                </div>
+            </div>
+
+            <!-- Catatan -->
+            <div class="section-title"><i class="bi bi-journal-text me-2"></i>Catatan Tambahan</div>
+            <div class="mb-4">
+                <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Catatan kondisi mesin, histori perbaikan, dll..."></textarea>
+            </div>
+
+            <div class="d-flex gap-3 justify-content-end">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Batal</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                    <i class="bi bi-floppy-fill me-1"></i> @(isEdit ? "Update Data" : "Simpan Mesin")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

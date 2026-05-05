@@ -1,0 +1,275 @@
+@model IEnumerable<VelastoProductionSystem.Models.ProductionReport>
+@{
+    ViewData["Title"] = "Parameter History";
+    var total = Model.Count();
+    var activeCount = Model.Count(x => x.Status != "COMPLETED");
+    var doneCount = Model.Count(x => x.Status == "COMPLETED");
+}
+
+<div style="min-height:100vh; background:#060d1c; padding:2rem; font-family:'Inter',system-ui,sans-serif; background-image:radial-gradient(ellipse 50% 35% at 5% 0%, rgba(14,165,233,0.07) 0%,transparent 55%);">
+
+    <!-- AMBER TOP LINE -->
+    <div style="height:3px; background:linear-gradient(90deg,transparent 0%,#eab308 30%,#fbbf24 50%,#eab308 70%,transparent 100%); margin-bottom:2rem; box-shadow:0 0 18px rgba(234,179,8,0.5);"></div>
+
+    <!-- ══ HEADER ══ -->
+    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.9); border:1px solid rgba(234,179,8,0.18); border-radius:18px; padding:1.4rem 2rem; margin-bottom:1.4rem; backdrop-filter:blur(20px);">
+        <div style="display:flex; align-items:center; gap:1.4rem;">
+            <div style="width:58px;height:58px; background:rgba(234,179,8,0.1); border:1px solid rgba(234,179,8,0.3); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:#eab308;">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div>
+                <div style="font-size:10px;font-weight:800;letter-spacing:3px;color:rgba(234,179,8,0.7);display:flex;align-items:center;gap:7px;margin-bottom:4px;">
+                    <span style="width:6px;height:6px;background:#22c55e;border-radius:50%;box-shadow:0 0 7px #22c55e;animation:blink 1.5s infinite;display:inline-block;"></span> LIVE ARCHIVE
+                </div>
+                <h1 style="font-size:1.9rem;font-weight:900;color:#fff;letter-spacing:-0.8px;margin:0 0 2px;line-height:1;">PARAMETER HISTORY</h1>
+                <p style="font-size:11px;color:rgba(255,255,255,0.35);margin:0;">Archived Production Specifications &amp; SPS Log</p>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button onclick="exportTable()" style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-weight:700;font-size:12px;padding:0.55rem 1.2rem;border-radius:9px;cursor:pointer;" onmouseover="this.style.color='white';this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.color='rgba(255,255,255,0.6)';this.style.background='rgba(255,255,255,0.05)';">
+                <i class="bi bi-download"></i> EXPORT DATA
+            </button>
+            <a asp-action="Create" style="display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:1px solid rgba(96,165,250,0.35);color:#fff;font-weight:800;font-size:12px;padding:0.55rem 1.4rem;border-radius:9px;text-decoration:none;box-shadow:0 0 18px rgba(37,99,235,0.3);">
+                <i class="bi bi-plus-lg"></i> NEW RECORD
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ STATS + SEARCH ══ -->
+    <div style="display:flex;gap:0.8rem;margin-bottom:1.2rem;">
+        <div style="background:rgba(15,23,42,0.75);border:1px solid rgba(96,165,250,0.15);border-radius:12px;padding:0.9rem 1.3rem;display:flex;align-items:center;gap:10px;min-width:140px;">
+            <i class="bi bi-archive-fill" style="font-size:1.3rem;color:#60a5fa;"></i>
+            <div><div style="font-size:1.6rem;font-weight:900;color:#fff;line-height:1;">@total</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);">TOTAL</div></div>
+        </div>
+        <div style="background:rgba(15,23,42,0.75);border:1px solid rgba(14,165,233,0.15);border-radius:12px;padding:0.9rem 1.3rem;display:flex;align-items:center;gap:10px;min-width:140px;">
+            <i class="bi bi-broadcast" style="font-size:1.3rem;color:#34d399;"></i>
+            <div><div style="font-size:1.6rem;font-weight:900;color:#fff;line-height:1;">@activeCount</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);">ACTIVE</div></div>
+        </div>
+        <div style="background:rgba(15,23,42,0.75);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:0.9rem 1.3rem;display:flex;align-items:center;gap:10px;min-width:140px;">
+            <i class="bi bi-check-circle-fill" style="font-size:1.3rem;color:#a78bfa;"></i>
+            <div><div style="font-size:1.6rem;font-weight:900;color:#fff;line-height:1;">@doneCount</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);">COMPLETED</div></div>
+        </div>
+        <div style="flex:1;background:rgba(15,23,42,0.75);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:0.85rem 1.3rem;display:flex;align-items:center;gap:10px;">
+            <i class="bi bi-search" style="color:rgba(255,255,255,0.2);"></i>
+            <input id="phSearch" type="text" placeholder="Search document, shift, hose type, operator..." oninput="filterRows(this.value)"
+                   style="background:none;border:none;outline:none;color:rgba(255,255,255,0.8);font-size:13px;font-weight:500;width:100%;" />
+        </div>
+    </div>
+
+    <!-- ══ TABLE ══ -->
+    <div style="background:rgba(8,14,28,0.95); border:1px solid rgba(14,165,233,0.15); border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+        <div style="overflow-x:auto; overflow-y:auto; max-height:72vh;">
+            <table id="phTable" style="width:100%;border-collapse:collapse;min-width:1050px;">
+                <thead>
+                    <tr style="background:rgba(14,165,233,0.04); border-bottom:2px solid rgba(14,165,233,0.2); position:sticky;top:0;z-index:5;">
+                        <th style="padding:15px 14px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:left;">DATE</th>
+                        <th style="padding:15px 14px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:left;">DOC NUMBER</th>
+                        <th style="padding:15px 14px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:center;">SHIFT</th>
+                        <th style="padding:15px 14px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:left;">HOSE TYPE</th>
+                        <th style="padding:15px 14px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:left;">MATERIAL (IN/OUT)</th>
+                        <th style="padding:15px 14px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:center;">OPERATOR</th>
+                        <th style="padding:15px 14px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:center;">STATUS</th>
+                        <th style="padding:15px 18px 15px 10px;font-size:9.5px;font-weight:900;letter-spacing:2.5px;color:#38bdf8;text-transform:uppercase;white-space:nowrap; text-align:center;">COMMAND</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    var isCompleted = item.Status == "COMPLETED";
+                    var shift1 = item.Shift?.Contains("1") == true || item.Shift?.ToUpper().Contains("I") == true;
+                    var searchText = ((item.DocumentNumber ?? "") + " " + (item.HoseType ?? "") + " " + (item.Shift ?? "") + " " + (item.CreatedBy ?? "") + " " + (item.InnerMaterial ?? "") + " " + (item.OuterMaterial ?? "")).ToLower();
+                    var pct = item.QtyTarget > 0 ? Math.Min(100, (item.QtyOk * 100) / item.QtyTarget) : 0;
+
+                    <tr class="ph-row" data-search="@searchText"
+                        style="border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.12s;"
+                        onmouseover="this.style.background='rgba(14,165,233,0.04)';"
+                        onmouseout="this.style.background='transparent';">
+
+                        <!-- DATE -->
+                        <td style="padding:14px; vertical-align:middle; white-space:nowrap;">
+                            <div style="font-weight:900;font-size:1rem;color:#fff;line-height:1;">@item.ProductionDate.ToString("dd/MM/yy")</div>
+                            <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:2px;font-weight:600;">@item.ProductionDate.ToString("ddd").ToUpper()</div>
+                        </td>
+
+                        <!-- DOC NUMBER -->
+                        <td style="padding:14px; vertical-align:middle;">
+                            <div style="font-family:monospace;font-size:11.5px;font-weight:700;color:#38bdf8;word-break:break-all;">@item.DocumentNumber</div>
+                        </td>
+
+                        <!-- SHIFT -->
+                        <td style="padding:14px; vertical-align:middle; text-align:center;">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;font-size:14px;font-weight:900; background:@(shift1 ? "rgba(14,165,233,0.18)" : "rgba(234,179,8,0.18)"); border:1px solid @(shift1 ? "rgba(14,165,233,0.45)" : "rgba(234,179,8,0.45)"); color:@(shift1 ? "#38bdf8" : "#fbbf24");">
+                                @(shift1 ? "I" : "II")
+                            </span>
+                        </td>
+
+                        <!-- HOSE TYPE -->
+                        <td style="padding:14px; vertical-align:middle;">
+                            <span style="display:inline-block;background:rgba(37,99,235,0.12);border:1px solid rgba(59,130,246,0.3);border-left:3px solid #3b82f6;color:#93c5fd;font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px;white-space:nowrap;">@item.HoseType</span>
+                            <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:3px;">@(item.Dimension ?? "")</div>
+                        </td>
+
+                        <!-- MATERIAL -->
+                        <td style="padding:14px; vertical-align:middle;">
+                            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.75);margin-bottom:2px;">
+                                <span style="font-size:9px;font-weight:900;color:#38bdf8;">IN</span>&nbsp;@(string.IsNullOrEmpty(item.InnerMaterial) ? "—" : item.InnerMaterial)
+                            </div>
+                            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.75);">
+                                <span style="font-size:9px;font-weight:900;color:#fbbf24;">OUT</span>&nbsp;@(string.IsNullOrEmpty(item.OuterMaterial) ? "—" : item.OuterMaterial)
+                            </div>
+                        </td>
+
+                        <!-- OPERATOR -->
+                        <td style="padding:14px; vertical-align:middle; text-align:center;">
+                            <div style="display:inline-flex;align-items:center;gap:7px;">
+                                <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#2563eb);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0;">@(string.IsNullOrEmpty(item.CreatedBy) ? "?" : item.CreatedBy.Substring(0,1).ToUpper())</div>
+                                <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.75);">@(string.IsNullOrEmpty(item.CreatedBy) ? "—" : item.CreatedBy)</span>
+                            </div>
+                        </td>
+
+                        <!-- STATUS -->
+                        <td style="padding:14px; vertical-align:middle; text-align:center;">
+                            <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:9.5px;font-weight:900;letter-spacing:1px;white-space:nowrap; background:@(isCompleted ? "rgba(16,185,129,0.12)" : "rgba(14,165,233,0.12)"); border:1px solid @(isCompleted ? "rgba(16,185,129,0.4)" : "rgba(14,165,233,0.4)"); color:@(isCompleted ? "#34d399" : "#38bdf8");">
+                                <i class="bi @(isCompleted ? "bi-check-circle-fill" : "bi-broadcast")"></i>
+                                @(isCompleted ? "COMPLETED" : (item.Status ?? "ACTIVE"))
+                            </span>
+                        </td>
+
+                        <!-- COMMAND -->
+                        <td style="padding:14px 18px 14px 10px; vertical-align:middle; text-align:center;">
+                            <div style="display:flex;justify-content:center;gap:5px;">
+                                <a asp-action="Details" asp-route-id="@item.Id" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;color:#38bdf8;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);text-decoration:none;font-size:14px;transition:transform 0.15s;" title="View" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;color:#fbbf24;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);text-decoration:none;font-size:14px;transition:transform 0.15s;" title="Edit" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button class="delete-btn" data-id="@item.Id" data-doc="@item.DocumentNumber" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;color:#f87171;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);cursor:pointer;font-size:14px;transition:transform 0.15s;" title="Delete" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div style="text-align:center;padding:4rem 2rem;">
+                    <i class="bi bi-archive" style="font-size:3.5rem;color:rgba(234,179,8,0.2);display:block;margin-bottom:1rem;"></i>
+                    <div style="color:rgba(255,255,255,0.3);font-weight:800;letter-spacing:3px;font-size:12px;">NO RECORDS IN ARCHIVE</div>
+                    <a asp-action="Create" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:1px solid rgba(96,165,250,0.4);color:#fff;font-weight:800;font-size:13px;padding:0.7rem 1.5rem;border-radius:10px;text-decoration:none;margin-top:1.5rem;">
+                        <i class="bi bi-plus-lg"></i> Create New Record
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div style="text-align:center;padding:1rem 0;font-size:10px;color:rgba(255,255,255,0.15);font-weight:600;letter-spacing:0.5px;">
+        <i class="bi bi-shield-check" style="color:#0ea5e9;margin-right:5px;"></i>SPS data managed under ISO/TS 16949 &nbsp;|&nbsp; All changes are logged
+    </div>
+</div>
+
+<form id="deleteForm" asp-action="Delete" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="deleteId" />
+</form>
+
+<style>
+    @@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+    .ph-row.ph-hidden { display:none !important; }
+    /* Scrollbar style */
+    div::-webkit-scrollbar { width:5px; height:5px; }
+    div::-webkit-scrollbar-track { background:rgba(15,23,42,0.8); }
+    div::-webkit-scrollbar-thumb { background:#0ea5e9; border-radius:3px; }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function filterRows(q) {
+            const t = q.toLowerCase();
+            document.querySelectorAll('.ph-row').forEach(r => {
+                r.classList.toggle('ph-hidden', !r.dataset.search.includes(t));
+            });
+        }
+
+        function exportTable() {
+            const rows = document.querySelectorAll('#phTable tr:not(.ph-hidden)');
+            const csv = Array.from(rows).map(r =>
+                Array.from(r.querySelectorAll('th,td')).slice(0,-1)
+                     .map(c => '"' + c.innerText.trim().replace(/\n/g,' ').replace(/"/g,'""') + '"')
+                     .join(',')
+            ).join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+            a.download = `ParameterHistory_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                Swal.fire({
+                    title: '<span style="color:#f87171">DELETE RECORD?</span>',
+                    html: `<span style="color:rgba(255,255,255,0.6)">Permanently remove:<br><strong style="color:#38bdf8">${this.dataset.doc}</strong></span>`,
+                    icon: 'warning', showCancelButton: true,
+                    confirmButtonColor: '#ef4444', cancelButtonColor: '#334155',
+                    confirmButtonText: 'DELETE', cancelButtonText: 'CANCEL',
+                    background: '#0f172a', color: '#fff'
+                }).then(r => {
+                    if (r.isConfirmed) {
+                        document.getElementById('deleteId').value = this.dataset.id;
+                        document.getElementById('deleteForm').submit();
+                    }
+                });
+            });
+        });
+
+        @if (TempData["SuccessMessage"] != null) {
+            <text>Swal.fire({icon:'success',title:'SUCCESS',text:'@TempData["SuccessMessage"]',background:'#0f172a',color:'#38bdf8',confirmButtonColor:'#0ea5e9',timer:3000});</text>
+        }
+
+        // SignalR Live Sync for Parameter History
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hub/dashboard")
+            .withAutomaticReconnect()
+            .build();
+
+        async function startSignalR() {
+            try {
+                await connection.start();
+                console.log("SignalR Connected to Parameter History Hub.");
+            } catch (err) {
+                console.log("SignalR Connection Error: ", err);
+                setTimeout(startSignalR, 5000);
+            }
+        }
+
+        connection.on("ReceiveUpdate", function () {
+            console.log("Real-time Update Received in Parameter History!");
+            
+            // Show notification
+            Swal.fire({
+                title: 'Live Archive Sync',
+                text: 'Data baru terdeteksi. Memperbarui list...',
+                icon: 'info',
+                background: '#0f172a',
+                color: '#fff',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+
+            // Reload page
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        });
+
+        startSignalR();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+}

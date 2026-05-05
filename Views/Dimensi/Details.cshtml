@@ -1,0 +1,459 @@
+@model VelastoProductionSystem.Models.DimensionReport
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Detail Dimensi";
+}
+
+<style>
+    :root {
+        --grid: #000000;
+        --white: #ffffff;
+    }
+
+    body { 
+        background: #ced4da; 
+        padding: 20px; 
+        font-family: Arial, sans-serif;
+    }
+
+    .paper {
+        width: 297mm;
+        min-height: 210mm;
+        background: var(--white);
+        margin: 0 auto;
+        padding: 8mm; /* Slightly more space */
+        box-shadow: 0 0 40px rgba(0,0,0,0.2);
+        color: #000;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 5px;
+    }
+
+    .header-left { width: 33%; }
+    .header-center { width: 34%; text-align: center; }
+    .header-right { width: 33%; }
+
+    .logo-area { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    .logo-img { width: 140px; }
+
+    .meta-table { font-size: 10px; width: 100%; border-collapse: collapse; }
+    .meta-table td { padding: 2px 0; border: none; font-weight: bold; }
+    .meta-table td:first-child { width: 80px; font-weight: normal; }
+
+    .title-h1 { font-size: 26px; font-weight: bold; margin: 5px 0 0; }
+    .title-h2 { font-size: 14px; margin: 0; }
+
+    .approval-table {
+        width: 100%; border-collapse: collapse; font-size: 9px; text-align: center;
+    }
+    .approval-table th { border: 1px solid var(--grid); padding: 4px; font-weight: normal; background: #fff; }
+    .approval-table td { border: 1px solid var(--grid); height: 40px; }
+
+    .sub-header-bar {
+        border: 1px solid var(--grid);
+        padding: 5px 15px;
+        font-size: 11px;
+        font-weight: bold;
+        background: #f8f9fa;
+        margin-bottom: 10px;
+    }
+
+    .main-grid-container {
+        display: flex;
+        gap: 0;
+    }
+
+    .left-matrix { width: 55%; border: 1px solid var(--grid); }
+    .right-summary { width: 45%; border: 1px solid var(--grid); border-left: none; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+    .data-table th, .data-table td { border: 1px solid var(--grid); padding: 2px 4px; text-align: center; }
+    .data-table th { background: #fff; font-weight: bold; font-size: 9px; }
+
+    /* Special row for JAM matrix */
+    .jam-row { background: #fff !important; height: 18px; }
+
+    .row-point { text-align: left !important; font-weight: normal !important; }
+    
+    /* Measurement sub-lines (the 5 lines per point) */
+    .sub-matrix-td { padding: 0 !important; vertical-align: top; }
+    .sub-matrix-inner { width: 100%; height: 100%; border-collapse: collapse; border: none !important; }
+    .sub-matrix-inner td { border: none !important; border-bottom: 1px solid var(--grid) !important; height: 18px; font-size: 8px; color: #000; font-family: 'Consolas', monospace; }
+    .sub-matrix-inner tr:last-child td { border-bottom: none !important; }
+
+    .footer-area {
+        display: flex;
+        border: 1px solid var(--grid);
+        margin-top: 10px;
+        font-size: 9px;
+    }
+    .footer-note { width: 60%; padding: 5px; border-right: 1px solid var(--grid); min-height: 60px; }
+    .footer-att { width: 40%; padding: 5px; background: #fff; }
+
+    .no-print-btns {
+        position: fixed; 
+        top: 85px; 
+        right: 30px; 
+        z-index: 9000; 
+        display: flex; 
+        gap: 12px;
+        padding: 10px;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    @@media print {
+        body { background: white; padding: 0; }
+        .paper { box-shadow: none; padding: 0; width: 100%; margin: 0; border: none; }
+        .no-print-btns { display: none; }
+        @@page { size: landscape; margin: 5mm; }
+    }
+</style>
+
+<div class="no-print-btns">
+    <a href="/Dimensi/Index" class="btn btn-secondary btn-sm shadow">← Kembali</a>
+    <button onclick="window.print()" class="btn btn-primary btn-sm shadow">Cetak A4 Landscape</button>
+</div>
+
+<div class="paper">
+    <!-- ── HEADER ── -->
+    <div class="report-header">
+        <div class="header-left">
+            <div class="logo-area">
+                <div class="logo-block" style="display: flex; align-items: flex-start; gap: 8px;">
+                    <img src="/images/velasto-logo-e1700056160273.png" class="logo-img" style="width: 120px;" />
+                    <div style="font-size: 10px; font-weight: bold; margin-top: 15px;">INDONESIA</div>
+                </div>
+            </div>
+            <table class="meta-table">
+                <tr><td>No Doc.</td><td>: @Model.DocumentNumber</td></tr>
+                <tr><td>Revisi</td><td>: @Model.RevisionNumber</td></tr>
+                <tr><td>Date</td><td>: @Model.ProductionDate.ToString("dd MMM yyyy")</td></tr>
+                <tr><td>Shift</td><td>: @(Model.Shift ?? "-")</td></tr>
+                <tr><td>Customer</td><td>: @(Model.CustomerName ?? "-")</td></tr>
+            </table>
+        </div>
+        <div class="header-center">
+            <h1 class="title-h1">Extruder Production Report</h1>
+            <h2 class="title-h2">(Dimension)</h2>
+        </div>
+        <div class="header-right">
+            <table class="approval-table">
+                <tr>
+                    <th>PREPARED</th>
+                    <th>CHECKED</th>
+                    <th>APPROVED</th>
+                </tr>
+                <tr><td></td><td></td><td></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── SUB HEADER BAR ── -->
+    <div class="sub-header-bar">
+        Tipe: @(Model.HoseType ?? "-") | Water By Pass: @(Model.ByPass ?? "-") | @(Model.DimensionDisplay ?? "-")
+    </div>
+
+    <!-- ── MAIN GRID ── -->
+    <div class="main-grid-container">
+        <!-- LEFT: MEASUREMENT MATRIX -->
+        <div class="left-matrix">
+            <table class="data-table">
+                @{
+                    var timeHeaderStr = Model.Measurements?.FirstOrDefault()?.TimeSection ?? "";
+                    var timePartsArray = timeHeaderStr.Split(',').Select(s => s.Trim()).ToArray();
+                }
+                <tr class="jam-row">
+                    <td colspan="3" style="border-right: none;"></td>
+                    <td style="border-left: none; font-weight: bold;">PUKUL / JAM</td>
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <td style="font-weight: bold; font-family: 'Consolas', monospace;">
+                            @(timePartsArray.Length > i && !string.IsNullOrEmpty(timePartsArray[i]) ? timePartsArray[i] : "-")
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    <th width="120">POINT</th>
+                    <th width="80">FREKUENSI</th>
+                    <th width="80">STD DIMENSI</th>
+                    <th width="60">INITIAL</th>
+                    <th width="35">1</th>
+                    <th width="35">2</th>
+                    <th width="35">3</th>
+                    <th width="35">4</th>
+                    <th width="35">5</th>
+                </tr>
+                @{
+                    var measurements = Model.Measurements?.ToDictionary(m => m.PointName, StringComparer.OrdinalIgnoreCase) ?? new Dictionary<string, VelastoProductionSystem.Models.DimensionMeasurement>(StringComparer.OrdinalIgnoreCase);
+                    var sps = ViewBag.Sps as VelastoProductionSystem.Models.StandardParameterSetting;
+                    var master = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                    
+                    var mainPoints = new[] {
+                        "Inner Diameter", "Inner Thickness (x)", "Inner Thickness (y)", 
+                        "Total Thickness (x)", "Total Thickness (y)"
+                    };
+
+                    (decimal t, decimal tol)? GetCleanSps(string point, string rawText) {
+                        try {
+                            decimal target = 0, tol = 0;
+                            decimal defaultTol = point.Contains("Thick") ? 0.2m : 0.1m;
+
+                            // 1. PRIORITIZE SPS (StandardParameterSetting) for Clean Numerics
+                            if (sps != null) {
+                                if (point.Contains("Diameter")) { target = sps.InnerDie; tol = sps.ToleranceDie; }
+                                else if (point.Contains("Inner Thick")) { target = sps.TubeDie; tol = sps.Tol_TubeDie; }
+                                else if (point.Contains("Total Thick")) { target = sps.CoverDie; tol = sps.Tol_CoverDie; }
+                            }
+
+                            // 2. USE MASTERLIST for TARGET (Dimensi) if SPS is missing
+                            if (target <= 0 && master != null) {
+                                if (point.Contains("Diameter")) target = ParseNum(master.Dimensi);
+                                else if (point.Contains("Inner Thick")) target = ParseNum(master.TebalInner);
+                                else if (point.Contains("Total Thick")) target = ParseNum(master.TebalTotal);
+                            }
+
+                            // 3. TOLERANCE REFINEMENT (Masterlist fallback)
+                            if (tol <= 0) {
+                                if (master != null) {
+                                    if (point.Contains("Diameter")) tol = ParseTol(master.ToleranceInner, 0.1m);
+                                    else if (point.Contains("Thick")) tol = ParseTol(master.ToleranceOuter, 0.2m);
+                                    else if (point.Contains("Spiral")) tol = ParseTol(master.ToleranceSpiralPitch, 5.0m);
+                                }
+                            }
+
+                            // Final Default Safety
+                            if (tol <= 0) tol = defaultTol;
+
+                            // 4. ABSOLUTE FALLBACK (Legacy Reports)
+                            if (target <= 0) {
+                                var matches = System.Text.RegularExpressions.Regex.Matches(rawText.Replace(",", "."), @"\d+(?:\.\d+)?");
+                                if (matches.Count >= 2) {
+                                    target = decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    tol = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    if (tol > 2.0m) tol = defaultTol;
+                                } else if (matches.Count == 1) {
+                                    target = decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    tol = defaultTol;
+                                }
+                            }
+
+                            return target > 0 ? (target, tol) : null;
+                        } catch { return null; }
+                    }
+
+                    decimal ParseNum(string? s) {
+                        if (string.IsNullOrEmpty(s)) return 0;
+                        var m = System.Text.RegularExpressions.Regex.Match(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                        return m.Success ? decimal.Parse(m.Value, System.Globalization.CultureInfo.InvariantCulture) : 0;
+                    }
+
+                    decimal ParseTol(string? s, decimal def) {
+                        if (string.IsNullOrEmpty(s)) return def;
+                        var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                        if (matches.Count == 0) return def;
+                        decimal val = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                        return val > 2.0m ? def : val; // OD/Length filtering
+                    }
+
+                    string F(decimal v) => v.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+                }
+                @foreach (var point in mainPoints)
+                {
+                    var row = measurements.ContainsKey(point) ? measurements[point] : null;
+                    var spsVal = GetCleanSps(point, row?.StandardDimension ?? "");
+                    
+                    <tr>
+                        <td class="row-point">@point</td>
+                        <td>@(row?.Frequency ?? "30 Menit Sekali")</td>
+                        <td style="padding: 0 !important; background: #fff; vertical-align: middle; border: 1px solid var(--grid);">
+                            @if (spsVal != null) {
+                                var v = spsVal.Value;
+                                <table style="width: 100%; border-collapse: collapse; min-height: 90px; border: none !important; margin: 0;">
+                                    <tr>
+                                        <td rowspan="5" style="padding-left: 10px; vertical-align: middle; text-align: left; border: none !important; border-right: 1px solid var(--grid) !important;">
+                                            <div style="font-weight: 800; font-size: 13px; color: #000; white-space: nowrap;">
+                                                @v.t.ToString("G29").Replace(".", ",") ± @v.tol.ToString("G29").Replace(".", ",")
+                                            </div>
+                                        </td>
+                                        <td style="width: 40px; height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #777; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle;">@F(v.t + v.tol)</td>
+                                    </tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle;">@F(v.t + v.tol/2)</td></tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #555; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle; font-weight: bold;">@F(v.t)</td></tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #eee; text-align: right; padding-right: 5px; border: none !important; border-bottom: 1px solid #eee !important; vertical-align: middle;">@F(v.t - v.tol/2)</td></tr>
+                                    <tr><td style="height: 18px; font-size: 8px; font-family: 'Consolas', monospace; color: #777; text-align: right; padding-right: 5px; border: none !important; vertical-align: middle;">@F(v.t - v.tol)</td></tr>
+                                </table>
+                            } else {
+                                <div style="font-size: 10px; color: #000; text-align: center; padding: 10px;">@(row?.StandardDimension ?? "-")</div>
+                            }
+                        </td>
+                        <!-- INITIAL & 1-5 Sub Matrix -->
+                        <td class="sub-matrix-td">
+                            <table class="sub-matrix-inner">
+                                <tr><td>max</td></tr>
+                                <tr><td>&nbsp;</td></tr>
+                                <tr style="background:#fcfcfc;"><td>@(row?.Initial ?? "")</td></tr>
+                                <tr><td>&nbsp;</td></tr>
+                                <tr><td>min</td></tr>
+                            </table>
+                        </td>
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            decimal? rVal = row != null ? (decimal?)(typeof(VelastoProductionSystem.Models.DimensionMeasurement).GetProperty("R" + i)?.GetValue(row)) : null;
+                            <td class="sub-matrix-td">
+                                <table class="sub-matrix-inner">
+                                    <tr><td>&nbsp;</td></tr>
+                                    <tr><td>&nbsp;</td></tr>
+                                    <tr style="background:#fcfcfc;"><td>@(rVal != null ? rVal.Value.ToString("0.00") : "")</td></tr>
+                                    <tr><td>&nbsp;</td></tr>
+                                    <tr><td>&nbsp;</td></tr>
+                                </table>
+                            </td>
+                        }
+                    </tr>
+                }
+                @{
+                    var spiralRow = measurements.ContainsKey("Spiral Pitch") ? measurements["Spiral Pitch"] : null;
+                    var visualRow = measurements.ContainsKey("Visual Check") ? measurements["Visual Check"] : null;
+                    var spiralStd = (sps != null && sps.SpiralPitch > 0) ? $"{sps.SpiralPitch.ToString("0")} ± {sps.Tol_SpiralPitch.ToString("0")}" : (spiralRow?.StandardDimension ?? "38 ± 5");
+                }
+                <tr>
+                    <td class="row-point">Spiral Pitch</td>
+                    <td>@(spiralRow?.Frequency ?? "30 Menit Sekali")</td>
+                    <td>@spiralStd</td>
+                    <td>@(spiralRow?.Initial ?? "-")</td>
+                    <td>@spiralRow?.R1?.ToString("0.00")</td>
+                    <td>@spiralRow?.R2?.ToString("0.00")</td>
+                    <td>@spiralRow?.R3?.ToString("0.00")</td>
+                    <td>@spiralRow?.R4?.ToString("0.00")</td>
+                    <td>@spiralRow?.R5?.ToString("0.00")</td>
+                </tr>
+                @{
+                    string FmtV(decimal? val) => val == null ? "-" : (val == 1 ? "OK" : (val == 0 ? "NG" : val.Value.ToString("0.00")));
+                    var visualItems = new[] { "Burry", "Line", "Bubble", "Scratch" };
+                }
+                @foreach(var vName in visualItems)
+                {
+                    var vPoint = $"Visual Check - {vName}";
+                    var vRow = measurements.ContainsKey(vPoint) ? measurements[vPoint] : null;
+                    <tr>
+                        <td class="row-point">Visual - @vName</td>
+                        <td>@(vRow?.Frequency ?? "30 Menit Sekali")</td>
+                        <td>NORMAL</td>
+                        <td>@(vRow?.Initial ?? "-")</td>
+                        <td>@FmtV(vRow?.R1)</td>
+                        <td>@FmtV(vRow?.R2)</td>
+                        <td>@FmtV(vRow?.R3)</td>
+                        <td>@FmtV(vRow?.R4)</td>
+                        <td>@FmtV(vRow?.R5)</td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+        <!-- RIGHT: SUMMARY TABLE -->
+        <div class="right-summary">
+            <table class="data-table">
+                <tr>
+                    <th rowspan="2">PART NUMBER</th>
+                    <th rowspan="2">VIN KODE</th>
+                    <th rowspan="2">STD. PANJANG</th>
+                    <th rowspan="2">ACT. PANJANG</th>
+                    <th rowspan="2">QTY. TARGET</th>
+                    <th colspan="3">QTY. ACTUAL</th>
+                    <th rowspan="2" width="80">REMARK</th>
+                </tr>
+                <tr>
+                    <th width="25">OK</th>
+                    <th width="35">Dimensi</th>
+                    <th width="35">Visual</th>
+                </tr>
+                @{
+                    bool hasSummaries = Model.Summaries != null && Model.Summaries.Any();
+                    string partNum = Model.DimensionDisplay ?? Model.HoseType ?? "-";
+                    string stdPnjg = string.IsNullOrEmpty(Model.StandardLength) || Model.StandardLength == "-"
+                        ? (master?.Dimensi ?? "-") : Model.StandardLength;
+
+                    int totalTarget = 0;
+                    int totalOk = 0;
+                    int totalNgDim = 0;
+                    int totalNgVis = 0;
+                }
+                @if (hasSummaries) {
+                    @foreach (var s in Model.Summaries!) {
+                        totalTarget += s.QtyTarget;
+                        totalOk += s.QtyOk;
+                        totalNgDim += s.NgDimension;
+                        totalNgVis += s.NgVisual;
+                        <tr>
+                            <td>@(s.PartNumber ?? partNum)</td>
+                            <td>@(s.VinCode ?? "-")</td>
+                            <td>@(s.StandardLength ?? stdPnjg)</td>
+                            <td>@(s.ActualLength ?? "-")</td>
+                            <td>@(s.QtyTarget > 0 ? s.QtyTarget.ToString() : "-")</td>
+                            <td>@s.QtyOk</td>
+                            <td>@s.NgDimension</td>
+                            <td>@s.NgVisual</td>
+                            <td style="text-align:left;font-size:8px;">@(s.QtyOk > 0 && s.NgDimension == 0 && s.NgVisual == 0 ? "ALL OK" : (s.NgDimension > 0 || s.NgVisual > 0 ? "CONTAINS NG" : ""))</td>
+                        </tr>
+                    }
+                    @for (int i = Model.Summaries.Count; i < 25; i++) {
+                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    }
+                } else {
+                    // Fallback: show report header (legacy single-row)
+                    totalTarget = Model.QtyTarget;
+                    totalOk = Model.QtyOk;
+                    totalNgDim = Model.NgDimension;
+                    totalNgVis = Model.NgVisual;
+                    <tr>
+                        <td>@partNum</td>
+                        <td>@(Model.VinCode ?? "-")</td>
+                        <td>@stdPnjg</td>
+                        <td>@(Model.ActualLength ?? "-")</td>
+                        <td>@(Model.QtyTarget > 0 ? Model.QtyTarget.ToString() : "-")</td>
+                        <td>@Model.QtyOk.ToString("G29")</td>
+                        <td>@Model.NgDimension.ToString("G29")</td>
+                        <td>@Model.NgVisual.ToString("G29")</td>
+                        <td style="text-align:left;vertical-align:top;font-size:8px;">@Model.Remark</td>
+                    </tr>
+                    @for (int i = 0; i < 24; i++) {
+                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    }
+                }
+                <!-- TOTAL ROW -->
+                <tr style="background: #f1f5f9; font-weight: bold;">
+                    <td colspan="4" style="text-align: right; padding-right: 10px;">TOTAL</td>
+                    <td>@totalTarget</td>
+                    <td>@totalOk</td>
+                    <td>@totalNgDim</td>
+                    <td>@totalNgVis</td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── FOOTER ── -->
+    <div class="footer-area">
+        <div class="footer-note">
+            <strong>Note :</strong>
+            @Model.Remark
+        </div>
+        <div class="footer-att">
+            <strong>Attention :</strong><br/>
+            1. Setiap operator wajib menggunakan APD (Sepatu safety & Sarung tangan)<br/>
+            2. Periksa Dies Sebelum dan sesudah proses<br/>
+            3. Pastikan semua parameter sesuai dengan SPS
+        </div>
+    </div>
+</div>

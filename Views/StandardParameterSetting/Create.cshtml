@@ -72,21 +72,29 @@
                         </div>
                         <div class="d-flex align-items-center mb-1">
                             <span class="small fw-bold me-2" style="width: 100px;">Item / PN :</span>
-                            <input asp-for="ProductCode" class="form-report-input border-0 bg-transparent flex-grow-1 fw-bold text-primary" placeholder="Scan Item..." />
+                            <input asp-for="ProductCode" id="ProductCode" class="form-report-input border-0 bg-transparent flex-grow-1 fw-bold text-primary" placeholder="Scan Item..." />
                         </div>
                         <div class="d-flex align-items-center">
                             <span class="small fw-bold me-2" style="width: 100px;">Tipe Hose :</span>
                             <input asp-for="HoseType" class="form-report-input border-0 bg-transparent flex-grow-1" placeholder="..." />
                         </div>
                     </div>
-                    <div class="p-2" style="flex: 1 1 200px;">
+                    <div class="p-2 border-end border-dark border-2" style="flex: 1 1 200px;">
                         <div class="d-flex align-items-center mb-1">
                             <span class="small fw-bold me-2">No. Rev. :</span>
                             <input asp-for="RevisionNumber" class="form-report-input border-0 bg-transparent flex-grow-1 text-center" />
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-1">
                             <span class="small fw-bold me-2">Dimensi :</span>
                             <input asp-for="Diameter" class="form-report-input border-0 bg-transparent flex-grow-1 text-center" />
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="small fw-bold me-2 text-danger">Layer :</span>
+                            <select asp-for="LayerType" class="form-report-input border-0 bg-transparent flex-grow-1 fw-bold" id="LayerTypeSelector">
+                                <option value="Legacy">Legacy / 1-Layer</option>
+                                <option value="CHS 2 Layer">CHS 2 Layer</option>
+                                <option value="CHS 3 Layer">CHS 3 Layer</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -139,8 +147,13 @@
                             </tr>
                             <tr>
                                 <td class="text-center">5</td>
-                                <td>Tube Die</td>
-                                <td><input asp-for="TubeDie" class="table-input" /></td>
+                                <td>Tube Die / Mid Die</td>
+                                <td>
+                                    <input asp-for="TubeDie" class="table-input" placeholder="Tube" />
+                                    <div class="layer-3-only border-top border-dark mt-1">
+                                        <input asp-for="MiddleDie" class="table-input" placeholder="Middle" />
+                                    </div>
+                                </td>
                                 <td><input name="ActualTubeDie" class="table-input" /></td>
                                 <td colspan="5"></td>
                             </tr>
@@ -152,59 +165,56 @@
                                 <td colspan="5"></td>
                             </tr>
 
-                            <!-- INNER TUBE -->
-                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">III. INNER (TUBE 1)</td></tr>
-                            <tr>
-                                <td class="text-center">7</td>
-                                <td>Head Temp. (°C)</td>
-                                <td><input asp-for="HeadTemp" class="table-input" /></td>
-                                <td><input name="ActualHeadTemp" class="table-input" /></td>
-                                <td title="S1"><input class="table-input" /></td>
-                                <td title="S2"><input class="table-input" /></td>
-                                <td title="S3"><input class="table-input" /></td>
-                                <td title="S4"><input class="table-input" /></td>
-                                <td title="S5"><input class="table-input" /></td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">8</td>
-                                <td>Cylinder 1 Temp. (°C)</td>
-                                <td><input asp-for="Cylinder1Temp" class="table-input" /></td>
-                                <td><input name="ActualCyl1" class="table-input" /></td>
-                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">9</td>
-                                <td>Cylinder 2 Temp. (°C)</td>
-                                <td><input asp-for="Cylinder2Temp" class="table-input" /></td>
-                                <td><input name="ActualCyl2" class="table-input" /></td>
-                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">10</td>
-                                <td>Screw Speed (rpm)</td>
-                                <td><input asp-for="ScrewSpeed" class="table-input" /></td>
-                                <td><input name="ActualScrewSpeed" class="table-input" /></td>
-                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">11</td>
-                                <td>Pressure (MPa)</td>
-                                <td><input asp-for="Pressure" class="table-input" /></td>
-                                <td><input name="ActualPressure" class="table-input" /></td>
-                                <td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td>
-                            </tr>
+                            <!-- INNER TUBE (EXTRUDER 1) -->
+                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">III. EXTRUDER 1 (INNER)</td></tr>
+                            <tr><td class="text-center">7</td><td>Head 1 Temp. (°C)</td><td><input asp-for="HeadTemp" class="table-input" /></td><td><input name="ActH1" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+                            <tr><td class="text-center">8</td><td>Cyl 1-1 / 2-1 / 3-1</td><td>
+                                <input asp-for="Cylinder1Temp" class="table-input" placeholder="C1" />
+                                <input asp-for="Cylinder2Temp" class="table-input" placeholder="C2" />
+                                <input asp-for="Cylinder3Temp" class="table-input" placeholder="C3" />
+                            </td><td><input name="ActC1" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+                            <tr><td class="text-center">9</td><td>Screw Speed 1 / Press 1</td><td>
+                                <input asp-for="ScrewSpeed" class="table-input" placeholder="RPM" />
+                                <input asp-for="Pressure" class="table-input" placeholder="MPa" />
+                            </td><td><input name="ActS1" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+
+                            <!-- MIDDLE TUBE (EXTRUDER 2) - DYNAMIC -->
+                            <tr class="section-row layer-2-up"><td colspan="9" class="p-1 fw-bold bg-warning bg-opacity-10">IV. EXTRUDER 2 (MIDDLE / OUTER 2L)</td></tr>
+                            <tr class="layer-2-up"><td class="text-center">10</td><td>Head 2 Temp. (°C)</td><td><input asp-for="HeadTemp2" class="table-input" /></td><td><input name="ActH2" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+                            <tr class="layer-2-up"><td class="text-center">11</td><td>Cyl 1-2 / 2-2 / 3-2</td><td>
+                                <input asp-for="Cylinder1_2" class="table-input" placeholder="C1" />
+                                <input asp-for="Cylinder2_2" class="table-input" placeholder="C2" />
+                                <input asp-for="Cylinder3_2" class="table-input" placeholder="C3" />
+                            </td><td><input name="ActC2" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+                            <tr class="layer-2-up"><td class="text-center">12</td><td>Screw Speed 2 / Press 2</td><td>
+                                <input asp-for="ScrewSpeed2" class="table-input" placeholder="RPM" />
+                                <input asp-for="Pressure2" class="table-input" placeholder="MPa" />
+                            </td><td><input name="ActS2" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+
+                            <!-- OUTER TUBE (EXTRUDER 3) - DYNAMIC -->
+                            <tr class="section-row layer-3-only"><td colspan="9" class="p-1 fw-bold bg-info bg-opacity-10">V. EXTRUDER 3 (OUTER 3L)</td></tr>
+                            <tr class="layer-3-only"><td class="text-center">13</td><td>Head 3 Temp. (°C)</td><td><input asp-for="HeadTemp3" class="table-input" /></td><td><input name="ActH3" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+                            <tr class="layer-3-only"><td class="text-center">14</td><td>Cyl 1-3 / 2-3 / 3-3</td><td>
+                                <input asp-for="Cylinder1_3" class="table-input" placeholder="C1" />
+                                <input asp-for="Cylinder2_3" class="table-input" placeholder="C2" />
+                                <input asp-for="Cylinder3_3" class="table-input" placeholder="C3" />
+                            </td><td><input name="ActC3" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
+                            <tr class="layer-3-only"><td class="text-center">15</td><td>Screw Speed 3 / Press 3</td><td>
+                                <input asp-for="ScrewSpeed3" class="table-input" placeholder="RPM" />
+                                <input asp-for="Pressure3" class="table-input" placeholder="MPa" />
+                            </td><td><input name="ActS3" class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td><td><input class="table-input" /></td></tr>
 
                             <!-- OTHER -->
-                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">IV. OTHERS</td></tr>
+                            <tr class="section-row"><td colspan="9" class="p-1 fw-bold bg-light">VI. OTHERS</td></tr>
                             <tr>
-                                <td class="text-center">12</td>
+                                <td class="text-center">16</td>
                                 <td>Chiller Water Temp (°C)</td>
                                 <td><input asp-for="ChillerWaterTemp" class="table-input" /></td>
                                 <td><input name="ActualChiller" class="table-input" /></td>
                                 <td></td><td></td><td></td><td></td><td></td>
                             </tr>
                             <tr>
-                                <td class="text-center">13</td>
+                                <td class="text-center">17</td>
                                 <td>Take-up Conveyor (m/min)</td>
                                 <td><input asp-for="TakeupConveyorSpeed" class="table-input" /></td>
                                 <td><input name="ActualTakeUp" class="table-input" /></td>
@@ -307,12 +317,20 @@
     
     <script>
         let html5QrCode;
+        let _isScanning = false; // Guard agar tidak double-fire
+
+        // Helper: set nilai ke semua elemen dengan id atau name = 'ProductCode'
+        function setProductCode(code) {
+            const byId = document.getElementById('ProductCode');
+            if (byId) byId.value = code;
+            document.querySelectorAll('input[name="ProductCode"]').forEach(el => el.value = code);
+        }
 
         function startScanner() {
+            _isScanning = false;
             document.getElementById('scanner-container').style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
             html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
                 .catch(err => {
                     console.error("Scanner Error:", err);
@@ -321,91 +339,154 @@
         }
 
         function stopScanner() {
+            document.getElementById('scanner-container').style.display = 'none';
             if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    document.getElementById('scanner-container').style.display = 'none';
-                });
+                html5QrCode.stop().catch(e => {});
             }
         }
 
-        async function onScanSuccess(decodedText, decodedResult) {
-            console.log("Scanned:", decodedText);
+        function onScanSuccess(decodedText) {
+            if (_isScanning) return; // Cegah double-fire
+            _isScanning = true;
+
             stopScanner();
-            
-            // Masukkan kode ke input ProductCode
-            document.getElementById('ProductCode').value = decodedText;
-            
-            // Audio feedback
-            try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play(); } catch(e){}
 
-            // Cari data standar ke backend
-            Swal.fire({
-                title: 'Mencari Standar...',
-                text: 'Mengambil data dari SPS Masterlist untuk ' + decodedText,
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+            // Delay 400ms agar scanner selesai close dulu, baru isi form
+            setTimeout(async function() {
+                // Tampilkan item code di input
+                setProductCode(decodedText);
 
-            try {
-                const response = await fetch(`/StandardParameterSetting/GetMasterDataByItem?itemCode=${encodeURIComponent(decodedText)}`);
-                const data = await response.json();
+                // Audio feedback
+                try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play(); } catch(e){}
 
-                if (data) {
-                    fillForm(data);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Data Ditemukan',
-                        text: 'Standar parameter untuk ' + decodedText + ' telah diisi otomatis.',
-                        timer: 2000
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Tidak Ditemukan',
-                        text: 'Item ' + decodedText + ' tidak ada di Masterlist SPS.'
-                    });
+                // Cari data standar ke backend
+                Swal.fire({
+                    title: 'Mencari Standar...',
+                    text: 'Mengambil data dari SPS Masterlist untuk ' + decodedText,
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                try {
+                    const response = await fetch(`/StandardParameterSetting/GetMasterDataByItem?itemCode=${encodeURIComponent(decodedText)}`);
+                    const data = await response.json();
+
+                    if (data) {
+                        fillForm(data, decodedText);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Data Ditemukan',
+                            text: 'Standar parameter untuk ' + decodedText + ' telah diisi otomatis.',
+                            timer: 2000
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Tidak Ditemukan',
+                            text: 'Item ' + decodedText + ' tidak ada di Masterlist SPS.'
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Gagal menghubungi server.', 'error');
                 }
-            } catch (error) {
-                Swal.fire('Error', 'Gagal menghubungi server.', 'error');
-            }
+
+                // Jaminan akhir — ProductCode PASTI tampil
+                setProductCode(decodedText);
+
+            }, 400);
         }
 
-        function fillForm(data) {
+        function fillForm(data, scannedCode) {
             const setV = (id, val) => {
                 const el = document.getElementById(id);
-                if (el) el.value = val || '';
+                if (el) el.value = (val !== null && val !== undefined) ? val : '';
             };
 
-            // Mapping Data Masterlist ke Form
             setV('CustomerName', data.customer);
             setV('HoseType', data.hoseType);
             setV('DocumentNumber', data.documentNumber);
             setV('RevisionNumber', data.revisionNumber);
             setV('Diameter', data.dimensi);
-            setV('ProductCode', data.itemList);
-            
+
+            // ProductCode = selalu dari hasil scan barcode
+            setProductCode(scannedCode);
+
             // Materials
             setV('InnerMaterial', data.innerTube || data.material);
             setV('OuterMaterial', data.outerCover);
-            
-            // Dies (Numeric)
+
+            // Dies
             setV('InnerDie', data.nipple);
             setV('TubeDie', data.tubeDie);
+            setV('MiddleDie', data.middleDie); // New
             setV('CoverDie', data.coverDie);
-            
-            // Temperatures & Speeds (Numeric/Int)
+
+            // Temperatures & Speeds - Extruder 1
             setV('HeadTemp', parseInt(data.headTemp1) || 0);
             setV('Cylinder1Temp', parseInt(data.cylinder1_1) || 0);
             setV('Cylinder2Temp', parseInt(data.cylinder2_1) || 0);
+            setV('Cylinder3Temp', parseInt(data.cylinder3_1) || 0);
+            setV('ScrewTemp', parseInt(data.screw1) || 0);
             setV('ScrewSpeed', parseFloat(data.screwSpeed1) || 0);
             setV('Pressure', parseFloat(data.pressure1) || 0);
-            
+            setV('FeedRollRatio', parseFloat(data.feed1) || 0);
+
+            // Extruder 2
+            setV('HeadTemp2', parseInt(data.headTemp2) || 0);
+            setV('Cylinder1_2', parseInt(data.cylinder1_2) || 0);
+            setV('Cylinder2_2', parseInt(data.cylinder2_2) || 0);
+            setV('Cylinder3_2', parseInt(data.cylinder3_2) || 0);
+            setV('ScrewTemp2', parseInt(data.screw2) || 0);
+            setV('ScrewSpeed2', parseFloat(data.screwSpeed2) || 0);
+            setV('Pressure2', parseFloat(data.pressure2) || 0);
+            setV('FeedRollRatio2', parseFloat(data.feed2) || 0);
+
+            // Extruder 3
+            setV('HeadTemp3', parseInt(data.headTemp3) || 0);
+            setV('Cylinder1_3', parseInt(data.cylinder1_3) || 0);
+            setV('Cylinder2_3', parseInt(data.cylinder2_3) || 0);
+            setV('Cylinder3_3', parseInt(data.cylinder3_3) || 0);
+            setV('ScrewTemp3', parseInt(data.screw3) || 0);
+            setV('ScrewSpeed3', parseFloat(data.screwSpeed3) || 0);
+            setV('Pressure3', parseFloat(data.pressure3) || 0);
+            setV('FeedRollRatio3', parseFloat(data.feed3) || 0);
+
+            // Detect Layer Type
+            let layerType = "Legacy";
+            if (data.tebalInnerMiddle) {
+                layerType = "CHS 3 Layer";
+            } else if (data.headTemp2) {
+                layerType = "CHS 2 Layer";
+            }
+            setV('LayerTypeSelector', layerType);
+            toggleLayers(layerType);
+
             setV('ChillerWaterTemp', data.chillerWaterTemp);
             setV('TakeupConveyorSpeed', data.takeUpConveyorSpeed);
             setV('MarkingMaterialColor', data.markingColour);
-            
-            // Optional fields
             setV('MeshScreen', data.meshScreen1);
+            setV('MeshScreen2', data.meshScreen2);
+            setV('MeshScreen3', data.meshScreen3);
         }
+
+        function toggleLayers(type) {
+            console.log("Toggling layers for:", type);
+            if (type === "CHS 3 Layer") {
+                $('.layer-2-up, .layer-3-only').show();
+            } else if (type === "CHS 2 Layer") {
+                $('.layer-2-up').show();
+                $('.layer-3-only').hide();
+            } else {
+                $('.layer-2-up, .layer-3-only').hide();
+            }
+        }
+
+        $(document).ready(function() {
+            $('#LayerTypeSelector').on('change', function() {
+                toggleLayers($(this).val());
+            });
+            // Initial trigger
+            toggleLayers($('#LayerTypeSelector').val());
+        });
     </script>
 }

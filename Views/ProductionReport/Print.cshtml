@@ -1,8 +1,8 @@
+@inject VelastoProductionSystem.Data.ApplicationDbContext _context
 @model VelastoProductionSystem.Models.ProductionReport
 
 @{
     Layout = null;
-    var dimensionReadings = ViewBag.DimensionReadings as IEnumerable<VelastoProductionSystem.Models.DimensionReading> ?? new List<VelastoProductionSystem.Models.DimensionReading>();
 }
 
 <!DOCTYPE html>
@@ -61,35 +61,78 @@
     <button class="no-print-btn" onclick="window.close()" style="background:#6c757d; margin-left: 10px;">Close Window</button>
 
     <div class="print-container">
-        <div class="header-section">
-            <div class="header-left">
-                <div style="font-weight: 900; font-size: 14pt;">VELASTO</div>
-                <div style="font-size: 8pt; border-bottom: 1px solid #000; display: inline-block;">INDONESIA</div>
-                <table class="meta-table" style="margin-top: 5px;">
-                    <tr><td class="label">No Doc.</td><td>: @Model.DocumentNumber</td></tr>
-                    <tr><td class="label">Revisi</td><td>: @Model.RevisionNumber</td></tr>
-                    <tr><td class="label">Date</td><td>: @Model.ProductionDate.ToString("dd MMM yyyy")</td></tr>
-                    <tr><td class="label">Shift</td><td>: @Model.Shift</td></tr>
-                    <tr><td class="label">Customer</td><td>: @Model.CustomerName</td></tr>
-                </table>
-            </div>
-            <div class="header-center">
-                <h1 class="report-title">Extruder Production Report</h1>
-                <h2 class="report-subtitle">(Dimension)</h2>
-            </div>
-            <div class="header-right">
-                <table class="signature-table">
+        <div class="header-section" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); color: #e2e8f0; padding: 15px; border: 2px solid #3b82f6; border-radius: 8px; margin-bottom: 15px;">
+            <!-- Baris 1: Logo, Judul, dan TTD -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <!-- Logo Kiri -->
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                        <span style="font-weight: 900; font-size: 20px; color: white;">V</span>
+                    </div>
+                    <div>
+                        <div style="font-weight: 900; font-size: 16px; color: #60a5fa;">VELASTO</div>
+                        <div style="font-size: 9px; color: #94a3b8; border-bottom: 1px solid #3b82f6; padding-bottom: 1px;">INDONESIA</div>
+                    </div>
+                </div>
+                
+                <!-- Judul Tengah -->
+                <div style="text-align: center;">
+                    <h1 style="font-size: 18px; font-weight: 900; margin: 0; color: #f1f5f9; text-transform: uppercase;">EXTRUDER PRODUCTION REPORT</h1>
+                    <h2 style="font-size: 12px; font-weight: 500; margin: 2px 0 0 0; color: #3b82f6;">(Dimension)</h2>
+                </div>
+                
+                <!-- TTD Kanan -->
+                <table style="width: 180px; border: 1px solid #3b82f6; border-collapse: collapse; font-size: 8px;">
                     <thead>
-                        <tr><th width="33%">PREPARED</th><th width="33%">CHECKED</th><th width="34%">APPROVED</th></tr>
+                        <tr>
+                            <th style="border: 1px solid #3b82f6; padding: 4px; background: #3b82f6; color: white; font-weight: bold;">PREPARED</th>
+                            <th style="border: 1px solid #3b82f6; padding: 4px; background: #3b82f6; color: white; font-weight: bold;">CHECKED</th>
+                            <th style="border: 1px solid #3b82f6; padding: 4px; background: #3b82f6; color: white; font-weight: bold;">APPROVED</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>@Model.CreatedBy.Split(' ')[0]</td>
-                            <td>@(Model.CheckedBy?.Split(' ')[0] ?? "-")</td>
-                            <td>@(Model.ApprovedBy?.Split(' ')[0] ?? "-")</td>
+                            <td style="border: 1px solid #3b82f6; height: 35px; text-align: center; color: #60a5fa; font-weight: bold;">Operator 1</td>
+                            <td style="border: 1px solid #3b82f6; height: 35px;"></td>
+                            <td style="border: 1px solid #3b82f6; height: 35px;"></td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Baris 2: Informasi Dokumen -->
+            <div style="display: flex; justify-content: space-between; font-size: 9px; padding: 8px 0; border-top: 1px solid #3b82f6; border-bottom: 1px solid #3b82f6;">
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">NO DOC :</span> SOP/PROD/HOSE/SPS/24/10/05
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">REVISI :</span> 0
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">DATE :</span> 17/Mar/2026
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">SHIFT :</span> 2
+                </div>
+            </div>
+            
+            <!-- Baris 3: Customer dan Product Info -->
+            <div style="display: flex; justify-content: space-between; font-size: 9px; padding-top: 8px;">
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">CUSTOMER :</span> PT. TMMIN
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">TYPE :</span> TSHSS01G-1C
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">HOSE :</span> 11 mm x 18 mm
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">WIRE :</span> 0.30 mm x 7 x 7
+                </div>
+                <div>
+                    <span style="color: #60a5fa; font-weight: bold;">BY PASS :</span> 2.5 mm
+                </div>
             </div>
         </div>
 
@@ -119,12 +162,24 @@
             </thead>
             <tbody>
                 @{
+                    var master = _context.MasterlistSpsDoubleLayers.FirstOrDefault(m => m.HoseType == Model.HoseType);
+                    
+                    // Helper to parse string to decimal
+                    decimal D(string? s, decimal def) => decimal.TryParse(s ?? "0", System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                    
+                    decimal idNom = master != null ? D(master.Dimensi, 11.0m) : 11.0m;
+                    decimal idTol = master != null ? D(master.ToleranceInner, 0.2m) : 0.2m;
+                    decimal tubeNom = master != null ? D(master.TebalInner, 1.8m) : 1.8m;
+                    decimal tubeTol = 0.2m;
+                    decimal coverNom = master != null ? D(master.TebalTotal, 3.3m) : 3.3m;
+                    decimal coverTol = master != null ? D(master.ToleranceOuter, 0.2m) : 0.2m;
+
                     var pGroups = new[] {
-                        new { Name = "Inner Diameter", Std = "11.0 ± 0.2", Values = new[] { "11.20", "11.10", "11.00", "10.90", "10.80" } },
-                        new { Name = "Inner Thickness (x)", Std = "1.8 ± 0.2", Values = new[] { "2.00", "1.90", "1.80", "1.70", "1.60" } },
-                        new { Name = "Inner Thickness (y)", Std = "1.8 ± 0.2", Values = new[] { "2.00", "1.90", "1.80", "1.70", "1.60" } },
-                        new { Name = "Total Thickness (x)", Std = "3.3 ± 0.2", Values = new[] { "3.50", "3.40", "3.30", "3.20", "3.10" } },
-                        new { Name = "Total Thickness (y)", Std = "3.3 ± 0.2", Values = new[] { "3.50", "3.40", "3.30", "3.20", "3.10" } }
+                        new { Name = "Inner Diameter", Std = $"{idNom:0.0} ± {idTol:0.0}", Values = new[] { (idNom+idTol*1.0m).ToString("0.00"), (idNom+idTol*0.5m).ToString("0.00"), idNom.ToString("0.00"), (idNom-idTol*0.5m).ToString("0.00"), (idNom-idTol*1.0m).ToString("0.00") } },
+                        new { Name = "Inner Thickness (x)", Std = $"{tubeNom:0.0} ± {tubeTol:0.0}", Values = new[] { (tubeNom+tubeTol*1.0m).ToString("0.00"), (tubeNom+tubeTol*0.5m).ToString("0.00"), tubeNom.ToString("0.00"), (tubeNom-tubeTol*0.5m).ToString("0.00"), (tubeNom-tubeTol*1.0m).ToString("0.00") } },
+                        new { Name = "Inner Thickness (y)", Std = $"{tubeNom:0.0} ± {tubeTol:0.0}", Values = new[] { (tubeNom+tubeTol*1.0m).ToString("0.00"), (tubeNom+tubeTol*0.5m).ToString("0.00"), tubeNom.ToString("0.00"), (tubeNom-tubeTol*0.5m).ToString("0.00"), (tubeNom-tubeTol*1.0m).ToString("0.00") } },
+                        new { Name = "Total Thickness (x)", Std = $"{coverNom:0.0} ± {coverTol:0.0}", Values = new[] { (coverNom+coverTol*1.0m).ToString("0.00"), (coverNom+coverTol*0.5m).ToString("0.00"), coverNom.ToString("0.00"), (coverNom-coverTol*0.5m).ToString("0.00"), (coverNom-coverTol*1.0m).ToString("0.00") } },
+                        new { Name = "Total Thickness (y)", Std = $"{coverNom:0.0} ± {coverTol:0.0}", Values = new[] { (coverNom+coverTol*1.0m).ToString("0.00"), (coverNom+coverTol*0.5m).ToString("0.00"), coverNom.ToString("0.00"), (coverNom-coverTol*0.5m).ToString("0.00"), (coverNom-coverTol*1.0m).ToString("0.00") } }
                     };
                 }
 
@@ -146,7 +201,7 @@
                             {
                                 <td rowspan="27">@(Model.StandardParameterSetting?.ProductCode ?? "-")</td>
                                 <td rowspan="27">@Model.VinCode</td>
-                                <td rowspan="27">@Model.StandardLength</td>
+                                <td rowspan="27">@(master?.Dimensi ?? Model.StandardLength)</td>
                                 <td rowspan="27" style="font-weight: bold;">@Model.ActualLength</td>
                                 <td rowspan="27">@Model.QtyTarget</td>
                                 <td rowspan="27" style="font-weight: bold;">@Model.QtyOk</td>
@@ -160,7 +215,7 @@
                 <tr>
                     <td class="point-name">Spiral Pitch</td>
                     <td>30m Sekali</td>
-                    <td style="font-weight: bold;">38 ± 5</td>
+                    <td style="font-weight: bold;">@(master?.ToleranceSpiralPitch ?? "38 ± 5")</td>
                     <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                 </tr>
                 <tr>

@@ -79,35 +79,72 @@ namespace VelastoProductionSystem.Models
         public decimal Tol_SpiralPitch { get; set; }
 
         // Mesh Screen
-        [Display(Name = "Mesh Screen")]
+        [Display(Name = "Mesh Screen 1")]
         public string MeshScreen { get; set; } = string.Empty;
+        [Display(Name = "Mesh Screen 2")]
+        public string? MeshScreen2 { get; set; }
+        [Display(Name = "Mesh Screen 3")]
+        public string? MeshScreen3 { get; set; }
 
-        // Temperature Settings
-        [Display(Name = "Head Temp (°C)")]
+        // Process Settings - Extruder 1
+        [Display(Name = "Head 1 (°C)")]
         public int HeadTemp { get; set; }
-
-        [Display(Name = "Cylinder 1 (°C)")]
+        [Display(Name = "Cyl 1-1 (°C)")]
         public int Cylinder1Temp { get; set; }
-
-        [Display(Name = "Cylinder 2 (°C)")]
+        [Display(Name = "Cyl 2-1 (°C)")]
         public int Cylinder2Temp { get; set; }
-
-        [Display(Name = "Cylinder 3 (°C)")]
+        [Display(Name = "Cyl 3-1 (°C)")]
         public int Cylinder3Temp { get; set; }
-
-        [Display(Name = "Screw Temp (°C)")]
+        [Display(Name = "Screw 1 (°C)")]
         public int ScrewTemp { get; set; }
-
-        // Speed Settings
-        [Display(Name = "Screw Speed (rpm)")]
+        [Display(Name = "RPM 1 (rpm)")]
         public decimal ScrewSpeed { get; set; }
-
-        [Display(Name = "Feed Roll Ratio (%)")]
+        [Display(Name = "Feed 1 (%)")]
         public decimal FeedRollRatio { get; set; }
-
-        // Pressure Settings
-        [Display(Name = "Pressure (MPa)")]
+        [Display(Name = "Press 1 (MPa)")]
         public decimal Pressure { get; set; }
+        [Display(Name = "Am 1")]
+        public string? AmMeter { get; set; }
+
+        // Process Settings - Extruder 2
+        [Display(Name = "Head 2 (°C)")]
+        public int? HeadTemp2 { get; set; }
+        [Display(Name = "Cyl 1-2 (°C)")]
+        public int? Cylinder1_2 { get; set; }
+        [Display(Name = "Cyl 2-2 (°C)")]
+        public int? Cylinder2_2 { get; set; }
+        [Display(Name = "Cyl 3-2 (°C)")]
+        public int? Cylinder3_2 { get; set; }
+        [Display(Name = "Screw 2 (°C)")]
+        public int? ScrewTemp2 { get; set; }
+        [Display(Name = "RPM 2 (rpm)")]
+        public decimal? ScrewSpeed2 { get; set; }
+        [Display(Name = "Feed 2 (%)")]
+        public decimal? FeedRollRatio2 { get; set; }
+        [Display(Name = "Press 2 (MPa)")]
+        public decimal? Pressure2 { get; set; }
+        [Display(Name = "Am 2")]
+        public string? AmMeter2 { get; set; }
+
+        // Process Settings - Extruder 3
+        [Display(Name = "Head 3 (°C)")]
+        public int? HeadTemp3 { get; set; }
+        [Display(Name = "Cyl 1-3 (°C)")]
+        public int? Cylinder1_3 { get; set; }
+        [Display(Name = "Cyl 2-3 (°C)")]
+        public int? Cylinder2_3 { get; set; }
+        [Display(Name = "Cyl 3-3 (°C)")]
+        public int? Cylinder3_3 { get; set; }
+        [Display(Name = "Screw 3 (°C)")]
+        public int? ScrewTemp3 { get; set; }
+        [Display(Name = "RPM 3 (rpm)")]
+        public decimal? ScrewSpeed3 { get; set; }
+        [Display(Name = "Feed 3 (%)")]
+        public decimal? FeedRollRatio3 { get; set; }
+        [Display(Name = "Press 3 (MPa)")]
+        public decimal? Pressure3 { get; set; }
+        [Display(Name = "Am 3")]
+        public string? AmMeter3 { get; set; }
 
         // Air Pressure
         [Display(Name = "Air Pressure (A)")]

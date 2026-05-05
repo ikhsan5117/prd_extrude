@@ -82,6 +82,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Preset Temp (°C)")]
         public decimal? PresetTemp { get; set; }
 
+        [Display(Name = "Preset Value (Ø mm)")]
+        public decimal? PresetValue { get; set; }
+
         // Control Values
         [Display(Name = "Control Value (Ø mm)")]
         public decimal? ControlValue { get; set; }
@@ -106,6 +109,28 @@ namespace VelastoProductionSystem.Models
 
         [Display(Name = "Caterpillar Gap (mm)")]
         public decimal? CaterpillarGap { get; set; }
+
+        // DIMENSION REPORT FIELDS (Gambar Dimension)
+        [Display(Name = "Inner Diameter (mm)")]
+        public decimal? InnerDiameter { get; set; }
+
+        [Display(Name = "Inner Thickness X (mm)")]
+        public decimal? InnerThicknessX { get; set; }
+
+        [Display(Name = "Inner Thickness Y (mm)")]
+        public decimal? InnerThicknessY { get; set; }
+
+        [Display(Name = "Total Thickness X (mm)")]
+        public decimal? TotalThicknessX { get; set; }
+
+        [Display(Name = "Total Thickness Y (mm)")]
+        public decimal? TotalThicknessY { get; set; }
+
+        [Display(Name = "Spiral Pitch (mm)")]
+        public decimal? SpiralPitch { get; set; }
+
+        [Display(Name = "Visual Check")]
+        public string? VisualCheck { get; set; }
 
         // Notes
         [Display(Name = "Catatan")]

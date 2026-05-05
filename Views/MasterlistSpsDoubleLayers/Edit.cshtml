@@ -1,0 +1,68 @@
+@model VelastoProductionSystem.Models.MasterlistSpsDoubleLayer
+
+@{
+    ViewData["Title"] = "Edit SPS Master";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white fw-bold mb-0"><i class="bi bi-pencil-square text-warning me-2"></i> Edit SPS Master</h2>
+            <p class="text-white-50 small mb-0">Memperbarui data spesifikasi teknis untuk: <span class="text-info fw-bold">@Model.ExcelId</span> - @Model.Customer</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info rounded-pill px-4">
+                <i class="bi bi-eye me-2"></i> Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-light rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i> Kembali
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        
+        <partial name="_SpsForm" />
+
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-warning rounded-pill px-5 py-2 fw-bold shadow text-dark">
+                    <i class="bi bi-save-fill me-2"></i> Update Data
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                    Batal
+                </a>
+            </div>
+
+            <button type="button" class="btn btn-danger btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="bi bi-trash-fill me-2"></i> Hapus Data Ini
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal Delete -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p>Apakah Anda yakin ingin menghapus data SPS <span class="text-info fw-bold">@Model.ExcelId</span>?</p>
+                <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle-fill me-1"></i> Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Hapus Sekarang</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

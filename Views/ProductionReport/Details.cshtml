@@ -1,152 +1,1830 @@
+@inject VelastoProductionSystem.Data.ApplicationDbContext _context
 @model VelastoProductionSystem.Models.ProductionReport
 
 @{
     ViewData["Title"] = "Production Monitoring Dashboard";
+    var readings = Model.ProductionReadings.OrderBy(r => r.ReadingTime).ToList();
+    var std = Model.StandardParameterSetting ?? new VelastoProductionSystem.Models.StandardParameterSetting();
+    var currentPortal = Context.Request.Query["portal"].ToString();
 }
 
-<div class="no-print mb-4 d-flex justify-content-between align-items-center">
-    <div>
-        <h2 class="text-white fw-bold mb-0">PRODUCTION MONITORING</h2>
-        <span class="badge bg-success shadow-sm px-3 rounded-pill">STATUS: @Model.Status</span>
-    </div>
-    <div class="d-flex gap-2">
-        <button onclick="window.print()" class="btn btn-light"><i class="bi bi-printer me-1"></i> Print Full Report</button>
-        <form asp-action="FinishProduction" method="post" onsubmit="return confirm('Selesaikan produksi ini?')">
-            <input type="hidden" name="id" value="@Model.Id" />
-            <button type="submit" class="btn btn-danger px-4 shadow">FINISH PRODUCTION</button>
-        </form>
-    </div>
-</div>
-
-<!-- TAB NAVIGATION -->
-<ul class="nav nav-tabs custom-tabs no-print mb-4" id="prodTabs" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" id="parameter-tab" data-bs-toggle="tab" href="#parameter" role="tab">
-            <i class="bi bi-thermometer-half me-2"></i> 1. PARAMETER SETTING (Gambar 5)
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="dimension-tab" data-bs-toggle="tab" href="#dimension" role="tab">
-            <i class="bi bi-rulers me-2"></i> 2. DIMENSION REPORT (Gambar 2)
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="material-tab" data-bs-toggle="tab" href="#material" role="tab">
-            <i class="bi bi-box-seam me-2"></i> 3. INITIAL CHECK (Gambar 1)
-        </a>
-    </li>
-</ul>
-
-<div class="tab-content" id="prodTabsContent">
-    <!-- TAB 1: PARAMETER SETTING (Image 5) -->
-    <div class="tab-pane fade show active" id="parameter" role="tabpanel">
-        <div class="production-paper p-4 shadow-lg mb-5">
-            <div class="text-center border-bottom border-dark border-2 mb-3">
-                <h4 class="fw-bold">Extruder Production Report (Parameter Setting)</h4>
+<div class="production-dashboard-sapphire fade-in">
+    <!-- PREMUIM ACTION TOOLBAR (No Print) -->
+    <div class="no-print sticky-top mb-4 p-2 p-md-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px); margin-top: 70px; border-radius: 0 0 20px 20px;">
+        <div class="container-fluid d-flex flex-column flex-xl-row align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 gap-md-3">
+                <a href="/ProductionReport/Create" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
+                    <i class="bi bi-arrow-left me-1 me-md-2"></i> <span class="d-none d-sm-inline">KEMBALI KE INPUT</span><span class="d-inline d-sm-none">KEMBALI</span>
+                </a>
+                <div class="vr bg-white opacity-25 d-none d-md-block" style="height: 24px;"></div>
+                <div class="btn-group btn-group-sm rounded-pill p-1 bg-black bg-opacity-25 border border-white border-opacity-10">
+                    <a href="?id=@Model.Id&portal=dashboard" class="btn rounded-pill px-3 px-md-4 @(currentPortal != "identity" ? "btn-primary shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
+                        <i class="bi bi-speedometer2 me-1"></i><span class="d-none d-sm-inline">DASHBOARD</span><span class="d-inline d-sm-none">DASH</span>
+                    </a>
+                    <a href="?id=@Model.Id&portal=identity" class="btn rounded-pill px-3 px-md-4 @(currentPortal == "identity" ? "btn-info shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
+                        <i class="bi bi-card-checklist me-1"></i><span class="d-none d-sm-inline">IDENTITY CARD</span><span class="d-inline d-sm-none">ID CARD</span>
+                    </a>
+                </div>
             </div>
-            <!-- Header Grid dari Gambar 5 -->
-            <table class="table table-bordered table-sm border-dark small-table text-center">
-                <thead class="bg-light">
-                    <tr>
-                        <th rowspan="2" class="align-middle">TIME</th>
-                        <th colspan="5">INNER (TUBE 1)</th>
-                        <th colspan="5">OUTER (COVER)</th>
-                        <th rowspan="2" class="align-middle">ACTION</th>
-                    </tr>
-                    <tr>
-                        <th>Head (°C)</th><th>Cyl 1</th><th>Cyl 2</th><th>Speed</th><th>Press</th>
-                        <th>Head (°C)</th><th>Cyl 1</th><th>Cyl 2</th><th>Speed</th><th>Press</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(var log in Model.ProductionReadings) {
-                        <tr>
-                            <td>@log.ReadingTime.ToString("HH:mm")</td>
-                            <td>@log.HeadTempInner</td><td>@log.Cylinder1TempInner</td><td>@log.Cylinder2TempInner</td><td>@log.ScrewSpeedInner</td><td>@log.PressureInner</td>
-                            <td>@log.HeadTempOuter</td><td>@log.Cylinder1TempOuter</td><td>@log.Cylinder2TempOuter</td><td>@log.ScrewSpeedOuter</td><td>@log.PressureOuter</td>
-                            <td><button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button></td>
-                        </tr>
-                    }
-                    <tr class="bg-info bg-opacity-10 no-print">
-                        <td class="extra-small">ADD NEW</td>
-                        <td><input class="log-input" id="h_in" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td>
-                        <td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td><td><input class="log-input" /></td>
-                        <td><button class="btn btn-primary btn-xs"><i class="bi bi-plus-lg"></i></button></td>
-                    </tr>
-                </tbody>
-            </table>
+
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                <button onclick="downloadPDF()" class="btn btn-outline-info btn-sm px-3 px-md-4 rounded-pill fw-bold neon-glow-info">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> <span class="d-none d-sm-inline">DOWNLOAD PDF</span><span class="d-inline d-sm-none">PDF</span>
+                </button>
+                <button onclick="window.print()" class="btn btn-outline-primary btn-sm px-3 px-md-4 rounded-pill fw-bold">
+                    <i class="bi bi-printer me-1"></i> <span class="d-none d-sm-inline">PRINT REPORT</span><span class="d-inline d-sm-none">PRINT</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- TAB 2: DIMENSION REPORT (Image 2) -->
-    <div class="tab-pane fade" id="dimension" role="tabpanel">
-        <div class="dimension-paper p-4 shadow-lg mb-5">
-            <div class="text-center border-bottom border-dark border-2 mb-3">
-                <h4 class="fw-bold">Extruder Production Report (Dimension)</h4>
+    @if (currentPortal == "identity")
+    {
+        <style>
+            @@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
+            @@media print {
+                @@page { size: landscape; margin: 0; }
+                body { margin: 0; }
+                .no-print { display: none !important; }
+            }
+            .landscape-sheet { 
+                background: white; 
+                width: 1350px; /* Maksimal lebar untuk visibilitas tinggi */
+                min-height: 750px;
+                padding: 10px; 
+                color: #000; 
+                font-family: 'Segoe UI', Arial, sans-serif; 
+                border: 2px solid #000; 
+                margin: 0 auto; 
+                box-shadow: 0 0 40px rgba(0,0,0,0.1); 
+                position: relative; 
+            }
+            .inner-border {
+                border: 1px solid #000;
+                padding: 10px;
+                height: 100%;
+                width: 100%;
+            }
+            .landscape-sheet table { border-collapse: collapse; border: 1px solid #000; width: 100%; }
+            .landscape-sheet td, .landscape-sheet th { border: 1px solid #000; padding: 3px 6px; font-size: 10px; line-height: 1.1; color: #000; }
+            .hand-ink { font-family: 'Caveat', cursive; color: #0033cc; font-size: 1.8rem; vertical-align: bottom; font-weight: bold; }
+            .dots-fill { border-bottom: 2px solid #000; flex-grow: 1; min-height: 32px; display: inline-block; margin-left: 5px; position: relative; }
+            .label-main { font-size: 1.2rem; color: #000; font-weight: 500; white-space: nowrap; }
+            .header-title { text-align: center; font-size: 2.8rem; font-weight: bold; margin-bottom: 0; letter-spacing: 3px; }
+            .spv-box-outer { border: 2px solid #000; width: 160px; padding: 8px; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+            .spv-sq { width: 120px; height: 45px; border: 2px solid #000; margin: 2px 0; }
+            .border-bottom-form-bold { border-bottom: 3px solid #000; }
+            .border-end-form { border-right: 2px solid #000; }
+            .super-small { font-size: 8px; text-transform: uppercase; color: #000; }
+        </style>
+
+        <div id="printArea" class="fade-in py-5 bg-secondary bg-opacity-10" style="min-height: 100vh; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <div class="d-inline-flex min-w-100 justify-content-center p-3" style="min-width: 1450px;">
+                <div class="landscape-sheet">
+                    <div class="inner-border">
+                    <!-- ROW 1: HEADER -->
+                    <div class="row align-items-start mb-2">
+                        <div class="col-4"></div>
+                        <div class="col-4 text-center">
+                            <h1 class="header-title">NOW I'M PRODUCE :</h1>
+                        </div>
+                        <div class="col-4 text-end">
+                            <table style="width: 300px; display: inline-table;">
+                                <tr><td style="width: 45%; background: #f8f9fa;">No. Dokumen</td><td>: @Model.DocumentNumber</td></tr>
+                                <tr><td style="background: #f8f9fa;">No. Revisi</td><td>: @Model.RevisionNumber</td></tr>
+                                <tr><td style="background: #f8f9fa;">Effective Date</td><td>: @Model.CreatedDate.ToString("dd.MM.yy")</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 1:1 PHOTO REPLICA: 3 COLUMN MAIN BLOCK -->
+                    <div class="row g-0 mt-2 mb-5 align-items-start">
+                        
+                        <!-- COLUMN 1: IDENTITIES -->
+                        <div class="col-4">
+                            <div class="d-flex flex-column gap-3 pe-4">
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">1. Hose Type</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-1.5deg);">: @Model.HoseType</span></div>
+                                </div>
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">2. Class</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-0.5deg);">: @Model.CustomerName</span></div>
+                                </div>
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">3. Dimension</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(1deg);">: ø @Model.Dimension</span></div>
+                                </div>
+                                <div class="d-flex align-items-end">
+                                    <span class="label-main" style="width: 130px;">4. Yarn</span>
+                                    <div class="dots-fill"><span class="hand-ink" style="position: absolute; left: 10px; bottom: 2px; transform: rotate(-1.5deg);">: @(Model.YarnActual ?? Model.Yarn)</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 2: DATE & TIMING -->
+                        <div class="col-4 px-3">
+                            <div class="d-flex align-items-end mb-4">
+                                <span class="label-main" style="font-size: 1.4rem;">Date</span>
+                                <div class="dots-fill text-center ms-3" style="width: 250px;"><span class="hand-ink" style="position: absolute; left: 20px; bottom: 2px; transform: rotate(-1deg);">: @Model.ProductionDate.ToString("dd.MM.yy")</span></div>
+                            </div>
+                            
+                            <div class="d-flex gap-3 align-items-start mb-4">
+                                <span class="fw-bold label-main" style="width: 100px; font-size: 1.4rem;">Dandori</span>
+                                <table style="width: 240px; border: 1px solid #000;">
+                                    <tr><th rowspan="2" style="width: 100px;"></th><th colspan="2" class="text-center">Waktu</th></tr>
+                                    <tr><th class="text-center">Awal</th><th class="text-center">Akhir</th></tr>
+                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Start Prod.</td><td class="text-center hand-ink" style="font-size:12px">@Model.DAI_Awal</td><td class="text-center hand-ink" style="font-size:12px">@Model.DAI_Akhir</td></tr>
+                                    <tr><td style="font-size: 9px; padding: 1px 4px;">Akhir Prod.</td><td class="text-center hand-ink" style="font-size:12px">@Model.DRAI_Awal</td><td class="text-center hand-ink" style="font-size:12px">@Model.DRAI_Akhir</td></tr>
+                                </table>
+                            </div>
+
+                            <div class="d-flex gap-3 align-items-start">
+                                <span class="fw-bold label-main" style="width: 100px; font-size: 1.4rem; padding-top: 10px;">Production</span>
+                                <table style="width: 180px; border: 1px solid #000; margin-top: 10px;">
+                                    <tr><th colspan="2" class="text-center">Waktu</th></tr>
+                                    <tr><th class="text-center">Awal</th><th class="text-center">Akhir</th></tr>
+                                    <tr><td class="text-center hand-ink" style="height: 30px; vertical-align:middle; font-size:14px">@Model.DAC_Awal</td><td class="text-center hand-ink" style="height: 30px; vertical-align:middle; font-size:14px">@Model.DAC_Akhir</td></tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 3: TARGET TABLES -->
+                        <div class="col-4 ps-5">
+                            <div class="mb-4">
+                                <div class="fw-bold mb-1" style="font-size: 9px; letter-spacing: 0.5px;">CHS 2 L DANDORY TARGET</div>
+                                <table style="width: 100%; text-align: center; font-size: 7px;">
+                                    <tr class="fw-bold"><td>TARGET TIME</td><td>DIES</td><td>MATERIAL</td><td>BENANG</td></tr>
+                                    <tr><td>20 Minute</td><td>O</td><td>O</td><td>-</td></tr>
+                                    <tr><td>40 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                    <tr><td>55 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                </table>
+                            </div>
+                            <div>
+                                <div class="fw-bold mb-1" style="font-size: 9px; letter-spacing: 0.5px;">CHS 3 L DANDORY TARGET</div>
+                                <table style="width: 100%; text-align: center; font-size: 7px;">
+                                    <tr class="fw-bold"><td>TARGET TIME</td><td>DIES</td><td>MATERIAL</td><td>BENANG</td></tr>
+                                    <tr><td>30 Minute</td><td>O</td><td>O</td><td>-</td></tr>
+                                    <tr><td>45 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                    <tr><td>60 Minute</td><td>O</td><td>O</td><td>O</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 3: MATERIAL LIST WIDE -->
+                    <div class="mt-5 border-top border-dark pt-3">
+                        <h5 class="fw-bold mb-4" style="font-size: 1.5rem;">Material :</h5>
+                        <div class="d-flex flex-column gap-4">
+                            <div class="d-flex align-items-end">
+                                <span class="label-main" style="width: 110px;">1) Inner :</span>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@(Model.InnerMaterialActual ?? Model.InnerMaterial)</span></div>
+                                <span class="label-main mx-4">No.Lot :</span>
+                                <div class="dots-fill ps-3" style="min-width: 300px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var innerLots = Model.MaterialLots.Where(x => x.LayerType == "INNER").Select(x => x.LotNumber).ToList();
+                                            var innerShow = innerLots.Any() ? string.Join(", ", innerLots) : Model.InnerMaterialLotNo;
+                                        }
+                                        @innerShow
+                                    </span>
+                                </div>
+                                <span class="label-main mx-4">SG :</span>
+                                <div class="dots-fill ps-3" style="min-width: 150px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var innerSGs = Model.MaterialLots.Where(x => x.LayerType == "INNER" && x.SGValue.HasValue).Select(x => x.SGValue!.Value).ToList();
+                                            var innerSGShow = innerSGs.Any() ? ((decimal)innerSGs.Average()).ToString("0.000") : (Model.InnerMaterialSG?.ToString("0.000") ?? "-");
+                                        }
+                                        @innerSGShow
+                                    </span>
+                                </div>
+                            </div>
+                            @{
+                                var middleLots = Model.MaterialLots.Where(x => x.LayerType == "MIDDLE").Select(x => x.LotNumber).ToList();
+                                var middleShow = middleLots.Any() ? string.Join(", ", middleLots) : Model.MiddleMaterialLotNo;
+                                var middleSGs = Model.MaterialLots.Where(x => x.LayerType == "MIDDLE" && x.SGValue.HasValue).Select(x => x.SGValue!.Value).ToList();
+                                var middleSGShow = middleSGs.Any() ? ((decimal)middleSGs.Average()).ToString("0.000") : (Model.MiddleMaterialSG?.ToString("0.000") ?? "-");
+                                var hasMiddle = !string.IsNullOrWhiteSpace(middleShow) || !string.IsNullOrWhiteSpace(Model.MiddleMaterial) || !string.IsNullOrWhiteSpace(Model.MiddleMaterialActual);
+                            }
+                            <div class="d-flex align-items-end @(!hasMiddle ? "opacity-25" : "")">
+                                <span class="label-main" style="width: 110px;">2) Middle :</span>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@(Model.MiddleMaterialActual ?? Model.MiddleMaterial)</span></div>
+                                <span class="label-main mx-4">No.Lot :</span>
+                                <div class="dots-fill ps-3" style="min-width: 300px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">@middleShow</span>
+                                </div>
+                                <span class="label-main mx-4">SG :</span>
+                                <div class="dots-fill ps-3" style="min-width: 150px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">@(hasMiddle ? middleSGShow : "")</span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end">
+                                <span class="label-main" style="width: 110px;">3) Outer :</span>
+                                <div class="dots-fill ps-3" style="min-width: 350px;"><span class="hand-ink">@(Model.OuterMaterialActual ?? Model.OuterMaterial)</span></div>
+                                <span class="label-main mx-4">No.Lot :</span>
+                                <div class="dots-fill ps-3" style="min-width: 300px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var outerLots = Model.MaterialLots.Where(x => x.LayerType == "OUTER").Select(x => x.LotNumber).ToList();
+                                            var outerShow = outerLots.Any() ? string.Join(", ", outerLots) : Model.OuterMaterialLotNo;
+                                        }
+                                        @outerShow
+                                    </span>
+                                </div>
+                                <span class="label-main mx-4">SG :</span>
+                                <div class="dots-fill ps-3" style="min-width: 150px;">
+                                    <span class="hand-ink" style="font-size: 1.2rem;">
+                                        @{
+                                            var outerSGs = Model.MaterialLots.Where(x => x.LayerType == "OUTER" && x.SGValue.HasValue).Select(x => x.SGValue!.Value).ToList();
+                                            var outerSGShow = outerSGs.Any() ? ((decimal)outerSGs.Average()).ToString("0.000") : (Model.OuterMaterialSG?.ToString("0.000") ?? "-");
+                                        }
+                                        @outerSGShow
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 4: FOOTER WIDE -->
+                    <div class="row mt-5 pt-5 align-items-end">
+                        <div class="col-12">
+                            <div class="fw-bold mb-1" style="font-size: 13px;">NOTE :</div>
+                            <div style="font-size: 13px; border: 1px solid #000; padding: 15px; width: 100%; min-height: 80px;">
+                                JANGAN MENJALANKAN PRODUKSI SEBELUM CHECKSHEET INI DI CHECK OLEH SUPERVISOR.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <!-- Grid Dimension Table dari Gambar 2 -->
-            <div class="row g-0 border border-dark border-2">
-                <div class="col-md-8 border-end border-dark">
-                    <table class="table table-bordered border-dark small-table text-center mb-0">
+        </div>
+    </div>
+    }
+    else if (currentPortal == "dimension")
+    {
+        <div id="printArea" class="hud-container fade-in">
+            <!-- PORTAL 2: DIMENSION (App Sync Layout) -->
+            <div class="content-card shadow-2xl mx-auto mb-4" style="background: rgba(15, 23, 42, 0.8); border: 2px solid var(--accent-blue); border-radius: 12px; overflow: hidden;">
+                <!-- 2. META INFO BAR (Now as Header) -->
+                <div class="row g-0 border-bottom-cyber px-3 py-3" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); font-size: 11px;">
+                    <div class="col-3"><span class="text-info fw-bold">NO DOC :</span> <span class="text-white">@Model.DocumentNumber</span></div>
+                    <div class="col-2"><span class="text-info fw-bold">REVISI :</span> <span class="text-white">@Model.RevisionNumber</span></div>
+                    <div class="col-3"><span class="text-info fw-bold">DATE :</span> <span class="text-white">@Model.ProductionDate.ToString("dd/MMM/yyyy")</span></div>
+                    <div class="col-2"><span class="text-info fw-bold">SHIFT :</span> <span class="text-white">@Model.Shift</span></div>
+                    <div class="col-2 text-end"><span class="text-warning fw-extra-bold fs-6">@Model.HoseType / @Model.Dimension</span></div>
+                </div>
+
+                <!-- 3. MAIN DATA TABLE (Fixed Pukul/Jam Matrix) -->
+                <div class="p-0">
+                    <table class="data-table w-100 text-center" style="border-collapse: collapse;">
                         <thead>
-                            <tr>
-                                <th style="width: 150px;">POINT</th>
-                                <th style="width: 80px;">STD</th>
-                                <th>INIT</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                            <tr style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 10px;">
+                                <th colspan="4" class="py-1 border-bottom border-primary border-opacity-25 tracking-widest fw-black text-center text-uppercase text-nowrap">PUKUL / JAM</th>
+                                @for(int i=0; i<6; i++) {
+                                    <th class="p-0 border border-primary border-opacity-25" style="height: 25px;">
+                                        <input type="text" class="w-100 h-100 border-0 text-center bg-transparent text-info fw-bold" style="font-size: 10px;" placeholder="00:00" />
+                                    </th>
+                                }
+                            </tr>
+                            <tr style="background: rgba(30, 41, 59, 0.7); color: #94a3b8; font-size: 9px;">
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">POINT</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">FREKUENSI</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle">STD DIMENSI</th>
+                                <th class="p-2 border border-primary border-opacity-25 align-middle" style="width: 70px;">SCALE</th>
+                                <th class="p-1 border border-primary border-opacity-25" style="width: 75px;">INITIAL</th>
+                                @for(int i=1; i<=5; i++) {
+                                    <th class="p-1 border border-primary border-opacity-25">@i</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td>Inner Dia.</td><td class="fw-bold">11.0±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
-                            <tr><td>Inner Thick.</td><td class="fw-bold">1.8±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
-                            <tr><td>Total Thick.</td><td class="fw-bold">3.3±0.2</td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td><td><input class="log-input"/></td></tr>
+                            @{
+                                var master = _context.MasterlistSpsDoubleLayers.FirstOrDefault(m => m.HoseType == Model.HoseType);
+                                var stdVal = Model.StandardParameterSetting;
+
+                                // Helpers for robust parsing
+                                decimal D(string? s, decimal def) {
+                                    if (string.IsNullOrEmpty(s)) return def;
+                                    var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                                    return (matches.Count > 0) ? decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture) : def;
+                                }
+                                decimal DTol(string? s, decimal def) {
+                                    if (string.IsNullOrEmpty(s)) return def;
+                                    var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+                                    if (matches.Count == 0) return def;
+                                    decimal val = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    return (val > 2.0m) ? def : val;
+                                }
+
+                                // PRIORITY: SPS (stdVal) > Masterlist > Default
+                                decimal idNom = (stdVal?.InnerDie > 0) ? stdVal.InnerDie : D(master?.Dimensi, 11.0m);
+                                decimal idTol = (stdVal?.ToleranceDie > 0) ? stdVal.ToleranceDie : DTol(master?.ToleranceInner, 0.1m);
+                                decimal tubeNom = (stdVal?.TubeDie > 0) ? stdVal.TubeDie : D(master?.TebalInner, 1.8m);
+                                decimal tubeTol = (stdVal?.Tol_TubeDie > 0) ? stdVal.Tol_TubeDie : DTol(master?.ToleranceOuter, 0.2m);
+                                decimal coverNom = (stdVal?.CoverDie > 0) ? stdVal.CoverDie : D(master?.TebalTotal, 3.3m);
+                                decimal coverTol = (stdVal?.Tol_CoverDie > 0) ? stdVal.Tol_CoverDie : DTol(master?.ToleranceOuter, 0.2m);
+
+                                var sections = new[] {
+                                    new { Label = "Inner Diameter", Nom = idNom, Tol = idTol, Prop = "InnerDiameter" },
+                                    new { Label = "In Thick (X)", Nom = tubeNom, Tol = tubeTol, Prop = "InnerThicknessX" },
+                                    new { Label = "In Thick (Y)", Nom = tubeNom, Tol = tubeTol, Prop = "InnerThicknessY" },
+                                    new { Label = "Total Thick (X)", Nom = coverNom, Tol = coverTol, Prop = "TotalThicknessX" },
+                                    new { Label = "Total Thick (Y)", Nom = coverNom, Tol = coverTol, Prop = "TotalThicknessY" }
+                                };
+                            }
+
+                            @foreach(var sec in sections) {
+                                for(int rIdx=0; rIdx<5; rIdx++) {
+                                    decimal scaleValue = sec.Nom + (sec.Tol - (sec.Tol * 0.5m * rIdx));
+                                    <tr style="height: 22px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
+                                        @if(rIdx == 0) {
+                                            <td rowspan="5" class="p-1 border-end border-primary border-opacity-25 text-start fw-bold text-info" style="font-size: 10px;">@sec.Label</td>
+                                            <td rowspan="5" class="border-end border-primary border-opacity-25 text-white-50" style="font-size: 8px;">30m Sekali</td>
+                                            <td rowspan="5" class="border-end border-primary border-opacity-25 p-0" style="background: rgba(0,0,0,0.2);">
+                                                <div style="display: flex; height: 100%; min-height: 100px; align-items: stretch;">
+                                                    <!-- Legend Ref -->
+                                                    <div style="width: 45px; background: rgba(30, 41, 59, 0.6); border-right: 1px solid rgba(59, 130, 246, 0.2); font-size: 8px; font-family: monospace; display: flex; flex-direction: column; justify-content: space-around; text-align: right; padding-right: 3px; line-height: 1; color: #94a3b8;">
+                                                        <div>@((sec.Nom + sec.Tol).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                        <div>@((sec.Nom + sec.Tol/2).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                        <div style="color: #fff; font-weight: bold;">@sec.Nom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)</div>
+                                                        <div>@((sec.Nom - sec.Tol/2).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                        <div>@((sec.Nom - sec.Tol).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</div>
+                                                    </div>
+                                                    <!-- Main Display -->
+                                                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 10px; color: #fbbf24; text-align: center; padding: 2px;">
+                                                        @sec.Nom.ToString("0.0") ± @sec.Tol.ToString("0.0")
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        }
+                                        <td class="border-end border-primary border-opacity-25 bg-white-5" style="font-size: 9px; color: #94a3b8;">@scaleValue.ToString("0.00")</td>
+                                        @for(int h=0; h<6; h++) {
+                                            var reading = h < readings.Count ? readings[h] : null;
+                                            var val = (reading != null) ? (decimal?)reading.GetType().GetProperty(sec.Prop)?.GetValue(reading) : null;
+                                            bool isMatch = val != null && Math.Abs(val.Value - scaleValue) < (sec.Tol * 0.26m);
+                                            
+                                            <td class="border-end border-primary border-opacity-25 p-0 position-relative @(isMatch ? "bg-info-glow" : "")">
+                                                @if(isMatch) { <span class="val-display" style="font-size: 10px; font-weight: 800; color: white; text-shadow: 0 0 5px #3b82f6;">@val?.ToString("0.00")</span> }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+
+                            <!-- Spiral & Visual -->
+                            <tr style="height: 40px; border-top: 2px solid rgba(59, 130, 246, 0.3);">
+                                <td class="p-2 text-start fw-bold text-info" style="font-size: 11px;">Spiral Pitch</td>
+                                <td class="text-white-50" style="font-size: 9px;">30m Sekali</td>
+                                <td class="text-warning fw-bold" style="font-size: 11px;">
+                                    @{
+                                        string spiralStr = master?.ToleranceSpiralPitch ?? $"{stdVal?.SpiralPitch ?? 38} ± {stdVal?.Tol_SpiralPitch ?? 5}";
+                                    }
+                                    @spiralStr
+                                </td>
+                                <td class="bg-white-5" style="font-size: 10px;">NOM</td>
+                                @for(int h=0; h<6; h++) {
+                                    var r = h < readings.Count ? readings[h] : null;
+                                    <td class="border-start border-primary border-opacity-25 text-white fw-bold">@r?.SpiralPitch?.ToString("0.0")</td>
+                                }
+                            </tr>
+                            <tr style="height: 45px; border-top: 1px solid rgba(59, 130, 246, 0.3);">
+                                <td class="p-2 text-start fw-bold text-info" style="font-size: 11px;">Visual Check</td>
+                                <td class="text-white-50" style="font-size: 9px;">30m Sekali</td>
+                                <td colspan="2" class="text-start ps-2 py-1 lh-1 text-white-50" style="font-size: 9px; opacity: 0.7;">No Burry, No Line, No Bubble, No Scratch</td>
+                                @for(int h=0; h<6; h++) {
+                                    var r = h < readings.Count ? readings[h] : null;
+                                    <td class="border-start border-primary border-opacity-25 @(r?.VisualCheck == "NG" ? "text-danger" : "text-success") fw-black">@r?.VisualCheck</td>
+                                }
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                <!-- Right Side: Qty Status -->
-                <div class="col-md-4 p-3 bg-light">
-                    <div class="mb-3">
-                        <label class="fw-bold extra-small text-muted d-block">VIN KODE</label>
-                        <div class="fs-5 fw-bold">@Model.VinCode</div>
+
+                <!-- 4. FOOTER NOTE & ATTENTION -->
+                <div class="row g-0 border-top-cyber" style="background: rgba(15, 23, 42, 0.5);">
+                    <div class="col-7 p-2 border-end border-primary border-opacity-25 text-start">
+                        <span class="text-info extra-small opacity-50">Note :</span>
+                        <div class="text-white-50 font-size-8 ms-2 mt-1">@Model.Remark</div>
                     </div>
-                    <div class="row g-2">
-                        <div class="col-6"><label class="extra-small">QTY TARGET</label><div class="fw-bold border-bottom border-dark">@Model.QtyTarget pcs</div></div>
-                        <div class="col-6"><label class="extra-small">QTY OK</label><input type="number" class="form-control form-control-sm border-success text-success fw-bold" value="@Model.QtyOk" /></div>
-                        <div class="col-6"><label class="extra-small text-danger">NG DIMENSI</label><input type="number" class="form-control form-control-sm border-danger text-danger" value="@Model.NgDimension" /></div>
-                        <div class="col-6"><label class="extra-small text-danger">NG VISUAL</label><input type="number" class="form-control form-control-sm border-danger text-danger" value="@Model.NgVisual" /></div>
+                    <div class="col-5 p-2 text-start">
+                        <div class="text-warning extra-small opacity-75">Attention :</div>
+                        <div class="text-white-50 font-size-7 ps-2 mt-1 lh-sm">
+                            1. Operator wajib menggunakan APD lengkap<br/>
+                            2. Periksa Dies Sebelum dan sesudah proses<br/>
+                            3. Parameter harus sesuai Standard Parameter Setting (SPS)
+                        </div>
                     </div>
                 </div>
+            </div>
+
+
+        </div>
+    }
+    else
+    {
+        <!-- ============================================= -->
+        <!-- PORTAL 1: PARAMETER SETTING (Modern HUD)      -->
+        <!-- ============================================= -->
+        <div id="printArea" class="bg-white p-2" style="overflow-x: auto;">
+            <div class="paper-replica shadow-2xl mx-auto mb-5 p-0">
+            <div class="text-uppercase" style="font-size: 10px;">
+                
+                <!-- 1. HEADER & INFO SECTION -->
+                <div class="border-form-bold mb-2 bg-white text-dark">
+                    <!-- TOP ROW -->
+                    <div class="row g-0 border-bottom-form-bold">
+                        <!-- Logo -->
+                        <div class="col-3 border-end-form p-2 d-flex align-items-center justify-content-center">
+                             <img src="/images/velasto-logo-e1700056160273.png" crossorigin="anonymous" alt="Velasto Logo" style="height: 45px; object-fit: contain;" />
+                        </div>
+                        <!-- Title -->
+                        <div class="col-5 border-end-form p-2 d-flex flex-column justify-content-center align-items-center text-center">
+                            <h6 class="fw-bold mb-1" style="font-size: 16px; letter-spacing: 0.5px;">Extruder Production Report</h6>
+                            <div class="fw-bold" style="font-size: 14px;">(Parameter Setting)</div>
+                        </div>
+                        <!-- Signature Block -->
+                        <div class="col-4">
+                            <table class="w-100 h-100 text-center m-0 border-0" style="font-size: 10px; table-layout: fixed;">
+                                <tr style="height: 20px;">
+                                    <td class="border-end-form border-bottom-form align-middle">Disetujui</td>
+                                    <td class="border-end-form border-bottom-form align-middle">Diperiksa</td>
+                                    <td class="border-bottom-form align-middle">Dibuat</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-end-form border-bottom-form cursor-pointer align-middle" style="height: 35px;" onclick="openApprovalModal('FOREMAN')">
+                                        @if(!string.IsNullOrEmpty(Model.ApprovedBy)) {
+                                            <div class="fw-black text-primary" style="font-size: 12px; letter-spacing: 1px;">@Model.ApprovedBySignature</div>
+                                            <div style="font-size: 8px; color: #666;">@Model.ApprovedDate?.ToString("dd/MM HH:mm")</div>
+                                        } else {
+                                            <span class="text-muted opacity-25"><i class="bi bi-pencil"></i></span>
+                                        }
+                                    </td>
+                                    <td class="border-end-form border-bottom-form cursor-pointer align-middle" onclick="openApprovalModal('LEADER')">
+                                        @if(!string.IsNullOrEmpty(Model.CheckedBy)) {
+                                            <div class="fw-black text-primary" style="font-size: 11px;">@Model.CheckedBySignature</div>
+                                            <div style="font-size: 8px; color: #666;">@Model.CheckedDate?.ToString("dd/MM HH:mm")</div>
+                                        } else {
+                                            <span class="text-muted opacity-25"><i class="bi bi-pencil"></i></span>
+                                        }
+                                    </td>
+                                    <td class="border-bottom-form align-middle">
+                                        <div class="fw-black text-dark">@Model.CreatedBy?.ToUpper()</div>
+                                        <div style="font-size: 8px; color: #666;">@Model.CreatedDate.ToString("dd/MM HH:mm")</div>
+                                    </td>
+                                </tr>
+                                <tr style="height: 15px;">
+                                    <td class="border-end-form">Foreman</td>
+                                    <td class="border-end-form">Leader</td>
+                                    <td>Operator</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- BOTTOM ROW -->
+                    <div class="row g-0 h-100">
+                        <!-- Info Block (No. Doc, Date, etc.) -->
+                        <div class="col-5 border-end-form">
+                            <table class="w-100 m-0 border-0 text-start fw-bold" style="font-size: 10px;">
+                                <tr>
+                                    <td style="width: 80px;" class="border-bottom-form py-1 ps-2">NO. DOC.</td>
+                                    <td style="width: 15px;" class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-primary">@Model.DocumentNumber</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">PART NO.</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-info">@(Model.StandardParameterSetting?.ProductCode ?? "-")</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">DATE</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2">
+                                        <input type="text" class="input-transparent text-start w-100 text-dark fw-bold ps-1" value='@(Model.ProductionDate.ToString("dd MMM yyyy"))' />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">SHIFT / OP</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1">@Model.Shift / @Model.CreatedBy</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">CUST.</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1">@(string.IsNullOrEmpty(Model.CustomerName) ? "-" : Model.CustomerName)</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-bottom-form py-1 ps-2">TIPE</td>
+                                    <td class="border-bottom-form py-1 text-center">:</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1">@Model.HoseType @Model.Dimension</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1 ps-2">LAYER</td>
+                                    <td class="py-1 text-center">:</td>
+                                    <td class="py-1 pe-2 ps-1">@(Model.StandardParameterSetting?.LayerType ?? "-")</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- EMBEL/LEMBAR Block -->
+                        <div class="col-1 border-end-form d-flex align-items-center justify-content-center p-0">
+                            <table class="p-0 border-form m-0 text-center" style="width: 45px; font-size: 8px;">
+                                <tr><td class="border-bottom-form bg-light p-0">EMBEL</td></tr>
+                                <tr><td class="fw-bold p-0">1</td></tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Revision Table -->
+                        <div class="col-6">
+                            <table class="w-100 h-100 m-0 border-0 text-center align-middle" style="font-size: 9px; table-layout: fixed;">
+                                <tr class="border-bottom-form" style="height: 22px;">
+                                    <td class="border-end-form" style="width: 25%;">No. Rev.</td>
+                                    <td class="border-end-form" style="width: 50%;">Description</td>
+                                    <td style="width: 25%;">Date</td>
+                                </tr>
+                                <tr class="border-bottom-form"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                                <tr class="border-bottom-form"><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                                <tr><td class="border-end-form"></td><td class="border-end-form"></td><td></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-0 border-form mb-0 border-top-0" style="background: #fafafa;">
+                    <div class="col-12 p-2">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-list-ul text-primary"></i>
+                            <span class="fw-black text-dark" style="font-size: 10px; letter-spacing: 0.5px;">MATERIAL LOT TRACKING (FULL HISTORY)</span>
+                        </div>
+                        <table class="w-100 grid-form border-0 text-center" style="font-size: 9px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #e9ecef;">
+                                    <th class="ps-2 text-start">LAYER</th>
+                                    <th>MATERIAL NAME</th>
+                                    <th>ACTUAL BATCH</th>
+                                    <th>LOT NUMBER</th>
+                                    <th class="border-end-0">SG VALUE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MaterialLots.Any()) {
+                                    @foreach (var lot in Model.MaterialLots.OrderBy(x => x.LayerType)) {
+                                        <tr>
+                                            <td class="ps-2 text-start fw-bold text-dark">@lot.LayerType</td>
+                                            <td class="text-start ps-2">@lot.MaterialName</td>
+                                            <td class="text-start ps-2">@lot.MaterialActual</td>
+                                            <td class="fw-bold text-dark">@lot.LotNumber</td>
+                                            <td class="border-end-0 fw-bold">@(lot.SGValue?.ToString("0.000") ?? "-")</td>
+                                        </tr>
+                                    }
+                                } else {
+                                    <tr>
+                                        <td colspan="5" class="p-2 text-muted italic">--- NO DYNAMIC LOTS RECORDED ---</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. TOP GRID (Material, Dies, Mesh) -->
+                <div class="row g-0 border-form mb-0">
+                    <!-- MATERIAL & DIES -->
+                    <div class="col-6 border-end-form">
+                         <table class="w-100 grid-form border-0">
+                            <!-- MATERIAL SECTION -->
+                            <tr>
+                                <th rowspan="4" class="align-middle text-center p-0" style="background:#f0f0f0; width: 30px;">
+                                    <div style="font-size: 9px; line-height: 1.1; font-weight: 800; letter-spacing: 1px;">M<br/>A<br/>T<br/>E<br/>R<br/>I<br/>A<br/>L</div>
+                                </th>
+                                <th colspan="2" style="background:#f0f0f0; border-bottom: 0; width: 120px;"></th>
+                                <th style="background:#f0f0f0; width: 95px;" class="text-center">STANDARD</th>
+                                <th colspan="3" style="background:#f0f0f0; width: 130px;" class="text-center border-end-0">ACTUAL</th>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
+                                <td class="text-center">@(Model.InnerMaterial ?? "-")</td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="text-start ps-2">OUTER(MATERIAL)</td>
+                                <td class="text-center">@(Model.OuterMaterial ?? "-")</td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="text-start ps-2">YARN</td>
+                                <td class="text-center">ARAMID</td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
+                            </tr>
+                            
+                            @{
+                                var mSps = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                                string FDie(string? fromSps, decimal stdVal, string hardcode) {
+                                    if (!string.IsNullOrEmpty(fromSps) && fromSps != "-" && fromSps != "0") return fromSps;
+                                    if (stdVal != 0) return stdVal.ToString();
+                                    return hardcode;
+                                }
+                            }
+                            <!-- DIES DIMENSION SECTION -->
+                            <tr class="border-top-form">
+                                <th width="30" rowspan="7" class="align-middle text-center p-0" style="background:#f0f0f0;">
+                                    <div style="font-size: 8px; line-height: 1.0; font-weight: 800;">D<br/>I<br/>E<br/>S<br/><br/>D<br/>I<br/>M<br/>E<br/>N<br/>S<br/>I<br/>O<br/>N</div>
+                                </th>
+                                <th style="background:#f0f0f0; width: 110px;" class="text-start ps-2">DIES</th>
+                                <th style="background:#f0f0f0; width: 115px;" class="text-center">CEK VISUAL</th>
+                                <th style="background:#f0f0f0; width: 80px;" class="text-center">STANDARD</th>
+                                <th colspan="2" style="background:#f0f0f0;" class="text-center">BEFORE</th>
+                                <th style="background:#f0f0f0; width: 60px; border-right: 0 !important;" class="text-center">AFTER</th>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø NIPPLE DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.NippleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.NippleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@FDie(mSps?.Nipple, std.InnerDie, "8.8±0.1")</td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.NippleDieInitial == "0" ? "" : Model.NippleDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.NippleDieFinal" placeholder="" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø TUBE DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.TubeDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.TubeDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@FDie(mSps?.TubeDie, std.TubeDie, "11.1±0.1")</td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.TubeDieInitial == "0" ? "" : Model.TubeDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.TubeDieFinal" placeholder="" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø MIDDLE DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@FDie(null, std.MiddleDie, "14.2±0.1")</td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.MiddleDieInitial == "0" ? "" : Model.MiddleDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.MiddleDieFinal" placeholder="" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø COVER DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.CoverDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.CoverDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@FDie(mSps?.CoverDie, std.CoverDie, "15.1±0.1")</td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.CoverDieInitial == "0" ? "" : Model.CoverDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.CoverDieFinal" placeholder="" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Ø SPACER DIE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@FDie(null, std.SpacerDie, "7.3±0.1")</td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.SpacerDieInitial == "0" ? "" : Model.SpacerDieInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.SpacerDieFinal" placeholder="" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">A DISTANCE</td>
+                                <td class="p-0 align-middle">
+                                    <div class="d-flex justify-content-center gap-1 align-items-center h-100" style="font-size: 10px;">
+                                        <label class="mb-0 d-flex align-items-center gap-1">OK <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                        <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
+                                    </div>
+                                </td>
+                                <td class="text-center">@FDie(null, std.ToleranceDie, "0.4±0.1")</td>
+                                <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.ToleranceInitial == "0" ? "" : Model.ToleranceInitial)" placeholder="" /></td>
+                                <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.ToleranceFinal" placeholder="" /></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <!-- MESH & EMBOSS -->
+                    <div class="col-6">
+                        <table class="w-100 grid-form border-0 h-100">
+                            <!-- Header -->
+                            <tr>
+                                <th width="80" style="background:#f0f0f0;" class="border-end-0"></th>
+                                <th width="80" style="background:#f0f0f0;" class="text-start ps-2 border-start-0">Content</th>
+                                <th style="background:#f0f0f0;" class="text-center">Ø96 #10</th>
+                                <th colspan="2" style="background:#f0f0f0;" class="text-center border-end-0">Ø96 #40</th>
+                            <!-- Tipe Mesh -->
+                            <tr>
+                                <td rowspan="2" class="align-middle text-center p-1" style="background-color: #f4f4f4; font-size: 11px;">Tipe Mesh<br/>(Sebelum<br/>Proses)</td>
+                                <td class="text-start ps-2">Inner</td>
+                                <td class="p-0 align-middle text-center">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInner10Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInner40Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Outer</td>
+                                <td class="p-0 align-middle text-center">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuter10Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
+                                <td colspan="2" class="p-0 align-middle text-center border-end-0">
+                                    <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuter40Before ? "checked" : "") style="width:14px; height:14px; cursor:default;" onclick="return false;">
+                                </td>
+                            </tr>
+
+                            <!-- Mesh Checking -->
+                            <tr class="border-top-form">
+                                <td rowspan="2" class="align-middle text-center p-1" style="background-color: #f4f4f4; font-size: 11px;">Mesh<br/>Checking<br/>(Setelah<br/>Proses)</td>
+                                <td class="text-start ps-2">Inner</td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInnerCheck == "OK" ? "checked" : "") style="width:13px; height:13px;"> OK</label>
+                                </td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInnerCheck == "BOLONG" ? "checked" : "") style="width:13px; height:13px;"> Bolong</label>
+                                </td>
+                                <td class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshInnerCheck == "ASING" ? "checked" : "") style="width:13px; height:13px;"> Material Asing</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Outer</td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuterCheck == "OK" ? "checked" : "") style="width:13px; height:13px;"> OK</label>
+                                </td>
+                                <td class="p-0 align-middle px-2">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuterCheck == "BOLONG" ? "checked" : "") style="width:13px; height:13px;"> Bolong</label>
+                                </td>
+                                <td class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.MeshOuterCheck == "ASING" ? "checked" : "") style="width:13px; height:13px;"> Material Asing</label>
+                                </td>
+                            </tr>
+
+                            <!-- Emboss Marking -->
+                            <tr class="border-top-form">
+                                <td rowspan="5" class="align-middle text-center p-1 border-bottom-0" style="background-color: #f4f4f4; font-size: 11px;">Emboss<br/>Marking<br/>Check<br/>(Setelah<br/>Proses)</td>
+                                <td class="text-start ps-2">Text</td>
+                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" value="@Model.EmbossMarkContent" placeholder="~" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Date</td>
+                                <td colspan="3" class="p-0 align-middle border-end-0"><input type="text" class="input-transparent w-100 h-100 px-2 text-start text-dark fw-bold" value="@(Model.EmbossMarkDate?.ToString("dd.MM.yy") ?? Model.ProductionDate.ToString("dd.MM.yy"))" placeholder="~" /></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Condition</td>
+                                <td colspan="1" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcCond == "BERSIH" ? "checked" : "") style="width:13px; height:13px;"> Bersih</label>
+                                </td>
+                                <td colspan="2" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcCond == "KOTOR" ? "checked" : "") style="width:13px; height:13px;"> Kotor</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2">Surface</td>
+                                <td colspan="1" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcSurf == "OK" ? "checked" : "") style="width:13px; height:13px;"> OK</label>
+                                </td>
+                                <td colspan="2" class="p-0 align-middle px-2 border-end-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcSurf == "SCRATCH" ? "checked" : "") style="width:13px; height:13px;"> Scratch</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-2 border-bottom-0">Text</td>
+                                <td colspan="1" class="p-0 align-middle px-2 border-end-0 border-bottom-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcRes == "READ" ? "checked" : "") style="width:13px; height:13px;"> Terbaca</label>
+                                </td>
+                                <td colspan="2" class="p-0 align-middle px-2 border-end-0 border-bottom-0">
+                                    <label class="mb-0 d-flex align-items-center gap-1" style="font-size: 11px;"><input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(Model.QcRes == "UNREAD" ? "checked" : "") style="width:13px; height:13px;"> Tdk Terbaca</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. TOTAL MONITORING MATRIX (Paper Theme) -->
+                <div class="table-responsive border border-dark mb-2">
+                    <table class="grid-form w-100 text-center m-0">
+                        <thead>
+                            <tr class="bg-light">
+                                <th colspan="2" style="width: 180px;" class="text-start ps-2 py-1">INSTRUMENT PARAMETER</th>
+                                <th style="width: 80px;">STANDARD</th>
+                                <th style="width: 80px;" class="bg-light text-dark">INITIAL</th>
+                                @for(int i=1; i<=7; i++) { <th style="width: 65px;">#@i</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- INNER SECTION -->
+                            @{
+                                var sMaster = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                                string F(string? strVal, decimal fallbackVal, string prefix, string suffix) {
+                                    string res = "-";
+                                    if (!string.IsNullOrWhiteSpace(strVal) && strVal != "-") {
+                                        if (strVal.Contains("±", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MAX", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MIN", StringComparison.OrdinalIgnoreCase)) {
+                                            res = strVal;
+                                        } else {
+                                            res = $"{prefix}{strVal}{suffix}";
+                                        }
+                                    } else if (fallbackVal > 0) {
+                                        res = $"{prefix}{fallbackVal}{suffix}";
+                                    }
+                                    return res;
+                                }
+
+                                string FormatVal(object? val, string unit) {
+                                    if (val == null) return "";
+                                    string vStr = "";
+                                    if (val is decimal d) vStr = d.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                                    else vStr = val.ToString() ?? "";
+                                    
+                                    if (string.IsNullOrWhiteSpace(vStr)) return "";
+                                    return vStr + (string.IsNullOrEmpty(unit) ? "" : $" {unit}");
+                                }
+
+                                var innerRows = new[] {
+                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = F(sMaster?.HeadTemp1, std.HeadTemp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = F(sMaster?.Cylinder1_1, std.Cylinder1Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = F(sMaster?.Cylinder2_1, std.Cylinder2Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = F(null, std.Cylinder3Temp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = F(sMaster?.ScrewTemp1, std.ScrewTemp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = F(sMaster?.ScrewSpeed1, std.ScrewSpeed, "", "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = F(sMaster?.Feed1, std.FeedRollRatio, "MAX ", ""), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureInner", S = F(sMaster?.Pressure1, std.Pressure, "MAX ", ""), U = "MPa" }
+                                };
+                            }
+                            @for(int r = 0; r < innerRows.Length; r++) {
+                                <tr>
+                                    @if(r == 0) { <td rowspan="@innerRows.Length" class="hud-vertical-label">INNER TUBE</td> }
+                                    <td class="text-start ps-2 pe-1 py-1 fw-bold">@innerRows[r].L @(string.IsNullOrEmpty(innerRows[r].U) ? "" : $"({innerRows[r].U})")</td>
+                                    <td class="small opacity-50 fw-bold">@innerRows[r].S</td>
+                                    <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + innerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()), innerRows[r].U)" /></td>
+                                    @for(int i=1; i<=7; i++) {
+                                        <td class="p-0">
+                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), innerRows[r].U)" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+
+                            <!-- OUTER SECTION -->
+                            <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
+                            @{
+                                var outerRows = new[] {
+                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder1Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2Temp, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder3Temp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, std.ScrewTemp, "", "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, std.ScrewSpeed, "", "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, std.FeedRollRatio, "MAX ", ""), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, std.Pressure, "MAX ", ""), U = "MPa" }
+                                };
+                            }
+                            @for(int r = 0; r < outerRows.Length; r++) {
+                                <tr>
+                                    @if(r == 0) { <td rowspan="@outerRows.Length" class="hud-vertical-label">OUTER COVER</td> }
+                                    <td class="text-start ps-2 pe-1 py-1 fw-bold">@outerRows[r].L @(string.IsNullOrEmpty(outerRows[r].U) ? "" : $"({outerRows[r].U})")</td>
+                                    <td class="small opacity-50 fw-bold">@outerRows[r].S</td>
+                                    <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + outerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()), outerRows[r].U)" /></td>
+                                    @for(int i=1; i<=7; i++) {
+                                        <td class="p-0">
+                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), outerRows[r].U)" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+
+                            <!-- SPIRAL & OTHERS -->
+                            <tr class="bg-secondary text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
+                            @{
+                                var otherRows = new[] {
+                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, std.SpiralSpeed, "", "±20"), U = "rpm" },
+                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(sMaster?.ToleranceSpiralPitch, std.SpiralPitch, "", "±5"), U = "mm" },
+                                    new { L = "PRESET VALVE", K = "PresetValue", S = F(null, std.PresetValve, "", ""), U = "mm" },
+                                    new { L = "CONTROL VAL.", K = "ControlValue", S = (std.ControlValue ?? "-"), U = "mm" },
+                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = (std.HoseSpeed ?? "-"), U = "m/min" },
+                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = (sMaster?.TakeUpConveyorSpeed ?? std.TakeupConveyorSpeed ?? "-"), U = "m/min" },
+                                    new { L = "COOL SPEED", K = "CoolConveyorSpeed", S = (std.CoolConveyorSpeed ?? "-"), U = "m/min" },
+                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = (std.ConveyorRatio ?? "-"), U = "%" },
+                                    new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = (sMaster?.ChillerWaterTemp ?? std.ChillerWaterTemp ?? "-"), U = "°C" },
+                                    new { L = "CATERPIL. GAP", K = "CaterpillarGap", S = (std.CaterpillarGap ?? "-"), U = "mm" },
+                                    new { L = "SURFACE", K = "UnsmoothSurface", S = F(null, std.UnsmoothSurface, "OK", ""), U = "" }
+                                };
+                            }
+                            @for(int r = 0; r < otherRows.Length; r++) {
+                                <tr>
+                                    @if(r == 0) { <td rowspan="@otherRows.Length" class="hud-vertical-label">MISC</td> }
+                                    <td class="text-start ps-2 pe-1 py-1 fw-bold">@otherRows[r].L @(string.IsNullOrEmpty(otherRows[r].U) ? "" : $"({otherRows[r].U})")</td>
+                                    <td class="small opacity-50 fw-bold">@otherRows[r].S</td>
+                                    <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + otherRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()), otherRows[r].U)" /></td>
+                                    @for(int i=1; i<=7; i++) {
+                                        <td class="p-0">
+                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), otherRows[r].U)" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 5. WASTE PERFORMANCE (Paper Theme) -->
+                <div class="row m-0">
+                    <div class="col-12 p-0">
+                        <table class="grid-form w-100 text-center m-0">
+                            <tbody>
+                                <tr class="bg-light">
+                                    <th rowspan="6" class="align-middle fw-bold text-center border-end-0 border-bottom-0" style="width: 30px; background: #f0f0f0;">
+                                        <div style="font-size: 9px; line-height: 1.1; font-weight: 800;">W<br/>A<br/>S<br/>T<br/>E</div>
+                                    </th>
+                                    <th colspan="2" class="align-middle py-2 border-end-0 text-uppercase" style="font-size: 0.75rem;">Initial Setting</th>
+                                    <th class="align-middle border-end-0 text-uppercase" style="width: 15%; font-size: 0.75rem;">Awal</th>
+                                    <th class="align-middle border-end border-dark text-uppercase" style="width: 15%; font-size: 0.75rem;">Akhir</th>
+                                    <th class="align-middle border-bottom-0 text-start ps-2 pt-2 text-uppercase" style="width: 30%; font-size: 0.75rem;">Note :</th>
+                                </tr>
+                                <tr class="bg-light">
+                                    <th colspan="2" class="align-middle py-2 border-end-0 text-uppercase" style="font-size: 0.75rem;">Berat (kg)</th>
+                                    <th class="align-middle border-end-0 border-bottom-0" style="background-color: #fff;"></th>
+                                    <th class="align-middle border-end border-dark border-bottom-0" style="background-color: #fff;"></th>
+                                    <td rowspan="5" class="align-top text-start text-dark p-2 border-bottom-0" style="font-size: 11px; background-color: #f8f9fa;">
+                                        Lakukan pengecekan parameter pada saat<br/>awal, tengah & akhir proses.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2" class="text-start ps-2 align-middle border-bottom-0 fw-bold border-end-0 text-uppercase" style="font-size: 0.7rem; width: 140px; background-color: #f8f9fa;">Dandori Awal<br/><span class="fw-normal">(Cleaning)</span></td>
+                                    <td class="text-start ps-2 border-end-0 text-uppercase" style="font-size: 0.7rem; width: 60px;">Inner</td>
+                                    <td class="p-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAI_Awal ?? Model.WasteInnerAwal?.ToString())" /></td>
+                                    <td class="p-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAI_Akhir ?? Model.WasteInnerAkhir?.ToString())" /></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-start ps-2 border-end-0 text-uppercase" style="font-size: 0.7rem;">Cover</td>
+                                    <td class="p-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAC_Awal ?? Model.WasteCoverAwal?.ToString())" /></td>
+                                    <td class="p-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DAC_Akhir ?? Model.WasteCoverAkhir?.ToString())" /></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2" class="text-start ps-2 align-middle border-bottom-0 fw-bold border-end-0 text-uppercase" style="font-size: 0.7rem; background-color: #f8f9fa;">Dandori Akhir<br/><span class="fw-normal">(Remain Material)</span></td>
+                                    <td class="text-start ps-2 border-end-0 text-uppercase" style="font-size: 0.7rem;">Inner</td>
+                                    <td class="p-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DRAI_Awal ?? Model.WasteWeightAwal?.ToString())" /></td>
+                                    <td class="p-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@(Model.DRAI_Akhir ?? Model.WasteWeightAkhir?.ToString())" /></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-start ps-2 border-bottom-0 border-end-0 text-uppercase" style="font-size: 0.7rem;">Cover</td>
+                                    <td class="p-0 border-bottom-0 border-end-0"><input type="text" class="input-transparent text-center h-100 py-1" value="@Model.DRAC_Awal" /></td>
+                                    <td class="p-0 border-bottom-0 border-end border-dark"><input type="text" class="input-transparent text-center h-100 py-1" value="@Model.DRAC_Akhir" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
             </div>
         </div>
     </div>
 
-    <!-- TAB 3: MATERIAL CHECK (Image 1) -->
-    <div class="tab-pane fade" id="material" role="tabpanel">
-        <div class="material-paper p-4 shadow-lg mb-5" style="background: #fff8f0; border: 1.5px solid #d4a373;">
-            <h5 class="fw-bold border-bottom border-dark pb-2 mb-3">INITIAL MATERIAL & SETUP (NOW I'M PRODUCE)</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-1"><b>Hose Type:</b> @Model.HoseType</p>
-                    <p class="mb-1"><b>Dimension:</b> @Model.Dimension</p>
-                    <p class="mb-1"><b>Yarn:</b> @Model.Yarn</p>
+    }
+</div>
+
+<!-- ============================================= -->
+<!-- MODALS FOR INPUT & SCANNER                    -->
+<!-- ============================================= -->
+
+<!-- (Scanner Modal Removed per user decision, kept exclusively for Create & Edit) -->
+
+<!-- (Legacy Input Modals Removed as they are handled in Edit View) -->
+
+
+<!-- MODAL FINISH PRODUCTION & WASTE -->
+<div class="modal fade no-print" id="finishProductionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content scanner-modal-glass border-0">
+            <div class="modal-header border-bottom border-danger border-opacity-25 pb-3">
+                <div class="d-flex align-items-center">
+                    <div class="hud-icon-box bg-danger bg-opacity-10 me-3"><i class="bi bi-flag-fill text-danger fs-3"></i></div>
+                    <div>
+                        <h4 class="modal-title text-white fw-black mb-0">PRODUCTION FINAL RECAP</h4>
+                        <div class="text-danger-50 small fw-bold">INPUT WASTE & SELESAIKAN PROSES</div>
+                    </div>
                 </div>
-                <div class="col-md-6 border-start border-dark border-opacity-10">
-                    <p class="mb-1 text-info"><b>Material Inner Lot:</b> @Model.InnerMaterialLotNo (SG: @Model.InnerMaterialSG)</p>
-                    <p class="mb-1 text-info"><b>Material Outer Lot:</b> @Model.OuterMaterialLotNo (SG: @Model.OuterMaterialSG)</p>
-                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+            <form asp-action="FinishProduction" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-body p-4 bg-hud-navy-dark">
+                    <div class="row g-4">
+                        <!-- WASTE SECTION -->
+                        <div class="col-12">
+                            <h6 class="text-white-50 border-bottom border-white border-opacity-10 pb-2 mb-3 fw-bold">DANDORY & WASTE (KG)</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3"><label class="hud-label">INNER AWAL</label><input name="WasteInnerAwal" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteInnerAwal" /></div>
+                                <div class="col-md-3"><label class="hud-label">INNER AKHIR</label><input name="WasteInnerAkhir" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteInnerAkhir" /></div>
+                                <div class="col-md-3"><label class="hud-label">COVER AWAL</label><input name="WasteCoverAwal" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteCoverAwal" /></div>
+                                <div class="col-md-3"><label class="hud-label">COVER AKHIR</label><input name="WasteCoverAkhir" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteCoverAkhir" /></div>
+                            </div>
+                        </div>
+
+                        <!-- RECAP SECTION -->
+                        <div class="col-12">
+                            <h6 class="text-white-50 border-bottom border-white border-opacity-10 pb-2 mb-3 fw-bold">FINAL ACCOMPLISHMENT</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4"><label class="hud-label text-info">Qty OK (Pcs/m)</label><input name="qtyOk" id="finish-ok" type="number" class="hud-input-lg w-100" value="@Model.QtyOk" /></div>
+                                <div class="col-md-4"><label class="hud-label text-warning">NG Dimension</label><input name="ngDim" id="finish-ng-dim" type="number" class="hud-input-lg w-100" value="@Model.NgDimension" /></div>
+                                <div class="col-md-4"><label class="hud-label text-danger">NG Visual</label><input name="ngVis" id="finish-ng-vis" type="number" class="hud-input-lg w-100" value="@Model.NgVisual" /></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-danger border-opacity-10 bg-hud-navy">
+                    <div class="me-auto text-white">
+                        <span class="small opacity-50 fw-bold">TOTAL QTY:</span>
+                        <span class="fs-4 fw-black text-primary" id="finish-total-display">0</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-danger px-5 fw-bold neon-pulse-red" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan produksi ini?')">FINISH PRODUCTION</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <style>
-    .production-paper, .dimension-paper { background: white; color: black; border-radius: 4px; border: 1px solid #dee2e6; }
-    .small-table { font-size: 11px; }
-    .small-table th { background: #f8f9fa; font-weight: 700; color: #333; }
-    .log-input { width: 100%; border: none; outline: none; background: transparent; text-align: center; border-bottom: 1px solid #eee; }
-    .log-input:focus { border-bottom: 2px solid #3b82f6; }
-    .extra-small { font-size: 10px; font-weight: bold; }
-    .custom-tabs .nav-link { border: none; color: rgba(255,255,255,0.6); font-weight: 600; padding: 12px 20px; transition: all 0.3s; }
-    .custom-tabs .nav-link.active { background: rgba(59, 130, 246, 0.1) !important; color: #3b82f6 !important; border-bottom: 3px solid #3b82f6 !important; }
-    .custom-tabs .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
-    @@media print { .no-print { display: none !important; } .tab-pane { display: block !important; opacity: 1 !important; } .tab-content > .tab-pane { display: block !important; } }
+    .portal-btn {
+        background: rgba(30, 58, 138, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 12px 28px;
+        border-radius: 16px;
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.7;
+        backdrop-filter: blur(5px);
+    }
+    .portal-btn i { color: rgba(59, 130, 246, 0.5); font-size: 1.5rem; }
+    .portal-btn.active { 
+        background: rgba(37, 99, 235, 0.4); 
+        border-color: #3b82f6; 
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2);
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+    .portal-btn.active i { color: #60a5fa; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+    .portal-btn:hover { opacity: 1; background: rgba(30, 58, 138, 0.3); border-color: rgba(59, 130, 246, 0.5); }
+
+    .paper-replica { 
+        background: #fff; 
+        color: #000; 
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+        border: 2px solid #000;
+        border-radius: 0;
+        width: 800px;
+        min-width: 800px;
+        margin: 0 auto;
+        padding: 10px;
+        box-sizing: border-box;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .paper-padding { padding: 0; }
+    .border-form-bold { border: 2px solid #000 !important; }
+    .border-bottom-form-bold { border-bottom: 2px solid #000 !important; }
+    .border-form { border: 1px solid #000 !important; }
+    .border-end-form { border-right: 1px solid #000 !important; }
+    .border-bottom-form { border-bottom: 1px solid #000 !important; }
+    .border-top-form { border-top: 1px solid #000 !important; }
+    .grid-form { table-layout: fixed; width: 100%; border-collapse: collapse; }
+    .grid-form th, .grid-form td { border: 1px solid #000 !important; padding: 3px 6px; font-size: 10.5px; height: 26px; overflow: hidden; }
+    .grid-form th { background: #f0f0f0; color: #333; font-weight: 800; text-transform: uppercase; font-size: 10px; }
+    .grid-form th, .grid-form td { 
+        border: 1px solid #333 !important; 
+        padding: 0; 
+        font-size: 11px; 
+        vertical-align: middle;
+    }
+    .grid-form th { 
+        background: #f4f4f4; 
+        color: #000; 
+        font-weight: 800; 
+        text-transform: uppercase; 
+        padding: 5px 2px;
+    }
+    
+    .input-transparent {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #000;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        padding: 0;
+        margin: 0;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 800;
+        font-size: 13px;
+        transition: all 0.2s;
+        display: block;
+    }
+    .input-transparent:focus {
+        background: #fffde7;
+        color: #1a237e;
+    }
+    
+    .hud-vertical-label {
+        background: #e9ecef;
+        color: #333;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-align: center;
+        width: 30px !important;
+        border-bottom: 0 !important;
+    }
+
+    .super-small { font-size: 9px; }
+    .text-info-glow { color: #0d6efd; font-weight: 900; }
+    .bg-info-soft { background: rgba(13, 110, 253, 0.05); }
+    
+    .hud-container {
+        padding: 25px;
+        background: radial-gradient(circle at 0% 0%, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.95) 100%),
+                    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 20px;
+        position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(59, 130, 246, 0.05);
+        z-index: 1;
+        overflow: hidden;
+    }
+    .hud-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.4), transparent);
+        z-index: 2;
+    }
+    .hud-container::after {
+        content: '';
+        position: absolute;
+        bottom: 0; right: 0; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+        z-index: -1;
+    }
+
+    .btn-velasto-glow-green {
+        background: var(--btn-green);
+        color: white;
+        border: 1px solid var(--neon-green);
+        box-shadow: 0 0 10px var(--neon-green-glow);
+        transition: all 0.3s;
+    }
+    .btn-velasto-glow-green:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--neon-green-glow); color: white; }
+
+    /* Modal Tweaks */
+    .hud-tabs .nav-link { 
+        background: rgba(15, 23, 42, 0.8); 
+        color: rgba(255,255,255,0.5); 
+        border: none; 
+        border-right: 1px solid rgba(255,255,255,0.1);
+        font-weight: bold;
+    }
+    .hud-tabs .nav-link.active { background: #1e293b; color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+    .bg-hud-navy-dark { background: #0f172a; }
+    .hud-input-group { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+    .hud-label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .hud-label .unit { font-size: 9px; opacity: 0.6; }
+    .hud-input-lg { 
+        background: #1e293b; 
+        border: 1px solid rgba(59, 130, 246, 0.4); 
+        border-radius: 6px; 
+        color: #60a5fa; 
+        padding: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        outline: none;
+    }
+    .hud-input-lg:focus { border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+
+    .neon-pulse-blue { animation: neon-pulse-blue 2s infinite ease-in-out; }
+    .neon-pulse-red { animation: neon-pulse-red 2s infinite ease-in-out; }
+    
+    @@keyframes neon-pulse-blue {
+        0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+        50% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); }
+        100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+    }
+    @@keyframes neon-pulse-red {
+        0% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.5); }
+        50% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.8); }
+        100% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.5); }
+    }
+
+    .production-dashboard-sapphire {
+        min-height: 100vh;
+        padding: 2rem;
+        background-color: #020617;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.1) 0, transparent 50%);
+        position: relative;
+    }
+
+    .header-sapphire-glass {
+        background: rgba(30, 58, 138, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(59, 130, 246, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .btn-outline-glass {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.3s;
+    }
+    .btn-outline-glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .btn-danger-glass {
+        background: rgba(220, 38, 38, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        color: #f87171;
+        transition: all 0.3s;
+    }
+    .btn-danger-glass:hover {
+        background: rgba(220, 38, 38, 0.2);
+        border-color: rgba(220, 38, 38, 0.4);
+        color: white;
+        box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+    }
+
+    /* DIMENSION PORTAL SPECIFIC STYLES */
+    .dim-info-card {
+        background: rgba(30, 58, 138, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .dim-readings-card {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .dim-matrix-table th {
+        background: rgba(30, 58, 138, 0.3);
+        color: rgba(147, 197, 253, 0.6);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 12px 8px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .dim-matrix-table td {
+        padding: 14px 8px;
+        border: 1px solid rgba(255,255,255,0.03);
+        color: white;
+        font-size: 13px;
+        text-align: center;
+    }
+    .dim-matrix-table .point-cell {
+        text-align: left;
+        font-weight: 700;
+        color: #93c5fd;
+        padding-left: 20px;
+        background: rgba(255,255,255,0.02);
+    }
+    .dim-matrix-table .std-cell {
+        font-weight: 900;
+        color: #fbbf24;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .read-cell {
+        font-weight: 800;
+        font-size: 14px;
+        min-width: 70px;
+    }
+    .out-of-spec { color: #f87171 !important; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); font-weight: 900; }
+    .in-spec { color: #34d399 !important; }
+
+    .dim-recap-card {
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(15, 23, 42, 0.6) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+    .recap-input {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 10px 15px;
+        color: white;
+        font-weight: 800;
+        width: 100%;
+        outline: none;
+        transition: all 0.3s;
+    }
+    .recap-input:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+    .recap-item .value { font-size: 18px; font-weight: 900; color: white; margin-top: 2px; }
+
+    /* MODERN GLASS PAPER GRID (DIMENSION PORTAL) */
+    .glass-paper {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(25px) saturate(160%);
+        border: 2px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+    }
+    .border-cyber-blue { border-color: rgba(59, 130, 246, 0.4) !important; }
+    .border-bottom-cyber { border-bottom: 2px solid rgba(59, 130, 246, 0.3) !important; }
+    .border-bottom-cyber-thin { border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important; }
+    .border-end-cyber { border-right: 2px solid rgba(59, 130, 246, 0.3) !important; }
+    .border-start-cyber { border-left: 2px solid rgba(59, 130, 246, 0.3) !important; }
+    .border-top-cyber { border-top: 2px solid rgba(59, 130, 246, 0.3) !important; }
+
+    .dimension-glass-grid th {
+        padding: 5px 2px;
+        background: rgba(30, 58, 138, 0.5);
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    .dimension-glass-grid td {
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .bg-white-5 { background: rgba(255, 255, 255, 0.05); }
+    .bg-white-10 { background: rgba(255, 255, 255, 0.1); }
+    
+    .bg-info-glow { 
+        background: rgba(59, 130, 246, 0.4); 
+        box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+    .val-display {
+        color: #fff;
+        font-weight: 900;
+        font-size: 11px;
+        text-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+    }
+    
+    .font-size-7 { font-size: 7px; }
+    .font-size-8 { font-size: 8px; }
+    .font-size-9 { font-size: 9px; }
+    .font-size-10 { font-size: 10px; }
+    .lh-condensed { line-height: 1.1; }
+
+    .input-glass-sm {
+        background: rgba(255, 255, 255, 0.03);
+        color: #fff;
+        border: none;
+        outline: none;
+        font-size: 10px;
+    }
+    .input-glass-sm:focus { background: rgba(59, 130, 246, 0.1); }
+    
+    @@media print {
+        @@page {
+            size: @(currentPortal == "identity" || currentPortal == "dimension" ? "landscape" : "portrait");
+            margin: 3mm;
+        }
+        .hud-container { padding: 0; background: transparent !important; backdrop-filter: none; border: none; box-shadow: none; }
+        .production-dashboard-sapphire { background: transparent !important; padding: 0; }
+        .no-print { display: none !important; }
+        .glass-paper { background: white !important; border: 2px solid #000 !important; color: #000 !important; }
+        
+        /* Force full width on print */
+        .paper-replica { 
+            width: 100% !important; 
+            max-width: none !important; 
+            margin: 0 !important; 
+            padding: 5px !important;
+            box-shadow: none !important; 
+            border: 2px solid #000 !important; 
+        }
+    }
+
+    /* ============================================================ */
+    /* PDF-FIT: Rules applied during html2canvas render via onclone  */
+    /* MUST be outside @@media print -- html2canvas ignores print CSS  */
+    /* ============================================================ */
+    .pdf-fit { font-size: 8px !important; line-height: 1.1 !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
+    .pdf-fit .paper-padding { padding: 5px 10px !important; }
+    .pdf-fit .mb-1, .pdf-fit .mb-2, .pdf-fit .mb-3, .pdf-fit .mb-4, .pdf-fit .mb-5, .pdf-fit .mt-4, .pdf-fit .mt-2 { margin: 0 !important; padding: 0 !important; }
+    .pdf-fit table { margin-bottom: 2px !important; table-layout: fixed !important; width: 100% !important; border-collapse: collapse !important; }
+    .pdf-fit th, .pdf-fit td { padding: 2px 3px !important; font-size: 8px !important; height: auto !important; line-height: 1 !important; overflow: hidden; }
+    .pdf-fit .grid-form th, .pdf-fit .grid-form td { font-size: 7.5px !important; padding: 2px !important; border-width: 0.3px !important; }
+    .pdf-fit input, .pdf-fit .input-transparent { font-size: 8px !important; height: auto !important; line-height: 1 !important; border: none !important; background: transparent !important; color: #000 !important; }
+    .pdf-fit .row { margin: 0 !important; display: flex !important; flex-wrap: nowrap !important; width: 100% !important; }
+    .pdf-fit .col-6 { width: 50% !important; flex: 0 0 50% !important; max-width: 50% !important; }
+    .pdf-fit .col-3 { width: 25% !important; flex: 0 0 25% !important; max-width: 25% !important; }
+    .pdf-fit img { height: 35px !important; }
+    .pdf-fit h6 { font-size: 13px !important; margin: 0 !important; padding: 0 !important; }
+    .pdf-fit .paper-replica { width: 100% !important; max-width: none !important; margin: 0 auto !important; background: white !important; color: #000 !important; border: 2px solid #000 !important; box-shadow: none !important; padding: 5px !important; }
+    .pdf-fit .border-form, .pdf-fit .border-form-bold { border-width: 0.5px !important; }
+    .pdf-fit .border-bottom-form, .pdf-fit .border-end-form, .pdf-fit .border-start-form, .pdf-fit .border-top-form { border-width: 0.5px !important; }
+
+    /* FIX: Vertical label column (MATERIAL, DIES DIMENSION) */
+    .pdf-fit th[rowspan] { width: 12px !important; padding: 0 !important; }
+    .pdf-fit th[rowspan] > div { font-size: 5px !important; line-height: 0.9 !important; letter-spacing: 0 !important; }
+
+    /* FIX: OK/NG checkbox labels */
+    .pdf-fit .d-flex.gap-1 { gap: 2px !important; flex-wrap: nowrap !important; }
+    .pdf-fit .d-flex.gap-1 label { white-space: nowrap !important; font-size: 5.5px !important; }
+    .pdf-fit .form-check-input { width: 8px !important; height: 8px !important; min-width: 8px !important; }
+
+    /* FIX: Mesh & Emboss labels */
+    .pdf-fit label.mb-0 { font-size: 5.5px !important; white-space: nowrap !important; margin: 0 !important; gap: 1px !important; }
+
 </style>
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function downloadPDF() {
+            const element = document.getElementById('printArea');
+            if (!element) return;
+
+            // Deteksi portal mana yang aktif
+            const portal = new URLSearchParams(window.location.search).get('portal') || 'dashboard';
+            const isIdentity = portal === 'identity';
+            const isDimension = portal === 'dimension';
+            const isDashboard = portal === 'dashboard' || portal === '';
+
+            if (isIdentity) {
+                Swal.fire({ title: 'GENERATING PDF...', html: 'Mempersiapkan laporan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                html2pdf().set({
+                    margin: [4, 3, 4, 3],
+                    filename: 'IdentityCard_@(Model.DocumentNumber.Replace("/", "_")).pdf',
+                    image: { type: 'png' },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: false,
+                        backgroundColor: '#ffffff',
+                        onclone: (clonedDoc) => {
+                            // Rapikan printArea
+                            const pa = clonedDoc.getElementById('printArea');
+                            if (pa) pa.style.cssText = 'padding:0;margin:0;background:white;min-height:auto;display:block;';
+
+                            // Perkecil landscape-sheet agar muat A4 landscape
+                            const sheet = clonedDoc.querySelector('.landscape-sheet');
+                            if (sheet) sheet.style.cssText = 'width:1000px;min-height:auto;padding:12px;border:3px solid #000;box-shadow:none;font-size:8px;margin:0;';
+
+                            const inner = clonedDoc.querySelector('.inner-border');
+                            if (inner) inner.style.padding = '10px';
+
+                            clonedDoc.querySelectorAll('.hand-ink').forEach(el => el.style.fontSize = '1.1rem');
+                            clonedDoc.querySelectorAll('.label-main').forEach(el => el.style.fontSize = '0.8rem');
+                            clonedDoc.querySelectorAll('.header-title').forEach(el => el.style.fontSize = '1.8rem');
+
+                            // Fix image paths
+                            clonedDoc.querySelectorAll('img').forEach(img => {
+                                const src = img.getAttribute('src') || '';
+                                if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+                                    img.src = window.location.origin + (src.startsWith('/') ? src : '/' + src);
+                                }
+                            });
+                        }
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                    pagebreak: { mode: ['avoid-all'] }
+                }).from(element).save()
+                .then(() => Swal.fire({ icon: 'success', title: 'DOWNLOAD COMPLETE', timer: 1500, showConfirmButton: false }))
+                .catch(err => Swal.fire({ icon: 'error', title: 'GAGAL', text: err.message }));
+                return;
+            }
+
+            // =============================================
+            // PORTAL LAIN: Pakai html2pdf seperti biasa
+            // =============================================
+            Swal.fire({
+                title: 'GENERATING PDF...',
+                html: 'Mempersiapkan laporan produksi...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const isLandscape = portal === 'identity' || portal === 'dimension';
+
+            const opt = {
+                margin:      [3, 3, 3, 3],
+                filename:    'Report_@(Model.DocumentNumber.Replace("/", "_"))_' + portal.toUpperCase() + '.pdf',
+                image:       { type: 'png' },
+                html2canvas: {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#ffffff',
+                    letterRendering: true,
+                    onclone: (clonedDoc) => {
+                        const clonedEl = clonedDoc.getElementById('printArea');
+                        if (clonedEl) {
+                            clonedEl.style.background = 'white';
+                            clonedEl.style.padding = '0';
+                            clonedEl.style.margin = '0';
+                            clonedEl.style.minHeight = 'auto';
+
+                            if (portal === 'identity') {
+                                const sheet = clonedEl.querySelector('.landscape-sheet');
+                                if (sheet) {
+                                    sheet.style.width = '1000px';
+                                    sheet.style.minHeight = 'auto';
+                                    sheet.style.padding = '15px 20px';
+                                    sheet.style.fontSize = '9px';
+                                    sheet.style.boxShadow = 'none';
+                                }
+                            } else {
+                                const isDashboardPortal = (portal === 'dashboard' || portal === '');
+                                // Apply pdf-fit to compress vertical height, and use 950px width for a good portrait fit
+                                const targetWidth = portal === 'dimension' ? '1050px' : '950px';
+                                clonedEl.style.width = targetWidth;
+                                
+                                // Always apply pdf-fit to compress table padding and fonts
+                                clonedEl.classList.add('pdf-fit');
+                                
+                                const paper = clonedEl.querySelector('.paper-replica');
+                                if (paper) {
+                                    paper.style.width = targetWidth;
+                                    paper.style.maxWidth = 'none';
+                                    paper.style.margin = '0 auto';
+                                    paper.style.padding = isDashboardPortal ? '0' : '5px';
+                                    paper.style.boxShadow = 'none';
+                                    paper.style.border = '2px solid #000';
+                                }
+                            }
+                        }
+                        // Fix image paths
+                        clonedDoc.querySelectorAll('img').forEach(img => {
+                            const src = img.getAttribute('src') || '';
+                            if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+                                img.src = window.location.origin + (src.startsWith('/') ? src : '/' + src);
+                            }
+                        });
+                    }
+                },
+                jsPDF:       { unit: 'mm', format: 'a4', orientation: isLandscape ? 'landscape' : 'portrait' },
+                pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(element).save()
+                .then(() => {
+                    Swal.fire({ icon: 'success', title: 'DOWNLOAD SUCCESS', timer: 1500, showConfirmButton: false });
+                })
+                .catch(err => {
+                    Swal.fire({ icon: 'error', title: 'DOWNLOAD FAILED', text: err.message });
+                });
+        }
+    </script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // ==========================================
+        // SCANNER ITEM VERIFICATION LOGIC
+        // ==========================================
+        let html5QrCode;
+        let cameraDevices = [];
+        let currentCamIdx = 0;
+
+        async function startVerifyScanner() {
+            const mEl = document.getElementById('scannerVerifyModal');
+            const modal = new bootstrap.Modal(mEl);
+            modal.show();
+            
+            try {
+                cameraDevices = await Html5Qrcode.getCameras();
+                if (cameraDevices && cameraDevices.length > 0) {
+                    currentCamIdx = cameraDevices.findIndex(c => 
+                        c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment')
+                    );
+                    if (currentCamIdx === -1) currentCamIdx = 0;
+                }
+                if (html5QrCode && html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
+                initScanner();
+            } catch (err) {
+                initScanner(); 
+            }
+        }
+
+        function initScanner() {
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader-verify");
+            
+            let target = { facingMode: "environment" };
+            if (cameraDevices && cameraDevices.length > 0 && cameraDevices[currentCamIdx]) {
+                target = cameraDevices[currentCamIdx].id;
+            }
+            
+            html5QrCode.start(target, { fps: 20, aspectRatio: 1.0 }, onScanSuccess)
+                .catch(e => {
+                    if (!cameraDevices || cameraDevices.length === 0) {
+                        html5QrCode.start({ facingMode: "user" }, { fps: 20, aspectRatio: 1.0 }, onScanSuccess);
+                    }
+                });
+        }
+
+        async function switchCamera() {
+            if (!html5QrCode) return;
+            if (cameraDevices.length > 1) {
+                currentCamIdx = (currentCamIdx + 1) % cameraDevices.length;
+                if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                    initScanner();
+                }
+            } else {
+                const isEnv = html5QrCode.isScanning ? true : false; 
+                await html5QrCode.stop();
+                html5QrCode.start({ facingMode: isEnv ? "user" : "environment" }, { fps: 20, aspectRatio: 1.0 }, onScanSuccess);
+            }
+        }
+
+        async function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                try { await html5QrCode.stop(); } catch (e) {}
+            }
+        }
+
+        async function onScanSuccess(decodedText) {
+            stopScanner();
+            const modalEl = document.getElementById('scannerVerifyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            Swal.fire({
+                title: 'VERIFYING DATA...',
+                text: 'Memeriksa kecocokan Part List dengan Standard...',
+                allowOutsideClick: false,
+                background: '#0d1117',
+                color: '#fff',
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                const res = await fetch(`/ProductionReport/GetMasterByItem?itemCode=${encodeURIComponent(decodedText)}`);
+                const data = await res.json();
+                
+                const currentHoseType = '@Model.HoseType';
+                
+                if (data && data.hoseType === currentHoseType) {
+                    // Match! Kunci dibuka
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'VERIFIED MATCH!',
+                        html: `Hose Type: <b class="text-success">${data.hoseType}</b>.<br/>Akses Input Parameter Dibuka!`,
+                        background: '#0d1117', color: '#fff'
+                    });
+                    
+                    document.getElementById('btnInput').classList.remove('opacity-50', 'pe-none');
+                    document.getElementById('iconLock').classList.replace('bi-lock-fill', 'bi-unlock-fill');
+                    document.getElementById('textInput').innerText = 'INPUT DATA PARAMETER';
+                    
+                    var btnVerify = document.getElementById('btnVerify');
+                    btnVerify.classList.replace('btn-outline-info', 'btn-success');
+                    btnVerify.innerHTML = '<i class="bi bi-shield-check me-2"></i> VERIFIED';
+                    btnVerify.classList.add('pe-none');
+                } else {
+                    // Reject
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'SPEC MISMATCH / REJECTED',
+                        html: `Part List <b class="text-warning">${decodedText}</b> memiliki Hose Type: <b>${data ? data.hoseType : 'Tidak Ditemukan'}</b>.<br/>Sangat tidak sesuai dengan produksi saat ini (<b>${currentHoseType}</b>).`,
+                        background: '#3f1115', color: '#fff'
+                    });
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'SERVER ERROR', background: '#0d1117', color: '#fff' });
+            }
+        }
+
+        async function saveRecap() {
+            const data = {
+                reportId: @Model.Id,
+                vinCode: document.getElementById('rec-vincode').value,
+                qtyOk: document.getElementById('rec-ok').value,
+                ngDim: document.getElementById('rec-ngdim').value,
+                ngVis: document.getElementById('rec-ngvis').value,
+                remark: document.getElementById('rec-remark').value
+            };
+
+            const res = await fetch('/ProductionReport/UpdateRecap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({ icon: 'success', title: 'Recap Saved!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+            }
+        }
+
+        async function saveDimRecap() {
+            const data = {
+                reportId: @Model.Id,
+                actualLength: document.getElementById('rec-actlen').value,
+                qtyOk: document.getElementById('rec-qtyok').value,
+                ngDim: document.getElementById('rec-ngdim').value,
+                ngVis: document.getElementById('rec-ngvis').value,
+                remark: document.getElementById('rec-remark-dim').value
+            };
+
+            const res = await fetch('/ProductionReport/UpdateRecap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'DIMENSION RECAP UPDATED', 
+                    toast: true, 
+                    position: 'top-end', 
+                    showConfirmButton: false, 
+                    timer: 2000,
+                    background: '#0d1117',
+                    color: '#fff'
+                });
+            }
+        }
+
+        // Live Total Qty Calculation for Finish Modal
+        const finishInputs = ['finish-ok', 'finish-ng-dim', 'finish-ng-vis'];
+        function updateFinishTotal() {
+            const ok = parseInt(document.getElementById('finish-ok')?.value) || 0;
+            const ngDim = parseInt(document.getElementById('finish-ng-dim')?.value) || 0;
+            const ngVis = parseInt(document.getElementById('finish-ng-vis')?.value) || 0;
+            const display = document.getElementById('finish-total-display');
+            if (display) display.innerText = ok + ngDim + ngVis;
+        }
+        finishInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateFinishTotal);
+        });
+        updateFinishTotal(); // Initial call
+
+        // APPROVAL PROTOCOL LOGIC
+        function openApprovalModal(role) {
+            Swal.fire({
+                title: `VERIFIKASI ${role}`,
+                html: `
+                    <div class="text-center p-3">
+                        <i class="bi bi-shield-lock-fill text-info fs-1 mb-3"></i>
+                        <div class="text-white-50 small mb-3">SILAKAN MASUKKAN PIN ATAU SCAN ID CARD</div>
+                        <input type="password" id="staffPin" class="form-control text-center bg-dark text-white fw-bold fs-4 border-info" 
+                               placeholder="****" maxlength="6" style="letter-spacing: 10px;">
+                    </div>
+                `,
+                background: '#0d1117',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonText: 'VERIFY NOW',
+                confirmButtonColor: '#3b82f6',
+                preConfirm: () => {
+                    const pin = Swal.getPopup().querySelector('#staffPin').value;
+                    if (!pin) { Swal.showValidationMessage('PIN WAJIB DIISI!'); return false; }
+                    return { pin: pin };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    verifyStaff(role, result.value.pin);
+                }
+            });
+        }
+
+        async function verifyStaff(role, pin) {
+            const res = await fetch('/ProductionReport/VerifyApproval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id: @Model.Id, role: role, pin: pin })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'VERIFIKASI BERHASIL!', text: `Terima kasih, ${data.name}`, timer: 1500, showConfirmButton: false });
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                Swal.fire({ icon: 'error', title: 'GAGAL!', text: data.message });
+            }
+        }
+    </script>
+}

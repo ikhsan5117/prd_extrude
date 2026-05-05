@@ -7,11 +7,22 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <!-- Animated Background -->
     <div class="animated-bg"></div>
+
+    <!-- Global SVG Gradient Definition -->
+    <svg width="0" height="0" class="position-absolute" style="visibility: hidden;">
+        <defs>
+            <linearGradient id="nav-icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#4facfe;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+    </svg>
     
     <!-- Top Navbar -->
     <nav class="top-navbar no-print">
@@ -22,10 +33,34 @@
                 </button>
                 <div class="brand">
                     <i class="bi bi-gear-fill"></i>
-                    <span>VELASTO Production System</span>
+                    <span>VELASTO <small class="d-none d-lg-inline opacity-50 fw-light">Production System</small></span>
                 </div>
             </div>
             <div class="navbar-right">
+                <!-- Fullscreen Toggle -->
+                <button class="btn btn-link text-white-50 p-0 me-2 me-md-3 border-0" onclick="toggleFullScreen()" title="Toggle Fullscreen">
+                    <i class="bi bi-fullscreen fs-5" id="fs-icon"></i>
+                </button>
+
+                @if (!string.IsNullOrEmpty(Context.Session.GetString("UserName")))
+                {
+                    <div class="d-flex align-items-center me-2 me-md-3 border-end pe-2 pe-md-3 border-white border-opacity-10">
+                        <div class="text-end me-3 d-none d-md-block">
+                            <div class="text-white-50 super-small text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">Operator</div>
+                            <div class="text-info fw-bold" style="font-size: 0.85rem;">@Context.Session.GetString("UserName")</div>
+                        </div>
+                        <div class="text-end me-2 me-md-3">
+                            <div class="text-white-50 super-small text-uppercase fw-bold d-none d-md-block" style="font-size: 0.6rem; letter-spacing: 1px;">Machine</div>
+                            <div class="text-warning fw-bold" style="font-size: 0.85rem;">
+                                <i class="bi bi-cpu-fill d-inline-block d-md-none text-white-50 me-1"></i>
+                                @Context.Session.GetString("MachineName")
+                            </div>
+                        </div>
+                        <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm border-0 rounded-circle" title="Change User/Machine">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </div>
+                }
                 <div class="status-indicator">
                     <span class="status-dot pulse"></span>
                     <span>System Online</span>
@@ -49,48 +84,109 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a asp-controller="Home" asp-action="Index" class="nav-item">
-                <i class="bi bi-speedometer2"></i>
-                <span>Dashboard</span>
-            </a>
-            
-            <div class="nav-group">
-                <div class="nav-group-title">
-                    <i class="bi bi-database"></i>
-                    <span>Master Data</span>
-                </div>
-                <a asp-controller="StandardParameterSetting" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-sliders"></i>
-                    <span>Parameter Setting</span>
+            @if (Context.Session.GetString("IsAdmin") == "true")
+            {
+                <!-- ADMIN - Full Access -->
+                <a asp-controller="Home" asp-action="Index" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M120-120v-80l80-80v160h-80Zm160 0v-240l80-80v320h-80Zm160 0v-320l80 81v239h-80Zm160 0v-239l80-80v319h-80Zm160 0v-400l80-80v480h-80ZM120-327v-113l280-280 160 160 280-280v113L560-447 400-607 120-327Z"/></svg>
+                    <span>Dashboard</span>
                 </a>
-                <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-file-earmark-spreadsheet"></i>
-                    <span>SPS Excel Master</span>
-                </a>
-                <a asp-controller="PackingStandard" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Packing Standard</span>
-                </a>
-            </div>
 
-            <div class="nav-group">
-                <div class="nav-group-title">
-                    <i class="bi bi-gear-wide-connected"></i>
-                    <span>Production</span>
+                <div class="nav-group">
+                    <div class="nav-group-title">
+                        <i class="bi bi-database"></i>
+                        <span>Master Data</span>
+                    </div>
+                    <a asp-controller="PlanningMaster" asp-action="Index" class="nav-item sub">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>Planning Master</span>
+                    </a>
+                    <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
+                        <i class="bi bi-layers"></i>
+                        <span>SPS Master</span>
+                    </a>
+                    <a asp-controller="PartMaster" asp-action="Index" class="nav-item sub">
+                        <i class="bi bi-gear"></i>
+                        <span>Part Master</span>
+                    </a>
+                    <a asp-controller="ExtrudeUser" asp-action="Index" class="nav-item sub">
+                        <i class="bi bi-people"></i>
+                        <span>Users</span>
+                    </a>
+                    <a asp-controller="ExtrudeMachine" asp-action="Index" class="nav-item sub">
+                        <i class="bi bi-hdd-rack"></i>
+                        <span>Extrude Machine</span>
+                    </a>
                 </div>
-                <a asp-controller="ProductionReport" asp-action="Create" class="nav-item sub">
-                    <i class="bi bi-play-circle-fill text-success"></i>
-                    <span class="fw-bold">NOW I'M PRODUCE (Start)</span>
-                </a>
-                <a asp-controller="ProductionReport" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-clipboard-data"></i>
-                    <span>Production Monitoring</span>
-                </a>
-                <a asp-controller="LotTag" asp-action="Index" class="nav-item sub">
-                    <i class="bi bi-tag"></i>
-                    <span>Lot Tag</span>
-                </a>
-            </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">
+                        <i class="bi bi-gear-wide-connected"></i>
+                        <span>Production</span>
+                    </div>
+                    <a asp-controller="ProductionReport" asp-action="Create" class="nav-item sub">
+                        <i class="bi bi-clipboard2-plus"></i>
+                        <span>Form Parameter Setting</span>
+                    </a>
+                    <a asp-controller="Dimensi" asp-action="Index" class="nav-item sub">
+                        <i class="bi bi-rulers"></i>
+                        <span>Input Dimensi</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">
+                        <i class="bi bi-archive-fill"></i>
+                        <span>History Archive</span>
+                    </div>
+                    <a asp-controller="ProductionReport" asp-action="ParameterHistory" class="nav-item sub">
+                        <i class="bi bi-sliders"></i>
+                        <span>Parameter History</span>
+                    </a>
+                    <a asp-controller="Dimensi" asp-action="History" class="nav-item sub">
+                        <i class="bi bi-rulers"></i>
+                        <span>Dimension History</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">
+                        <i class="bi bi-broadcast"></i>
+                        <span>Sensor Integration</span>
+                    </div>
+                    <a asp-controller="SensorReadings" asp-action="Monitor" class="nav-item sub">
+                        <i class="bi bi-activity"></i>
+                        <span>Sensor Monitor</span>
+                    </a>
+                    <a asp-controller="SensorReadings" asp-action="Simulator" class="nav-item sub">
+                        <i class="bi bi-cpu"></i>
+                        <span>Sensor Simulator</span>
+                    </a>
+                    <a asp-controller="SensorReadings" asp-action="Analysis" class="nav-item sub">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>Analisis vs Standar</span>
+                    </a>
+                </div>
+            }
+            else
+            {
+                <!-- OPERATOR - Restricted Access -->
+                <div class="nav-group">
+                    <div class="nav-group-title">
+                        <i class="bi bi-gear-wide-connected"></i>
+                        <span>Production</span>
+                    </div>
+                    <a asp-controller="ProductionReport" asp-action="Create" class="nav-item sub">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M680-80v-400q16 0 31 2.5t29 7.5v380q-14 5-29 7.5T680-80Zm-100-28v-344q14-8 28.5-14.5T640-476v392q-17-3-31.5-9.5T580-108Zm200 0v-344q45 26 72.5 71T880-280q0 56-27.5 101T780-108Zm-240-30q-28-27-44-63.5T480-280q0-42 16-79t44-64v285Zm-60-342ZM370-80l-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-74 56q-22-11-45-18.5T714-558l63-48-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q17 17 36.5 30.5T400-275q1 57 23.5 107T484-80H370Zm41-279q6-20 14.5-38.5T445-433q-11-8-17-20.5t-6-26.5q0-25 17.5-42.5T482-540q14 0 27 6.5t21 17.5q17-11 35-19.5t38-13.5q-18-32-50-51.5T482-620q-59 0-99.5 41T342-480q0 38 18.5 70.5T411-359Z"/></svg>
+                        <span class="fw-bold">Form Parameter Setting</span>
+                    </a>
+                    <a asp-controller="Dimensi" asp-action="Index" class="nav-item sub">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M208-120q-37 0-62.5-25.5T120-208v-548q0-29 27-40.5t47 8.5l90 90-54 54 28 28 54-54 104 104-54 54 28 28 54-54 104 104-54 54 28 28 54-54 104 104-54 54 28 28 54-54 80 80q20 20 8.5 47T756-120H208Zm32-120h332L240-572v332Z"/></svg>
+                        <span class="fw-bold">Input Dimensi</span>
+                    </a>
+                </div>
+            }
+
         </nav>
 
         <div class="sidebar-footer">
@@ -106,27 +202,7 @@
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert-glass alert-success">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>@TempData["SuccessMessage"]</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-        }
-        
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert-glass alert-danger">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>@TempData["ErrorMessage"]</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-        }
+        <!-- Global alerts removed to use SweetAlert instead -->
 
         @RenderBody()
 
@@ -134,14 +210,68 @@
             <p>&copy; 2026 PT. Velasto Indonesia - Manufacturing Excellence</p>
         </footer>
     </main>
-    
+    @await RenderSectionAsync("StickyFooter", required: false)
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        $(document).ready(function() {
+            // Global SweetAlert for TempData
+            @if (TempData["SuccessMessage"] != null && ViewContext.RouteData.Values["controller"]?.ToString()?.Contains("MasterlistSpsDoubleLayers") == false)
+            {
+                var msg = TempData["SuccessMessage"]?.ToString()?.Replace("\n", "<br>").Replace("'", "\\'") ?? "";
+                <text>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    html: '@Html.Raw(msg)',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                </text>
+            }
+
+            @if (TempData["ErrorMessage"] != null && ViewContext.RouteData.Values["controller"]?.ToString()?.Contains("MasterlistSpsDoubleLayers") == false)
+            {
+                var msg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>").Replace("'", "\\'") ?? "";
+                <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    html: '@Html.Raw(msg)'
+                });
+                </text>
+            }
+        });
+
         // Sidebar toggle
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+
+        // Check if backdrop exists, create if not
+        let backdrop = document.querySelector('.sidebar-backdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'sidebar-backdrop';
+            document.body.appendChild(backdrop);
+        }
+
+        sidebarToggle.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('show');
+                backdrop.classList.toggle('show');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            }
+        });
+
+        // Close when backdrop clicked
+        backdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            backdrop.classList.remove('show');
         });
 
         // Update datetime every minute
@@ -168,6 +298,362 @@
             }, 5000);
         });
     </script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
+
+    @* FAB: Today's Summary - Operator Only *@
+    @if (Context.Session.GetString("IsAdmin") != "true" && !string.IsNullOrEmpty(Context.Session.GetString("UserName")))
+    {
+        var path = Context.Request.Path.Value ?? "";
+        bool isInputPage = path.Contains("/ProductionReport/Create", StringComparison.OrdinalIgnoreCase) || 
+                           (path.Contains("/Dimensi", StringComparison.OrdinalIgnoreCase) && 
+                            !path.Contains("/History", StringComparison.OrdinalIgnoreCase) && 
+                            !path.Contains("/Details", StringComparison.OrdinalIgnoreCase));
+
+        <style>
+            #todayFab {
+                position: fixed; bottom: 30px; right: 30px;
+                width: 60px; height: 60px; border-radius: 50%;
+                background: linear-gradient(135deg, #0ea5e9, #6366f1);
+                border: none; color: white; font-size: 22px; cursor: pointer;
+                box-shadow: 0 8px 30px rgba(14,165,233,0.55);
+                z-index: 10500; display: flex; align-items: center; justify-content: center;
+                transition: all 0.3s cubic-bezier(.4,0,.2,1);
+                animation: fabIn 0.5s ease-out;
+            }
+            #todayFab:hover { transform: scale(1.12) translateY(-4px); box-shadow: 0 16px 45px rgba(14,165,233,0.75); }
+            #todayFab:active { transform: scale(0.94); }
+            .fab-badge {
+                position: absolute; top: -4px; right: -4px;
+                background: #ef4444; color: #fff; font-size: 9px; font-weight: 900;
+                min-width: 18px; height: 18px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                border: 2px solid #0f172a; padding: 0 2px;
+            }
+            @@keyframes fabIn { from{opacity:0;transform:scale(0) rotate(-180deg)} to{opacity:1;transform:scale(1) rotate(0)} }
+            #todayModal {
+                display: none; position: fixed; inset: 0; z-index: 11000;
+                background: rgba(2,6,23,.85); backdrop-filter: blur(8px);
+                justify-content: center; align-items: center;
+            }
+            #todayModal.show { display: flex; }
+            .t-panel {
+                width: 95%; max-width: 1200px; max-height: 85vh;
+                background: linear-gradient(160deg,#0f172a,#0d1b2e);
+                border: 1px solid rgba(14,165,233,.3);
+                border-radius: 20px; overflow: hidden;
+                display: flex; flex-direction: column;
+                box-shadow: 0 25px 80px rgba(0,0,0,.9), 0 0 0 1px rgba(14,165,233,.1);
+                animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
+            }
+            @@keyframes popIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+            .t-header {
+                padding: 18px 24px 14px; border-bottom: 1px solid rgba(255,255,255,.06);
+                display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+            }
+            .t-title { font-size:13px; font-weight:900; color:#fff; letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:10px; }
+            .t-live { width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981; animation:livePulse 1.5s infinite; }
+            @@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+            .t-close { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:#94a3b8; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:.2s; }
+            .t-close:hover { background:rgba(239,68,68,.2); color:#ef4444; border-color:#ef4444; }
+            .t-body { overflow-y:auto; padding:14px 24px 28px; flex:1; }
+            .t-tabs { display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,.06); padding-bottom:10px; }
+            .t-tab { background:transparent; border:none; color:#64748b; font-size:11px; font-weight:800; padding:8px 16px; cursor:pointer; border-radius:8px; transition:all .2s; }
+            .t-tab.active { background:rgba(14,165,233,.15); color:#38bdf8; }
+            .t-tab.dim.active { background:rgba(129,140,248,.15); color:#818cf8; }
+            .t-tab:hover:not(.active) { background:rgba(255,255,255,.04); color:#e2e8f0; }
+            .t-pane { display:none; }
+            .t-pane.active { display:block; animation:fadeIn .3s; }
+            @@keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+            
+            .t-table-wrapper { overflow-x:auto; background:rgba(15,23,42,.6); border:1px solid rgba(255,255,255,.06); border-radius:10px; }
+            .t-table { width:100%; border-collapse:collapse; min-width:800px; text-align:left; }
+            .t-table th { padding:12px 16px; font-size:9px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,.06); white-space:nowrap; }
+            .t-table td { padding:12px 16px; font-size:11px; color:#e2e8f0; border-bottom:1px solid rgba(255,255,255,.04); white-space:nowrap; }
+            .t-table tbody tr:last-child td { border-bottom:none; }
+            .t-table tbody tr:hover { background:rgba(255,255,255,.02); }
+            
+            .t-badge { font-size:9px; font-weight:900; padding:3px 8px; border-radius:20px; letter-spacing:1px; }
+            .t-done { background:rgba(16,185,129,.15); color:#10b981; border:1px solid rgba(16,185,129,.3); }
+            .t-prod { background:rgba(245,158,11,.15); color:#f59e0b; border:1px solid rgba(245,158,11,.3); }
+            .t-actv { background:rgba(99,102,241,.15); color:#818cf8; border:1px solid rgba(99,102,241,.3); }
+            .t-val.ok { color:#10b981; font-weight:bold; } 
+            .t-val.ng { color:#ef4444; font-weight:bold; }
+            .t-val.dim { color:#38bdf8; font-family:monospace; font-weight:bold; }
+            .t-code { font-family:monospace; font-weight:bold; color:#38bdf8; font-size:13px; }
+            .t-code.dim { color:#818cf8; }
+            .t-sub { font-size:10px; color:#64748b; margin-top:2px; }
+            .t-stats { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+            .t-pill { display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:6px 14px; font-size:11px; font-weight:800; color:#94a3b8; }
+            .t-pill .v { color:#fff; font-size:14px; font-weight:900; }
+            .t-empty { text-align:center; padding:40px 20px; color:#475569; }
+            .t-empty i { font-size:40px; display:block; margin-bottom:10px; }
+            .t-empty p { font-size:12px; font-weight:700; letter-spacing:1px; margin:0; }
+            @@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        </style>
+
+        @if (isInputPage)
+        {
+            <button id="todayFab" onclick="openTodayModal()" title="Data Yang Sudah Diinput Hari Ini">
+                <i class="bi bi-eye-fill"></i>
+                <span class="fab-badge" id="fabBadge" style="display:none">0</span>
+            </button>
+        }
+
+        <div id="todayModal" onclick="if(event.target===this)closeTodayModal()">
+            <div class="t-panel">
+                <div class="t-header">
+                    <div class="t-title">
+                        <span class="t-live"></span>
+                        <i class="bi bi-calendar-check text-info"></i>
+                        INPUT SUMMARY
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="date" id="t-date-filter" class="form-control form-control-sm bg-dark text-white border-secondary" style="font-size: 11px; width: 140px; height: 30px; border-radius: 6px;" onchange="fetchTodayData(this.value)">
+                        <button class="t-close" onclick="closeTodayModal()"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                </div>
+                <div class="t-body" id="t-body"><div class="t-empty"><i class="bi bi-hourglass-split"></i><p>LOADING...</p></div></div>
+            </div>
+        </div>
+
+        <script>
+            async function openTodayModal() {
+                document.getElementById('todayModal').classList.add('show');
+                const filter = document.getElementById('t-date-filter');
+                if (!filter.value) {
+                    filter.value = new Date().toISOString().split('T')[0];
+                }
+                await fetchTodayData(filter.value);
+            }
+            function closeTodayModal() { document.getElementById('todayModal').classList.remove('show'); }
+
+            async function fetchTodayData(targetDate) {
+                const body = document.getElementById('t-body');
+                body.innerHTML = `<div class="t-empty"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite"></i><p>LOADING DATA...</p></div>`;
+                try {
+                    const url = targetDate ? `/ProductionReport/GetTodaysSummary?targetDate=${targetDate}` : '/ProductionReport/GetTodaysSummary';
+                    const r = await fetch(url);
+                    const d = await r.json();
+                    
+                    // Context detection
+                    const path = window.location.pathname;
+                    const isDim = path.includes('/Dimensi');
+                    const isParam = path.includes('/ProductionReport');
+                    
+                    renderToday(d, isDim, isParam);
+
+                    let tot = 0;
+                    if (isDim) tot = d.dimensionReports?.length||0;
+                    else if (isParam) tot = d.parameterReports?.length||0;
+                    else tot = (d.parameterReports?.length||0) + (d.dimensionReports?.length||0);
+
+                    const b = document.getElementById('fabBadge');
+                    if (b) {
+                        b.textContent = tot > 99 ? '99+' : tot;
+                        b.style.display = tot > 0 ? 'flex' : 'none';
+                    }
+                } catch(e) {
+                    body.innerHTML = `<div class="t-empty"><i class="bi bi-wifi-off text-danger"></i><p>GAGAL MEMUAT DATA</p></div>`;
+                }
+            }
+
+            window.switchTab = function(type) {
+                document.querySelectorAll('.t-tab').forEach(el=>el.classList.remove('active'));
+                document.querySelectorAll('.t-pane').forEach(el=>el.classList.remove('active'));
+                document.getElementById('tab-'+type).classList.add('active');
+                document.getElementById('pane-'+type).classList.add('active');
+            };
+
+            function renderToday(data, isDim, isParam) {
+                const body = document.getElementById('t-body');
+                let p = data.parameterReports||[], d = data.dimensionReports||[];
+                
+                if (isDim) { p = []; }
+                else if (isParam) { d = []; }
+
+                if (p.length===0 && d.length===0) {
+                    body.innerHTML = `<div class="t-empty"><i class="bi bi-moon-stars"></i><p>BELUM ADA DATA PADA TANGGAL INI</p></div>`;
+                    return;
+                }
+
+                const okTot = (isParam ? p : (isDim ? d : [...p,...d])).reduce((s,r)=>s+(r.qtyOk||0),0);
+                const ngTot = (isParam ? p : (isDim ? d : [...p,...d])).reduce((s,r)=>s+(r.ngDimension||0)+(r.ngVisual||0),0);
+                
+                let html = `<div class="t-stats" style="margin-bottom:15px;">
+                    <div class="t-pill"><i class="bi bi-cpu-fill text-warning"></i> ${data.machine||'—'}</div>
+                    <div class="t-pill" style="color:#10b981">QTY OK <span class="v ms-1" style="color:#10b981">${okTot}</span></div>
+                    ${ngTot>0?`<div class="t-pill" style="color:#ef4444">TOTAL NG <span class="v ms-1" style="color:#ef4444">${ngTot}</span></div>`:''}
+                </div>`;
+                
+                html += `
+                <div class="t-tabs">
+                    ${isParam ? 
+                        `<button class="t-tab active" style="cursor:default !important"><i class="bi bi-sliders2"></i> FORM PARAMETER (${p.length})</button>` : 
+                        (isDim ? 
+                            `<button class="t-tab dim active" style="cursor:default !important"><i class="bi bi-rulers"></i> INPUT DIMENSI (${d.length})</button>` :
+                            `<button class="t-tab active" style="cursor:default !important">TOTAL SUMMARY (${p.length + d.length})</button>`
+                        )
+                    }
+                </div>
+                `;
+
+                if(isParam || (!isDim && p.length > 0)) {
+                    html += `<div id="pane-param" class="t-pane active">`;
+                    if(p.length===0){
+                        html += `<div class="t-empty"><i class="bi bi-inbox" style="font-size:28px"></i><p>BELUM ADA DATA PARAMETER</p></div>`;
+                    } else {
+                        html += `<div class="t-table-wrapper"><table class="t-table">
+                            <thead><tr>
+                                <th>Item / Hose Type</th><th>Doc & Marking</th><th>Operator / Shift</th><th>Machine Performance</th><th>Material Batches</th><th>Status</th><th>Action</th>
+                            </tr></thead><tbody>`;
+                        p.forEach(r=>{
+                            const st = r.status === 'COMPLETED' ? 't-done' : 't-prod';
+                            const time = r.createdDate ? new Date(r.createdDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+                            
+                            // Dies calculation
+                            const dies = [r.nippleDieOK, r.tubeDieOK, r.middleDieOK, r.coverDieOK, r.spacerDieOK, r.toleranceDieOK];
+                            const okCount = dies.filter(d => d === true).length;
+                            const dieColor = okCount === 6 ? '#10b981' : (okCount > 0 ? '#f59e0b' : '#ef4444');
+
+                            // Material logic
+                            const matIn = r.innerMaterialLotNo || r.innerMaterialActual || '—';
+                            const matOut = r.outerMaterialLotNo || r.outerMaterialActual || '—';
+                            const matYrn = r.yarnLotNo || r.yarnActual || '—';
+
+                            html += `<tr>
+                                <td>
+                                    <div class="t-code">${r.hoseType||'—'}</div>
+                                    <div class="t-sub"><i class="bi bi-clock me-1"></i>${time} | ${r.vinCode||'—'}</div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info" style="font-size:0.75rem;">${r.documentNumber||'—'}</div>
+                                    <div class="t-sub fw-bold" style="color: #60a5fa; margin-top:4px; max-width:150px; overflow:hidden; text-overflow:ellipsis;">
+                                        <i class="bi bi-fonts me-1"></i>${r.embossMarkContent || '—'}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-white" style="font-size:0.75rem;">${r.createdBy||'—'}</div>
+                                    <div class="t-sub">SHIFT ${r.shift||'—'}</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="fw-bold text-warning" style="font-size:0.85rem;">
+                                            <i class="bi bi-speedometer2 me-1"></i>${r.initHoseSpeed || '0'} <small>m/m</small>
+                                        </div>
+                                        <div style="font-size:0.65rem; color:${dieColor}">
+                                            <i class="bi bi-gear-fill me-1"></i>DIES: ${okCount}/6 OK
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="min-width:160px;">
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="badge bg-dark border border-white border-opacity-10 text-info super-small text-start">IN: ${matIn}</div>
+                                        <div class="badge bg-dark border border-white border-opacity-10 text-warning super-small text-start">OUT: ${matOut}</div>
+                                        <div class="badge bg-dark border border-white border-opacity-10 text-success super-small text-start">YRN: ${matYrn}</div>
+                                    </div>
+                                </td>
+                                <td><span class="t-badge ${st}">${r.status||'—'}</span></td>
+                                <td class="text-center">
+                                    <a href="/ProductionReport/Details/${r.id}" class="btn btn-sm p-0 text-info">
+                                        <i class="bi bi-eye-fill fs-5"></i>
+                                    </a>
+                                </td>
+                            </tr>`;
+                        });
+                        html += `</tbody></table></div>`;
+                    }
+                    html += `</div>`;
+                }
+
+                if(isDim || (!isParam && d.length > 0)) {
+                    html += `<div id="pane-dim" class="t-pane active">`;
+                    if(d.length===0){
+                        html += `<div class="t-empty"><i class="bi bi-inbox" style="font-size:28px"></i><p>BELUM ADA DATA DIMENSI</p></div>`;
+                    } else {
+                        html += `<div class="t-table-wrapper"><table class="t-table">
+                            <thead><tr>
+                                <th>Hose Type</th><th>Status</th><th>Dimensi</th><th>Doc No</th><th>Shift</th><th>Created By</th>
+                                <th>Std Pjg</th><th>Act Pjg</th><th>Target</th><th>OK</th><th>NG Dim</th><th>NG Vis</th><th>Remark</th><th>Action</th>
+                            </tr></thead><tbody>`;
+                        d.forEach(r=>{
+                            const st = r.status === 'COMPLETED' ? 't-done' : 't-actv';
+                            html += `<tr>
+                                <td><div class="t-code dim">${r.hoseType||'—'}</div><div class="t-sub">${r.vinCode||'—'}</div></td>
+                                <td><span class="t-badge ${st}">${r.status||'—'}</span></td>
+                                <td class="t-val dim">${r.dimensionDisplay||'—'}</td>
+                                <td>${r.documentNumber||'—'}</td>
+                                <td>${r.shift||'—'}</td>
+                                <td>${r.createdBy||'—'}</td>
+                                <td>${r.standardLength||'—'}</td>
+                                <td>${r.actualLength||'—'}</td>
+                                <td>${r.qtyTarget??'—'}</td>
+                                <td class="t-val ok">${r.qtyOk??'—'}</td>
+                                <td class="t-val ${r.ngDimension>0?'ng':''}">${r.ngDimension??0}</td>
+                                <td class="t-val ${r.ngVisual>0?'ng':''}">${r.ngVisual??0}</td>
+                                <td style="color:#94a3b8;max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${r.remark||''}">${r.remark||'—'}</td>
+                                <td class="text-center">
+                                    <a href="/Dimensi/Details/${r.id}" class="btn btn-sm p-0 text-info" title="View Details">
+                                        <i class="bi bi-eye-fill fs-5"></i>
+                                    </a>
+                                </td>
+                            </tr>`;
+                        });
+                        html += `</tbody></table></div>`;
+                    }
+                    html += `</div>`;
+                }
+
+                body.innerHTML = html;
+            }
+
+            // Silent badge load on page ready
+            window.addEventListener('load', async()=>{
+                try {
+                    const r = await fetch('/ProductionReport/GetTodaysSummary');
+                    const d = await r.json();
+
+                    const path = window.location.pathname;
+                    const isDim = path.includes('/Dimensi');
+                    const isParam = path.includes('/ProductionReport');
+
+                    let tot = 0;
+                    if (isDim) tot = d.dimensionReports?.length||0;
+                    else if (isParam) tot = d.parameterReports?.length||0;
+                    else tot = (d.parameterReports?.length||0) + (d.dimensionReports?.length||0);
+
+                    const b = document.getElementById('fabBadge');
+                    if (b) {
+                        b.textContent = tot > 99 ? '99+' : tot;
+                        b.style.display = tot > 0 ? 'flex' : 'none';
+                    }
+                } catch(e){}
+            });
+
+            function toggleFullScreen() {
+                const icon = document.getElementById('fs-icon');
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                    });
+                    icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                        icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
+                    }
+                }
+            }
+
+            // Sync icon if user presses ESC to exit fullscreen
+            document.addEventListener('fullscreenchange', () => {
+                const icon = document.getElementById('fs-icon');
+                if (!document.fullscreenElement) {
+                    icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
+                } else {
+                    icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
+                }
+            });
+        </script>
+    }
+        @await RenderSectionAsync("Scripts", required: false)
+    </body>
 </html>

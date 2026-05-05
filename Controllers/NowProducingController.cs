@@ -187,6 +187,113 @@ namespace VelastoProductionSystem.Controllers
             return _context.NowProducings.Any(e => e.Id == id);
         }
 
+        // GET: NowProducing/ParameterSettings
+        public async Task<IActionResult> ParameterSettings()
+        {
+            var settings = await _context.StandardParameterSettings
+                .Where(s => s.IsActive)
+                .OrderByDescending(s => s.CreatedDate)
+                .ToListAsync();
+
+            return View(settings);
+        }
+
+        // GET: NowProducing/ExtruderApp - Halaman NOW I'M PRODUCE di menu Extruder
+        public async Task<IActionResult> ExtruderApp()
+        {
+            // Ambil produksi yang sedang berjalan (jika ada)
+            var currentProduction = await _context.NowProducings
+                .Where(n => n.ProductionEndTime == null)
+                .OrderByDescending(n => n.ProductionDate)
+                .FirstOrDefaultAsync();
+
+            // Pass all available SPS Masterlist HoseTypes for autocomplete
+            ViewBag.MasterlistItems = await _context.MasterlistSpsDoubleLayers
+                .Where(m => !string.IsNullOrEmpty(m.ItemList))
+                .Select(m => new { m.ItemList, m.HoseType, m.Customer })
+                .OrderBy(m => m.ItemList)
+                .ToListAsync();
+
+            return View(currentProduction);
+        }
+
+        // GET: NowProducing/GetMasterByItem?itemCode=xxx - API untuk Barcode Scanner
+        [HttpGet]
+        public async Task<IActionResult> GetMasterByItem(string itemCode)
+        {
+            if (string.IsNullOrWhiteSpace(itemCode))
+                return Json(new { success = false, message = "Item code kosong" });
+
+            var master = await _context.MasterlistSpsDoubleLayers
+                .FirstOrDefaultAsync(m => m.ItemList == itemCode.Trim());
+
+            if (master == null)
+                return Json(new { success = false, message = $"Item Code '{itemCode}' tidak ditemukan di SPS Masterlist!" });
+
+            return Json(new {
+                success = true,
+                data = new {
+                    hoseType    = master.HoseType,
+                    customer    = master.Customer,
+                    dimensi     = master.Dimensi,
+                    innerTube   = master.InnerTube,
+                    outerCover  = master.OuterCover,
+                    material    = master.Material,
+                    documentNumber = master.DocumentNumber,
+                    formulasi   = master.Formulasi,
+                    tebalInner  = master.TebalInner,
+                    tebalOuter  = master.TebalOuter,
+                    tebalTotal  = master.TebalTotal,
+                    toleranceInner = master.ToleranceInner,
+                    toleranceOuter = master.ToleranceOuter
+                }
+            });
+        }
+
+        // POST: NowProducing/SaveExtruderProduce - Simpan data form Extruder Now Producing
+        [HttpPost]
+        public async Task<IActionResult> SaveExtruderProduce([FromBody] ExtruderProducePayload data)
+        {
+            try
+            {
+                NowProducing? record;
+                if (data.Id > 0)
+                {
+                    record = await _context.NowProducings.FindAsync(data.Id);
+                    if (record == null) return Json(new { success = false, message = "Record tidak ditemukan" });
+                }
+                else
+                {
+                    record = new NowProducing { ProductionDate = DateTime.Today };
+                    _context.NowProducings.Add(record);
+                }
+
+                record.HoseType                = data.HoseType ?? "-";
+                record.Dimension               = data.Dimension ?? "-";
+                record.Yarn                    = data.Yarn ?? "-";
+                record.MaterialInner           = data.MaterialInner ?? "-";
+                record.MaterialInnerLotNo      = data.MaterialInnerLotNo ?? "";
+                record.MaterialInnerSG         = data.MaterialInnerSG ?? 0m;
+                record.MaterialMiddle          = data.MaterialMiddle;
+                record.MaterialMiddleLotNo     = data.MaterialMiddleLotNo;
+                record.MaterialMiddleSG        = data.MaterialMiddleSG ?? 0m;
+                record.MaterialOuter           = data.MaterialOuter ?? "-";
+                record.MaterialOuterLotNo      = data.MaterialOuterLotNo ?? "";
+                record.MaterialOuterSG         = data.MaterialOuterSG ?? 0m;
+                record.DandoriStartProdTime    = data.DandoriStart;
+                record.DandoriEndProdTime      = data.DandoriEnd;
+                record.ProductionStartTime     = data.ProductionStart;
+                record.SPVCheck                = data.SPVCheck;
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, id = record.Id, message = "Data berhasil disimpan!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         // GET: NowProducing/Print/5 - Cetak form Now Producing
         public async Task<IActionResult> Print(int? id)
         {

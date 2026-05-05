@@ -1,0 +1,1079 @@
+@model VelastoProductionSystem.Models.ProductionReport
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Extruder Production Report";
+}
+
+@Html.AntiForgeryToken()
+
+@section Styles {
+    <style>
+        :root {
+            --primary-bg: #0f172a;
+            --secondary-bg: #1e293b;
+            --tertiary-bg: #334155;
+            --accent-blue: #3b82f6;
+            --accent-light: #60a5fa;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: #3b82f6;
+            --success-green: #10b981;
+            --warning-yellow: #f59e0b;
+            --danger-red: #ef4444;
+        }
+
+        /* Adjustments for Layout Integration */
+        .app-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .app-header, .content-card {
+            backdrop-filter: blur(10px);
+        }
+
+        /* Header Styles */
+        .app-header {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(51, 65, 85, 0.8) 100%);
+            border: 2px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: nowrap;
+            gap: 15px;
+        }
+
+        .header-logo {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .header-logo-v {
+            width: 50px;
+            height: 50px;
+            background: var(--accent-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .header-logo-v span {
+            font-weight: 900;
+            font-size: 24px;
+            color: white;
+        }
+
+        .header-logo-text .velasto {
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--accent-light);
+            letter-spacing: 1px;
+        }
+
+        .header-logo-text .indonesia {
+            font-size: 10px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--accent-blue);
+            padding-bottom: 2px;
+            margin-top: 2px;
+        }
+
+        .header-title {
+            flex: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .header-title h1 {
+            font-size: 20px;
+            font-weight: 900;
+            margin: 0;
+            color: #f1f5f9;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header-title h2 {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 4px 0 0 0;
+            color: var(--accent-blue);
+        }
+
+        .signature-section {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .signature-table {
+            width: 220px;
+            border: 1px solid var(--accent-blue);
+            border-collapse: collapse;
+            font-size: 10px;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .signature-table th {
+            border: 1px solid var(--accent-blue);
+            padding: 6px;
+            background: var(--accent-blue);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .signature-table td {
+            border: 1px solid var(--accent-blue);
+            height: 30px;
+            text-align: center;
+            color: var(--accent-light);
+            font-weight: bold;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .header-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 10px 0;
+            border-top: 1px solid var(--accent-blue);
+            border-bottom: 1px solid var(--accent-blue);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header-info-row div {
+            min-width: 120px;
+        }
+
+        .header-info-row span {
+            color: var(--accent-light);
+            font-weight: bold;
+        }
+
+        .product-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding-top: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .product-info-row div {
+            min-width: 120px;
+        }
+
+        .product-info-row span {
+            color: var(--accent-light);
+            font-weight: bold;
+        }
+
+        /* Content Sections */
+        .app-main-body {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .content-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-blue);
+            opacity: 0.6;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--accent-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Data Tables */
+        .data-table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th, .data-table td {
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 10px;
+            text-align: center;
+        }
+
+        .data-table th {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--accent-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .point-name {
+            background: rgba(30, 41, 59, 0.9);
+            color: var(--text-primary);
+            font-weight: 700;
+            text-align: left !important;
+            padding-left: 15px !important;
+        }
+
+        .std-dimension {
+            background: rgba(59, 130, 246, 0.05);
+            color: var(--warning-yellow);
+            font-weight: 700;
+        }
+
+        /* Form Inputs */
+        .simple-production-data {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .data-row {
+            display: flex;
+            gap: 25px;
+            align-items: stretch;
+            margin-bottom: 10px;
+        }
+
+        .data-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .data-item.full-width {
+            flex: 1;
+        }
+
+        .data-item .label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 10px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+        }
+
+        .data-item .value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .simple-input {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .simple-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* QTY Selector Toggle */
+        .qty-toggle-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .qty-toggle-buttons {
+            display: flex;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .qty-toggle-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .qty-toggle-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-light);
+            color: var(--accent-light);
+        }
+
+        .qty-toggle-btn.ok-btn.active {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success-green);
+            color: var(--success-green);
+        }
+
+        .qty-toggle-btn.ng-btn.active {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger-red);
+            color: var(--danger-red);
+        }
+
+        .qty-input-section {
+            display: none;
+        }
+
+        .qty-input-section.active {
+            display: block;
+        }
+
+        .qty-main-input {
+            width: 100%;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .ng-inputs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .ng-input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ng-input-group label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .ng-input {
+            width: 100%;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 6px 4px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-app {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+        }
+
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-success { background: var(--success-green); color: white; }
+        .btn-warning { background: var(--warning-yellow); color: white; }
+
+        .btn-app:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Responsive Tablet */
+        @@media (max-width: 1366px) {
+            .app-container { padding: 10px 0; }
+            .data-table { font-size: 11px; }
+            .data-table th { font-size: 9px; padding: 6px 2px; }
+            .data-table td { font-size: 10px; padding: 4px 2px; }
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+}
+
+<div class="app-container">
+    <!-- BARCODE SCANNER FORM -->
+    <div class="barcode-scanner-box no-print" style="margin-bottom: 20px;">
+        <div class="input-group" style="box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); border-radius: 8px; overflow: hidden;">
+            <span class="input-group-text bg-dark border-primary" style="color: var(--accent-light); border-right: none;">
+                <i class="bi bi-upc-scan fs-4"></i>
+            </span>
+            <input type="text" id="barcodeScanner" class="form-control bg-dark border-primary text-white" 
+                   style="border-left: none; font-size: 16px; padding: 12px;" 
+                   placeholder="Arahkan Barcode Scanner kesini atau ketik Part Number..." autocomplete="off" autofocus />
+            <button class="btn btn-primary" type="button" onclick="handleScan()" style="padding: 0 25px; font-weight: bold;">
+                <i class="bi bi-search"></i> LOAD DATA
+            </button>
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 5px; margin-left: 5px;">
+            <i class="bi bi-info-circle"></i> Scan Item List / Part Number pada Masterlist untuk memuat Form ini secara instan.
+        </div>
+    </div>
+
+    <div class="app-header fade-in">
+        <!-- Header Top -->
+        <div class="header-top">
+            <div class="header-logo">
+                <div class="header-logo-v"><span>V</span></div>
+                <div class="header-logo-text">
+                    <div class="velasto">VELASTO</div>
+                    <div class="indonesia">INDONESIA</div>
+                </div>
+            </div>
+            <div class="header-title">
+                <h1>EXTRUDER PRODUCTION REPORT</h1>
+                <h2>( DIMENSION )</h2>
+            </div>
+            <div class="signature-section">
+                <table class="signature-table">
+                    <thead>
+                        <tr>
+                            <th>APPROVED</th>
+                            <th>CHECKED</th>
+                            <th>PREPARED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SPV</td>
+                            <td>LDR</td>
+                            <td>OPR</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+                
+        <!-- Document Info -->
+        <div class="header-info-row">
+            <div><span>NO DOC :</span> @Model.DocumentNumber</div>
+            <div><span>DATE :</span> @Model.ProductionDate.ToString("dd/MMM/yyyy")</div>
+            <div><span>SHIFT :</span> @Model.Shift</div>
+            <div class="text-info fw-bold"><span>OPERATOR :</span> @Model.CreatedBy</div>
+            <div class="text-warning fw-bold"><span>MESIN :</span> @Model.MachineName</div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="product-info-row">
+            <div><span>CUSTOMER :</span> @Model.CustomerName</div>
+            <div><span>TYPE :</span> @Model.HoseType</div>
+            <div><span>HOSE :</span> @Model.Dimension</div>
+            <div><span>WIRE :</span> @Model.Yarn</div>
+            <div><span>BY PASS :</span> 2.5 mm</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="app-main-body">
+        <!-- Dimension Data Card -->
+        <div class="content-card fade-in">
+            <div class="card-header">
+                <h3 class="card-title">Dimension Measurements</h3>
+                <div>
+                    <span class="status-indicator status-ok"></span>
+                    <span style="font-size: 12px; color: var(--text-secondary);">System Active</span>
+                </div>
+            </div>
+            
+            <div class="row g-4" id="dimGridHUD">
+                @{
+                    var stdVal = Model.StandardParameterSetting;
+                    var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
+
+                    decimal D(string? s, decimal def) {
+                        if (string.IsNullOrWhiteSpace(s)) return def;
+                        string cleanString = s.Replace(",", "."); 
+                        var match = System.Text.RegularExpressions.Regex.Match(cleanString, @"-?\d+(\.\d+)?");
+                        if (match.Success) {
+                            return decimal.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                        }
+                        return def;
+                    }
+
+                    decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 0m) : 0m);
+                    decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0m) : 0m);
+                    decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 0m) : 0m);
+                    decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0m;
+                    decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 0m) : 0m);
+                    decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0m) : 0m);
+
+                    var idNomDisp = idNom.ToString("0.0");
+                    var idTolDisp = idTol.ToString("0.0");
+                    var idFull = $"{idNomDisp} ± {idTolDisp}";
+
+                    var tubeNomDisp = tubeNom.ToString("0.0");
+                    var tubeTolDisp = tubeTol.ToString("0.0");
+                    var tubeFull = $"{tubeNomDisp} ± {tubeTolDisp}";
+
+                    var coverNomDisp = coverNom.ToString("0.0");
+                    var coverTolDisp = coverTol.ToString("0.0");
+                    var coverFull = $"{coverNomDisp} ± {coverTolDisp}";
+
+                    var pitchNom = (stdVal?.SpiralPitch ?? 38);
+                    var pitchTol = (stdVal?.Tol_SpiralPitch ?? 5);
+                    var pitchFull = $"{pitchNom} ± {pitchTol}";
+
+                    var dimensionPoints = new[] {
+                        new { Name = "Inner Diameter", Key = "ID", Std = idFull, Icon = "bi-circle" },
+                        new { Name = "In Thick (X)", Key = "InThickX", Std = tubeFull, Icon = "bi-arrows-expand" },
+                        new { Name = "In Thick (Y)", Key = "InThickY", Std = tubeFull, Icon = "bi-arrows-vertical" },
+                        new { Name = "Total Thick (X)", Key = "TotThickX", Std = coverFull, Icon = "bi-plus-circle" },
+                        new { Name = "Total Thick (Y)", Key = "TotThickY", Std = coverFull, Icon = "bi-plus-circle-dotted" },
+                        new { Name = "Spiral Pitch", Key = "SpiralPitch", Std = pitchFull, Icon = "bi-soundwave" }
+                    };
+                }
+
+                @foreach (var dp in dimensionPoints) {
+                    <div class="col-md-6 col-xxl-4">
+                        <div class="content-card h-100 p-3" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi @dp.Icon text-info opacity-50"></i>
+                                    <span class="super-small fw-black text-white tracking-widest opacity-40">@dp.Name.ToUpper()</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-info p-0 px-2 super-small opacity-50" style="border-radius:20px" onclick="toggleJam('@dp.Key')">DETAIL (1-5)</button>
+                            </div>
+                            
+                            <div class="text-center py-2">
+                                <div class="super-small text-info opacity-40 mb-n1">STANDARD (mm)</div>
+                                <div class="fw-black text-info" id="spec_@dp.Key" style="font-size: 1.5rem; text-shadow: 0 0 15px rgba(56, 189, 248, 0.3)">@dp.Std</div>
+                            </div>
+
+                            <div class="mt-2">
+                                <div class="super-small opacity-30 text-center mb-1">INITIAL MEASUREMENT</div>
+                                <input name="Init_@dp.Key" 
+                                       class="input-init-big font-monospace w-100" 
+                                       placeholder="0.00" 
+                                       oninput="validateParam(this, 'spec_@dp.Key')" />
+                            </div>
+
+                            <!-- JAM 1-5 DETAIL -->
+                            <div class="d-none mt-3 p-2 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05)" id="jam_@dp.Key">
+                                <div class="row g-2">
+                                    @for(int j=1; j<=5; j++) {
+                                        <div class="col">
+                                            <div class="super-small text-center opacity-25">J-@j</div>
+                                            <input name="J@(j)_@dp.Key" class="simple-input text-center p-1 fs-6" placeholder="-" oninput="validateParam(this, 'spec_@dp.Key')" />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- VISUAL CHECK HUD -->
+                <div class="col-12">
+                    <div class="content-card p-4" style="background: linear-gradient(135deg, rgba(30,41,59,0.5), rgba(15,23,42,0.3)); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <i class="bi bi-eye-fill text-warning fs-4"></i>
+                            <span class="fw-black text-white tracking-widest opacity-50">PRODUCTION VISUAL CHECK</span>
+                        </div>
+                        <div class="row g-4">
+                            @{
+                                var checks = new[] { "NO BURR", "NO LINE", "NO BUBBLE", "NO SCRATCH" };
+                            }
+                            @foreach(var c in checks) {
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-black bg-opacity-30 rounded-3 text-center">
+                                        <div class="super-small fw-bold mb-2 opacity-50">@c</div>
+                                        <div class="btn-group w-100">
+                                            <button type="button" class="btn btn-sm btn-outline-success fw-bold" style="font-size: 10px;" onclick="setVisual(this)">OK</button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold" style="font-size: 10px;" onclick="setVisual(this)">NG</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <!-- Production Data Card -->
+        <div class="content-card fade-in">
+            <div class="card-header">
+                <h3 class="card-title">Production Data</h3>
+            </div>
+            
+            <div class="simple-production-data">
+                <div class="data-row">
+                    <div class="data-item">
+                        <span class="label">PART NUMBER</span>
+                        <span class="value">@(Model.StandardParameterSetting?.ProductCode ?? "-")</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">VIN KODE</span>
+                        <input type="text" id="vinCode" value="@Model.VinCode" placeholder="Enter VIN Code" class="simple-input" />
+                    </div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-item">
+                        <span class="label">STD PNJG</span>
+                        <span class="value">@Model.StandardLength</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">ACT PNJG</span>
+                        <input type="text" id="actualLength" value="@Model.ActualLength" placeholder="Enter Actual Length" class="simple-input" />
+                    </div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-item">
+                        <span class="label">QTY TARGET</span>
+                        <span class="value">@Model.QtyTarget</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">QTY ACTUAL</span>
+                        <div class="qty-toggle-container">
+                            <div class="qty-toggle-buttons">
+                                <button type="button" class="qty-toggle-btn ok-btn active" data-type="ok">
+                                    <i class="bi bi-check-circle"></i> OK
+                                </button>
+                                <button type="button" class="qty-toggle-btn ng-btn" data-type="ng">
+                                    <i class="bi bi-x-circle"></i> NG
+                                </button>
+                            </div>
+                            
+                            <div class="qty-input-section ok-section active">
+                                <input type="text" id="qtyOk" value="@Model.QtyOk" placeholder="0" class="qty-main-input" data-field="QtyOk" />
+                            </div>
+                            
+                            <div class="qty-input-section ng-section">
+                                <div class="ng-inputs">
+                                    <div class="ng-input-group">
+                                        <label>DIMENSI</label>
+                                        <input type="text" id="ngDim" value="@Model.NgDimension" placeholder="0" class="ng-input" data-field="NgDimension" />
+                                    </div>
+                                    <div class="ng-input-group">
+                                        <label>VISUAL</label>
+                                        <input type="text" id="ngVis" value="@Model.NgVisual" placeholder="0" class="ng-input" data-field="NgVisual" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-item full-width">
+                        <span class="label">REMARK</span>
+                        <input type="text" id="remark" value="@Model.Remark" placeholder="Enter remarks or notes..." class="simple-input full-width" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn-app btn-primary" onclick="saveData()">
+                <i class="bi bi-save"></i> Save Data
+            </button>
+            <button class="btn-app btn-success" onclick="submitReport()">
+                <i class="bi bi-check-circle"></i> Submit Report
+            </button>
+            <button class="btn-app btn-info" onclick="window.location.href='/ProductionReport/Index'">
+                <i class="bi bi-folder2-open"></i> Buka Histori Data
+            </button>
+            <button class="btn-app btn-warning" onclick="exportData()">
+                <i class="bi bi-download"></i> Export
+            </button>
+            <button class="btn-app btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const reportId = @Model.Id;
+        let isDirty = false;
+        
+        // ─────────────────────────────────────────────────────────────────────
+        // DRAFT POKAYOKE SYSTEM (localStorage per product code)
+        // ─────────────────────────────────────────────────────────────────────
+        const DRAFT_PREFIX = 'velasto_app_draft_v1_';
+        const _currentProductCode = '@(Model.StandardParameterSetting?.ProductCode ?? "NA")';
+        let _autoSaveTimer = null;
+
+        function _draftKey() { return DRAFT_PREFIX + _currentProductCode; }
+
+        function captureDraft() {
+            if (!_currentProductCode) return;
+            const draft = {
+                ts: Date.now(),
+                inputs: {},
+                visuals: {},
+                qtyType: document.querySelector('.qty-toggle-btn.active')?.dataset.type || 'ok'
+            };
+
+            // Capture all inputs (Init, J1-J5, VIN, QTY, etc)
+            document.querySelectorAll('input:not([type="hidden"])').forEach(el => {
+                if (el.id) draft.inputs[el.id] = el.value;
+                if (el.name) draft.inputs['__name_' + el.name] = el.value;
+            });
+
+            // Capture visual check states
+            document.querySelectorAll('.btn-group').forEach(group => {
+                const label = group.closest('div').querySelector('.super-small')?.innerText;
+                const activeBtn = group.querySelector('.btn.active');
+                if (label && activeBtn) {
+                    draft.visuals[label] = activeBtn.innerText;
+                }
+            });
+
+            localStorage.setItem(_draftKey(), JSON.stringify(draft));
+        }
+
+        function restoreDraft() {
+            const raw = localStorage.getItem(_draftKey());
+            if (!raw) return;
+            try {
+                const draft = JSON.parse(raw);
+                if (!draft) return;
+
+                // Restore inputs
+                Object.entries(draft.inputs).forEach(([key, val]) => {
+                    if (key.startsWith('__name_')) {
+                        const name = key.replace('__name_', '');
+                        const el = document.querySelector(`input[name="${name}"]`);
+                        if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    } else {
+                        const el = document.getElementById(key);
+                        if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    }
+                });
+
+                // Restore QTY type
+                if (draft.qtyType) {
+                    const btn = document.querySelector(`.qty-toggle-btn[data-type="${draft.qtyType}"]`);
+                    if (btn) btn.click();
+                }
+
+                // Restore visuals
+                Object.entries(draft.visuals).forEach(([label, state]) => {
+                    document.querySelectorAll('.super-small').forEach(lblEl => {
+                        if (lblEl.innerText === label) {
+                            const group = lblEl.closest('div').querySelector('.btn-group');
+                            if (group) {
+                                group.querySelectorAll('button').forEach(btn => {
+                                    if (btn.innerText === state) setVisual(btn);
+                                });
+                            }
+                        }
+                    });
+                });
+
+                showNotification('DRAFT DIPULIHKAN (POKAYOKE ACTIVE)', 'success');
+            } catch (e) { console.error("Restore failed", e); }
+        }
+
+        function setupAutoSave() {
+            const container = document.querySelector('.app-main-body');
+            if (!container) return;
+            container.addEventListener('input', () => {
+                clearTimeout(_autoSaveTimer);
+                _autoSaveTimer = setTimeout(captureDraft, 1500);
+            });
+        }
+
+        function setVisual(btn) {
+            const group = btn.closest('.btn-group');
+            group.querySelectorAll('button').forEach(b => {
+                b.classList.remove('active', 'btn-success', 'btn-danger');
+                b.classList.add(b.innerText === 'OK' ? 'btn-outline-success' : 'btn-outline-danger');
+            });
+            
+            btn.classList.remove('btn-outline-success', 'btn-outline-danger');
+            btn.classList.add('active');
+            btn.classList.add(btn.innerText === 'OK' ? 'btn-success' : 'btn-danger');
+            
+            captureDraft(); // Immediate save on visual toggle
+        }
+
+        function toggleJam(key) {
+            const el = document.getElementById('jam_' + key);
+            if(el) el.classList.toggle('d-none');
+        }
+
+        function validateParam(input, specId) {
+            const valStr = input.value.trim().replace(',', '.');
+            if(valStr === "") { input.classList.remove('valid-success', 'valid-error'); return; }
+            
+            const val = parseFloat(valStr);
+            const specEl = document.getElementById(specId);
+            if(!specEl || isNaN(val)) { input.classList.remove('valid-success', 'valid-error'); return; }
+            
+            let isValid = true;
+            // Handle standard with comma like "7,0 ± 6,8"
+            const specText = specEl.innerText.trim().replace(',', '.');
+            
+            try {
+                if (specText.includes('±')) {
+                    const parts = specText.split('±');
+                    const target = parseFloat(parts[0].trim());
+                    const tol = parseFloat(parts[1].trim());
+                    isValid = (val >= (target - tol) && val <= (target + tol));
+                } else if (specText.toLowerCase().includes('max')) {
+                    const maxVal = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    isValid = (val <= maxVal);
+                } else if (specText.toLowerCase().includes('min')) {
+                    const minVal = parseFloat(specText.replace(/[^-0-9.]/g, ''));
+                    isValid = (val >= minVal);
+                }
+            } catch(e) { isValid = false; }
+
+            if (isValid) { input.classList.add('valid-success'); input.classList.remove('valid-error'); }
+            else { input.classList.add('valid-error'); input.classList.remove('valid-success'); }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // QTY Toggle
+            const toggleButtons = document.querySelectorAll('.qty-toggle-btn');
+            const okSection = document.querySelector('.ok-section');
+            const ngSection = document.querySelector('.ng-section');
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    toggleButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    okSection.classList.toggle('active', this.dataset.type === 'ok');
+                    ngSection.classList.toggle('active', this.dataset.type === 'ng');
+                });
+            });
+
+            // Input listeners
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', () => isDirty = true);
+            });
+            
+            // Barcode Scanner Listener
+            const barcodeInput = document.getElementById('barcodeScanner');
+            if(barcodeInput){
+                barcodeInput.focus();
+                barcodeInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleScan();
+                    }
+                });
+            }
+
+            // Restore and Setup Pokayoke
+            setTimeout(() => {
+                restoreDraft();
+                setupAutoSave();
+            }, 500);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (isDirty) captureDraft();
+        });
+
+        function handleScan() {
+            const val = document.getElementById('barcodeScanner').value.trim();
+            if(val) {
+                showNotification('Memuat data dari Masterlist SPS...', 'success');
+                window.location.href = '/ProductionReport/AppByItem?itemCode=' + encodeURIComponent(val);
+            }
+        }
+
+        async function saveData() {
+            showNotification('Menyimpan data...', 'success');
+            const points = ['ID', 'InThickX', 'InThickY', 'TotThickX', 'TotThickY', 'SpiralPitch'];
+            const payload = {
+                ReportId: reportId,
+                DocumentNumber: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DocumentNumber ?? "")),
+                HoseType: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HoseType ?? "")),
+                DimensionDisplay: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Dimension ?? "")),
+                CustomerName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName ?? "")),
+                Yarn: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Yarn ?? "")),
+                VinCode: document.getElementById('vinCode')?.value || '',
+                ActualLength: document.getElementById('actualLength')?.value || '',
+                QtyOk: parseInt(document.getElementById('qtyOk')?.value) || 0,
+                NgDimension: parseInt(document.getElementById('ngDim')?.value) || 0,
+                NgVisual: parseInt(document.getElementById('ngVis')?.value) || 0,
+                Remark: document.getElementById('remark')?.value || '',
+                DimensionReadings: []
+            };
+
+            // Loop HUD Tiles for measurements
+            points.forEach(p => {
+                payload.DimensionReadings.push({
+                    PointName: p,
+                    TimeSection: "INITIAL",
+                    Initial: document.querySelector(`input[name="Init_${p}"]`)?.value || '0',
+                    Reading1: document.getElementById(`r1_${p}`)?.value || '0',
+                    Reading2: document.getElementById(`r2_${p}`)?.value || '0',
+                    Reading3: document.getElementById(`r3_${p}`)?.value || '0',
+                    Reading4: document.getElementById(`r4_${p}`)?.value || '0',
+                    Reading5: document.getElementById(`r5_${p}`)?.value || '0'
+                });
+            });
+
+            try {
+                const response = await fetch('/ProductionReport/SaveAppData', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if(result.success) {
+                    showNotification('Berhasil! Data telah aman di Database.', 'success');
+                    isDirty = false;
+                    if(reportId === 0 && result.reportId) {
+                        setTimeout(() => {
+                            window.location.href = '/ProductionReport/App/' + result.reportId;
+                        }, 1200);
+                    }
+                } else {
+                    showNotification('Gagal menyimpan: ' + result.message, 'error');
+                }
+            } catch(e) {
+                console.error(e);
+                showNotification('Error jaringan saat menghubungi server!', 'error');
+            }
+        }
+
+        async function submitReport() {
+            if(confirm('Submit this report?')) {
+                showNotification('Report submitted!', 'success');
+                window.location.href = '/ProductionReport/Index';
+            }
+        }
+
+        function exportData() {
+            window.open(`/ProductionReport/ExportAppData/${reportId}`, '_blank');
+        }
+
+        function showNotification(msg, type) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `position:fixed; top:20px; right:20px; background:${type==='success'?'#10b981':'#ef4444'}; color:white; padding:15px; border-radius:8px; z-index:9999; animation:fadeIn 0.3s;`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+}

@@ -1,0 +1,168 @@
+@model VelastoProductionSystem.Models.ElwpUser
+@{
+    ViewData["Title"] = "Edit User Extrude";
+}
+
+<style>
+    .form-glass-card {
+        background: rgba(30, 34, 41, 0.7);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 32px;
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
+    .form-label {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    .form-control, .form-select {
+        background: rgba(0, 0, 0, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff !important;
+        border-radius: 12px;
+        padding: 12px 16px;
+        transition: all 0.3s;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        background: rgba(0, 0, 0, 0.4) !important;
+    }
+    .input-group-text {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+        border-radius: 12px 0 0 12px;
+    }
+    .input-group .form-control {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .btn-submit {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        color: #fff;
+        font-weight: 700;
+        padding: 14px 28px;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        filter: brightness(1.1);
+    }
+    .avatar-header {
+        width: 80px;
+        height: 80px;
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        border-radius: 50%;
+        margin: 0 auto 20px;
+        border: 2px solid rgba(59, 130, 246, 0.3);
+    }
+</style>
+
+<div class="container py-5 fade-in">
+    <div class="text-center mb-5">
+        <div class="avatar-header">@Model.FullName.Substring(0, 1).ToUpper()</div>
+        <h2 class="text-white fw-bold">Edit Profile: @Model.FullName</h2>
+        <p class="text-white-50">Perbarui informasi user di area Extrude.</p>
+    </div>
+
+    <div class="form-glass-card">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="AreaId" />
+            <input type="hidden" asp-for="PlantId" />
+
+            <div class="row g-4">
+                <!-- Nama Lengkap -->
+                <div class="col-md-12">
+                    <label asp-for="FullName" class="form-label">Nama Lengkap</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input asp-for="FullName" class="form-control" required />
+                    </div>
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <!-- Username & NPK -->
+                <div class="col-md-6">
+                    <label asp-for="Username" class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-at"></i></span>
+                        <input asp-for="Username" class="form-control" required />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NPK" class="form-label">NPK</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        <input asp-for="NPK" class="form-control" />
+                    </div>
+                </div>
+
+                <!-- Role & Email -->
+                <div class="col-md-6">
+                    <label asp-for="Role" class="form-label">Role / Jabatan</label>
+                    <select asp-for="Role" class="form-select">
+                        <option value="Operator">Operator</option>
+                        <option value="Leader">Leader</option>
+                        <option value="Foreman">Foreman</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="col-md-12">
+                    <label asp-for="PasswordHash" class="form-label">Reset Password (Opsional)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input type="password" name="PasswordHash" class="form-control" placeholder="Masukkan password baru jika ingin diubah" />
+                    </div>
+                    <p class="text-white-50 small mt-2">Biarkan kosong jika tidak ingin mengubah password.</p>
+                </div>
+
+                <!-- IsActive Card Section -->
+                <div class="col-md-12">
+                    <div class="form-check form-switch p-3 bg-white bg-opacity-5 rounded-3 border border-white border-opacity-10">
+                        <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="IsActive">
+                        <label class="form-check-label text-white fw-bold" asp-for="IsActive">User Aktif</label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="col-md-12 mt-4">
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a asp-action="Index" class="btn btn-outline-light rounded-12 px-4">Batal</a>
+                        <button type="submit" class="btn btn-submit shadow-lg px-5">
+                            <i class="bi bi-save2-fill me-2"></i> Update Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

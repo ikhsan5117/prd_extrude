@@ -1,0 +1,217 @@
+@model IEnumerable<VelastoProductionSystem.Models.ElwpUser>
+@{
+    ViewData["Title"] = "User Management - Extrude";
+}
+
+<style>
+    .user-header { 
+        background: rgba(30, 34, 41, 0.7); 
+        backdrop-filter: blur(10px);
+        border-radius: 16px; 
+        border: 1px solid rgba(255,255,255,0.06); 
+        padding: 24px; 
+        margin-bottom: 24px; 
+    }
+    .table-container { 
+        background: rgba(26, 30, 38, 0.6); 
+        backdrop-filter: blur(15px);
+        border-radius: 16px; 
+        overflow: hidden; 
+        border: 1px solid rgba(255,255,255,0.1); 
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    .user-table { font-size: 0.9rem; }
+    .user-table th { 
+        background: rgba(0,0,0,0.3); 
+        color: #94a3b8; 
+        font-size: 0.75rem; 
+        text-transform: uppercase; 
+        letter-spacing: 1px; 
+        padding: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .user-table td { 
+        padding: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        vertical-align: middle;
+    }
+    .user-table tr:hover td { background: rgba(255,255,255,0.02); }
+    
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .status-active { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .status-inactive { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    
+    .role-pill {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        transition: all 0.2s;
+    }
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+    
+    .search-box {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 10px 16px;
+        color: #fff;
+        width: 100%;
+        max-width: 400px;
+        transition: all 0.3s;
+    }
+    .search-box:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+</style>
+
+<div class="container-fluid py-4 fade-in">
+    <!-- Header Section -->
+    <div class="user-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-white fw-bold mb-1">
+                <i class="bi bi-people-fill text-info me-2"></i> User Management
+            </h2>
+            <p class="text-white-50 mb-0">Kelola data operator dan staff di area <span class="text-info fw-bold">EXTRUDE</span></p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-info rounded-pill px-4 fw-bold shadow-sm">
+                <i class="bi bi-person-plus-fill me-2"></i> Tambah User Baru
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="position-relative">
+            <i class="bi bi-search position-absolute top-50 translate-middle-y ms-3 text-white-50"></i>
+            <input type="text" id="userSearch" class="search-box ps-5" placeholder="Cari nama, NPK, atau username...">
+        </div>
+        <div class="text-white-50 small">
+            Menampilkan <span class="text-white fw-bold" id="userCount">@Model.Count()</span> User Aktif
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container shadow-lg">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 user-table" id="userTable">
+                <thead>
+                    <tr>
+                        <th>Nama Lengkap</th>
+                        <th>Username / NPK</th>
+                        <th>Role</th>
+                        <th>Area</th>
+                        <th>Status</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr data-search="@($"{user.FullName} {user.Username} {user.NPK}".ToLower())">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: bold;">
+                                        @user.FullName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div>
+                                        <div class="text-white fw-bold">@user.FullName</div>
+                                        <div class="text-white-50 small">@user.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-info">@user.Username</div>
+                                <div class="text-white-50 small">NPK: @(string.IsNullOrEmpty(user.NPK) ? "-" : user.NPK)</div>
+                            </td>
+                            <td>
+                                <span class="role-pill">@user.Role</span>
+                            </td>
+                            <td>
+                                <span class="text-white-50">@(user.Area?.Name ?? "Extrude")</span>
+                            </td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="status-badge status-active">
+                                        <span class="status-dot pulse" style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span>
+                                        Aktif
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-inactive">Non-Aktif</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-glass btn-sm me-2 rounded-3" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <button type="button" onclick="deleteUser(@user.Id, '@user.FullName')" class="btn btn-glass btn-sm text-danger rounded-3" title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Real-time search
+        $('#userSearch').on('input', function() {
+            var value = $(this).val().toLowerCase();
+            var visibleCount = 0;
+            
+            $("#userTable tbody tr").filter(function() {
+                var match = $(this).data('search').indexOf(value) > -1;
+                $(this).toggle(match);
+                if(match) visibleCount++;
+            });
+            
+            $('#userCount').text(visibleCount);
+        });
+
+        // Delete confirm
+        function deleteUser(id, name) {
+            if (confirm('Apakah Anda yakin ingin menghapus user "' + name + '"?')) {
+                $.post('@Url.Action("Delete")', { id: id }, function(res) {
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            }
+        }
+    </script>
+}

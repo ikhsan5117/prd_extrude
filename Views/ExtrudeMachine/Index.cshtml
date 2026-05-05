@@ -1,0 +1,157 @@
+@model IEnumerable<VelastoProductionSystem.Models.ElwpMachine>
+@{
+    ViewData["Title"] = "Machine Management - Extrude";
+}
+
+<style>
+    .glass-card { 
+        background: rgba(30, 34, 41, 0.7); 
+        backdrop-filter: blur(12px);
+        border-radius: 16px; 
+        border: 1px solid rgba(255,255,255,0.06); 
+        padding: 24px; 
+        margin-bottom: 24px; 
+    }
+    .table-container { 
+        background: rgba(26, 30, 38, 0.6); 
+        backdrop-filter: blur(15px);
+        border-radius: 16px; 
+        overflow: hidden; 
+        border: 1px solid rgba(255,255,255,0.1); 
+    }
+    .machine-table { font-size: 0.9rem; }
+    .machine-table th { 
+        background: rgba(0,0,0,0.3); 
+        color: #94a3b8; 
+        font-size: 0.75rem; 
+        text-transform: uppercase; 
+        letter-spacing: 1px; 
+        padding: 16px;
+    }
+    .machine-table td { 
+        padding: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        vertical-align: middle;
+    }
+    .machine-table tr:hover td { background: rgba(255,255,255,0.02); }
+    
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .status-active { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-inactive { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    
+    .area-badge {
+        background: rgba(139, 92, 246, 0.15);
+        color: #a78bfa;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+    }
+    .area-tpe {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+    }
+
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+</style>
+
+<div class="container-fluid py-4 fade-in">
+    <div class="glass-card d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-white fw-bold mb-1">
+                <i class="bi bi-gear-wide-connected text-warning me-2"></i> Mesin Extrude
+            </h2>
+            <p class="text-white-50 mb-0">Managemen aset mesin di area Extrude & TPE</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-warning rounded-pill px-4 fw-bold">
+                <i class="bi bi-plus-circle-fill me-2"></i> Tambah Mesin
+            </a>
+        </div>
+    </div>
+
+    <div class="table-container shadow-lg">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 machine-table">
+                <thead>
+                    <tr>
+                        <th>Kode Mesin</th>
+                        <th>Nama Mesin</th>
+                        <th>Area</th>
+                        <th>Kapasitas</th>
+                        <th>Status</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model)
+                    {
+                        <tr>
+                            <td class="text-warning fw-bold">@m.KodeMesin</td>
+                            <td>
+                                <div class="text-white">@m.NamaMesin</div>
+                                <div class="text-white-50 small">@m.Keterangan</div>
+                            </td>
+                            <td>
+                                <span class="area-badge @(m.AreaId == 10 ? "area-tpe" : "")">
+                                    @(m.Area?.Name ?? (m.AreaId == 10 ? "Extrude TPE" : "Extrude"))
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-white-50">@(m.Kapasitas?.ToString("N0") ?? "-") / jam</span>
+                            </td>
+                            <td>
+                                @if (m.IsActive)
+                                {
+                                    <span class="status-badge status-active">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-inactive">Non-Aktif</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-glass btn-sm me-2 rounded-3">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <button type="button" onclick="deleteMachine(@m.Id, '@m.NamaMesin')" class="btn btn-glass btn-sm text-danger rounded-3">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteMachine(id, name) {
+            if (confirm('Hapus mesin "' + name + '"?')) {
+                $.post('@Url.Action("Delete")', { id: id }, function(res) {
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            }
+        }
+    </script>
+}

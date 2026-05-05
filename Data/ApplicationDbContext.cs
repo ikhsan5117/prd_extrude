@@ -13,11 +13,21 @@ namespace VelastoProductionSystem.Data
         public DbSet<StandardParameterSetting> StandardParameterSettings { get; set; }
         public DbSet<ProductionReport> ProductionReports { get; set; }
         public DbSet<ProductionReading> ProductionReadings { get; set; }
-        public DbSet<DimensionReading> DimensionReadings { get; set; }
         public DbSet<NowProducing> NowProducings { get; set; }
         public DbSet<LotTag> LotTags { get; set; }
         public DbSet<PackingStandard> PackingStandards { get; set; }
         public DbSet<MasterlistSpsDoubleLayer> MasterlistSpsDoubleLayers { get; set; }
+        public DbSet<DimensionReport> DimensionReports { get; set; }
+        public DbSet<DimensionMeasurement> DimensionMeasurements { get; set; }
+        public DbSet<DimensionSummary> DimensionSummaries { get; set; }
+        public DbSet<PlanningMaster> PlanningMasters { get; set; }
+        public DbSet<DailyPlanExecution> DailyPlanExecutions { get; set; }
+        public DbSet<DailyPlanActivity> DailyPlanActivities { get; set; }
+        public DbSet<Machine> Machines { get; set; }
+        public DbSet<PartMaster> PartMasters { get; set; }
+        public DbSet<ShiftMaster> ShiftMasters { get; set; }
+        public DbSet<ProductionMaterialLot> ProductionMaterialLots { get; set; }
+        public DbSet<SensorIngestLog> SensorIngestLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,10 +46,16 @@ namespace VelastoProductionSystem.Data
                 .HasForeignKey(p => p.ProductionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<DimensionReading>()
-                .HasOne(d => d.ProductionReport)
-                .WithMany()
-                .HasForeignKey(d => d.ProductionReportId)
+            modelBuilder.Entity<DimensionMeasurement>()
+                .HasOne(d => d.DimensionReport)
+                .WithMany(r => r.Measurements)
+                .HasForeignKey(d => d.DimensionReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DimensionSummary>()
+                .HasOne(s => s.DimensionReport)
+                .WithMany(r => r.Summaries)
+                .HasForeignKey(s => s.DimensionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LotTag>()
@@ -99,6 +115,16 @@ namespace VelastoProductionSystem.Data
                 .HasIndex(p => p.NACode)
                 .IsUnique();
 
+            // SensorIngestLogs indexes
+            modelBuilder.Entity<SensorIngestLog>()
+                .HasIndex(s => s.IdempotencyKey)
+                .IsUnique()
+                .HasFilter("[IdempotencyKey] IS NOT NULL");
+            modelBuilder.Entity<SensorIngestLog>()
+                .HasIndex(s => new { s.MachineCode, s.SensorTimestamp });
+            modelBuilder.Entity<SensorIngestLog>()
+                .HasIndex(s => s.DeviceId);
+
             // Seed initial data (optional)
             SeedData(modelBuilder);
         }
@@ -110,6 +136,12 @@ namespace VelastoProductionSystem.Data
             // modelBuilder.Entity<PackingStandard>().HasData(
             //     new PackingStandard { Id = 1, NACode = "NA-1420", ... }
             // );
+        }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+            configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
         }
     }
 }

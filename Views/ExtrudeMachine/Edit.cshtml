@@ -1,0 +1,82 @@
+@model VelastoProductionSystem.Models.ElwpMachine
+@{
+    ViewData["Title"] = "Edit Mesin Extrude";
+}
+
+<style>
+    .form-glass-card {
+        background: rgba(30, 34, 41, 0.7);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 32px;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .form-label { color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+    .form-control, .form-select {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff !important;
+        border-radius: 12px;
+        padding: 12px;
+    }
+    .btn-submit {
+        background: #fbbf24;
+        border: none;
+        color: #000;
+        font-weight: 700;
+        padding: 12px 24px;
+        border-radius: 12px;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="form-glass-card">
+        <h3 class="text-white fw-bold mb-4"><i class="bi bi-pencil-square text-warning me-2"></i> Edit Mesin: @Model.KodeMesin</h3>
+        
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="PlantId" />
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label">Kode Mesin</label>
+                    <input asp-for="KodeMesin" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Area Produksi</label>
+                    <select asp-for="AreaId" class="form-select">
+                        <option value="1">Extrude</option>
+                        <option value="10">Extrude TPE</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Nama Mesin</label>
+                    <input asp-for="NamaMesin" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Kapasitas (pcs/jam)</label>
+                    <input asp-for="Kapasitas" type="number" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Keterangan</label>
+                    <input asp-for="Keterangan" class="form-control" />
+                </div>
+                <div class="col-md-12">
+                    <div class="form-check form-switch p-3 bg-white bg-opacity-5 rounded-3 border border-white border-opacity-10">
+                        <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="IsActive">
+                        <label class="form-check-label text-white fw-bold" asp-for="IsActive">Mesin Aktif</label>
+                    </div>
+                </div>
+                
+                <div class="col-12 mt-4 pt-2">
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a asp-action="Index" class="btn btn-outline-light px-4">Batal</a>
+                        <button type="submit" class="btn btn-submit px-5">Update Mesin</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
