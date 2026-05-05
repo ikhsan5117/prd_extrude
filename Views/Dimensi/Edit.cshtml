@@ -652,7 +652,7 @@
         <div class="row g-3 animate__animated animate__fadeInUp">
             <!-- Left Console: Planning Master -->
             <div class="col-md-7">
-                <div class="hud-console-pill">
+                <div class="hud-console-pill planning-master-container">
                     <div class="hud-label-mini" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                         <div><i class="bi bi-list-check"></i> PLANNING MASTER</div>
                         <span class="badge" style="font-size:8px; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);"><i class="bi bi-shield-check"></i> ALL MACHINES</span>
@@ -662,8 +662,8 @@
                                placeholder="KETIK ITEM CODE..." 
                                value="@(string.IsNullOrEmpty(Model.ItemCode) || Model.ItemCode == "---" ? Model.HoseType : $"[{Model.ItemCode}] {Model.HoseType}")"
                                oninput="filterPlanningResults(this.value)" 
-                               onfocus="openPlanningDropdown()" autocomplete="off" readonly
-                               style="cursor:pointer;" />
+                               onfocus="openPlanningDropdown()" autocomplete="off"
+                               style="cursor:text;" />
                     </div>
                     <div id="planningResults" class="planning-results d-none custom-tactical-scroll"></div>
                 </div>
@@ -1139,7 +1139,6 @@
 
             planningInput.placeholder = 'LOADING PLANNING...';
             planningInput.disabled = true;
-            document.getElementById('planningResults')?.classList.add('d-none');
 
             try {
                 const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shiftText)}`);
@@ -1155,10 +1154,16 @@
                 planningInput.disabled = false;
                 if (planningItemsCache.length > 0) {
                     planningInput.placeholder = `SEARCH PLANNING (${planningItemsCache.length} ITEM${planningItemsCache.length > 1 ? 'S' : ''}${machineCtx})`;
+                    // FIX: Hanya tampilkan jika user sedang aktif di kolom ini (mencegah muncul sendiri saat load)
+                    if (document.activeElement === planningInput) {
+                        document.getElementById('planningResults')?.classList.remove('d-none');
+                        renderPlanningResults(planningResultItems, true);
+                    }
                 } else {
                     planningInput.placeholder = 'NO ITEMS IN PLAN FOR THIS MACHINE/DAY';
                 }
-                planningInput.value = '';
+                // FIX: JANGAN hapus value di sini agar input user tetap ada
+                // planningInput.value = ''; 
             } catch (error) {
                 console.error('Failed to refresh planning items:', error);
                 planningInput.disabled = false;
@@ -1284,14 +1289,12 @@
 
         function openPlanningDropdown() {
             const planningInput = document.getElementById('planningSearch');
-            if (!planningInput) return;
-            planningInput.value = '';
-            planningInput.readOnly = false;
-            planningInput.placeholder = planningItemsCache.length > 0
-                ? `KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA)`
-                : 'LOADING...';
-            filterPlanningResults('');
-            document.getElementById('planningResults')?.classList.remove('d-none');
+            const results = document.getElementById('planningResults');
+            if (results) {
+                results.classList.remove('d-none');
+                // Selalu render ulang agar up-to-date
+                renderPlanningResults(planningResultItems, true);
+            }
             if (planningItemsCache.length === 0) refreshPlanningItems();
         }
 
@@ -1542,10 +1545,17 @@
                     spsIdField.value = '';
                     console.log('✅ SpsId field cleared (Masterlist source)');
                 }
-            } else if (spsIdField && sps.Id) {
-                spsIdField.value = sps.Id;
-                console.log('💾 SpsId field set to:', sps.Id, '(StandardParameterSettings source)');
-                console.log('   Verify field value:', spsIdField.value);
+            } else if (spsIdField) {
+                // FIX: Handle both 'id' (camelCase from JSON) and 'Id' (PascalCase)
+                // FIX: Jika dari Masterlist, coba cari ID-nya di SPS (jika ada)
+                const targetId = sps.id || sps.Id || sps.spsId;
+                if (targetId) {
+                    spsIdField.value = targetId;
+                    console.log('💾 SpsId field set to:', targetId);
+                } else {
+                    spsIdField.value = '';
+                    console.log('⚠️ No ID found, SpsId cleared');
+                }
             } else {
                 console.warn('⚠️ SpsId field not found or SPS has no ID:', {
                     fieldExists: !!spsIdField,
@@ -1568,12 +1578,30 @@
                 if (hoseEl && sps.HoseType) {
                     hoseEl.innerText = sps.HoseType;
                 }
+
+                // FIX: Update Nomor Dokumen (SOP/SPS No) di Header
+                const docEl = document.getElementById('h-doc');
+                const docNo = sps.DocumentNumber || sps.documentNumber;
+                if (docEl && docNo && docNo !== '---') {
+                    docEl.innerText = docNo;
+                }
                 
                 // Update manualItemSearch display
                 const manualInput = document.getElementById('manualItemSearch');
                 if (manualInput && sps.ItemList) {
                     manualInput.value = sps.ItemList;
                 }
+            }
+
+            // FIX: Update Nomor Dokumen (SOP/SPS No) di Header (Pindahkan ke luar IF supaya Planning juga update)
+            const docEl = document.getElementById('h-doc');
+            const docNo = sps.DocumentNumber || sps.documentNumber;
+            console.log('🔍 SPS Data Received:', sps);
+            if (docEl && docNo && docNo !== '---') {
+                docEl.innerText = docNo;
+                console.log('📄 Header DocNo updated to:', docNo);
+            } else {
+                console.warn('⚠️ No DocumentNumber found in SPS data');
             }
 
             // Trigger loadMaster to update standards (without overriding planning data)
@@ -1982,6 +2010,15 @@
             refreshPlanningItems();
             initSmartNext();
             renderSummaryList(); // Initialize production data summary table
+            
+            // FIX: Tutup dropdown jika klik di luar area planning
+            document.addEventListener('click', (e) => {
+                const container = document.querySelector('.planning-master-container');
+                const results = document.getElementById('planningResults');
+                if (container && !container.contains(e.target) && results) {
+                    results.classList.add('d-none');
+                }
+            });
         });
 
         function cleanValue(raw) {
@@ -2591,7 +2628,7 @@
                     documentNumber: document.getElementById('h-doc')?.innerText || '---',
                     machineName: document.getElementById('h-line')?.innerText || '',
                     itemCode: document.getElementById('h-itemcode')?.innerText || '',
-                    spsId: spsIdInt,
+                    SpsId: spsIdInt,
                     hoseType: document.getElementById('h-hose')?.innerText || '',
                     customerName: "@(Model.CustomerName ?? "")",
                     dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',

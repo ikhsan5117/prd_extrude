@@ -309,8 +309,14 @@ namespace VelastoProductionSystem.Controllers
 
             if (master != null)
             {
+                // FIX: Try to find matching SPS ID in StandardParameterSettings even if source is Masterlist
+                var spsId = await _context.StandardParameterSettings
+                    .Where(s => s.ItemList == master.ItemList)
+                    .Select(s => (int?)s.Id)
+                    .FirstOrDefaultAsync();
+
                 return Json(new {
-                    Id = (int?)null,
+                    Id = spsId, // Use found SPS ID instead of null
                     Source = "Masterlist",
                     MasterlistId = master.Id,
                     ItemList = master.ItemList,
