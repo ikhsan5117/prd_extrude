@@ -82,9 +82,26 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction("Login", "Account");
 
             var configuredKey = _configuration["SensorApi:ApiKey"] ?? "VS-SENSOR-KEY-2026";
-            ViewBag.ApiKey = configuredKey;
+            ViewBag.ApiKey    = configuredKey;
             ViewBag.IngestUrl = $"{Request.Scheme}://{Request.Host}/api/sensor-readings/ingest";
             ViewBag.BatchUrl  = $"{Request.Scheme}://{Request.Host}/api/sensor-readings/ingest/batch";
+
+            return View();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  MVC PAGE — Sensor Simulator
+        //  GET /SensorReadings/Simulator
+        // ═══════════════════════════════════════════════════════════════
+
+        public IActionResult Simulator()
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+                return RedirectToAction("Login", "Account");
+
+            var configuredKey = _configuration["SensorApi:ApiKey"] ?? "VS-SENSOR-KEY-2026";
+            ViewBag.ApiKey    = configuredKey;
+            ViewBag.IngestUrl = $"{Request.Scheme}://{Request.Host}/api/sensor-readings/ingest";
 
             return View();
         }
@@ -442,6 +459,306 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             return Json(data.OrderBy(d => d.x).ToList());
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  MVC PAGE — Analysis Chart UI
+        //  GET /SensorReadings/Analysis
+        // ═══════════════════════════════════════════════════════════════
+
+        public async Task<IActionResult> Analysis()
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+                return RedirectToAction("Login", "Account");
+
+            // Ambil daftar machine code yang ada di sensor log
+            var machines = await _context.SensorIngestLogs
+                .Where(l => l.MachineCode != null && l.MachineCode != "")
+                .Select(l => l.MachineCode!)
+                .Distinct()
+                .OrderBy(m => m)
+                .ToListAsync();
+
+            // Ambil semua SPS dari MasterlistSpsDoubleLayers
+            var spsList = await _context.MasterlistSpsDoubleLayers
+                .OrderBy(s => s.ItemList)
+                .Select(s => new {
+                    s.Id,
+                    s.DocumentNumber,
+                    s.No,
+                    s.ItemList,
+                    s.MachineCode,
+                    s.Customer,
+                    s.OdSensor,
+                    s.ControlValue,
+                    s.ToleranceOuter,
+                    s.ToleranceInner,
+                    s.HoseSpeed,
+                    s.HeadTemp1,
+                    s.HeadTemp2,
+                    s.ScrewSpeed1,
+                    s.ScrewSpeed2,
+                    s.Pressure1,
+                    s.Pressure2,
+                    s.SpiralPitchSetting,
+                    s.ToleranceSpiralPitch,
+                    s.CaterpillarGap,
+                    s.ChillerWaterTemp,
+                    s.InnerTarget,
+                    s.InnerTol,
+                    s.InnerUCL,
+                    s.InnerLCL,
+                })
+                .ToListAsync();
+
+            ViewBag.Machines = machines;
+            var jsonOpts = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+            ViewBag.SpsList = System.Text.Json.JsonSerializer.Serialize(spsList, jsonOpts);
+            return View();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  API — ANALYSIS DATA (sensor aktual + standar untuk chart)
+        //  GET /api/sensor-readings/analysis-data
+        //      ?machineCode=EXT-01&metricType=outer_diameter&startDate=2026-05-01&endDate=2026-05-02
+        // ═══════════════════════════════════════════════════════════════
+
+        [HttpGet]
+        [Route("api/sensor-readings/analysis-data")]
+        public async Task<IActionResult> GetAnalysisData(
+            string? machineCode = null,
+            string? metricType  = "outer_diameter",
+            int     hours       = 8,
+            DateTime? startDate = null,
+            DateTime? endDate   = null,
+            int?    spsId       = null)
+        {
+            var now       = DateTime.Now;
+            var fromTime  = startDate ?? now.AddHours(-hours);
+            var toTime    = endDate ?? now;
+
+            // Jika input tanggal tanpa jam (00:00:00), anggap sampai akhir hari.
+            if (endDate.HasValue && endDate.Value.TimeOfDay == TimeSpan.Zero)
+                toTime = endDate.Value.Date.AddDays(1).AddTicks(-1);
+
+            if (fromTime > toTime)
+                return BadRequest("startDate tidak boleh lebih besar dari endDate.");
+
+            var metricKey = (metricType ?? "outer_diameter").ToLower().Trim();
+
+            // ── 1. Ambil data sensor aktual ──────────────────────────
+            var query = _context.SensorIngestLogs
+                .Where(l => l.Status == "OK"
+                         && l.MetricType == metricKey
+                         && l.SensorTimestamp >= fromTime
+                         && l.SensorTimestamp <= toTime);
+
+            if (!string.IsNullOrEmpty(machineCode))
+                query = query.Where(l => l.MachineCode == machineCode);
+
+            var sensorData = await query
+                .OrderBy(l => l.SensorTimestamp)
+                .Select(l => new
+                {
+                    x       = l.SensorTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                    y       = l.MetricValue,
+                    quality = l.Quality,
+                    device  = l.DeviceId
+                })
+                .ToListAsync();
+
+            // ── 2. Ambil standar — prioritas: spsId, lalu machineCode ─
+            MasterlistSpsDoubleLayer? sps = null;
+            if (spsId.HasValue)
+            {
+                sps = await _context.MasterlistSpsDoubleLayers
+                    .FirstOrDefaultAsync(s => s.Id == spsId.Value);
+            }
+            else if (!string.IsNullOrEmpty(machineCode))
+            {
+                sps = await _context.MasterlistSpsDoubleLayers
+                    .Where(s => s.MachineCode == machineCode)
+                    .FirstOrDefaultAsync();
+            }
+
+            object? standard = null;
+            if (sps != null)
+            {
+                standard = BuildStandard(metricKey, sps);
+            }
+
+            // ── 3. Hitung statistik ──────────────────────────────────
+            object? stats = null;
+            if (sensorData.Any())
+            {
+                var vals = sensorData.Select(d => d.y).ToList();
+                var avg  = vals.Average();
+                var stdDev = vals.Count > 1
+                    ? Math.Sqrt(vals.Sum(v => Math.Pow((double)(v - (decimal)avg), 2)) / (vals.Count - 1))
+                    : 0;
+                stats = new
+                {
+                    count  = vals.Count,
+                    min    = vals.Min(),
+                    max    = vals.Max(),
+                    avg    = Math.Round(avg, 4),
+                    stdDev = Math.Round((decimal)stdDev, 4),
+                    range  = vals.Max() - vals.Min()
+                };
+            }
+
+            return Json(new
+            {
+                metricType = metricKey,
+                machineCode,
+                hours,
+                rangeStart = fromTime,
+                rangeEnd   = toTime,
+                rangeLabel = $"{fromTime:dd/MM/yyyy HH:mm} - {toTime:dd/MM/yyyy HH:mm}",
+                sensorData,
+                standard,
+                stats
+            });
+        }
+
+        /// <summary>Petakan metricType ke field standar di MasterlistSpsDoubleLayer</summary>
+        private static object? BuildStandard(string metricKey, MasterlistSpsDoubleLayer sps)
+        {
+            decimal? target    = null;
+            decimal? ucl       = null;
+            decimal? lcl       = null;
+            decimal? tolerance = null;
+            string   label     = metricKey;
+            string   unit      = "";
+
+            switch (metricKey)
+            {
+                case "outer_diameter":
+                    // Gunakan OdSensor sebagai nilai standar OD sensor
+                    target    = TryParseFirst(sps.OdSensor) ?? TryParseFirst(sps.ControlValue);
+                    tolerance = TryParseTolerance(sps.ToleranceOuter)
+                             ?? TryParseTolerance(sps.ToleranceInner)
+                             ?? TryParseTolerance(sps.OdSensor);
+                    label = "Outer Diameter"; unit = "mm";
+                    break;
+                case "inner_diameter":
+                    target    = TryParseFirst(sps.InnerTarget);
+                    tolerance = TryParseTolerance(sps.InnerTol);
+                    // Jika ada UCL/LCL eksplisit, gunakan langsung
+                    if (sps.InnerUCL != null)
+                        ucl = TryParseFirst(sps.InnerUCL);
+                    if (sps.InnerLCL != null)
+                        lcl = TryParseFirst(sps.InnerLCL);
+                    label = "Inner Diameter"; unit = "mm";
+                    break;
+                case "hose_speed":
+                    target    = TryParseFirst(sps.HoseSpeed);
+                    label = "Hose Speed"; unit = "m/min";
+                    break;
+                case "head_temp_inner":
+                    target    = TryParseFirst(sps.HeadTemp1);
+                    tolerance = 5;
+                    label = "Head Temp Inner"; unit = "°C";
+                    break;
+                case "head_temp_outer":
+                    target    = TryParseFirst(sps.HeadTemp2);
+                    tolerance = 5;
+                    label = "Head Temp Outer"; unit = "°C";
+                    break;
+                case "screw_speed_inner":
+                    target    = TryParseFirst(sps.ScrewSpeed1);
+                    label = "Screw Speed Inner"; unit = "rpm";
+                    break;
+                case "screw_speed_outer":
+                    target    = TryParseFirst(sps.ScrewSpeed2);
+                    label = "Screw Speed Outer"; unit = "rpm";
+                    break;
+                case "pressure_inner":
+                    target    = TryParseFirst(sps.Pressure1);
+                    label = "Pressure Inner"; unit = "MPa";
+                    break;
+                case "pressure_outer":
+                    target    = TryParseFirst(sps.Pressure2);
+                    label = "Pressure Outer"; unit = "MPa";
+                    break;
+                case "spiral_pitch":
+                    target    = TryParseFirst(sps.SpiralPitchSetting);
+                    tolerance = TryParseTolerance(sps.ToleranceSpiralPitch);
+                    label = "Spiral Pitch"; unit = "mm";
+                    break;
+                case "caterpillar_gap":
+                    target    = TryParseFirst(sps.CaterpillarGap);
+                    label = "Caterpillar Gap"; unit = "mm";
+                    break;
+                case "chiller_water_temp":
+                    target    = TryParseFirst(sps.ChillerWaterTemp);
+                    tolerance = 2;
+                    label = "Chiller Water Temp"; unit = "°C";
+                    break;
+            }
+
+            if (target == null) return null;
+
+            // UCL/LCL: gunakan nilai eksplisit jika ada, fallback ke target±tolerance
+            ucl ??= tolerance.HasValue ? target + tolerance : (decimal?)null;
+            lcl ??= tolerance.HasValue ? target - tolerance : (decimal?)null;
+
+            return new
+            {
+                target,
+                ucl,
+                lcl,
+                tolerance,
+                label,
+                unit,
+                documentNumber = sps.DocumentNumber,
+                itemList       = sps.ItemList,
+                machineCode    = sps.MachineCode,
+            };
+        }
+
+        /// <summary>Parse angka pertama dari string (mis. "25.4", "Ø 8.0±0.2mm", "3.5-4.5", "25.4±0.5")</summary>
+        private static decimal? TryParseFirst(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            // Cari angka pertama (termasuk desimal) di mana saja dalam string
+            var m = System.Text.RegularExpressions.Regex.Match(input,
+                @"\d+([.,]\d+)?");
+            if (!m.Success) return null;
+            var clean = m.Value.Replace(',', '.');
+            return decimal.TryParse(clean, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var val) ? val : null;
+        }
+
+        /// <summary>
+        /// Parse toleransi dari string SPS.
+        /// Contoh: "10.3±0.1" => 0.1, "±0.2" => 0.2, "0.1" => 0.1
+        /// </summary>
+        private static decimal? TryParseTolerance(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+
+            var matches = System.Text.RegularExpressions.Regex.Matches(input, @"\d+([.,]\d+)?");
+            if (matches.Count == 0) return null;
+
+            // Format umum SPS: "target±tol" => ambil angka kedua sebagai toleransi.
+            if (input.Contains('±') && matches.Count >= 2)
+            {
+                var tolText = matches[1].Value.Replace(',', '.');
+                if (decimal.TryParse(tolText, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out var tolVal))
+                {
+                    return tolVal;
+                }
+            }
+
+            // Fallback: gunakan angka pertama (mis. "±0.1" atau "0.1").
+            var first = matches[0].Value.Replace(',', '.');
+            return decimal.TryParse(first, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var val) ? val : null;
         }
 
         // ═══════════════════════════════════════════════════════════════

@@ -1,0 +1,358 @@
+@{
+    ViewData["Title"] = "Parameter Graph History";
+}
+
+@section Styles {
+    <style>
+        .graph-container {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .filter-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .job-row {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .job-row:hover {
+            background: rgba(14, 165, 233, 0.1);
+        }
+
+        .job-row.active {
+            background: rgba(14, 165, 233, 0.2);
+            border-left: 4px solid #0ea5e9;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        .nav-pills .nav-link {
+            color: #94a3b8;
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #0ea5e9;
+            color: white;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+        }
+    </style>
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="text-white mb-0"><i class="bi bi-graph-up me-2 text-info"></i>Parameter Graph History</h4>
+            <small class="text-muted">Analyze process trends visually over time</small>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card filter-card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small">Machine</label>
+                    <input type="text" id="filterMachine" class="form-control bg-dark text-white border-secondary" placeholder="e.g. EXTRUDE 01">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small">Date</label>
+                    <input type="date" id="filterDate" class="form-control bg-dark text-white border-secondary">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small">Hose Type / Item</label>
+                    <input type="text" id="filterHose" class="form-control bg-dark text-white border-secondary" placeholder="Search Hose Type...">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button id="btnSearch" class="btn btn-info w-100 fw-bold">
+                        <i class="bi bi-search me-1"></i> Search Jobs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Job List -->
+        <div class="col-md-4 mb-4">
+            <div class="card filter-card h-100">
+                <div class="card-header border-bottom border-secondary pb-2">
+                    <h6 class="text-white mb-0"><i class="bi bi-list-task me-2"></i>Production Jobs</h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;" id="jobListContainer">
+                    <div class="text-center p-4 text-muted" id="jobLoading">
+                        Select filter to view jobs
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Section -->
+        <div class="col-md-8 mb-4">
+            <div class="graph-container d-none" id="graphPanel">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                    <div>
+                        <h5 class="text-white mb-0" id="gHoseType">-</h5>
+                        <small class="text-info" id="gVinCode">-</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-white-50 small">Machine: <span id="gMachine" class="text-white fw-bold">-</span></div>
+                        <div class="text-white-50 small">Date: <span id="gDate" class="text-white fw-bold">-</span></div>
+                        <div class="text-white-50 small">Process Time: <span id="gTime" class="text-warning fw-bold">-</span></div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-pills mb-3" id="graphTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="temp-tab" data-bs-toggle="pill" data-bs-target="#temp" type="button" role="tab">Temperatures</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="speed-tab" data-bs-toggle="pill" data-bs-target="#speed" type="button" role="tab">Speed & Pressure</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dim-tab" data-bs-toggle="pill" data-bs-target="#dim" type="button" role="tab">Control Values</button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="graphTabContent">
+                    <div class="tab-pane fade show active" id="temp" role="tabpanel">
+                        <div class="chart-wrapper">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="speed" role="tabpanel">
+                        <div class="chart-wrapper">
+                            <canvas id="speedChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="dim" role="tabpanel">
+                        <div class="chart-wrapper">
+                            <canvas id="dimChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="graph-container text-center py-5 text-muted" id="graphPlaceholder">
+                <i class="bi bi-graph-up" style="font-size: 3rem; opacity: 0.2"></i>
+                <h5 class="mt-3 text-white-50">Select a job to view its graphs</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Set today as default
+        document.getElementById('filterDate').value = new Date().toISOString().split('T')[0];
+
+        let tempChartInst = null;
+        let speedChartInst = null;
+        let dimChartInst = null;
+
+        document.getElementById('btnSearch').addEventListener('click', loadJobs);
+
+        // Load Jobs based on filters
+        async function loadJobs() {
+            const machine = document.getElementById('filterMachine').value;
+            const date = document.getElementById('filterDate').value;
+            const hose = document.getElementById('filterHose').value;
+            
+            const container = document.getElementById('jobListContainer');
+            container.innerHTML = '<div class="text-center p-4 text-info"><i class="bi bi-arrow-repeat spin"></i> Loading...</div>';
+            
+            document.getElementById('graphPanel').classList.add('d-none');
+            document.getElementById('graphPlaceholder').classList.remove('d-none');
+
+            try {
+                const url = `/ProductionReport/GetGraphJobs?machine=${encodeURIComponent(machine)}&date=${date}&hoseType=${encodeURIComponent(hose)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if(data.length === 0) {
+                    container.innerHTML = '<div class="text-center p-4 text-muted">No jobs found</div>';
+                    return;
+                }
+
+                let html = '<div class="list-group list-group-flush">';
+                data.forEach(job => {
+                    const statusColor = job.status === 'COMPLETED' ? 'text-success' : 'text-warning';
+                    html += `
+                        <div class="list-group-item bg-transparent border-secondary job-row p-3" onclick="loadGraph(${job.id}, this)">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-white">${job.hoseType}</h6>
+                                <small class="text-white-50">${job.timeStarted}</small>
+                            </div>
+                            <p class="mb-1 text-info small"><i class="bi bi-upc-scan me-1"></i>${job.vinCode}</p>
+                            <small class="${statusColor} fw-bold" style="font-size: 10px;">${job.status}</small>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch(e) {
+                container.innerHTML = '<div class="text-center p-4 text-danger">Error loading data</div>';
+            }
+        }
+
+        // Load graph data for specific job
+        async function loadGraph(reportId, el) {
+            // UI Selection state
+            document.querySelectorAll('.job-row').forEach(row => row.classList.remove('active'));
+            if(el) el.classList.add('active');
+
+            try {
+                const response = await fetch(`/ProductionReport/GetGraphData?reportId=${reportId}`);
+                const data = await response.json();
+
+                if(!data || !data.report) return;
+
+                // Update headers
+                document.getElementById('gHoseType').textContent = data.report.hoseType || '-';
+                document.getElementById('gVinCode').textContent = data.report.vinCode || '-';
+                document.getElementById('gMachine').textContent = data.report.machineName || '-';
+                document.getElementById('gDate').textContent = new Date(data.report.createdDate).toLocaleString('id-ID');
+
+                // Format time string
+                let startTime = data.report.productionStartTime ? new Date(data.report.productionStartTime).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) : '-';
+                let endTime = data.report.productionEndTime ? new Date(data.report.productionEndTime).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) : '-';
+                document.getElementById('gTime').textContent = `${startTime} s/d ${endTime}`;
+
+                // Render Charts
+                renderTempChart(data.readings);
+                renderSpeedChart(data.readings);
+                renderDimChart(data.readings);
+
+                document.getElementById('graphPlaceholder').classList.add('d-none');
+                document.getElementById('graphPanel').classList.remove('d-none');
+            } catch(e) {
+                console.error("Error loading graph data", e);
+                Swal.fire('Error', 'Failed to load graph data', 'error');
+            }
+        }
+
+        // Common Chart options
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#e2e8f0' } }
+            },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            }
+        };
+
+        function renderTempChart(readings) {
+            const ctx = document.getElementById('tempChart').getContext('2d');
+            if(tempChartInst) tempChartInst.destroy();
+
+            const labels = readings.map(r => r.time);
+            
+            tempChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Inner Head Temp', data: readings.map(r => r.headTempInner), borderColor: '#ef4444', tension: 0.3 },
+                        { label: 'Inner Cyl 1', data: readings.map(r => r.cyl1TempInner), borderColor: '#f87171', borderDash: [5, 5], tension: 0.3 },
+                        { label: 'Outer Head Temp', data: readings.map(r => r.headTempOuter), borderColor: '#3b82f6', tension: 0.3 },
+                        { label: 'Outer Cyl 1', data: readings.map(r => r.cyl1TempOuter), borderColor: '#60a5fa', borderDash: [5, 5], tension: 0.3 }
+                    ]
+                },
+                options: { ...commonOptions, plugins: { title: { display: true, text: 'Temperature Trends (°C)', color: '#fff' } } }
+            });
+        }
+
+        function renderSpeedChart(readings) {
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            if(speedChartInst) speedChartInst.destroy();
+
+            const labels = readings.map(r => r.time);
+            
+            speedChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Screw Speed Inner (RPM)', data: readings.map(r => r.screwSpeedInner), borderColor: '#10b981', tension: 0.3 },
+                        { label: 'Screw Speed Outer (RPM)', data: readings.map(r => r.screwSpeedOuter), borderColor: '#34d399', borderDash: [5, 5], tension: 0.3 },
+                        { label: 'Hose Speed (m/min)', data: readings.map(r => r.hoseSpeed), borderColor: '#f59e0b', tension: 0.3, yAxisID: 'y1' }
+                    ]
+                },
+                options: { 
+                    ...commonOptions, 
+                    plugins: { title: { display: true, text: 'Speed Trends', color: '#fff' } },
+                    scales: {
+                        ...commonOptions.scales,
+                        y1: {
+                            type: 'linear', display: true, position: 'right',
+                            ticks: { color: '#f59e0b' }, grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDimChart(readings) {
+            const ctx = document.getElementById('dimChart').getContext('2d');
+            if(dimChartInst) dimChartInst.destroy();
+
+            const labels = readings.map(r => r.time);
+            
+            dimChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Spiral Pitch Display (mm)', data: readings.map(r => r.spiralPitchDisplay), borderColor: '#8b5cf6', tension: 0.1 },
+                        { label: 'Control Value (mm)', data: readings.map(r => r.controlValue), borderColor: '#ec4899', tension: 0.1 },
+                        { label: 'Preset Value (mm)', data: readings.map(r => r.presetValue), borderColor: '#f472b6', borderDash: [5, 5], tension: 0.1 }
+                    ]
+                },
+                options: { ...commonOptions, plugins: { title: { display: true, text: 'Dimension / Control Trends', color: '#fff' } } }
+            });
+        }
+
+        // Initialize
+        @if (ViewBag.ReportId != null)
+        {
+            <text>
+            // If reportId is passed, load graph immediately and set date filter to empty
+            document.getElementById('filterDate').value = "";
+            loadGraph(@ViewBag.ReportId, null);
+            loadJobs(); // Still load the jobs list (without date filter)
+            </text>
+        }
+        else
+        {
+            <text>
+            loadJobs();
+            </text>
+        }
+    </script>
+}
