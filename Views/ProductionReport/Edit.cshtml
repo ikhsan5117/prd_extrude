@@ -17,6 +17,7 @@
 
         <form asp-action="Edit" id="editForm">
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" id="MachineName" name="MachineName" value="@(Model?.MachineName ?? Context.Session.GetString("MachineName"))" />
             @* Preserve immutable fields *@
             <input type="hidden" asp-for="CreatedDate" />
             <input type="hidden" asp-for="Status" />
@@ -323,17 +324,18 @@
                     <div class="row g-3">
                         @{
                             var diesList = new[] { 
-                                new { Name = "Nipple Die", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal", OK = Model!.NippleDieOK, InitVal = Model!.NippleDieInitial, FinalVal = Model!.NippleDieFinal },
+                                new { Name = "Nipple", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal", OK = Model!.NippleDieOK, InitVal = Model!.NippleDieInitial, FinalVal = Model!.NippleDieFinal },
                                 new { Name = "Tube Die", Field = "TubeDieOK", SpecKey = "TubeDie", InitName = "TubeDieInitial", FinalName = "TubeDieFinal", OK = Model!.TubeDieOK, InitVal = Model!.TubeDieInitial, FinalVal = Model!.TubeDieFinal },
                                 new { Name = "Middle Die", Field = "MiddleDieOK", SpecKey = "MiddleDie", InitName = "MiddleDieInitial", FinalName = "MiddleDieFinal", OK = Model!.MiddleDieOK, InitVal = Model!.MiddleDieInitial, FinalVal = Model!.MiddleDieFinal },
                                 new { Name = "Cover Die", Field = "CoverDieOK", SpecKey = "CoverDie", InitName = "CoverDieInitial", FinalName = "CoverDieFinal", OK = Model!.CoverDieOK, InitVal = Model!.CoverDieInitial, FinalVal = Model!.CoverDieFinal },
-                                new { Name = "Spacer Die", Field = "SpacerDieOK", SpecKey = "SpacerDie", InitName = "SpacerDieInitial", FinalName = "SpacerDieFinal", OK = Model!.SpacerDieOK, InitVal = Model!.SpacerDieInitial, FinalVal = Model!.SpacerDieFinal },
+                                new { Name = "Spacer", Field = "SpacerDieOK", SpecKey = "SpacerDie", InitName = "SpacerDieInitial", FinalName = "SpacerDieFinal", OK = Model!.SpacerDieOK, InitVal = Model!.SpacerDieInitial, FinalVal = Model!.SpacerDieFinal },
                                 new { Name = "A Distance", Field = "ToleranceDieOK", SpecKey = "ToleranceDie", InitName = "ToleranceInitial", FinalName = "ToleranceFinal", OK = Model!.ToleranceDieOK, InitVal = Model!.ToleranceInitial, FinalVal = Model!.ToleranceFinal }
                             };
                         }
 
                         @foreach(var die in diesList) {
-                            <div class="col-md-6 col-xl-4">
+                            var isMiddleDie = die.Name == "Middle Die";
+                            <div class="col-md-6 col-xl-4 @(isMiddleDie && string.IsNullOrEmpty(die.SpecKey) ? "d-none" : "")" id="die_card_@die.SpecKey">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div class="label-stack">
@@ -1110,6 +1112,31 @@
             setSpec('CoverDie', sps.CoverDie || sps.coverDie);
             setSpec('SpacerDie', sps.SpacerDie || sps.spacerDie);
             setSpec('ToleranceDie', sps.ToleranceDie || sps.toleranceDie);
+
+            // AUTO-HIDE Middle Die Card if empty OR if it's a Double Layer machine
+            const midVal = (sps.MiddleDie || sps.middleDie || '').trim();
+            
+            // SUPER ROBUST Machine Detection
+            const machineHidden = document.getElementById('MachineName')?.value || '';
+            // Look for the machine name in the top navbar (it's in a div with text-warning fw-bold near 'Machine' label)
+            const navbarMachine = Array.from(document.querySelectorAll('.navbar-right .text-warning.fw-bold'))
+                                     .map(el => el.textContent.trim())
+                                     .find(txt => txt.length > 0) || '';
+            
+            const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
+            const midCard = document.getElementById('die_card_MiddleDie');
+
+            if (midCard) {
+                if (isDoubleLayer || !midVal || midVal === '--' || midVal === '0' || midVal === '') {
+                    midCard.classList.add('d-none');
+                    midCard.style.setProperty('display', 'none', 'important');
+                    console.log('🚫 FORCE HIDE Middle Die. Detected:', (machineHidden || navbarMachine), 'Value:', midVal);
+                } else {
+                    midCard.classList.remove('d-none');
+                    midCard.style.display = 'block';
+                    console.log('✅ SHOW Middle Die. Value:', midVal);
+                }
+            }
             
             // Map SPS fields to spec labels (support both PascalCase and camelCase)
             setSpec('HeadTempInner', sps.HeadTempInner || sps.headTempInner);
@@ -1276,6 +1303,166 @@
             pReadings.push({ data: { ReadingTime: timeFormatted } });
             switchTab(pReadings.length - 1);
             Swal.fire({ icon: 'info', title: 'NEW CHECK ADDED', text: `Point P-${pReadings.length} initialized at ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}.`, toast: true, position: 'top-end', timer: 2000, showConfirmButton: false, background: '#0f172a', color: '#38bdf8' });
+        }
+
+        function applySpsToForm(sps) {
+            if (!sps) return;
+            console.log("Applying SPS to Edit Form:", sps);
+
+            // Populate headers if they are empty
+            if (!document.getElementById('DocNo').value) document.getElementById('DocNo').value = sps.documentNumber || sps.DocumentNumber || '';
+            if (!document.getElementById('RevNo').value || document.getElementById('RevNo').value === '0') document.getElementById('RevNo').value = sps.revisionNumber || sps.RevisionNumber || '0';
+            
+            // Populate standards
+            const formatVal = (val, prefix = '', suffix = '') => {
+                if (val === undefined || val === null || val === '') return '---';
+                let strVal = String(val).trim();
+                if (strVal === '-' || strVal === '' || strVal === '---') return strVal;
+                return `${prefix}${strVal}${suffix}`;
+            };
+
+            const specMappings = {
+                'HeadTempInner': formatVal(sps.headTempInner || sps.headTemp || sps.HeadTemp || sps.HeadTemp1, '', ' ± 5'),
+                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_1, '', ' ± 5'),
+                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_1, '', ' ± 5'),
+                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder1_3, '', ' ± 5'),
+                'ScrewTempInner': formatVal(sps.screwTempInner || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp1, '', ' ± 5'),
+                'ScrewSpeedInner': formatVal(sps.screwSpeedInner || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed1, '', ' ± 5'),
+                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.FeedRollRatioInner || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed1, 'Max '),
+                'PressureInner': formatVal(sps.pressureInner || sps.pressure || sps.Pressure || sps.Pressure1, 'Max '),
+
+                'HeadTempOuter': formatVal(sps.headTempOuter || sps.headTemp || sps.HeadTemp || sps.HeadTemp2, '', ' ± 5'),
+                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_2, '', ' ± 5'),
+                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_2, '', ' ± 5'),
+                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder3_2, '', ' ± 5'),
+                'ScrewTempOuter': formatVal(sps.screwTempOuter || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp2, '', ' ± 5'),
+                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed2, '', ' ± 5'),
+                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.FeedRollRatioOuter || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed2, 'Max '),
+                'PressureOuter': formatVal(sps.pressureOuter || sps.pressure || sps.Pressure || sps.Pressure2, 'Max '),
+
+                'SpiralSpeed': formatVal(sps.spiralSpeed || sps.SpiralSpeed, '', ' ± 20'),
+                'SpiralPitchSetting': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
+                'SpiralPitchDisplay': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
+                'PresetValue': formatVal(sps.presetValue || sps.PresetValue, '', ' ± 0.5'),
+                'ControlValue': formatVal(sps.controlValue || sps.ControlValue),
+                'HoseSpeed': formatVal(sps.hoseSpeed || sps.HoseSpeed),
+                'TakeupConveyorSpeed': formatVal(sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed || sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed),
+                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed || sps.CoolConveyorSpeed),
+                'ConveyorRatio': formatVal(sps.conveyorRatio || sps.ConveyorRatio),
+                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp),
+                'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
+                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface || 'OK'),
+
+                'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple),
+                'TubeDie': formatVal(sps.tubeDie || sps.TubeDie),
+                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie),
+                'CoverDie': formatVal(sps.coverDie || sps.CoverDie),
+                'SpacerDie': formatVal(sps.spacerDie || sps.SpacerDie),
+                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie || sps.toleranceInner || sps.ToleranceInner)
+            };
+
+            for (const [key, val] of Object.entries(specMappings)) {
+                const el = document.getElementById('spec_' + key);
+                const mainInput = document.getElementById('input_' + key);
+                const isNoData = (val === '---' || val === '' || val === null || val.trim() === '--' || val.trim() === '-' || val.trim() === '0');
+
+                if (el) {
+                    el.innerText = val;
+                    el.classList.add('blink-once');
+                    
+                    // Logic to Disable/Lock inputs if no standard exists
+                    if (isNoData) {
+                        if (mainInput) {
+                            mainInput.disabled = true;
+                            mainInput.placeholder = "N/A";
+                            mainInput.value = "";
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '0.4', 'important');
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'none', 'important');
+                        }
+                    } else {
+                        if (mainInput) {
+                            mainInput.disabled = false;
+                            mainInput.placeholder = "0.00";
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '1', 'important');
+                            mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'auto', 'important');
+                        }
+                    }
+
+                    if (key.includes('Die') || key === 'ToleranceDie') {
+                        const dieRadios = {
+                            'NippleDie': { field: 'NippleDieOK', init: 'NippleDieInitial', final: 'NippleDieFinal' },
+                            'TubeDie': { field: 'TubeDieOK', init: 'TubeDieInitial', final: 'TubeDieFinal' },
+                            'MiddleDie': { field: 'MiddleDieOK', init: 'MiddleDieInitial', final: 'MiddleDieFinal' },
+                            'CoverDie': { field: 'CoverDieOK', init: 'CoverDieInitial', final: 'CoverDieFinal' },
+                            'SpacerDie': { field: 'SpacerDieOK', init: 'SpacerDieInitial', final: 'SpacerDieFinal' },
+                            'ToleranceDie': { field: 'ToleranceDieOK', init: 'ToleranceInitial', final: 'ToleranceFinal' }
+                        };
+                        const d = dieRadios[key];
+                        if (d) {
+                            const container = document.getElementsByName(d.init)[0]?.closest('.die-card');
+                            if (isNoData) {
+                                document.getElementsByName(d.init)[0].disabled = true;
+                                document.getElementsByName(d.final)[0].disabled = true;
+                                if (container) {
+                                    container.style.opacity = "0.4";
+                                    container.style.pointerEvents = "none";
+                                    container.style.filter = "grayscale(100%)";
+                                }
+                            } else {
+                                document.getElementsByName(d.init)[0].disabled = false;
+                                document.getElementsByName(d.final)[0].disabled = false;
+                                if (container) {
+                                    container.style.opacity = "1";
+                                    container.style.pointerEvents = "auto";
+                                    container.style.filter = "none";
+                                }
+                            }
+                        }
+                    } else {
+                        const inputs = document.querySelectorAll(`[name$="${key}"]`);
+                        inputs.forEach(inp => { 
+                            if (isNoData) {
+                                inp.disabled = true;
+                                inp.placeholder = "N/A";
+                            } else {
+                                inp.disabled = false;
+                            }
+                        });
+                    }
+                }
+            }
+
+            // EXPLICIT HIDDEN LOGIC FOR DOUBLE LAYER MACHINES
+            const machineHidden = document.getElementById('MachineName')?.value || '';
+            const navbarMachine = Array.from(document.querySelectorAll('.navbar-right .text-warning.fw-bold'))
+                                     .map(el => el.textContent.trim())
+                                     .find(txt => txt.length > 0) || '';
+            const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
+            
+            const midCard = document.getElementById('die_card_MiddleDie');
+            const spacerCard = document.getElementById('die_card_SpacerDie');
+            const midVal = (sps.MiddleDie || sps.middleDie || '').trim();
+            const spacerVal = (sps.SpacerDie || sps.spacerDie || '').trim();
+
+            if (midCard) {
+                if (isDoubleLayer || !midVal || midVal === '--' || midVal === '0' || midVal === '') {
+                    midCard.classList.add('d-none');
+                    midCard.style.setProperty('display', 'none', 'important');
+                } else {
+                    midCard.classList.remove('d-none');
+                    midCard.style.display = 'block';
+                }
+            }
+
+            if (spacerCard) {
+                if (isDoubleLayer || !spacerVal || spacerVal === '--' || spacerVal === '0' || spacerVal === '') {
+                    spacerCard.classList.add('d-none');
+                    spacerCard.style.setProperty('display', 'none', 'important');
+                } else {
+                    spacerCard.classList.remove('d-none');
+                    spacerCard.style.display = 'block';
+                }
+            }
         }
 
         // Initialize on load
@@ -1533,5 +1720,25 @@
         @if (TempData["SuccessMessage"] != null) {
             <text>Swal.fire({icon:'success',title:'UPDATED!',text:'@TempData["SuccessMessage"]',toast:true,position:'top-end',timer:3000,showConfirmButton:false,background:'#0f172a',color:'#38bdf8'});</text>
         }
+        // Initial check on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const spsId = document.getElementById('SpsId')?.value;
+            if (spsId && spsId !== '0') {
+                // If we have an SPS ID, trigger the hide logic based on existing labels
+                const midVal = document.getElementById('spec_MiddleDie')?.textContent || '';
+                const machineHidden = document.getElementById('MachineName')?.value || '';
+                const navbarMachine = Array.from(document.querySelectorAll('.navbar-right .text-warning.fw-bold'))
+                                         .map(el => el.textContent.trim())
+                                         .find(txt => txt.length > 0) || '';
+                
+                const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
+                const midCard = document.getElementById('die_card_MiddleDie');
+                
+                if (midCard && (isDoubleLayer || !midVal || midVal === '--' || midVal === '0')) {
+                    midCard.classList.add('d-none');
+                    midCard.style.setProperty('display', 'none', 'important');
+                }
+            }
+        });
     </script>
 }

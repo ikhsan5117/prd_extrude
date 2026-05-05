@@ -94,6 +94,7 @@
                         <th class="ps-4">PRODUCTION DATE</th>
                         <th>DOC NUMBER</th>
                         <th>SHIFT</th>
+                        <th>MACHINE</th>
                         <th>ITEM CODE</th>
                         <th>SPECIFICATION</th>
                         <th>MATERIAL (IN/OUT)</th>
@@ -107,12 +108,15 @@
                     {
                         var isCompleted = item.Status == "COMPLETED";
                         var itemCode = item.ItemCode ?? item.StandardParameterSetting?.ItemList ?? "N/A";
-                        var searchText = ((item.DocumentNumber ?? "") + " " + itemCode + " " + (item.HoseType ?? "") + " " + (item.Shift ?? "") + " " + (item.CreatedBy ?? "")).ToLower();
+                        var searchText = ((item.DocumentNumber ?? "") + " " + itemCode + " " + (item.HoseType ?? "") + " " + (item.Shift ?? "") + " " + (item.MachineName ?? "") + " " + (item.CreatedBy ?? "")).ToLower();
                         
                         <tr class="align-middle ph-row" data-search="@searchText">
                             <td class="ps-4 fw-bold text-nowrap">@item.ProductionDate.ToString("dd MMM yyyy")</td>
                             <td><code class="text-primary-50">@item.DocumentNumber</code></td>
                             <td><span class="badge shift-badge @(item.Shift?.ToUpper().Contains("I") == true ? "bg-info" : "bg-warning")">@item.Shift</span></td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-25 text-white border border-white border-opacity-10 font-monospace">@(item.MachineName ?? "N/A")</span>
+                            </td>
                             <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 font-monospace">@itemCode</span></td>
                             <td>
                                 <div class="hose-type-tag">@item.HoseType</div>

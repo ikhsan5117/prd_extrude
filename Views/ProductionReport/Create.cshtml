@@ -17,6 +17,7 @@
 
         <form asp-action="Create" id="mainReportForm">
             <input type="hidden" id="SpsId" name="SpsId" value="" />
+            <input type="hidden" id="MachineName" name="MachineName" value="@(Context.Session.GetString("MachineName"))" />
             <!-- SECTION: PRODUCTION COMMAND CONSOLE (TOP HEADER) -->
             <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10" style="position: relative; z-index: 1050; overflow: visible;">
                 <div class="hud-card-header d-flex justify-content-between align-items-center py-2 px-3">
@@ -656,20 +657,20 @@
                 </div>
                 
                 <div class="p-3">
-                    <div class="row g-3">
+                    <div class="row g-3" id="diesDimensionRow">
                         @{
                             var diesList = new[] { 
-                                new { Name = "Nipple Die", Std = "--", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal" },
+                                new { Name = "Nipple", Std = "--", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal" },
                                 new { Name = "Tube Die", Std = "--", Field = "TubeDieOK", SpecKey = "TubeDie", InitName = "TubeDieInitial", FinalName = "TubeDieFinal" },
                                 new { Name = "Middle Die", Std = "--", Field = "MiddleDieOK", SpecKey = "MiddleDie", InitName = "MiddleDieInitial", FinalName = "MiddleDieFinal" },
                                 new { Name = "Cover Die", Std = "--", Field = "CoverDieOK", SpecKey = "CoverDie", InitName = "CoverDieInitial", FinalName = "CoverDieFinal" },
-                                new { Name = "Spacer Die", Std = "--", Field = "SpacerDieOK", SpecKey = "SpacerDie", InitName = "SpacerDieInitial", FinalName = "SpacerDieFinal" },
+                                new { Name = "Spacer", Std = "--", Field = "SpacerDieOK", SpecKey = "SpacerDie", InitName = "SpacerDieInitial", FinalName = "SpacerDieFinal" },
                                 new { Name = "A Distance", Std = "--", Field = "ToleranceDieOK", SpecKey = "ToleranceDie", InitName = "ToleranceInitial", FinalName = "ToleranceFinal" }
                             };
                         }
 
                         @foreach(var die in diesList) {
-                            <div class="col-md-6 col-xl-4">
+                            <div class="col-md-6 col-xl-4 die-container-item" id="die_card_@die.SpecKey">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div class="label-stack">
@@ -1390,7 +1391,7 @@
 
                 'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple),
                 'TubeDie': formatVal(sps.tubeDie || sps.TubeDie),
-                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie || sps.tubeDie || sps.TubeDie),
+                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie),
                 'CoverDie': formatVal(sps.coverDie || sps.CoverDie),
                 'SpacerDie': formatVal(sps.spacerDie || sps.SpacerDie),
                 'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie || sps.toleranceInner || sps.ToleranceInner)
@@ -1466,6 +1467,40 @@
                     }
                 }
             }
+
+            // EXPLICIT HIDDEN LOGIC FOR DOUBLE LAYER MACHINES
+            const machineHidden = document.getElementById('MachineName')?.value || '';
+            const navbarMachine = Array.from(document.querySelectorAll('.navbar-right .text-warning.fw-bold'))
+                                     .map(el => el.textContent.trim())
+                                     .find(txt => txt.length > 0) || '';
+            const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
+            
+            const midCard = document.getElementById('die_card_MiddleDie');
+            const spacerCard = document.getElementById('die_card_SpacerDie');
+            const midVal = (sps.MiddleDie || sps.middleDie || '').trim();
+            const spacerVal = (sps.SpacerDie || sps.spacerDie || '').trim();
+
+            if (midCard) {
+                if (isDoubleLayer || !midVal || midVal === '--' || midVal === '0' || midVal === '') {
+                    midCard.classList.add('d-none');
+                    midCard.style.setProperty('display', 'none', 'important');
+                } else {
+                    midCard.classList.remove('d-none');
+                    midCard.style.display = 'block';
+                }
+            }
+
+            if (spacerCard) {
+                if (isDoubleLayer || !spacerVal || spacerVal === '--' || spacerVal === '0' || spacerVal === '') {
+                    spacerCard.classList.add('d-none');
+                    spacerCard.style.setProperty('display', 'none', 'important');
+                } else {
+                    spacerCard.classList.remove('d-none');
+                    spacerCard.style.display = 'block';
+                }
+            }
+
+
 
             Swal.fire({
                 title: 'SPS SYNC SUCCESS',
@@ -2575,6 +2610,20 @@
             if (isMachine3L) {
                 const middleCard = document.getElementById('middleMaterialCard');
                 if (middleCard) middleCard.style.display = '';
+            }
+
+            // Initial hide check for Middle Die Card
+            const machineHidden = document.getElementById('MachineName')?.value || '';
+            const navbarMachine = Array.from(document.querySelectorAll('.navbar-right .text-warning.fw-bold'))
+                                     .map(el => el.textContent.trim())
+                                     .find(txt => txt.length > 0) || '';
+            const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
+            if (isDoubleLayer) {
+                const midCard = document.getElementById('die_card_MiddleDie');
+                if (midCard) {
+                    midCard.classList.add('d-none');
+                    midCard.style.setProperty('display', 'none', 'important');
+                }
             }
         });
         function resetHUD() {

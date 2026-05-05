@@ -149,6 +149,8 @@ namespace VelastoProductionSystem.Controllers
                         excelId = standard.ExcelId,
                         itemList = standard.ItemList,
                         toleranceSpiralPitch = standard.ToleranceSpiralPitch,
+                        spiralPitchSetting = standard.SpiralPitchSetting,
+                        spiralPitchDisplay = standard.SpiralPitchDisplay,
                         bypass = "2.0 mm" 
                     }
                 });
@@ -183,6 +185,8 @@ namespace VelastoProductionSystem.Controllers
                         revNo = sps.RevisionNumber,
                         itemList = sps.ItemList,
                         toleranceSpiralPitch = sps.SpiralPitch.ToString("G29"),
+                        spiralPitchSetting = sps.SpiralPitch.ToString("G29"),
+                        spiralPitchDisplay = sps.SpiralPitchDisplay,
                         bypass = "2.0 mm" 
                     }
                 });

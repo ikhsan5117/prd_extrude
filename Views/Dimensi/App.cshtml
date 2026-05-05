@@ -2296,7 +2296,7 @@
                             { id: 'innermidty', v: m.tebalInnerMiddle, t: m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
                             { id: 'totaltx', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-tx', dt: 0.2 },
                             { id: 'totalty', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-ty', dt: 0.2 },
-                            { id: 'spiral', v: m.toleranceSpiralPitch || m.spiralPitch, t: m.toleranceSpiralPitch || m.spiralPitch, el: 'spiral', dt: 5 }
+                            { id: 'spiral', v: m.spiralPitchSetting || m.toleranceSpiralPitch || m.spiralPitch, t: m.spiralPitchDisplay || m.toleranceSpiralPitch || m.spiralPitch, el: 'spiral', dt: 5 }
                         ];
 
                         configs.forEach(p => {
@@ -2316,7 +2316,7 @@
 
                             if (cardEl) {
                                 if (target === 0) {
-                                    cardEl.style.display = (p.id.startsWith('innermid')) ? 'none' : 'block';
+                                    cardEl.style.display = (p.id.startsWith('innermid') || p.id === 'spiral') ? 'none' : 'block';
                                     if (inputEl) {
                                         inputEl.disabled = true;
                                         inputEl.placeholder = "N/A";
