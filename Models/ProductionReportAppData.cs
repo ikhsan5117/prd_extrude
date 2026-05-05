@@ -15,6 +15,7 @@ namespace VelastoProductionSystem.Models
         public string? DocumentNumber { get; set; }
         public string? ItemCode { get; set; }
         public string? HoseType { get; set; }
+        public string? MachineName { get; set; }
         public string? DimensionDisplay { get; set; }
         public string? CustomerName { get; set; }
         public string? Yarn { get; set; }
@@ -30,7 +31,7 @@ namespace VelastoProductionSystem.Models
         public string? Shift { get; set; }
         public int RevisionNumber { get; set; }
         public string? CreatedBy { get; set; }
-        public int? StandardParameterSettingId { get; set; }
+        public int? SpsId { get; set; }
         
         // Dimension readings array
         public List<DimensionReadingData> DimensionReadings { get; set; } = new List<DimensionReadingData>();
@@ -120,7 +121,7 @@ namespace VelastoProductionSystem.Models
         public string? CreatedBy { get; set; }
         
         // --- NEW FIELDS ---
-        public int? StandardParameterSettingId { get; set; }
+        public int? SpsId { get; set; }
         public string? ItemCode { get; set; }
         
         // Dies

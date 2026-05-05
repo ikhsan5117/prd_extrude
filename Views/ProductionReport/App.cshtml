@@ -1018,7 +1018,7 @@
                 Remark: document.getElementById('remark')?.value || '',
                 Shift: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Shift ?? "I")),
                 CreatedBy: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CreatedBy ?? "Operator")),
-                StandardParameterSettingId: @(Model.StandardParameterSettingId ?? 0),
+                SpsId: @(Model.SpsId ?? 0),
                 DimensionReadings: []
             };
 

@@ -35,8 +35,8 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "Item Code (Planning)")]
         public string? ItemCode { get; set; }
 
-        [Display(Name = "Parameter Setting ID")]
-        public int? StandardParameterSettingId { get; set; }
+        [Display(Name = "SPS ID")]
+        public int? SpsId { get; set; }
         public StandardParameterSetting? StandardParameterSetting { get; set; }
 
         // IMAGE 1: NOW I'M PRODUCE (Keeping legacy names to avoid breakage)

@@ -129,7 +129,7 @@ namespace VelastoProductionSystem.Controllers
                 Dimension = master.Dimensi ?? "-",
                 Yarn = master.InnerTube ?? "-",
                 Shift = "Shift 1",
-                StandardParameterSettingId = sps?.Id,
+                SpsId = sps?.Id,
                 CreatedBy = HttpContext.Session.GetString("UserName") ?? "Operator"
             };
             
@@ -146,6 +146,44 @@ namespace VelastoProductionSystem.Controllers
             var sps = await _context.StandardParameterSettings.FindAsync(id);
             if (sps == null) return NotFound();
             return Json(sps);
+        }
+
+        // AJAX API: Search SPS Items for Autocomplete
+        [HttpGet]
+        public async Task<IActionResult> SearchSpsItems(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query)) return Json(new List<string>());
+            
+            var sanitizedQuery = query.Trim().ToUpper();
+            
+            // Get unique ItemList values from both tables
+            var spsItems = await _context.StandardParameterSettings
+                .Where(s => s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedQuery))
+                .Select(s => new { s.ItemList, s.HoseType })
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
+            
+            var masterItems = await _context.MasterlistSpsDoubleLayers
+                .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedQuery))
+                .Select(m => new { ItemList = m.ItemList, HoseType = m.HoseType })
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
+            
+            // Combine and deduplicate
+            var results = spsItems.Concat(masterItems)
+                .GroupBy(x => x.ItemList)
+                .Select(g => g.First())
+                .OrderBy(x => x.ItemList)
+                .Take(10)
+                .Select(x => new { 
+                    itemCode = x.ItemList, 
+                    hoseType = x.HoseType ?? "" 
+                })
+                .ToList();
+            
+            return Json(results);
         }
 
         // AJAX API: Get SPS by Item Code (Scanner)
@@ -173,7 +211,12 @@ namespace VelastoProductionSystem.Controllers
             if (master != null)
             {
                 // Map Master to a temporary SPS-like object for the form
+                // Note: Id will be null because Masterlist items don't have StandardParameterSetting records
+                // Only StandardParameterSettings table entries can be linked via SpsId FK
                 return Json(new {
+                    Id = (int?)null,  // NULL = from Masterlist (no StandardParameterSettings record)
+                    Source = "Masterlist",  // Add source indicator
+                    MasterlistId = master.Id,  // Include Masterlist ID for reference
                     ItemList = master.ItemList,
                     HoseType = master.HoseType,
                     CustomerName = master.Customer,
@@ -524,7 +567,7 @@ namespace VelastoProductionSystem.Controllers
                     CreatedBy = dto.CreatedBy ?? "Operator",
                     CreatedDate = DateTime.Now,
                     Status = "COMPLETED",
-                    StandardParameterSettingId = dto.StandardParameterSettingId,
+                    SpsId = dto.SpsId,
                     ItemCode = dto.ItemCode,
                     NippleDieOK = dto.NippleDieOK, NippleDieInitial = dto.NippleDieInitial, NippleDieFinal = dto.NippleDieFinal,
                     TubeDieOK = dto.TubeDieOK, TubeDieInitial = dto.TubeDieInitial, TubeDieFinal = dto.TubeDieFinal,
@@ -674,7 +717,7 @@ namespace VelastoProductionSystem.Controllers
                 report.Shift = dto.Shift;
                 report.CustomerName = dto.CustomerName;
                 report.HoseType = dto.HoseType;
-                report.StandardParameterSettingId = dto.StandardParameterSettingId;
+                report.SpsId = dto.SpsId;
 
                 report.InnerMaterial = dto.InnerMaterial;
                 report.InnerMaterialActual = dto.InnerMaterialActual;
@@ -944,6 +987,7 @@ namespace VelastoProductionSystem.Controllers
             var report = await _context.ProductionReports
                 .Include(p => p.StandardParameterSetting)
                 .Include(p => p.ProductionReadings)
+                .Include(p => p.MaterialLots)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (report == null) return NotFound();
 
@@ -951,7 +995,7 @@ namespace VelastoProductionSystem.Controllers
                 await _context.StandardParameterSettings.Where(s => s.IsActive)
                     .Select(s => new { Id = s.Id, Display = "[" + s.ItemList + "] - " + s.HoseType })
                     .ToListAsync(),
-                "Id", "Display", report.StandardParameterSettingId
+                "Id", "Display", report.SpsId
             );
 
             return View(report);
@@ -985,7 +1029,8 @@ namespace VelastoProductionSystem.Controllers
                     existing.CustomerName = report.CustomerName;
                     existing.HoseType = report.HoseType;
                     existing.Dimension = report.Dimension;
-                    existing.StandardParameterSettingId = report.StandardParameterSettingId;
+                    existing.ItemCode = report.ItemCode;
+                    existing.SpsId = report.SpsId;
 
                     // Standards (from SPS)
                     existing.InnerMaterial = report.InnerMaterial;
@@ -1080,7 +1125,7 @@ namespace VelastoProductionSystem.Controllers
                 await _context.StandardParameterSettings.Where(s => s.IsActive)
                     .Select(s => new { Id = s.Id, Display = "[" + s.ItemList + "] - " + s.HoseType })
                     .ToListAsync(),
-                "Id", "Display", report.StandardParameterSettingId
+                "Id", "Display", report.SpsId
             );
             return View(report);
         }
@@ -1263,7 +1308,7 @@ namespace VelastoProductionSystem.Controllers
                         CreatedBy = data.CreatedBy ?? "Operator",
                         Shift = data.Shift ?? "I",
                         ItemCode = data.ItemCode,
-                        StandardParameterSettingId = data.StandardParameterSettingId
+                        SpsId = data.SpsId
                     };
                     _context.ProductionReports.Add(report);
                 }

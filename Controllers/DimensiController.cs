@@ -241,9 +241,97 @@ namespace VelastoProductionSystem.Controllers
             }
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
+                .Include(r => r.StandardParameterSetting)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
             return View("Edit", report);
+        }
+
+        // AJAX API: Search SPS Items for Autocomplete
+        [HttpGet]
+        public async Task<IActionResult> SearchSpsItems(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query)) return Json(new List<string>());
+            
+            var sanitizedQuery = query.Trim().ToUpper();
+            
+            // Get unique ItemList values from both tables
+            var spsItems = await _context.StandardParameterSettings
+                .Where(s => s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedQuery))
+                .Select(s => new { s.ItemList, s.HoseType })
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
+            
+            var masterItems = await _context.MasterlistSpsDoubleLayers
+                .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedQuery))
+                .Select(m => new { ItemList = m.ItemList, HoseType = m.HoseType })
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
+            
+            // Combine and deduplicate
+            var results = spsItems.Concat(masterItems)
+                .GroupBy(x => x.ItemList)
+                .Select(g => g.First())
+                .OrderBy(x => x.ItemList)
+                .Take(10)
+                .Select(x => new { 
+                    itemCode = x.ItemList, 
+                    hoseType = x.HoseType ?? "" 
+                })
+                .ToList();
+            
+            return Json(results);
+        }
+
+        // AJAX API: Get SPS by Item Code (Scanner)
+        [HttpGet]
+        public async Task<IActionResult> GetSpsByItem(string itemCode)
+        {
+            if (string.IsNullOrWhiteSpace(itemCode)) return BadRequest();
+            
+            var sanitizedCode = itemCode.Trim().ToUpper();
+            
+            // Try StandardParameterSettings first (Detailed)
+            var sps = await _context.StandardParameterSettings
+                .FirstOrDefaultAsync(s => 
+                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedCode)) || 
+                    (s.ProductCode != null && s.ProductCode.ToUpper().Contains(sanitizedCode)));
+            
+            if (sps != null) return Json(sps);
+
+            // Fallback to MasterlistSpsDoubleLayers (Brief)
+            var master = await _context.MasterlistSpsDoubleLayers
+                .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedCode))
+                .OrderByDescending(m => m.Id)
+                .FirstOrDefaultAsync();
+
+            if (master != null)
+            {
+                return Json(new {
+                    Id = (int?)null,
+                    Source = "Masterlist",
+                    MasterlistId = master.Id,
+                    ItemList = master.ItemList,
+                    HoseType = master.HoseType,
+                    CustomerName = master.Customer,
+                    DocumentNumber = master.DocumentNumber,
+                    InnerMaterial = master.InnerTube,
+                    MiddleMaterial = master.MiddleTube,
+                    OuterMaterial = master.OuterCover,
+                    YarnType = master.Material,
+                    LayerType = !string.IsNullOrWhiteSpace(master.MiddleTube) ? "CHS 3 Layer" : "CHS 2 Layer",
+                    InnerDie = master.Nipple,
+                    TubeDie = master.TubeDie,
+                    MiddleDie = master.MiddleDie,
+                    CoverDie = master.CoverDie,
+                    SpacerDie = master.SpacerDie,
+                    ToleranceDie = master.ADistance
+                });
+            }
+
+            return Json(new { success = false, message = "Protocol Not Found" });
         }
 
         [HttpPost]
@@ -314,8 +402,13 @@ namespace VelastoProductionSystem.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                // Log SpsId before update
+                Console.WriteLine($"🔍 DEBUG - Before Update: SpsId = {report.SpsId}, Incoming = {data.SpsId}");
+                
                 report.HoseType = data.HoseType ?? "";
                 report.ItemCode = data.ItemCode ?? "";
+                report.SpsId = data.SpsId;
+                report.MachineName = data.MachineName ?? report.MachineName;
                 report.DimensionDisplay = data.DimensionDisplay ?? "";
                 report.VinCode = data.VinCode ?? "";
                 report.StandardLength = data.StandardLength ?? "";
@@ -329,6 +422,12 @@ namespace VelastoProductionSystem.Controllers
                 report.CustomerName = data.CustomerName ?? "-";
                 report.Yarn = data.Yarn ?? "";
                 report.Shift = !string.IsNullOrEmpty(data.Shift) ? data.Shift : (report.Shift ?? GetCurrentShift());
+                
+                // Explicitly mark entity as modified to ensure EF tracks changes
+                _context.Entry(report).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                
+                // Log SpsId after update
+                Console.WriteLine($"💾 DEBUG - After Update: SpsId = {report.SpsId}, State = {_context.Entry(report).State}");
 
                 var existing = _context.DimensionMeasurements.Where(m => m.DimensionReportId == report.Id).ToList();
                 if (existing.Any()) _context.DimensionMeasurements.RemoveRange(existing);

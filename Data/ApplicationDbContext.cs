@@ -37,7 +37,13 @@ namespace VelastoProductionSystem.Data
             modelBuilder.Entity<ProductionReport>()
                 .HasOne(p => p.StandardParameterSetting)
                 .WithMany()
-                .HasForeignKey(p => p.StandardParameterSettingId)
+                .HasForeignKey(p => p.SpsId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<DimensionReport>()
+                .HasOne(d => d.StandardParameterSetting)
+                .WithMany()
+                .HasForeignKey(d => d.SpsId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<ProductionReading>()

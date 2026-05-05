@@ -4,7 +4,7 @@
     ViewData["Title"] = "Edit Production Report";
 }
 
-<div class="production-blueprint pb-5">
+<div class="production-blueprint no-print-bg pb-5">
     <div class="container-fluid p-1 p-md-2">
 
         <!-- HEADER HUD -->
@@ -20,7 +20,7 @@
             @* Preserve immutable fields *@
             <input type="hidden" asp-for="CreatedDate" />
             <input type="hidden" asp-for="Status" />
-            <input type="hidden" id="StandardParameterSettingId" name="StandardParameterSettingId" value="@Model?.StandardParameterSettingId" />
+            <input type="hidden" id="SpsId" name="SpsId" value="@Model?.SpsId" />
             <div asp-validation-summary="ModelOnly" class="alert mb-4" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:10px;"></div>
 
             <!-- SECTION 1: COMMAND CONSOLE (HEADER) -->
@@ -39,35 +39,45 @@
                 <!-- SPS PROTOCOL SYNC ROW -->
                 <div class="p-3 bg-black bg-opacity-20 border-bottom border-white border-opacity-5">
                     <div class="row g-3 align-items-center">
-                        <div class="col-md-5">
+                        <div class="col-md-7">
+                            <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height:60px;position:relative;background:#0f172a;border-radius:8px;">
+                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
+                                    <div class="d-flex align-items-center gap-2 mb-0">
+                                        <label class="mb-0 text-info font-black" style="font-size:0.65rem;letter-spacing:1px;"><i class="bi bi-list-check me-2"></i>PLANNING MASTER</label>
+                                        @{
+                                            var sessionMachine = Context.Session.GetString("MachineName");
+                                            var sessionIsAdmin = Context.Session.GetString("IsAdmin") == "true";
+                                        }
+                                        @if (!sessionIsAdmin && !string.IsNullOrEmpty(sessionMachine))
+                                        {
+                                            <span class="ms-1" style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.3); white-space:nowrap;">
+                                                <i class="bi bi-cpu-fill me-1"></i>@sessionMachine
+                                            </span>
+                                        }
+                                        else if (sessionIsAdmin)
+                                        {
+                                            <span class="ms-1" style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3); white-space:nowrap;">
+                                                <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
+                                            </span>
+                                        }
+                                    </div>
+                                    <input asp-for="ItemCode" id="ItemCode" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size:1rem;outline:none;" placeholder="ITEM CODE / PLANNING..." />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5" style="position:relative;">
                             <div class="hud-pill p-0 d-flex flex-row overflow-hidden border border-info border-opacity-50" style="min-height:60px;background:#0f172a;border-radius:8px;">
                                 <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
                                     <label class="mb-0 text-info font-black" style="font-size:0.65rem;letter-spacing:1px;"><i class="bi bi-keyboard me-2"></i>MANUAL PROTOCOL</label>
-                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size:1rem;outline:none;" placeholder="ITEM CODE..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
+                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size:1rem;outline:none;" placeholder="SEARCH SPS MASTERLIST..." oninput="handleSpsAutocomplete(this.value)" onkeydown="handleSpsKeydown(event)" onfocus="if(this.value) handleSpsAutocomplete(this.value)" onblur="setTimeout(() => closeSpsAutocomplete(), 200)" autocomplete="off" />
                                 </div>
                                 <button type="button" onclick="let v=document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width:60px;background:rgba(14,165,233,0.1);color:#0ea5e9;" title="Search">
                                     <i class="bi bi-search fs-4"></i>
                                 </button>
-                                <button type="button" onclick="startSpsScanner()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width:70px;background:rgba(14,165,233,0.2);color:#38bdf8;" title="Scan Barcode">
-                                    <i class="bi bi-qr-code-scan fs-3"></i>
-                                </button>
                             </div>
-                        </div>
-                        <div class="col-md-7">
-                            <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height:60px;position:relative;background:#0f172a;border-radius:8px;">
-                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
-                                    <label class="mb-0 text-info font-black" style="font-size:0.65rem;letter-spacing:1px;"><i class="bi bi-link-45deg me-2"></i>SPS REFERENCE LINKED &nbsp;<span id="spsLinkedLabel" class="@(Model?.StandardParameterSettingId != null ? "text-success" : "text-white-50")" style="font-size:0.7rem;">@(Model?.StandardParameterSettingId != null ? "✓ LINKED" : "— NONE —")</span></label>
-                                    <div class="font-monospace fw-bold" id="spsLinkedDisplay" style="font-size:0.9rem;opacity:0.8;">
-                                        @if (Model?.StandardParameterSetting != null) {
-                                            <span class="text-success">[@Model.StandardParameterSetting.ItemList] @Model.StandardParameterSetting.HoseType</span>
-                                        } else {
-                                            <span class="text-white-50">Type item code or scan to link SPS protocol...</span>
-                                        }
-                                    </div>
-                                </div>
-                                <button type="button" onclick="clearSpsLink()" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width:60px;background:rgba(239,68,68,0.08);color:#f87171;" title="Clear SPS Link">
-                                    <i class="bi bi-x-circle fs-4"></i>
-                                </button>
+                            <!-- Autocomplete Dropdown -->
+                            <div id="spsAutocompleteResults" class="d-none" style="position:absolute;top:68px;left:0;right:0;background:#0f172a;border:2px solid #0ea5e9;border-radius:8px;max-height:300px;overflow-y:auto;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+                                <!-- Results will be injected here -->
                             </div>
                         </div>
                     </div>
@@ -112,69 +122,117 @@
 
             <!-- SECTION 2: MATERIAL & MESH CHECKING -->
             <div class="row g-4 mb-4 align-items-start">
-                <!-- CARD: MATERIAL TRACKING -->
+                <!-- CARD: MATERIAL & LOT TRACKING -->
                 <div class="col-lg-7">
-                    <div class="hud-card shadow-hud-blue border-white border-opacity-10 overflow-hidden">
+                    <div class="hud-card h-100 shadow-hud-blue border-white border-opacity-10 overflow-hidden">
                         <div class="hud-card-header">
                             <i class="bi bi-box-seam hud-card-icon"></i>
                             <span class="hud-card-title">MATERIAL & LOT TRACKING</span>
                         </div>
-                        <table class="table-hud-unified">
-                            <thead>
-                                <tr class="bg-black bg-opacity-20 text-center">
-                                    <th class="ps-4 text-start">DESCRIPTION</th>
-                                    <th width="22%">STANDARD</th>
-                                    <th width="22%">ACTUAL</th>
-                                    <th width="32%" class="hud-th-scan text-info border-start border-white border-opacity-10">NO. LOT (SCAN)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="ps-4"><div class="label-stack"><span class="label-sub">INNER (MATERIAL)</span><span class="label-main">COMPOUND</span></div></td>
-                                    <td><input asp-for="InnerMaterial" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td><input asp-for="InnerMaterialActual" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td class="hud-td-scan border-start border-white border-opacity-10">
-                                        <div class="hud-scan-group">
-                                            <input asp-for="InnerMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
-                                            <button type="button" class="hud-scan-btn" onclick="openScanner('InnerMaterialLotNo')"><i class="bi bi-upc-scan"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4"><div class="label-stack"><span class="label-sub">OUTER (MATERIAL)</span><span class="label-main">COMPOUND</span></div></td>
-                                    <td><input asp-for="OuterMaterial" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td><input asp-for="OuterMaterialActual" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td class="hud-td-scan border-start border-white border-opacity-10">
-                                        <div class="hud-scan-group">
-                                            <input asp-for="OuterMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
-                                            <button type="button" class="hud-scan-btn" onclick="openScanner('OuterMaterialLotNo')"><i class="bi bi-upc-scan"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr id="middleMaterialRow" style="display:none;">
-                                    <td class="ps-4"><div class="label-stack"><span class="label-sub" style="color:#a78bfa;">MIDDLE (MATERIAL)</span><span class="label-main" style="color:#c4b5fd;">COMPOUND 3L</span></div></td>
-                                    <td><input name="MiddleMaterial" id="MiddleMaterial" class="hud-input-underlined text-center" placeholder="---" value="@Model?.MiddleMaterial" /></td>
-                                    <td><input name="MiddleMaterialActual" id="MiddleMaterialActual" class="hud-input-underlined text-center" placeholder="---" value="@Model?.MiddleMaterialActual" /></td>
-                                    <td class="hud-td-scan border-start border-white border-opacity-10">
-                                        <div class="hud-scan-group" style="border-color:rgba(167,139,250,0.4);">
-                                            <input name="MiddleMaterialLotNo" id="MiddleMaterialLotNo" class="hud-input-scan" placeholder="SCAN LOT..." style="color:#c4b5fd;" value="@Model?.MiddleMaterialLotNo" />
-                                            <button type="button" class="hud-scan-btn" onclick="openScanner('MiddleMaterialLotNo')" style="color:#a78bfa;"><i class="bi bi-upc-scan"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4"><div class="label-stack"><span class="label-sub">YARN (SUPPORT)</span><span class="label-main">POLYESTER</span></div></td>
-                                    <td><input asp-for="Yarn" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td><input asp-for="YarnActual" class="hud-input-underlined text-center" placeholder="---" /></td>
-                                    <td class="hud-td-scan border-start border-white border-opacity-10">
-                                        <div class="hud-scan-group">
-                                            <input asp-for="YarnLotNo" class="hud-input-scan" placeholder="SCAN LOT..." />
-                                            <button type="button" class="hud-scan-btn" onclick="openScanner('YarnLotNo')"><i class="bi bi-upc-scan"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="p-3 bg-black bg-opacity-20 d-flex flex-column gap-3">
+                            <!-- INNER COMPOUND -->
+                            <div class="hud-pill-integrated border border-info border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack"><span class="label-sub text-info">INNER (MATERIAL)</span><span class="label-main">COMPOUND</span></div>
+                                    <button type="button" onclick="addMaterialRow('inner')" class="btn btn-sm btn-outline-info border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(14, 165, 233, 0.1);">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input asp-for="InnerMaterial" id="InnerMaterial" class="hud-input font-monospace text-white opacity-50 w-100" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small text-info mb-1">ACTUAL BATCH NAME</label>
+                                        <input asp-for="InnerMaterialActual" id="InnerMaterialActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                    </div>
+                                </div>
+                                
+                                <!-- Dynamic List for Inner -->
+                                <div id="inner-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+
+                            <!-- MIDDLE COMPOUND (CHS 3 LAYER ONLY - hidden by default) -->
+                            <div id="middleMaterialCard" class="hud-pill-integrated border p-3 shadow-sm" 
+                                 style="display:none; background: rgba(15, 23, 42, 0.8); border-color: rgba(167,139,250,0.35) !important;">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack">
+                                        <span class="label-sub" style="color:#a78bfa;">MIDDLE (MATERIAL)</span>
+                                        <span class="label-main" style="color:#c4b5fd;">COMPOUND 3L</span>
+                                    </div>
+                                    <button type="button" onclick="addMaterialRow('middle')" class="btn btn-sm border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(167,139,250,0.15); color:#a78bfa;">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input id="MiddleMaterial" name="MiddleMaterial" class="hud-input font-monospace w-100" style="color:rgba(196,181,253,0.6);" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small mb-1" style="color:#a78bfa;">ACTUAL BATCH NAME</label>
+                                        <input id="MiddleMaterialActual" name="MiddleMaterialActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                    </div>
+                                </div>
+                                <!-- Dynamic List for Middle -->
+                                <div id="middle-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+
+                            <!-- OUTER COMPOUND -->
+                            <div class="hud-pill-integrated border border-warning border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack"><span class="label-sub text-warning">OUTER (MATERIAL)</span><span class="label-main">COMPOUND</span></div>
+                                    <button type="button" onclick="addMaterialRow('outer')" class="btn btn-sm btn-outline-warning border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(245, 158, 11, 0.1);">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input asp-for="OuterMaterial" id="OuterMaterial" class="hud-input font-monospace text-white opacity-50 w-100" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small text-warning mb-1">ACTUAL BATCH NAME</label>
+                                        <input asp-for="OuterMaterialActual" id="OuterMaterialActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic List for Outer -->
+                                <div id="outer-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+
+                            <!-- YARN SUPPORT -->
+                            <div class="hud-pill-integrated border border-success border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
+                                    <div class="label-stack"><span class="label-sub text-success">YARN (SUPPORT)</span><span class="label-main">POLYESTER</span></div>
+                                    <button type="button" onclick="addMaterialRow('yarn')" class="btn btn-sm btn-outline-success border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(16, 185, 129, 0.1);">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2 align-items-end mb-2">
+                                    <div class="col-4">
+                                        <label class="super-small text-white-50 mb-1">STANDARD</label>
+                                        <input asp-for="Yarn" id="Yarn" class="hud-input font-monospace text-white opacity-50 w-100" readonly />
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="super-small text-success mb-1">ACTUAL BATCH NAME</label>
+                                        <input asp-for="YarnActual" id="YarnActual" class="hud-input font-monospace text-white w-100" placeholder="Input Actual..." />
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic List for Yarn -->
+                                <div id="yarn-lot-list" class="d-flex flex-column gap-2 mt-2">
+                                    <!-- Rows will be added here -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -590,6 +648,14 @@
     .group-lane { background: rgba(14,165,233,0.03); }
     .font-black { font-weight: 900 !important; font-size: 0.6rem !important; }
     .hud-check-box { position: relative; width: 32px; height: 32px; margin: 0 auto; cursor: pointer; }
+
+    /* Autocomplete Dropdown Styles */
+    #spsAutocompleteResults::-webkit-scrollbar { width: 8px; }
+    #spsAutocompleteResults::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 4px; }
+    #spsAutocompleteResults::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.5); border-radius: 4px; }
+    #spsAutocompleteResults::-webkit-scrollbar-thumb:hover { background: rgba(14,165,233,0.8); }
+    .autocomplete-item { transition: all 0.2s ease-in-out; }
+    .autocomplete-item:hover { transform: translateX(4px); }
     .hud-check-box input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; margin: 0; }
     .hud-check-box span { position: absolute; top: 0; left: 0; height: 32px; width: 32px; background-color: rgba(15,23,42,0.6); border: 2px solid rgba(14,165,233,0.2); border-radius: 8px; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); z-index: 1; }
     .hud-check-box:hover input ~ span { border-color: #0ea5e9; background: rgba(14,165,233,0.1); }
@@ -636,6 +702,157 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
         let html5QrCode;
+        
+        // === MATERIAL LOT TRACKING STATE ===
+        const materialState = {
+            inner: [],
+            middle: [],
+            outer: [],
+            yarn: []
+        };
+
+        function addMaterialRow(layer) {
+            const listContainer = document.getElementById(`${layer}-lot-list`);
+            const index = materialState[layer].length;
+            
+            if (index >= 10) {
+                Swal.fire('PROCESS LIMIT', 'System supports a maximum of 10 batch lots per production cycle.', 'warning');
+                return;
+            }
+
+            const rowId = `lot-${layer}-${Date.now()}`;
+            const isYarn = (layer === 'yarn');
+            const themeColor = layer === 'inner' ? 'info' : (layer === 'outer' ? 'warning' : (layer === 'middle' ? 'purple' : 'success'));
+            const themeRgb = layer === 'inner' ? '14, 165, 233' : (layer === 'outer' ? '245, 158, 11' : (layer === 'middle' ? '167, 139, 250' : '16, 185, 129'));
+            const themeHex = layer === 'inner' ? '#38bdf8' : (layer === 'outer' ? '#f59e0b' : (layer === 'middle' ? '#c4b5fd' : '#10b981'));
+            
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = `row g-1 align-items-center mb-2`;
+            div.innerHTML = `
+                <div class="${isYarn ? 'col-10' : 'col-6'}">
+                    <div class="hud-scan-group p-1" style="border-color: rgba(${themeRgb}, 0.25); background: rgba(15, 23, 42, 0.6); border-radius: 6px;">
+                        <input type="text" class="hud-input-scan fw-bold w-100" style="font-size: 0.75rem; color: ${themeHex}; padding: 6px;" placeholder="LOT #${index + 1}..." data-layer="${layer}" data-type="lot" />
+                        <button type="button" class="hud-scan-btn ms-1" style="color: ${themeHex};" onclick="openScannerForDynamicRow('${rowId}')"><i class="bi bi-upc-scan fs-6"></i></button>
+                    </div>
+                </div>
+                ${!isYarn ? `
+                <div class="col-4">
+                    <div class="d-flex flex-column" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(${themeRgb}, 0.3); border-radius: 6px; padding: 2px 8px;">
+                        <label class="font-black opacity-50 mb-0" style="font-size: 0.55rem; letter-spacing: 0.5px; color: ${themeHex};">SG VALUE</label>
+                        <div class="d-flex align-items-center">
+                            <span class="fw-900 me-1" style="font-size: 0.65rem; opacity: 0.6; color: ${themeHex};">🧪</span>
+                            <input type="number" step="0.0001" class="hud-input font-monospace fw-black p-0 border-0 bg-transparent text-end flex-grow-1" style="font-size: 1rem; color: ${themeHex};" placeholder="0.0000" data-layer="${layer}" data-type="sg" />
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                <div class="col-2 text-center" style="min-width: 40px;">
+                    <button type="button" onclick="removeMaterialRow('${layer}', '${rowId}')" class="btn btn-link text-danger p-0 border-0 shadow-none" title="REMOVE LOT">
+                        <i class="bi bi-x-circle-fill fs-5"></i>
+                    </button>
+                </div>
+            `;
+            
+            listContainer.appendChild(div);
+            materialState[layer].push(rowId);
+        }
+
+        function removeMaterialRow(layer, rowId) {
+            const el = document.getElementById(rowId);
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(20px)';
+                el.style.transition = 'all 0.3s';
+                setTimeout(() => {
+                    el.remove();
+                    materialState[layer] = materialState[layer].filter(id => id !== rowId);
+                }, 300);
+            }
+        }
+
+        function openScannerForDynamicRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            const input = row.querySelector('input[data-type="lot"]');
+            if (!input) return;
+            
+            openScannerCustom((code) => {
+                input.value = code;
+                input.style.animation = 'pulse 0.5s';
+            });
+        }
+
+        function openScannerCustom(callback) {
+            Swal.fire({
+                title: 'SCANNING LOT NUMBER',
+                html: `
+                    <div id="scanner-reader-container" style="width:100%;min-height:250px;background:#000;border-radius:8px;overflow:hidden;border:2px solid #0ea5e9;">
+                        <div id="scanner-reader"></div>
+                    </div>
+                `,
+                background: '#020617',
+                color: '#0ea5e9',
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: '90%',
+                didOpen: () => {
+                    const customScanner = new Html5Qrcode("scanner-reader");
+                    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+                    
+                    customScanner.start({ facingMode: "environment" }, config, (decodedText) => {
+                        callback(decodedText);
+                        customScanner.stop().then(() => {
+                            Swal.close();
+                            Swal.fire({ icon: 'success', title: 'SCANNED!', text: decodedText, toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+                        });
+                    }).catch(err => {
+                        document.getElementById('scanner-reader').innerHTML = `<div class="p-4 text-danger small">CAMERA ERROR: ${err}</div>`;
+                    });
+                },
+                willClose: () => {
+                    // Cleanup handled in callback
+                }
+            });
+        }
+
+        function getMaterialLotPayload() {
+            const results = [];
+            const layerIdMap = {
+                inner: { std: 'InnerMaterial', actual: 'InnerMaterialActual' },
+                outer: { std: 'OuterMaterial', actual: 'OuterMaterialActual' },
+                middle: { std: 'MiddleMaterial', actual: 'MiddleMaterialActual' },
+                yarn: { std: 'Yarn', actual: 'YarnActual' }
+            };
+
+            ['inner', 'outer', 'middle', 'yarn'].forEach(layer => {
+                const container = document.getElementById(`${layer}-lot-list`);
+                if (!container) return;
+                const rows = container.querySelectorAll('.row');
+                const ids = layerIdMap[layer];
+                const stdMaterial = document.getElementById(ids.std)?.value || '';
+                const actualMaterial = document.getElementById(ids.actual)?.value || '';
+                
+                rows.forEach(row => {
+                    const lotInput = row.querySelector('input[data-type="lot"]');
+                    const sgInput = row.querySelector('input[data-type="sg"]');
+                    const lot = lotInput ? lotInput.value.trim() : '';
+                    const sg = sgInput ? parseFloat(sgInput.value.replace(',', '.')) : null;
+                    
+                    if (lot || sg) {
+                        results.push({
+                            LayerType: layer.toUpperCase(),
+                            LotNumber: lot,
+                            SpecificGravity: sg,
+                            StandardMaterial: stdMaterial,
+                            ActualMaterial: actualMaterial
+                        });
+                    }
+                });
+            });
+
+            return results;
+        }
 
         async function openScanner(targetId) {
             Swal.fire({
@@ -676,34 +893,125 @@
             });
         }
 
-        // ══ SPS SYNC FUNCTIONS ══
-        async function startSpsScanner() {
-            Swal.fire({
-                title: '<div class="font-monospace small" style="color:#38bdf8;">SPS OPTICAL SCANNER</div>',
-                html: `
-                    <div id="sps-reader-container" style="width:100%;min-height:250px;background:#000;border-radius:8px;overflow:hidden;border:2px solid #0ea5e9;">
-                        <div id="sps-reader"></div>
-                    </div>
-                    <div class="mt-2 small fw-bold" style="color:#0ea5e9;letter-spacing:2px;">SCAN ITEM BARCODE TO LOAD SPS</div>
-                `,
-                background: '#020617',
-                showConfirmButton: false,
-                showCloseButton: true,
-                width: '90%',
-                didOpen: () => {
-                    const scanQrCode = new Html5Qrcode("sps-reader");
-                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-                    scanQrCode.start({ facingMode: "environment" }, config, async (decodedText) => {
-                        await scanQrCode.stop();
-                        Swal.close();
-                        document.getElementById('manualItemSearch').value = decodedText;
-                        fetchSpsByItem(decodedText);
-                    });
+        // ══ SPS AUTOCOMPLETE FUNCTIONS ══
+        let spsAutocompleteTimeout = null;
+        let spsAutocompleteSelectedIndex = -1;
+        let spsAutocompleteItems = [];
+
+        async function handleSpsAutocomplete(query) {
+            console.log('🔍 Autocomplete triggered, query:', query);
+            clearTimeout(spsAutocompleteTimeout);
+            
+            if (!query || query.trim().length < 2) {
+                console.log('⚠️ Query too short, closing dropdown');
+                closeSpsAutocomplete();
+                return;
+            }
+            
+            spsAutocompleteTimeout = setTimeout(async () => {
+                try {
+                    console.log('📡 Fetching SPS items for:', query);
+                    const res = await fetch(`/ProductionReport/SearchSpsItems?query=${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    console.log('✅ Received data:', data);
+                    
+                    if (data && data.length > 0) {
+                        showSpsAutocomplete(data);
+                    } else {
+                        console.log('⚠️ No results found');
+                        closeSpsAutocomplete();
+                    }
+                } catch (e) {
+                    console.error('❌ Autocomplete error:', e);
+                    closeSpsAutocomplete();
                 }
+            }, 300);
+        }
+
+        function showSpsAutocomplete(items) {
+            console.log('📋 Showing autocomplete with items:', items);
+            spsAutocompleteItems = items;
+            spsAutocompleteSelectedIndex = -1;
+            
+            const dropdown = document.getElementById('spsAutocompleteResults');
+            if (!dropdown) {
+                console.error('❌ Dropdown element not found!');
+                return;
+            }
+            
+            dropdown.innerHTML = items.map((item, index) => `
+                <div class="autocomplete-item" data-index="${index}" onclick="selectSpsItem('${item.itemCode}')" 
+                     style="padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:all 0.2s;">
+                    <div style="color:#38bdf8;font-weight:700;font-family:monospace;font-size:0.95rem;">${item.itemCode}</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.75rem;margin-top:2px;">${item.hoseType || 'No specification'}</div>
+                </div>
+            `).join('');
+            
+            dropdown.classList.remove('d-none');
+            console.log('✅ Dropdown displayed with', items.length, 'items');
+            
+            // Add hover effects
+            dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    dropdown.querySelectorAll('.autocomplete-item').forEach(i => i.style.background = 'transparent');
+                    this.style.background = 'rgba(14,165,233,0.15)';
+                });
+                item.addEventListener('mouseleave', function() {
+                    this.style.background = 'transparent';
+                });
             });
         }
 
+        function closeSpsAutocomplete() {
+            document.getElementById('spsAutocompleteResults').classList.add('d-none');
+            spsAutocompleteSelectedIndex = -1;
+        }
+
+        function handleSpsKeydown(event) {
+            const dropdown = document.getElementById('spsAutocompleteResults');
+            if (dropdown.classList.contains('d-none')) return;
+            
+            const items = dropdown.querySelectorAll('.autocomplete-item');
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                spsAutocompleteSelectedIndex = Math.min(spsAutocompleteSelectedIndex + 1, items.length - 1);
+                highlightSpsItem(items, spsAutocompleteSelectedIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                spsAutocompleteSelectedIndex = Math.max(spsAutocompleteSelectedIndex - 1, -1);
+                highlightSpsItem(items, spsAutocompleteSelectedIndex);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (spsAutocompleteSelectedIndex >= 0 && spsAutocompleteItems[spsAutocompleteSelectedIndex]) {
+                    selectSpsItem(spsAutocompleteItems[spsAutocompleteSelectedIndex].itemCode);
+                } else {
+                    const inputVal = document.getElementById('manualItemSearch').value;
+                    if (inputVal) fetchSpsByItem(inputVal);
+                }
+            } else if (event.key === 'Escape') {
+                closeSpsAutocomplete();
+            }
+        }
+
+        function highlightSpsItem(items, index) {
+            items.forEach((item, i) => {
+                item.style.background = i === index ? 'rgba(14,165,233,0.25)' : 'transparent';
+            });
+            if (index >= 0 && items[index]) {
+                items[index].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function selectSpsItem(itemCode) {
+            console.log('🎯 SPS item selected:', itemCode);
+            document.getElementById('manualItemSearch').value = itemCode;
+            closeSpsAutocomplete();
+            fetchSpsByItem(itemCode);
+        }
+
         async function fetchSpsByItem(code) {
+            console.log('📡 Fetching full SPS data for:', code);
             Swal.fire({
                 title: 'SEARCHING PROTOCOL...',
                 text: `VALIDATING: ${code.trim().toUpperCase()}`,
@@ -715,6 +1023,7 @@
                 const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
                 if (!res.ok) throw new Error('NOT FOUND');
                 const data = await res.json();
+                console.log('✅ Full SPS data received:', data);
                 if (data.success === false) throw new Error(data.message || 'NOT FOUND');
                 Swal.close();
                 applySpsToForm(data);
@@ -731,15 +1040,36 @@
 
         function applySpsToForm(sps) {
             if (!sps) return;
-            // Update hidden SPS ID
-            const spsIdEl = document.getElementById('StandardParameterSettingId');
-            if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
+            
+            console.log('Applying SPS to form:', sps);
+            
+            // Update hidden SPS ID (will be null if SPS comes from Masterlist, not StandardParameterSettings)
+            const spsIdEl = document.getElementById('SpsId');
+            if (spsIdEl) {
+                const spsId = sps.id || sps.Id;
+                spsIdEl.value = spsId != null ? spsId : '';
+                console.log('SpsId set to:', spsIdEl.value || 'NULL');
+                
+                // Warn user if this is from Masterlist (no StandardParameterSettings record)
+                if (!spsId && sps.source === 'Masterlist') {
+                    console.warn('⚠️ This SPS is from Masterlist - SpsId will be NULL in database');
+                    console.warn('   Item:', sps.itemList || sps.ItemList);
+                    console.warn('   Masterlist ID:', sps.masterlistId || sps.MasterlistId);
+                }
+            }
 
-            // Update linked display
-            const label = document.getElementById('spsLinkedLabel');
-            const display = document.getElementById('spsLinkedDisplay');
-            if (label) { label.textContent = '✓ LINKED'; label.className = 'text-success'; label.style.fontSize = '0.7rem'; }
-            if (display) display.innerHTML = `<span class="text-success">[${sps.itemList || sps.ItemList || '---'}] ${sps.hoseType || sps.HoseType || '---'}</span>`;
+            // Update manual search display (show what was loaded)
+            const manualSearchEl = document.getElementById('manualItemSearch');
+            if (manualSearchEl) manualSearchEl.value = sps.itemList || sps.ItemList || '';
+            
+            // Sync ItemCode with SPS ItemList (Planning Master field)
+            // This ensures ItemCode matches the SPS protocol being applied
+            const itemCodeEl = document.getElementById('ItemCode');
+            if (itemCodeEl && (sps.itemList || sps.ItemList)) {
+                const newItemCode = sps.itemList || sps.ItemList;
+                console.log('Syncing ItemCode from', itemCodeEl.value, 'to', newItemCode);
+                itemCodeEl.value = newItemCode;
+            }
 
             // Populate header inputs
             const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
@@ -754,12 +1084,12 @@
             setName('OuterMaterial', sps.outerMaterial || sps.OuterMaterial);
             setName('Yarn',          sps.yarnType || sps.Yarn);
 
-            // Show/hide Middle material row based on LayerType
+            // Show/hide Middle material CARD based on LayerType
             const layerType = (sps.layerType || sps.LayerType || '').toLowerCase();
             const is3Layer = layerType.includes('3') || layerType.includes('triple') || layerType.includes('three');
-            const middleRow = document.getElementById('middleMaterialRow');
-            if (middleRow) {
-                middleRow.style.display = is3Layer ? '' : 'none';
+            const middleCard = document.getElementById('middleMaterialCard');
+            if (middleCard) {
+                middleCard.style.display = is3Layer ? 'block' : 'none';
                 // If 3-layer, also pre-fill middle material name from SPS if available
                 if (is3Layer) {
                     const midEl = document.getElementById('MiddleMaterial');
@@ -773,29 +1103,37 @@
                 if (el) el.textContent = val || '--';
             };
             
-            // Map SPS fields to spec labels
-            setSpec('HeadTempInner', sps.headTempInner);
-            setSpec('Cylinder1TempInner', sps.cylinder1TempInner);
-            setSpec('Cylinder2TempInner', sps.cylinder2TempInner);
-            setSpec('Cylinder3TempInner', sps.cylinder3TempInner);
-            setSpec('ScrewTempInner', sps.screwTempInner);
-            setSpec('ScrewSpeedInner', sps.screwSpeedInner);
-            setSpec('FeedRollRatioInner', sps.feedRollRatioInner);
-            setSpec('PressureInner', sps.pressureInner);
+            // Dies dimension standards
+            setSpec('NippleDie', sps.InnerDie || sps.innerDie);
+            setSpec('TubeDie', sps.TubeDie || sps.tubeDie);
+            setSpec('MiddleDie', sps.MiddleDie || sps.middleDie);
+            setSpec('CoverDie', sps.CoverDie || sps.coverDie);
+            setSpec('SpacerDie', sps.SpacerDie || sps.spacerDie);
+            setSpec('ToleranceDie', sps.ToleranceDie || sps.toleranceDie);
+            
+            // Map SPS fields to spec labels (support both PascalCase and camelCase)
+            setSpec('HeadTempInner', sps.HeadTempInner || sps.headTempInner);
+            setSpec('Cylinder1TempInner', sps.Cylinder1TempInner || sps.cylinder1TempInner);
+            setSpec('Cylinder2TempInner', sps.Cylinder2TempInner || sps.cylinder2TempInner);
+            setSpec('Cylinder3TempInner', sps.Cylinder3TempInner || sps.cylinder3TempInner);
+            setSpec('ScrewTempInner', sps.ScrewTempInner || sps.screwTempInner);
+            setSpec('ScrewSpeedInner', sps.ScrewSpeedInner || sps.screwSpeedInner);
+            setSpec('FeedRollRatioInner', sps.FeedRollRatioInner || sps.feedRollRatioInner);
+            setSpec('PressureInner', sps.PressureInner || sps.pressureInner);
 
-            setSpec('HeadTempOuter', sps.headTempOuter);
-            setSpec('Cylinder1TempOuter', sps.cylinder1TempOuter);
-            setSpec('Cylinder2TempOuter', sps.cylinder2TempOuter);
-            setSpec('Cylinder3TempOuter', sps.cylinder3TempOuter);
-            setSpec('ScrewTempOuter', sps.screwTempOuter);
-            setSpec('ScrewSpeedOuter', sps.screwSpeedOuter);
-            setSpec('FeedRollRatioOuter', sps.feedRollRatioOuter);
-            setSpec('PressureOuter', sps.pressureOuter);
+            setSpec('HeadTempOuter', sps.HeadTempOuter || sps.headTempOuter);
+            setSpec('Cylinder1TempOuter', sps.Cylinder1TempOuter || sps.cylinder1TempOuter);
+            setSpec('Cylinder2TempOuter', sps.Cylinder2TempOuter || sps.cylinder2TempOuter);
+            setSpec('Cylinder3TempOuter', sps.Cylinder3TempOuter || sps.cylinder3TempOuter);
+            setSpec('ScrewTempOuter', sps.ScrewTempOuter || sps.screwTempOuter);
+            setSpec('ScrewSpeedOuter', sps.ScrewSpeedOuter || sps.screwSpeedOuter);
+            setSpec('FeedRollRatioOuter', sps.FeedRollRatioOuter || sps.feedRollRatioOuter);
+            setSpec('PressureOuter', sps.PressureOuter || sps.pressureOuter);
 
-            setSpec('SpiralSpeed', sps.spiralSpeed);
-            setSpec('SpiralPitchSetting', sps.spiralPitch);
-            setSpec('HoseSpeed', sps.hoseSpeed);
-            setSpec('ConveyorRatio', sps.conveyorRatio);
+            setSpec('SpiralSpeed', sps.SpiralSpeed || sps.spiralSpeed);
+            setSpec('SpiralPitchSetting', sps.SpiralPitch || sps.spiralPitch);
+            setSpec('HoseSpeed', sps.HoseSpeed || sps.hoseSpeed);
+            setSpec('ConveyorRatio', sps.ConveyorRatio || sps.conveyorRatio);
 
             // Populate Emboss Marking Date if empty
             const dateEl = document.getElementById('EmbossMarkDate');
@@ -828,40 +1166,39 @@
 
         // Load existing readings from Model
         const initialReadings = @Html.Raw(Json.Serialize((Model?.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).Select(r => new {
-            data = new Dictionary<string, string?> {
-                { "HeadTempInner", r.HeadTempInner?.ToString() },
-                { "Cylinder1TempInner", r.Cylinder1TempInner?.ToString() },
-                { "Cylinder2TempInner", r.Cylinder2TempInner?.ToString() },
-                { "Cylinder3TempInner", r.Cylinder3TempInner?.ToString() },
-                { "ScrewTempInner", r.ScrewTempInner?.ToString() },
-                { "ScrewSpeedInner", r.ScrewSpeedInner?.ToString() },
-                { "FeedRollRatioInner", r.FeedRollRatioInner?.ToString() },
-                { "PressureInner", r.PressureInner?.ToString() },
-                { "HeadTempOuter", r.HeadTempOuter?.ToString() },
-                { "Cylinder1TempOuter", r.Cylinder1TempOuter?.ToString() },
-                { "Cylinder2TempOuter", r.Cylinder2TempOuter?.ToString() },
-                { "Cylinder3TempOuter", r.Cylinder3TempOuter?.ToString() },
-                { "ScrewTempOuter", r.ScrewTempOuter?.ToString() },
-                { "ScrewSpeedOuter", r.ScrewSpeedOuter?.ToString() },
-                { "FeedRollRatioOuter", r.FeedRollRatioOuter?.ToString() },
-                { "PressureOuter", r.PressureOuter?.ToString() },
-                { "SpiralSpeed", r.SpiralSpeed?.ToString() },
-                { "SpiralPitchSetting", r.SpiralPitchSetting?.ToString() },
-                { "SpiralPitchDisplay", r.SpiralPitchDisplay?.ToString() },
-                { "PresetValue", r.PresetValue?.ToString() },
-                { "ControlValue", r.ControlValue?.ToString() },
-                { "HoseSpeed", r.HoseSpeed?.ToString() },
-                { "TakeupConveyorSpeed", r.TakeupConveyorSpeed?.ToString() },
-                { "CoolConveyorSpeed", r.CoolConveyorSpeed?.ToString() },
-                { "ConveyorRatio", r.ConveyorRatio?.ToString() },
-                { "UnsmoothSurface", r.UnsmoothSurface?.ToString() },
-                { "ChillerWaterTemp", r.ChillerWaterTemp?.ToString() },
-                { "CaterpillarGap", r.CaterpillarGap?.ToString() },
-                { "ReadingTime", r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss") }
-            }
-        })));
+            HeadTempInner = r.HeadTempInner?.ToString(),
+            Cylinder1TempInner = r.Cylinder1TempInner?.ToString(),
+            Cylinder2TempInner = r.Cylinder2TempInner?.ToString(),
+            Cylinder3TempInner = r.Cylinder3TempInner?.ToString(),
+            ScrewTempInner = r.ScrewTempInner?.ToString(),
+            ScrewSpeedInner = r.ScrewSpeedInner?.ToString(),
+            FeedRollRatioInner = r.FeedRollRatioInner?.ToString(),
+            PressureInner = r.PressureInner?.ToString(),
+            HeadTempOuter = r.HeadTempOuter?.ToString(),
+            Cylinder1TempOuter = r.Cylinder1TempOuter?.ToString(),
+            Cylinder2TempOuter = r.Cylinder2TempOuter?.ToString(),
+            Cylinder3TempOuter = r.Cylinder3TempOuter?.ToString(),
+            ScrewTempOuter = r.ScrewTempOuter?.ToString(),
+            ScrewSpeedOuter = r.ScrewSpeedOuter?.ToString(),
+            FeedRollRatioOuter = r.FeedRollRatioOuter?.ToString(),
+            PressureOuter = r.PressureOuter?.ToString(),
+            SpiralSpeed = r.SpiralSpeed?.ToString(),
+            SpiralPitchSetting = r.SpiralPitchSetting?.ToString(),
+            SpiralPitchDisplay = r.SpiralPitchDisplay?.ToString(),
+            PresetValue = r.PresetValue?.ToString(),
+            ControlValue = r.ControlValue?.ToString(),
+            HoseSpeed = r.HoseSpeed?.ToString(),
+            TakeupConveyorSpeed = r.TakeupConveyorSpeed?.ToString(),
+            CoolConveyorSpeed = r.CoolConveyorSpeed?.ToString(),
+            ConveyorRatio = r.ConveyorRatio?.ToString(),
+            UnsmoothSurface = r.UnsmoothSurface?.ToString(),
+            ChillerWaterTemp = r.ChillerWaterTemp?.ToString(),
+            CaterpillarGap = r.CaterpillarGap?.ToString(),
+            ReadingTime = r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss")
+        }).ToList()));
 
-        pReadings = initialReadings.length > 0 ? initialReadings : [{ data: {} }];
+        // Transform to match expected format { data: {...} }
+        pReadings = initialReadings.length > 0 ? initialReadings.map(r => ({ data: r })) : [{ data: {} }];
 
         function renderTabs() {
             const container = document.getElementById('readingsTabs');
@@ -945,10 +1282,115 @@
         window.addEventListener('DOMContentLoaded', () => {
             renderTabs();
             loadCurrentReadingToInputs();
+            loadExistingMaterialLots();
             @if (Model?.StandardParameterSetting != null) {
-                <text>applySpsToForm(@Html.Raw(Json.Serialize(Model.StandardParameterSetting)));</text>
+                <text>
+                applySpsToForm(@Html.Raw(Json.Serialize(new {
+                    Model.StandardParameterSetting.Id,
+                    Model.StandardParameterSetting.ItemList,
+                    Model.StandardParameterSetting.HoseType,
+                    Model.StandardParameterSetting.DocumentNumber,
+                    Model.StandardParameterSetting.RevisionNumber,
+                    Model.StandardParameterSetting.CustomerName,
+                    Model.StandardParameterSetting.InnerMaterial,
+                    Model.StandardParameterSetting.OuterMaterial,
+                    Model.StandardParameterSetting.YarnType,
+                    Model.StandardParameterSetting.LayerType,
+                    HeadTempInner = Model.StandardParameterSetting.HeadTemp,
+                    Cylinder1TempInner = Model.StandardParameterSetting.Cylinder1Temp,
+                    Cylinder2TempInner = Model.StandardParameterSetting.Cylinder2Temp,
+                    Cylinder3TempInner = Model.StandardParameterSetting.Cylinder3Temp,
+                    ScrewTempInner = Model.StandardParameterSetting.ScrewTemp,
+                    ScrewSpeedInner = Model.StandardParameterSetting.ScrewSpeed,
+                    FeedRollRatioInner = Model.StandardParameterSetting.FeedRollRatio,
+                    PressureInner = Model.StandardParameterSetting.Pressure,
+                    HeadTempOuter = Model.StandardParameterSetting.HeadTemp2,
+                    Cylinder1TempOuter = Model.StandardParameterSetting.Cylinder1_2,
+                    Cylinder2TempOuter = Model.StandardParameterSetting.Cylinder2_2,
+                    Cylinder3TempOuter = Model.StandardParameterSetting.Cylinder3_2,
+                    ScrewTempOuter = Model.StandardParameterSetting.ScrewTemp2,
+                    ScrewSpeedOuter = Model.StandardParameterSetting.ScrewSpeed2,
+                    FeedRollRatioOuter = Model.StandardParameterSetting.FeedRollRatio2,
+                    PressureOuter = Model.StandardParameterSetting.Pressure2,
+                    Model.StandardParameterSetting.SpiralSpeed,
+                    Model.StandardParameterSetting.SpiralPitch,
+                    Model.StandardParameterSetting.HoseSpeed,
+                    Model.StandardParameterSetting.ConveyorRatio
+                })));
+                </text>
+            }
+            @if (Model?.StandardParameterSetting == null && !string.IsNullOrWhiteSpace(Model?.ItemCode)) {
+                <text>
+                // StandardParameterSetting not loaded, but ItemCode exists
+                // Auto-fetch SPS data by ItemCode to restore Manual Protocol display
+                console.log('🔄 Auto-loading SPS for ItemCode:', '@Model.ItemCode');
+                fetchSpsByItem('@Model.ItemCode');
+                </text>
             }
         });
+
+        function loadExistingMaterialLots() {
+            @if (Model?.MaterialLots != null && Model.MaterialLots.Any()) {
+                <text>
+                const existingLots = @Html.Raw(Json.Serialize(Model.MaterialLots.Select(m => new { m.LayerType, m.LotNumber, m.SGValue })));
+                console.log('Loading existing material lots:', existingLots);
+                
+                // Check if there are any middle layer lots to show the card
+                const hasMiddle = existingLots.some(lot => (lot.layerType || lot.LayerType || '').toLowerCase() === 'middle');
+                if (hasMiddle) {
+                    const middleCard = document.getElementById('middleMaterialCard');
+                    if (middleCard) middleCard.style.display = 'block';
+                }
+                
+                existingLots.forEach(lot => {
+                    const layer = (lot.layerType || lot.LayerType || '').toLowerCase();
+                    if (!layer) return;
+                    
+                    // Add new row
+                    const listContainer = document.getElementById(`${layer}-lot-list`);
+                    if (!listContainer) return;
+                    
+                    const index = materialState[layer].length;
+                    const rowId = `lot-${layer}-${Date.now()}-${index}`;
+                    const isYarn = (layer === 'yarn');
+                    const themeColor = layer === 'inner' ? 'info' : (layer === 'outer' ? 'warning' : (layer === 'middle' ? 'purple' : 'success'));
+                    const themeRgb = layer === 'inner' ? '14, 165, 233' : (layer === 'outer' ? '245, 158, 11' : (layer === 'middle' ? '167, 139, 250' : '16, 185, 129'));
+                    const themeHex = layer === 'inner' ? '#38bdf8' : (layer === 'outer' ? '#f59e0b' : (layer === 'middle' ? '#c4b5fd' : '#10b981'));
+                    
+                    const div = document.createElement('div');
+                    div.id = rowId;
+                    div.className = `row g-1 align-items-center mb-2`;
+                    div.innerHTML = `
+                        <div class="${isYarn ? 'col-10' : 'col-6'}">
+                            <div class="hud-scan-group p-1" style="border-color: rgba(${themeRgb}, 0.25); background: rgba(15, 23, 42, 0.6); border-radius: 6px;">
+                                <input type="text" class="hud-input-scan fw-bold w-100" style="font-size: 0.75rem; color: ${themeHex}; padding: 6px;" placeholder="LOT #${index + 1}..." data-layer="${layer}" data-type="lot" value="${lot.lotNumber || lot.LotNumber || ''}" />
+                                <button type="button" class="hud-scan-btn ms-1" style="color: ${themeHex};" onclick="openScannerForDynamicRow('${rowId}')"><i class="bi bi-upc-scan fs-6"></i></button>
+                            </div>
+                        </div>
+                        ${!isYarn ? `
+                        <div class="col-4">
+                            <div class="d-flex flex-column" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(${themeRgb}, 0.3); border-radius: 6px; padding: 2px 8px;">
+                                <label class="font-black opacity-50 mb-0" style="font-size: 0.55rem; letter-spacing: 0.5px; color: ${themeHex};">SG VALUE</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="fw-900 me-1" style="font-size: 0.65rem; opacity: 0.6; color: ${themeHex};">🧪</span>
+                                    <input type="number" step="0.0001" class="hud-input font-monospace fw-black p-0 border-0 bg-transparent text-end flex-grow-1" style="font-size: 1rem; color: ${themeHex};" placeholder="0.0000" data-layer="${layer}" data-type="sg" value="${lot.sgValue || lot.SGValue || ''}" />
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        <div class="col-2 text-center" style="min-width: 40px;">
+                            <button type="button" onclick="removeMaterialRow('${layer}', '${rowId}')" class="btn btn-link text-danger p-0 border-0 shadow-none" title="REMOVE LOT">
+                                <i class="bi bi-x-circle-fill fs-5"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    listContainer.appendChild(div);
+                    materialState[layer].push(rowId);
+                });
+                </text>
+            }
+        }
 
         async function submitUpdateReport() {
             const payload = {
@@ -959,17 +1401,21 @@
                 Shift: document.getElementById('Shift').value,
                 CustomerName: document.getElementById('CustomerName').value,
                 HoseType: document.getElementById('HoseType').value,
-                StandardParameterSettingId: parseInt(document.getElementById('StandardParameterSettingId').value) || null,
+                ItemCode: document.getElementById('ItemCode').value,
+                SpsId: parseInt(document.getElementById('SpsId').value) || null,
 
                 InnerMaterial: document.querySelector('input[name="InnerMaterial"]').value,
                 InnerMaterialActual: document.querySelector('input[name="InnerMaterialActual"]').value,
-                InnerMaterialLotNo: document.querySelector('input[name="InnerMaterialLotNo"]').value,
+                InnerMaterialLotNo: '', // Deprecated, use MaterialLots array
                 OuterMaterial: document.querySelector('input[name="OuterMaterial"]').value,
                 OuterMaterialActual: document.querySelector('input[name="OuterMaterialActual"]').value,
-                OuterMaterialLotNo: document.querySelector('input[name="OuterMaterialLotNo"]').value,
+                OuterMaterialLotNo: '', // Deprecated, use MaterialLots array
                 Yarn: document.querySelector('input[name="Yarn"]').value,
                 YarnActual: document.querySelector('input[name="YarnActual"]').value,
-                YarnLotNo: document.querySelector('input[name="YarnLotNo"]').value,
+                YarnLotNo: '', // Deprecated, use MaterialLots array
+                MiddleMaterial: document.getElementById('MiddleMaterial')?.value || '',
+                MiddleMaterialActual: document.getElementById('MiddleMaterialActual')?.value || '',
+                MiddleMaterialLotNo: '', // Deprecated, use MaterialLots array
 
                 NippleDieOK: document.querySelector('input[name="NippleDieOK"]:checked')?.value === 'true',
                 NippleDieInitial: document.querySelector('input[name="NippleDieInitial"]').value,
@@ -1011,6 +1457,8 @@
                 DRAC_Awal: document.querySelector('input[name="DRAC_Awal"]').value,
                 DRAC_Akhir: document.querySelector('input[name="DRAC_Akhir"]').value,
 
+                MaterialLots: getMaterialLotPayload(),
+
                 Readings: pReadings.map(p => ({
                     ReadingTime: p.data.ReadingTime || new Date().toISOString(),
                     ...p.data
@@ -1024,6 +1472,11 @@
                 background: '#020617', color: '#38bdf8',
                 didOpen: () => { Swal.showLoading(); }
             });
+
+            console.log('📦 Payload being submitted:');
+            console.log('  - ItemCode:', payload.ItemCode);
+            console.log('  - SpsId:', payload.SpsId);
+            console.log('  - Full payload:', payload);
 
             try {
                 const res = await fetch('/ProductionReport/UpdateWithReadings', {
@@ -1044,12 +1497,16 @@
         }
 
         function clearSpsLink() {
-            document.getElementById('StandardParameterSettingId').value = '';
+            document.getElementById('SpsId').value = '';
             document.getElementById('manualItemSearch').value = '';
-            const label = document.getElementById('spsLinkedLabel');
-            const display = document.getElementById('spsLinkedDisplay');
-            if (label) { label.textContent = '— NONE —'; label.className = 'text-white-50'; }
-            if (display) display.innerHTML = '<span class="text-white-50">Type item code or scan to link SPS protocol...</span>';
+            Swal.fire({
+                icon: 'success',
+                title: 'SPS LINK CLEARED',
+                text: 'Parameter setting link telah dihapus',
+                toast: true, position: 'top-end', timer: 2000,
+                showConfirmButton: false,
+                background: '#0f172a', color: '#38bdf8'
+            });
         }
 
         // Confirm before submit

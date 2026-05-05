@@ -16,7 +16,7 @@
         </div>
 
         <form asp-action="Create" id="mainReportForm">
-            <input type="hidden" id="StandardParameterSettingId" name="StandardParameterSettingId" value="" />
+            <input type="hidden" id="SpsId" name="SpsId" value="" />
             <!-- SECTION: PRODUCTION COMMAND CONSOLE (TOP HEADER) -->
             <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10" style="position: relative; z-index: 1050; overflow: visible;">
                 <div class="hud-card-header d-flex justify-content-between align-items-center py-2 px-3">
@@ -999,7 +999,7 @@
 
                         <!-- OPERATIONAL SIGN-OFF (Hidden as name is from login) -->
                         <input type="hidden" asp-for="CreatedBy" />
-                        <input type="hidden" asp-for="StandardParameterSettingId" />
+                        <input type="hidden" asp-for="SpsId" />
                         <input type="hidden" asp-for="ItemCode" />
 
                         
@@ -1313,7 +1313,7 @@
             }
 
             // SET THE ID TO LINK WITH HISTORY
-            document.getElementById('StandardParameterSettingId').value = sps.id || sps.Id || 0;
+            document.getElementById('SpsId').value = sps.id || sps.Id || 0;
             document.getElementById('ItemCode').value = sps.itemList || sps.itemCode || sps.productCode || '';
 
             const itemCode = sps.itemList || sps.itemCode || sps.productCode || '';
@@ -1343,7 +1343,7 @@
             // Always populate the Standard field if data exists
             if (midEl) midEl.value = middleStd;
 
-            let spsIdEl = document.getElementById('StandardParameterSettingId');
+            let spsIdEl = document.getElementById('SpsId');
             if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
 
             const formatVal = (val, prefix = '', suffix = '') => {
@@ -2033,7 +2033,7 @@
                 DRAC_Awal: document.getElementById('DRAC_Awal').value,
                 DRAC_Akhir: document.getElementById('DRAC_Akhir').value,
 
-                StandardParameterSettingId: document.getElementById('StandardParameterSettingId')?.value ? parseInt(document.getElementById('StandardParameterSettingId').value) : null,
+                SpsId: document.getElementById('SpsId')?.value ? parseInt(document.getElementById('SpsId').value) : null,
                 ItemCode: document.getElementById('ItemCode')?.value,
 
                 NippleDieOK: document.querySelector('input[name="NippleDieOK"]:checked')?.value === 'true',
@@ -2620,7 +2620,7 @@
             const mSearch = document.getElementById('manualItemSearch');
             if (pSearch) pSearch.value = "";
             if (mSearch) mSearch.value = "";
-            document.getElementById('StandardParameterSettingId').value = "";
+            document.getElementById('SpsId').value = "";
 
             // 5. Re-lock the form UI
             const wrapper = document.getElementById('formContentBlurWrapper');
