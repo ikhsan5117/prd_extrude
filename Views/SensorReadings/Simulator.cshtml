@@ -673,16 +673,19 @@ function saveEditModal() {
     // Re-render card — easiest approach is remove + re-add
     const pos = sensors.indexOf(sensor);
     const cfg = { ...sensor };
+
+    // Bersihkan chart lama jika ada
+    const oldChart = Chart.getChart(`chart-${sensorId}`);
+    if (oldChart) oldChart.destroy();
     if (charts[sensorId]) { charts[sensorId].destroy(); delete charts[sensorId]; }
+
     const wrap = document.getElementById(`wrap-${sensorId}`);
     if (wrap) wrap.remove();
     sensors.splice(pos, 1);
-    // restore id
-    _idCounter--;
-    const oldId = sensorId;
+
+    // Langsung tambah sebagai card baru (ID akan otomatis bertambah)
     addSensorCard(cfg);
-    // fix: the new card will have a new id, we need to map it correctly
-    // actually just log and close
+    
     bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
     logLine('info', `⚙ Sensor ${sensor.deviceId} dikonfigurasi ulang`);
 }

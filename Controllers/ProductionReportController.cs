@@ -188,90 +188,138 @@ namespace VelastoProductionSystem.Controllers
 
         // AJAX API: Get SPS by Item Code (Scanner)
         [HttpGet]
-        public async Task<IActionResult> GetSpsByItem(string itemCode)
+        public async Task<IActionResult> GetSpsByItem(string itemCode, string? machineCode = null)
         {
             if (string.IsNullOrWhiteSpace(itemCode)) return BadRequest();
             
-            var sanitizedCode = itemCode.Trim().ToUpper();
+            var sanitizedCode = itemCode.Trim().ToUpper().Replace("-", "");
+            var sanitizedMachine = machineCode?.Trim().ToUpper();
             
             // Try StandardParameterSettings first (Detailed)
-            var sps = await _context.StandardParameterSettings
-                .FirstOrDefaultAsync(s => 
-                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedCode)) || 
-                    (s.ProductCode != null && s.ProductCode.ToUpper().Contains(sanitizedCode)));
+            var spsQuery = _context.StandardParameterSettings.AsQueryable();
             
-            if (sps != null) return Json(sps);
+            // Filter by ItemCode (Normalized)
+            spsQuery = spsQuery.Where(s => 
+                (s.ItemList != null && s.ItemList.Replace("-", "").ToUpper().Contains(sanitizedCode)) || 
+                (s.ProductCode != null && s.ProductCode.Replace("-", "").ToUpper().Contains(sanitizedCode)));
 
-            // Fallback to MasterlistSpsDoubleLayers (Brief) - Order by Id desc to get latest revision
-            var master = await _context.MasterlistSpsDoubleLayers
-                .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedCode))
-                .OrderByDescending(m => m.Id)
-                .FirstOrDefaultAsync();
-
-            if (master != null)
+            if (!string.IsNullOrEmpty(sanitizedMachine))
             {
-                // Map Master to a temporary SPS-like object for the form
-                // Note: Id will be null because Masterlist items don't have StandardParameterSetting records
-                // Only StandardParameterSettings table entries can be linked via SpsId FK
-                return Json(new {
-                    Id = (int?)null,  // NULL = from Masterlist (no StandardParameterSettings record)
-                    Source = "Masterlist",  // Add source indicator
-                    MasterlistId = master.Id,  // Include Masterlist ID for reference
-                    ItemList = master.ItemList,
-                    HoseType = master.HoseType,
-                    CustomerName = master.Customer,
-                    DocumentNumber = master.DocumentNumber,
-                    RevisionNumber = master.RevisionNumber,
-                    InnerMaterial = master.InnerTube,
-                    MiddleMaterial = master.MiddleTube,
-                    OuterMaterial = master.OuterCover,
-                    YarnType = master.Material,
-                    // Derive LayerType: if MiddleTube is present it's a 3-layer product
-                    LayerType = !string.IsNullOrWhiteSpace(master.MiddleTube) ? "CHS 3 Layer" : "CHS 2 Layer",
-                    
-                    // Map Masterlist values (These are strings in the DB)
-                    HeadTempInner = master.HeadTemp1,
-                    Cylinder1TempInner = master.Cylinder1_1,
-                    Cylinder2TempInner = master.Cylinder2_1,
-                    Cylinder3TempInner = master.Cylinder3_1,
-                    ScrewTempInner = master.ScrewTemp1,
-                    ScrewSpeedInner = master.ScrewSpeed1,
-                    PressureInner = master.Pressure1,
-                    FeedRollRatioInner = !string.IsNullOrEmpty(master.FeedRollRatio1) ? master.FeedRollRatio1 : master.Feed1,
-                    
-                    HeadTempOuter = master.HeadTemp2,
-                    Cylinder1TempOuter = master.Cylinder1_2,
-                    Cylinder2TempOuter = master.Cylinder2_2,
-                    Cylinder3TempOuter = master.Cylinder3_2,
-                    ScrewTempOuter = master.ScrewTemp2,
-                    ScrewSpeedOuter = master.ScrewSpeed2,
-                    PressureOuter = master.Pressure2,
-                    FeedRollRatioOuter = !string.IsNullOrEmpty(master.FeedRollRatio2) ? master.FeedRollRatio2 : master.Feed2,
-                    
-                    InnerDie = master.Nipple,
-                    TubeDie = master.TubeDie,
-                    MiddleDie = master.MiddleDie,
-                    CoverDie = master.CoverDie,
-                    SpacerDie = master.SpacerDie,
-                    ToleranceDie = master.ADistance,
-                    
-                    ChillerWaterTemp = master.ChillerWaterTemp,
-                    TakeupConveyorSpeed = master.TakeUpConveyorSpeed,
-                    SpiralSpeed = master.SpiralSpeed,
-                    ToleranceSpiralPitch = !string.IsNullOrEmpty(master.SpiralPitchSetting) ? master.SpiralPitchSetting : master.ToleranceSpiralPitch,
-                    
-                    // Added utility mappings
-                    HoseSpeed = master.HoseSpeed,
-                    CoolConveyorSpeed = master.CoolConveyorSpeed,
-                    ConveyorRatio = master.ConveyorRatio,
-                    PresetValue = master.PresetValue,
-                    ControlValue = master.ControlValue,
-                    UnsmoothSurface = master.UnsmoothSurface,
-                    CaterpillarGap = master.CaterpillarGap
-                });
+                // Detect Machine Category (DL vs CHS)
+                bool isDL = sanitizedMachine.Contains("DL") || sanitizedMachine.Contains("DOUBLE") || sanitizedMachine.Contains("NON-CHS");
+                bool isCHS = sanitizedMachine.Contains("CHS") && !isDL;
+
+                // 1. Try EXACT machine match first
+                var spsExact = await spsQuery.Where(s => 
+                    (s.MachineCode != null && s.MachineCode.ToUpper() == sanitizedMachine) ||
+                    (s.LayerType != null && s.LayerType.ToUpper() == sanitizedMachine))
+                    .OrderByDescending(s => s.Id).FirstOrDefaultAsync();
+                if (spsExact != null) return Json(spsExact);
+
+                // 2. Try CATEGORY match (DL to DL, CHS to CHS)
+                var spsCategory = await spsQuery.Where(s => 
+                    (isDL && s.LayerType != null && (s.LayerType.ToUpper().Contains("DL") || s.LayerType.ToUpper().Contains("NON-CHS") || s.LayerType.ToUpper().Contains("DOUBLE"))) ||
+                    (isCHS && s.LayerType != null && s.LayerType.ToUpper().Contains("CHS") && !s.LayerType.ToUpper().Contains("DL")))
+                    .OrderByDescending(s => s.Id).FirstOrDefaultAsync();
+                if (spsCategory != null) return Json(spsCategory);
             }
 
+            // Fallback to MasterlistSpsDoubleLayers (Brief)
+            var masterQuery = _context.MasterlistSpsDoubleLayers.AsQueryable();
+            masterQuery = masterQuery.Where(m => m.ItemList != null && m.ItemList.Replace("-", "").ToUpper().Contains(sanitizedCode));
+
+            if (!string.IsNullOrEmpty(sanitizedMachine))
+            {
+                bool isDL = sanitizedMachine.Contains("DL") || sanitizedMachine.Contains("DOUBLE") || sanitizedMachine.Contains("NON-CHS");
+                bool isCHS = sanitizedMachine.Contains("CHS") && !isDL;
+
+                // 1. Try EXACT machine match in Masterlist
+                var masterExact = await masterQuery.Where(m => 
+                    (m.MachineCode != null && m.MachineCode.ToUpper() == sanitizedMachine) ||
+                    (m.Machine != null && m.Machine.ToUpper() == sanitizedMachine))
+                    .OrderByDescending(m => m.Id).FirstOrDefaultAsync();
+                if (masterExact != null) return Json(MapMasterToSps(masterExact));
+
+                // 2. Try CATEGORY match in Masterlist
+                var masterCategory = await masterQuery.Where(m => 
+                    (isDL && m.Machine != null && (m.Machine.ToUpper().Contains("DL") || m.Machine.ToUpper().Contains("NON-CHS") || m.Machine.ToUpper().Contains("DOUBLE"))) ||
+                    (isCHS && m.Machine != null && m.Machine.ToUpper().Contains("CHS") && !m.Machine.ToUpper().Contains("DL")))
+                    .OrderByDescending(m => m.Id).FirstOrDefaultAsync();
+                if (masterCategory != null) return Json(MapMasterToSps(masterCategory));
+            }
+
+            // ULTIMATE FALLBACK: Only if no machine context OR absolutely no category match found
+            // This is risky, but better than "Not Found" if there's only one record.
+            // However, we'll keep it as a last resort.
+            var ultimateFallback = await spsQuery.OrderByDescending(s => s.Id).FirstOrDefaultAsync();
+            if (ultimateFallback != null) return Json(ultimateFallback);
+
+            var masterFallback = await masterQuery.OrderByDescending(m => m.Id).FirstOrDefaultAsync();
+            if (masterFallback != null) return Json(MapMasterToSps(masterFallback));
+
             return Json(new { success = false, message = "Protocol Not Found" });
+        }
+
+        private object MapMasterToSps(MasterlistSpsDoubleLayer master)
+        {
+            return new {
+                Id = (int?)null,
+                Source = "Masterlist",
+                MasterlistId = master.Id,
+                ItemList = master.ItemList,
+                HoseType = master.HoseType,
+                CustomerName = master.Customer,
+                DocumentNumber = master.DocumentNumber,
+                RevisionNumber = master.RevisionNumber,
+                InnerMaterial = master.InnerTube,
+                MiddleMaterial = master.MiddleTube,
+                OuterMaterial = master.OuterCover,
+                YarnType = master.Material,
+                LayerType = !string.IsNullOrWhiteSpace(master.MiddleTube) ? "CHS 3 Layer" : "CHS 2 Layer",
+                
+                HeadTempInner = master.HeadTemp1,
+                Cylinder1TempInner = master.Cylinder1_1,
+                Cylinder2TempInner = master.Cylinder2_1,
+                Cylinder3TempInner = master.Cylinder3_1,
+                ScrewTempInner = master.ScrewTemp1,
+                ScrewSpeedInner = master.ScrewSpeed1,
+                PressureInner = master.Pressure1,
+                FeedRollRatioInner = !string.IsNullOrEmpty(master.FeedRollRatio1) ? master.FeedRollRatio1 : master.Feed1,
+                
+                HeadTempOuter = master.HeadTemp2,
+                Cylinder1TempOuter = master.Cylinder1_2,
+                Cylinder2TempOuter = master.Cylinder2_2,
+                Cylinder3TempOuter = master.Cylinder3_2,
+                ScrewTempOuter = master.ScrewTemp2,
+                ScrewSpeedOuter = master.ScrewSpeed2,
+                PressureOuter = master.Pressure2,
+                FeedRollRatioOuter = !string.IsNullOrEmpty(master.FeedRollRatio2) ? master.FeedRollRatio2 : master.Feed2,
+                
+                InnerDie = master.Nipple,
+                TubeDie = master.TubeDie,
+                MiddleDie = master.MiddleDie,
+                CoverDie = master.CoverDie,
+                SpacerDie = master.SpacerDie,
+                ToleranceDie = master.ADistance,
+                
+                ChillerWaterTemp = master.ChillerWaterTemp,
+                TakeupConveyorSpeed = master.TakeUpConveyorSpeed,
+                SpiralSpeed = master.SpiralSpeed,
+                ToleranceSpiralPitch = !string.IsNullOrEmpty(master.SpiralPitchSetting) ? master.SpiralPitchSetting : master.ToleranceSpiralPitch,
+                
+                HoseSpeed = master.HoseSpeed,
+                CoolConveyorSpeed = master.CoolConveyorSpeed,
+                ConveyorRatio = master.ConveyorRatio,
+                PresetValue = master.PresetValue,
+                ControlValue = master.ControlValue,
+                UnsmoothSurface = master.UnsmoothSurface,
+                CaterpillarGap = master.CaterpillarGap,
+
+                MeshScreen1 = master.MeshScreen1,
+                MeshScreen2 = master.MeshScreen2,
+                MeshScreen3 = master.MeshScreen3,
+                MarkingStandard = master.TextMarkingMaterial
+            };
         }
 
         // GET: ProductionReport/GetTodaysSummary
@@ -718,6 +766,7 @@ namespace VelastoProductionSystem.Controllers
                 report.CustomerName = dto.CustomerName;
                 report.HoseType = dto.HoseType;
                 report.SpsId = dto.SpsId;
+                report.ItemCode = dto.ItemCode; // ← Pastikan ItemCode selalu tersimpan
 
                 report.InnerMaterial = dto.InnerMaterial;
                 report.InnerMaterialActual = dto.InnerMaterialActual;
@@ -725,6 +774,9 @@ namespace VelastoProductionSystem.Controllers
                 report.OuterMaterial = dto.OuterMaterial;
                 report.OuterMaterialActual = dto.OuterMaterialActual;
                 report.OuterMaterialLotNo = dto.OuterMaterialLotNo;
+                report.MiddleMaterial = dto.MiddleMaterial;         // ← Tambah Middle Material
+                report.MiddleMaterialActual = dto.MiddleMaterialActual;
+                report.MiddleMaterialLotNo = dto.MiddleMaterialLotNo;
                 report.Yarn = dto.Yarn;
                 report.YarnActual = dto.YarnActual;
                 report.YarnLotNo = dto.YarnLotNo;

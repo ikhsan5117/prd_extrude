@@ -534,25 +534,49 @@ namespace VelastoProductionSystem.Controllers
             int     hours       = 8,
             DateTime? startDate = null,
             DateTime? endDate   = null,
+            string? startTime   = "00:00", // Format HH:mm
+            string? endTime     = "23:59", // Format HH:mm
             int?    spsId       = null)
         {
             var now       = DateTime.Now;
             var fromTime  = startDate ?? now.AddHours(-hours);
             var toTime    = endDate ?? now;
 
-            // Jika input tanggal tanpa jam (00:00:00), anggap sampai akhir hari.
-            if (endDate.HasValue && endDate.Value.TimeOfDay == TimeSpan.Zero)
+            // Gabungkan Tanggal dengan Jam jika disediakan
+            if (startDate.HasValue && !string.IsNullOrWhiteSpace(startTime))
+            {
+                if (TimeSpan.TryParse(startTime, out var startTs))
+                {
+                    fromTime = startDate.Value.Date.Add(startTs);
+                }
+            }
+
+            if (endDate.HasValue && !string.IsNullOrWhiteSpace(endTime))
+            {
+                if (TimeSpan.TryParse(endTime, out var endTs))
+                {
+                    toTime = endDate.Value.Date.Add(endTs);
+                }
+            }
+            else if (endDate.HasValue && endDate.Value.TimeOfDay == TimeSpan.Zero)
+            {
+                // Fallback: Jika input tanggal tanpa jam (00:00:00), anggap sampai akhir hari.
                 toTime = endDate.Value.Date.AddDays(1).AddTicks(-1);
+            }
 
             if (fromTime > toTime)
-                return BadRequest("startDate tidak boleh lebih besar dari endDate.");
+                return BadRequest("Rentang waktu tidak valid (Waktu awal > Waktu akhir).");
 
             var metricKey = (metricType ?? "outer_diameter").ToLower().Trim();
 
             // ── 1. Ambil data sensor aktual ──────────────────────────
+            var metricKeys = new List<string> { metricKey };
+            if (metricKey == "outer_diameter") metricKeys.Add("diameter");
+            if (metricKey == "inner_diameter") metricKeys.Add("inner_dia");
+
             var query = _context.SensorIngestLogs
                 .Where(l => l.Status == "OK"
-                         && l.MetricType == metricKey
+                         && metricKeys.Contains(l.MetricType)
                          && l.SensorTimestamp >= fromTime
                          && l.SensorTimestamp <= toTime);
 
@@ -656,32 +680,37 @@ namespace VelastoProductionSystem.Controllers
                     break;
                 case "hose_speed":
                     target    = TryParseFirst(sps.HoseSpeed);
+                    tolerance = TryParseTolerance(sps.HoseSpeed);
                     label = "Hose Speed"; unit = "m/min";
                     break;
                 case "head_temp_inner":
                     target    = TryParseFirst(sps.HeadTemp1);
-                    tolerance = 5;
+                    tolerance = TryParseTolerance(sps.HeadTemp1) ?? 5;
                     label = "Head Temp Inner"; unit = "°C";
                     break;
                 case "head_temp_outer":
                     target    = TryParseFirst(sps.HeadTemp2);
-                    tolerance = 5;
+                    tolerance = TryParseTolerance(sps.HeadTemp2) ?? 5;
                     label = "Head Temp Outer"; unit = "°C";
                     break;
                 case "screw_speed_inner":
                     target    = TryParseFirst(sps.ScrewSpeed1);
+                    tolerance = TryParseTolerance(sps.ScrewSpeed1);
                     label = "Screw Speed Inner"; unit = "rpm";
                     break;
                 case "screw_speed_outer":
                     target    = TryParseFirst(sps.ScrewSpeed2);
+                    tolerance = TryParseTolerance(sps.ScrewSpeed2);
                     label = "Screw Speed Outer"; unit = "rpm";
                     break;
                 case "pressure_inner":
                     target    = TryParseFirst(sps.Pressure1);
+                    tolerance = TryParseTolerance(sps.Pressure1);
                     label = "Pressure Inner"; unit = "MPa";
                     break;
                 case "pressure_outer":
                     target    = TryParseFirst(sps.Pressure2);
+                    tolerance = TryParseTolerance(sps.Pressure2);
                     label = "Pressure Outer"; unit = "MPa";
                     break;
                 case "spiral_pitch":

@@ -244,67 +244,114 @@
                             <i class="bi bi-patch-check hud-card-icon"></i>
                             <span class="hud-card-title">MESH & EMBOSS QUALITY</span>
                         </div>
-                        <table class="table-hud-unified compact-hud instrument-style">
-                            <thead>
-                                <tr class="bg-black bg-opacity-40 text-center">
-                                    <th class="ps-3 text-start py-2 font-monospace tracking-widest text-primary-glow">CATEGORIES</th>
-                                    <th width="32%" class="py-2 border-start border-white border-opacity-5">Ø96 #10</th>
-                                    <th width="32%" class="py-2 border-start border-white border-opacity-5">Ø96 #40</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="group-lane">
-                                    <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub">TIPE MESH</span><span class="label-main small">INNER (BEFORE)</span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div></td>
-                                </tr>
-                                <tr class="group-lane border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-1"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (BEFORE)</span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div></td>
-                                    <td class="text-center border-start border-white border-opacity-10"><div class="hud-check-box"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div></td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">MESH CHECK</span><span class="label-main small">INNER (AFTER)</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
-                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshInnerCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshInnerCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshInnerCheck" value="ASING"></label></div>
-                                    </td>
-                                </tr>
-                                <tr class="border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub opacity-0 small">.</span><span class="label-main small">OUTER (AFTER)</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
-                                        <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshOuterCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshOuterCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshOuterCheck" value="ASING"></label></div>
-                                    </td>
-                                </tr>
-                                <tr class="group-lane border-bottom border-white border-opacity-10">
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">EMBOSSING</span><span class="label-main small">MARK DATA</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-7"><input asp-for="EmbossMarkContent" id="EmbossMarkContent" class="hud-input-underlined py-1 text-center font-monospace small" placeholder="CONTENT" /></div>
-                                            <div class="col-5"><input type="date" asp-for="EmbossMarkDate" id="EmbossMarkDate" class="hud-input-underlined py-1 text-center font-monospace small" /></div>
+                        <div class="p-3 bg-slate-800 bg-opacity-40 flex-grow-1" style="background: rgba(30, 41, 59, 0.4);">
+                            <!-- CATEGORY: TIPE MESH (BEFORE) -->
+                            <div class="mb-4 pb-3">
+                                <div class="label-stack mb-2">
+                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                         <div>
+                                             <span class="label-sub text-info-glow fw-bold"><i class="bi bi-layers me-1"></i>TIPE MESH</span>
+                                             <span class="label-main small text-white fw-900">INNER & OUTER SELECTION (BEFORE)</span>
+                                         </div>
+                                     </div>
+                                 </div>
+                                
+                                <div class="row g-2">
+                                    <!-- INNER GROUP -->
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-slate-900 bg-opacity-60 border border-white border-opacity-20 text-center">
+                                            <span class="label-main small text-white fw-900 opacity-75 d-block mb-3 border-bottom border-white border-opacity-10 pb-1">INNER LAYER</span>
+                                             <div class="d-flex justify-content-center gap-4 py-1">
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div>
+                                                     <span id="label_MeshInner1" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div>
+                                                     <span id="label_MeshInner2" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                             </div>
                                         </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-3 py-2"><div class="label-stack"><span class="label-sub">QC DETAILS</span><span class="label-main small">FINAL CHECK</span></div></td>
-                                    <td colspan="2" class="pe-3 py-2 border-start border-white border-opacity-10">
-                                        <div class="d-flex flex-column gap-2">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="label-sub font-black text-white-50" style="min-width:40px">COND</span>
-                                                <div class="hud-pill-group sm"><label class="hud-pill-item">BERSIH<input type="radio" asp-for="QcCond" value="BERSIH"></label><label class="hud-pill-item red">KOTOR<input type="radio" asp-for="QcCond" value="KOTOR"></label></div>
+                                    </div>
+                                    <!-- OUTER GROUP -->
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-slate-900 bg-opacity-60 border border-white border-opacity-20 text-center">
+                                            <span class="label-main small text-white fw-900 opacity-75 d-block mb-3">OUTER LAYER</span>
+                                             <div class="d-flex justify-content-center gap-4 py-1">
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div>
+                                                     <span id="label_MeshOuter1" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div>
+                                                     <span id="label_MeshOuter2" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CATEGORY: MESH CHECK (AFTER) -->
+                            <div class="mb-4 border-bottom border-white border-opacity-20 pb-4">
+                                <div class="label-stack mb-2"><span class="label-sub text-info-glow fw-bold"><i class="bi bi-shield-check me-1"></i>MESH CHECK</span><span class="label-main small text-white fw-900">QUALITY VERIFICATION (AFTER)</span></div>
+                                <div class="d-flex flex-column gap-3 mt-2">
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-slate-900 bg-opacity-50 border border-white border-opacity-20">
+                                        <span class="label-main text-white fw-black" style="font-size: 0.8rem; min-width:80px">INNER</span>
+                                        <div class="hud-pill-group"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshInnerCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshInnerCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshInnerCheck" value="ASING"></label></div>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-slate-900 bg-opacity-50 border border-white border-opacity-20">
+                                        <span class="label-main text-white fw-black" style="font-size: 0.8rem; min-width:80px">OUTER</span>
+                                        <div class="hud-pill-group"><label class="hud-pill-item">OK<input type="radio" asp-for="MeshOuterCheck" value="OK"></label><label class="hud-pill-item red">BOLONG<input type="radio" asp-for="MeshOuterCheck" value="BOLONG"></label><label class="hud-pill-item orange">ASING<input type="radio" asp-for="MeshOuterCheck" value="ASING"></label></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CATEGORY: EMBOSSING & QC -->
+                            <div class="p-3 bg-slate-900 bg-opacity-70 border border-white border-opacity-20 rounded-4">
+                                <div class="label-stack mb-3"><span class="label-sub text-info-glow fw-bold">FINAL SECURITY</span><span class="label-main small text-white fw-900">MARKING & QC ANALYTICS</span></div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-7">
+                                        <div class="p-2 px-3 rounded-3 border border-white border-opacity-30 bg-black bg-opacity-40 shadow-sm h-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label class="super-small text-info-glow fw-black mb-0"><i class="bi bi-fonts me-1"></i>MARK CONTENT DATA</label>
+                                                <span id="std_Marking" class="super-small text-info-glow opacity-75 font-monospace">STD: --</span>
                                             </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="label-sub font-black text-white-50" style="min-width:40px">SURF</span>
-                                                <div class="hud-pill-group sm"><label class="hud-pill-item">OK<input type="radio" asp-for="QcSurf" value="OK"></label><label class="hud-pill-item red">SCRATCH<input type="radio" asp-for="QcSurf" value="SCRATCH"></label></div>
+                                            <input asp-for="EmbossMarkContent" class="hud-input w-100 border-0 bg-transparent text-white fw-bold font-monospace mt-1" style="font-size: 1rem;" placeholder="[ ENTER SEQUENCE ]" />
+                                        </div>
+                                    </div>
+                                    <div class="col-5">
+                                        <div class="p-2 px-3 rounded-3 border border-white border-opacity-30 bg-black bg-opacity-40 shadow-sm h-100">
+                                            <label class="super-small text-info-glow fw-black mb-1"><i class="bi bi-calendar-event me-1"></i>VERIFICATION DATE</label>
+                                            <input type="date" asp-for="EmbossMarkDate" class="hud-input w-100 border-0 bg-transparent text-white fw-bold font-monospace mt-1" style="font-size: 1rem; color-scheme: dark;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex flex-column gap-3">
+                                    @{
+                                        var qcMetricsLight = new[] { 
+                                            new { Label = "CONDITION", Sub = "Q.01", Field = "QcCond", Opt1 = "BERSIH", Opt2 = "KOTOR" },
+                                            new { Label = "SURFACE", Sub = "Q.02", Field = "QcSurf", Opt1 = "OK", Opt2 = "SCRATCH" },
+                                            new { Label = "QUALITY RES", Sub = "Q.03", Field = "QcRes", Opt1 = "READ", Opt2 = "UNREAD" }
+                                        };
+                                    }
+
+                                    @foreach(var qc in qcMetricsLight) {
+                                        <div class="d-flex align-items-center justify-content-between p-2 px-3 rounded-3 bg-black bg-opacity-30 border border-white border-opacity-20">
+                                            <div class="label-stack">
+                                                <span class="label-sub text-info-glow opacity-75" style="font-size: 0.6rem">@qc.Sub</span>
+                                                <span class="label-main text-white fw-black" style="font-size: 0.85rem">@qc.Label</span>
                                             </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="label-sub font-black text-white-50" style="min-width:40px">RES</span>
-                                                <div class="hud-pill-group sm"><label class="hud-pill-item">READ<input type="radio" asp-for="QcRes" value="READ"></label><label class="hud-pill-item red">UNREAD<input type="radio" asp-for="QcRes" value="UNREAD"></label></div>
+                                            <div class="hud-pill-group" style="width: 170px; height: 38px;">
+                                                <label class="hud-pill-item">@qc.Opt1<input type="radio" name="@qc.Field" value="@qc.Opt1"></label>
+                                                <label class="hud-pill-item red">@qc.Opt2<input type="radio" name="@qc.Field" value="@qc.Opt2"></label>
                                             </div>
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    }
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1022,7 +1069,8 @@
                 didOpen: () => { Swal.showLoading(); }
             });
             try {
-                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
+                const machine = document.getElementById('MachineName')?.value || '';
+                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}&machineCode=${encodeURIComponent(machine)}`);
                 if (!res.ok) throw new Error('NOT FOUND');
                 const data = await res.json();
                 console.log('✅ Full SPS data received:', data);
@@ -1067,10 +1115,8 @@
             // Sync ItemCode with SPS ItemList (Planning Master field)
             // This ensures ItemCode matches the SPS protocol being applied
             const itemCodeEl = document.getElementById('ItemCode');
-            if (itemCodeEl && (sps.itemList || sps.ItemList)) {
-                const newItemCode = sps.itemList || sps.ItemList;
-                console.log('Syncing ItemCode from', itemCodeEl.value, 'to', newItemCode);
-                itemCodeEl.value = newItemCode;
+            if (itemCodeEl) {
+                itemCodeEl.value = sps.itemList || sps.ItemList || sps.productCode || sps.ProductCode || '';
             }
 
             // Populate header inputs
@@ -1081,21 +1127,25 @@
             set('CustomerName', sps.customerName || sps.CustomerName);
 
             // Populate material standards (readonly column)
-            const setName = (name, val) => { const el = document.querySelector(`[name="${name}"]`); if (el && val) el.value = val; };
-            setName('InnerMaterial', sps.innerMaterial || sps.InnerMaterial);
-            setName('OuterMaterial', sps.outerMaterial || sps.OuterMaterial);
-            setName('Yarn',          sps.yarnType || sps.Yarn);
+            // Explicitly set material names to form inputs to ensure they save to DB
+            const innerMatEl = document.getElementById('InnerMaterial');
+            if (innerMatEl) innerMatEl.value = sps.innerMaterial || sps.InnerMaterial || sps.innerTube || sps.InnerTube || '';
+            
+            const outerMatEl = document.getElementById('OuterMaterial');
+            if (outerMatEl) outerMatEl.value = sps.outerMaterial || sps.OuterMaterial || sps.material || sps.Material || '';
 
             // Show/hide Middle material CARD based on LayerType
             const layerType = (sps.layerType || sps.LayerType || '').toLowerCase();
-            const is3Layer = layerType.includes('3') || layerType.includes('triple') || layerType.includes('three');
+            const middleStd = sps.middleMaterial || sps.MiddleMaterial || sps.middleTube || sps.MiddleTube || '';
+            const is3Layer = layerType.includes('3') || layerType.includes('triple') || layerType.includes('three') || middleStd !== '';
+            
             const middleCard = document.getElementById('middleMaterialCard');
+            const midEl = document.getElementById('MiddleMaterial');
+            
             if (middleCard) {
                 middleCard.style.display = is3Layer ? 'block' : 'none';
-                // If 3-layer, also pre-fill middle material name from SPS if available
-                if (is3Layer) {
-                    const midEl = document.getElementById('MiddleMaterial');
-                    if (midEl && !midEl.value) midEl.value = sps.middleMaterial || sps.MiddleMaterial || '';
+                if (is3Layer && midEl) {
+                    midEl.value = middleStd;
                 }
             }
 
@@ -1167,6 +1217,42 @@
             if (dateEl && !dateEl.value) {
                 dateEl.value = new Date().toISOString().split('T')[0];
             }
+
+            // --- MESH MAPPING LOGIC ---
+            const innerMesh = (sps.meshScreen || sps.MeshScreen || sps.meshScreen1 || sps.MeshScreen1 || '').toString();
+            const outerMesh = (sps.meshScreen2 || sps.MeshScreen2 || '').toString();
+            
+            const stdMeshInnerEl = document.getElementById('std_MeshInner');
+            const stdMeshOuterEl = document.getElementById('std_MeshOuter');
+            if (stdMeshInnerEl) stdMeshInnerEl.innerText = innerMesh || '--';
+            if (stdMeshOuterEl) stdMeshOuterEl.innerText = outerMesh || '--';
+
+            // Auto-check checkboxes based on standard string
+                                             // Update labels and auto-check checkboxes
+                                             function parseAndApplyMesh(meshStr, layerType) {
+                                                 if (!meshStr) return;
+                                                 // Support splitting by comma, x, *, or ×
+                                                 const parts = meshStr.split(/[,x*×]/).map(s => s.trim()).filter(s => s !== '');
+                                                 
+                                                 // Update Labels
+                                                 const label1 = document.getElementById(`label_Mesh${layerType}1`);
+                                                 const label2 = document.getElementById(`label_Mesh${layerType}2`);
+                                                 if (label1 && parts[0]) label1.innerText = parts[0];
+                                                 if (label2 && parts[1]) label2.innerText = parts[1];
+
+                                                 // Auto-check
+                                                 const check1 = document.getElementById(`Mesh${layerType}10Before`);
+                                                 const check2 = document.getElementById(`Mesh${layerType}40Before`);
+                                                 if (check1) check1.checked = !!parts[0];
+                                                 if (check2) check2.checked = !!parts[1];
+                                             }
+
+                                             parseAndApplyMesh(innerMesh, 'Inner');
+                                             parseAndApplyMesh(outerMesh, 'Outer');
+
+            const markingStd = sps.markingStandard || sps.MarkingStandard || '';
+            const stdMarkingEl = document.getElementById('std_Marking');
+            if (stdMarkingEl) stdMarkingEl.innerText = 'STD: ' + (markingStd || '--');
 
             Swal.fire({
                 icon: 'success', title: 'SPS SYNC SUCCESS',
@@ -1502,7 +1588,11 @@
                     Model.StandardParameterSetting.SpiralSpeed,
                     Model.StandardParameterSetting.SpiralPitch,
                     Model.StandardParameterSetting.HoseSpeed,
-                    Model.StandardParameterSetting.ConveyorRatio
+                    Model.StandardParameterSetting.ConveyorRatio,
+                    MeshScreen = Model.StandardParameterSetting.MeshScreen,
+                    MeshScreen2 = Model.StandardParameterSetting.MeshScreen2,
+                    MeshScreen3 = Model.StandardParameterSetting.MeshScreen3
+                    // Note: MarkingStandard is typically handled via TextMarkingMaterial if available, but StandardParameterSetting doesn't have it explicitly right now, so it defaults gracefully
                 })));
                 </text>
             }
@@ -1591,14 +1681,14 @@
                 ItemCode: document.getElementById('ItemCode').value,
                 SpsId: parseInt(document.getElementById('SpsId').value) || null,
 
-                InnerMaterial: document.querySelector('input[name="InnerMaterial"]').value,
-                InnerMaterialActual: document.querySelector('input[name="InnerMaterialActual"]').value,
+                InnerMaterial: document.getElementById('InnerMaterial')?.value || document.querySelector('input[name="InnerMaterial"]')?.value || '',
+                InnerMaterialActual: document.getElementById('InnerMaterialActual')?.value || document.querySelector('input[name="InnerMaterialActual"]')?.value || '',
                 InnerMaterialLotNo: '', // Deprecated, use MaterialLots array
-                OuterMaterial: document.querySelector('input[name="OuterMaterial"]').value,
-                OuterMaterialActual: document.querySelector('input[name="OuterMaterialActual"]').value,
+                OuterMaterial: document.getElementById('OuterMaterial')?.value || document.querySelector('input[name="OuterMaterial"]')?.value || '',
+                OuterMaterialActual: document.getElementById('OuterMaterialActual')?.value || document.querySelector('input[name="OuterMaterialActual"]')?.value || '',
                 OuterMaterialLotNo: '', // Deprecated, use MaterialLots array
-                Yarn: document.querySelector('input[name="Yarn"]').value,
-                YarnActual: document.querySelector('input[name="YarnActual"]').value,
+                Yarn: document.getElementById('Yarn')?.value || document.querySelector('input[name="Yarn"]')?.value || '',
+                YarnActual: document.getElementById('YarnActual')?.value || document.querySelector('input[name="YarnActual"]')?.value || '',
                 YarnLotNo: '', // Deprecated, use MaterialLots array
                 MiddleMaterial: document.getElementById('MiddleMaterial')?.value || '',
                 MiddleMaterialActual: document.getElementById('MiddleMaterialActual')?.value || '',
@@ -1623,10 +1713,11 @@
                 ToleranceInitial: document.querySelector('input[name="ToleranceInitial"]').value,
                 ToleranceFinal: document.querySelector('input[name="ToleranceFinal"]').value,
 
-                MeshInner10Before: document.querySelector('input[name="MeshInner10Before"]:checked')?.value === 'true',
-                MeshInner40Before: document.querySelector('input[name="MeshInner40Before"]:checked')?.value === 'true',
-                MeshOuter10Before: document.querySelector('input[name="MeshOuter10Before"]:checked')?.value === 'true',
-                MeshOuter40Before: document.querySelector('input[name="MeshOuter40Before"]:checked')?.value === 'true',
+                // Checkbox: gunakan .checked bukan .value === 'true'
+                MeshInner10Before: document.getElementById('MeshInner10Before')?.checked ?? false,
+                MeshInner40Before: document.getElementById('MeshInner40Before')?.checked ?? false,
+                MeshOuter10Before: document.getElementById('MeshOuter10Before')?.checked ?? false,
+                MeshOuter40Before: document.getElementById('MeshOuter40Before')?.checked ?? false,
                 MeshInnerCheck: document.querySelector('input[name="MeshInnerCheck"]:checked')?.value,
                 MeshOuterCheck: document.querySelector('input[name="MeshOuterCheck"]:checked')?.value,
                 EmbossMarkContent: document.getElementById('EmbossMarkContent').value,

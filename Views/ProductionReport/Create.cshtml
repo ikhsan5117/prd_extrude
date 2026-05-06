@@ -547,39 +547,46 @@
                         </div>
                         <div class="p-3 bg-slate-800 bg-opacity-40 flex-grow-1" style="background: rgba(30, 41, 59, 0.4);">
                             <!-- CATEGORY: TIPE MESH (BEFORE) -->
-                            <div class="mb-4 border-bottom border-white border-opacity-20 pb-3">
-                                <div class="label-stack mb-2"><span class="label-sub text-info-glow fw-bold"><i class="bi bi-layers me-1"></i>TIPE MESH</span><span class="label-main small text-white fw-900">INNER & OUTER SELECTION (BEFORE)</span></div>
+                            <div class="mb-4 pb-3">
+                                <div class="label-stack mb-2">
+                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                         <div>
+                                             <span class="label-sub text-info-glow fw-bold"><i class="bi bi-layers me-1"></i>TIPE MESH</span>
+                                             <span class="label-main small text-white fw-900">INNER & OUTER SELECTION (BEFORE)</span>
+                                         </div>
+                                     </div>
+                                 </div>
                                 <div class="row g-2">
                                     <!-- INNER GROUP -->
                                     <div class="col-6">
                                         <div class="p-2 rounded-3 bg-slate-900 bg-opacity-60 border border-white border-opacity-20 text-center">
                                             <span class="label-main small text-white fw-900 opacity-75 d-block mb-3 border-bottom border-white border-opacity-10 pb-1">INNER LAYER</span>
-                                            <div class="d-flex justify-content-center gap-4 py-1">
-                                                <div class="d-flex flex-column align-items-center gap-1">
-                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div>
-                                                    <span class="super-small text-white fw-bold">#10</span>
-                                                </div>
-                                                <div class="d-flex flex-column align-items-center gap-1">
-                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div>
-                                                    <span class="super-small text-white fw-bold">#40</span>
-                                                </div>
-                                            </div>
+                                             <div class="d-flex justify-content-center gap-4 py-1">
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner10Before"><span></span></div>
+                                                     <span id="label_MeshInner1" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshInner40Before"><span></span></div>
+                                                     <span id="label_MeshInner2" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                             </div>
                                         </div>
                                     </div>
                                     <!-- OUTER GROUP -->
                                     <div class="col-6">
                                         <div class="p-2 rounded-3 bg-slate-900 bg-opacity-60 border border-white border-opacity-20 text-center">
                                             <span class="label-main small text-white fw-900 opacity-75 d-block mb-3 border-bottom border-white border-opacity-10 pb-1">OUTER LAYER</span>
-                                            <div class="d-flex justify-content-center gap-4 py-1">
-                                                <div class="d-flex flex-column align-items-center gap-1">
-                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div>
-                                                    <span class="super-small text-white fw-bold">#10</span>
-                                                </div>
-                                                <div class="d-flex flex-column align-items-center gap-1">
-                                                    <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div>
-                                                    <span class="super-small text-white fw-bold">#40</span>
-                                                </div>
-                                            </div>
+                                             <div class="d-flex justify-content-center gap-4 py-1">
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter10Before"><span></span></div>
+                                                     <span id="label_MeshOuter1" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                                 <div class="d-flex flex-column align-items-center gap-1">
+                                                     <div class="hud-check-box sm"><input type="checkbox" asp-for="MeshOuter40Before"><span></span></div>
+                                                     <span id="label_MeshOuter2" class="super-small text-white fw-bold">--</span>
+                                                 </div>
+                                             </div>
                                         </div>
                                     </div>
                                 </div>
@@ -606,7 +613,10 @@
                                 <div class="row g-2 mb-3">
                                     <div class="col-7">
                                         <div class="p-2 px-3 rounded-3 border border-white border-opacity-30 bg-black bg-opacity-40 shadow-sm h-100">
-                                            <label class="super-small text-info-glow fw-black mb-1"><i class="bi bi-fonts me-1"></i>MARK CONTENT DATA</label>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label class="super-small text-info-glow fw-black mb-0"><i class="bi bi-fonts me-1"></i>MARK CONTENT DATA</label>
+                                                <span id="std_Marking" class="super-small text-info-glow opacity-75 font-monospace">STD: --</span>
+                                            </div>
                                             <input asp-for="EmbossMarkContent" class="hud-input w-100 border-0 bg-transparent text-white fw-bold font-monospace mt-1" style="font-size: 1rem;" placeholder="[ ENTER SEQUENCE ]" />
                                         </div>
                                     </div>
@@ -1202,29 +1212,7 @@
             });
         }
 
-        async function fetchSpsByItem(code) {
-            Swal.fire({
-                title: 'SEARCHING PROTOCOL...',
-                text: `VALIDATING: ${code.trim().toUpperCase()}`,
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
 
-            try {
-                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
-                if (!res.ok) throw new Error('PROTOCOL NOT FOUND');
-                const data = await res.json();
-                Swal.close();
-                applySpsToForm(data);
-            } catch (e) {
-                Swal.fire({
-                    title: 'SYNC ERROR',
-                    text: `Kode '${code}' tidak ditemukan di Database SPS Masterlist!`,
-                    icon: 'warning',
-                    confirmButtonColor: '#0ea5e9'
-                });
-            }
-        }
 
         function clearActualInputs() {
             // Clear all operator-entered "Actual" fields (not SPS standard fields)
@@ -1324,28 +1312,34 @@
             document.getElementById('HoseType').value = sps.hoseType || sps.HoseType || '';
             document.getElementById('CustomerName').value = sps.customerName || sps.CustomerName || '';
             
-            // Materials mapping
-            document.getElementById('InnerMaterial').value = sps.innerMaterial || sps.InnerMaterial || sps.innerTube || sps.InnerTube || '';
-            document.getElementById('OuterMaterial').value = sps.outerMaterial || sps.OuterMaterial || sps.outerCover || sps.OuterCover || '';
-            document.getElementById('Yarn').value = sps.yarnType || sps.YarnType || sps.material || sps.Material || '';
+            // Ensure ItemCode is always populated for the report
+            let itemCodeEl = document.getElementById('ItemCode');
+            if (itemCodeEl) itemCodeEl.value = sps.itemList || sps.ItemList || sps.productCode || sps.ProductCode || '';
+
+            let spsIdEl = document.getElementById('SpsId');
+            if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
+
+            // Explicitly set material names to form inputs to ensure they save to DB
+            const innerMatEl = document.getElementById('InnerMaterial');
+            if (innerMatEl) innerMatEl.value = sps.innerMaterial || sps.InnerMaterial || sps.innerTube || sps.InnerTube || '';
+            
+            const outerMatEl = document.getElementById('OuterMaterial');
+            if (outerMatEl) outerMatEl.value = sps.outerMaterial || sps.OuterMaterial || sps.material || sps.Material || '';
+            
+            const middleStd = sps.middleMaterial || sps.MiddleMaterial || sps.middleTube || sps.MiddleTube || '';
+            const midEl = document.getElementById('MiddleMaterial');
+            if (midEl) midEl.value = middleStd;
 
             // Show/hide Middle material card based on LayerType (CHS 3 Layer)
             const layerType3L = (sps.layerType || sps.LayerType || '').toLowerCase();
             const machineName3L = (window.SESSION_MACHINE_NAME || '').toLowerCase();
-            const middleStd = sps.middleMaterial || sps.MiddleMaterial || sps.middleTube || sps.MiddleTube || '';
             const is3Layer = layerType3L.includes('3') || layerType3L.includes('triple') || layerType3L.includes('three')
                           || machineName3L.includes('3l') || machineName3L.includes('chs3') || machineName3L.includes('3 layer') || machineName3L.includes('3layer')
                           || middleStd !== '';   // auto-detect: if SPS has a middle material, it's 3 layer
             const middleCard = document.getElementById('middleMaterialCard');
-            const midEl = document.getElementById('MiddleMaterial');
             if (middleCard) {
                 middleCard.style.display = is3Layer ? '' : 'none';
             }
-            // Always populate the Standard field if data exists
-            if (midEl) midEl.value = middleStd;
-
-            let spsIdEl = document.getElementById('SpsId');
-            if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
 
             const formatVal = (val, prefix = '', suffix = '') => {
                 if (val === undefined || val === null || val === '') return '---';
@@ -1501,6 +1495,42 @@
             }
 
 
+
+            // --- MESH MAPPING LOGIC ---
+            const innerMesh = (sps.meshScreen || sps.MeshScreen || sps.meshScreen1 || sps.MeshScreen1 || '').toString();
+            const outerMesh = (sps.meshScreen2 || sps.MeshScreen2 || '').toString();
+            
+            const stdMeshInnerEl = document.getElementById('std_MeshInner');
+            const stdMeshOuterEl = document.getElementById('std_MeshOuter');
+            if (stdMeshInnerEl) stdMeshInnerEl.innerText = innerMesh || '--';
+            if (stdMeshOuterEl) stdMeshOuterEl.innerText = outerMesh || '--';
+
+            // Auto-check checkboxes based on standard string
+                                             // Update labels and auto-check checkboxes
+                                             function parseAndApplyMesh(meshStr, layerType) {
+                                                 if (!meshStr) return;
+                                                 // Support splitting by comma, x, *, or ×
+                                                 const parts = meshStr.split(/[,x*×]/).map(s => s.trim()).filter(s => s !== '');
+                                                 
+                                                 // Update Labels
+                                                 const label1 = document.getElementById(`label_Mesh${layerType}1`);
+                                                 const label2 = document.getElementById(`label_Mesh${layerType}2`);
+                                                 if (label1 && parts[0]) label1.innerText = parts[0];
+                                                 if (label2 && parts[1]) label2.innerText = parts[1];
+
+                                                 // Auto-check
+                                                 const check1 = document.getElementById(`Mesh${layerType}10Before`);
+                                                 const check2 = document.getElementById(`Mesh${layerType}40Before`);
+                                                 if (check1) check1.checked = !!parts[0];
+                                                 if (check2) check2.checked = !!parts[1];
+                                             }
+
+                                             parseAndApplyMesh(innerMesh, 'Inner');
+                                             parseAndApplyMesh(outerMesh, 'Outer');
+
+            const markingStd = sps.markingStandard || sps.MarkingStandard || '';
+            const stdMarkingEl = document.getElementById('std_Marking');
+            if (stdMarkingEl) stdMarkingEl.innerText = 'STD: ' + (markingStd || '--');
 
             Swal.fire({
                 title: 'SPS SYNC SUCCESS',
@@ -2505,7 +2535,7 @@
                 }
             }
 
-            fetchSpsByItem(item.itemCode);
+            fetchSpsByItem(item.itemCode, item.machineName || item.machineCode);
         }
 
         function lockForm() {
@@ -2544,7 +2574,7 @@
             window._selectedPlanningLabel = null;
         }
 
-        async function fetchSpsByItem(code) {
+        async function fetchSpsByItem(code, forcedMachine = null) {
             const normalCode = (code || '').toUpperCase().trim();
 
             // Save draft for previous item before switching
@@ -2553,7 +2583,8 @@
             }
 
             try {
-                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}`);
+                const machine = forcedMachine || document.getElementById('MachineName')?.value || '';
+                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}&machineCode=${encodeURIComponent(machine)}`);
                 const data = await res.json();
                 if (data.success === false) throw new Error('PROTOCOL NOT FOUND');
 

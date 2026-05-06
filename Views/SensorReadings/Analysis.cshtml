@@ -165,12 +165,18 @@
                     </select>
                 </div>
                 <div class="col-sm-6 col-md-2">
-                    <label class="form-label small fw-semibold mb-1">Tanggal Awal</label>
-                    <input type="date" class="form-control form-control-sm" id="startDate" onchange="onDateInputChanged()" />
+                    <label class="form-label small fw-semibold mb-1">Tanggal & Jam Awal</label>
+                    <div class="input-group input-group-sm">
+                        <input type="date" class="form-control" id="startDate" onchange="onDateInputChanged()" />
+                        <input type="time" class="form-control" id="startTime" value="00:00" onchange="onDateInputChanged()" style="max-width: 90px;" />
+                    </div>
                 </div>
                 <div class="col-sm-6 col-md-2">
-                    <label class="form-label small fw-semibold mb-1">Tanggal Akhir</label>
-                    <input type="date" class="form-control form-control-sm" id="endDate" onchange="onDateInputChanged()" />
+                    <label class="form-label small fw-semibold mb-1">Tanggal & Jam Akhir</label>
+                    <div class="input-group input-group-sm">
+                        <input type="date" class="form-control" id="endDate" onchange="onDateInputChanged()" />
+                        <input type="time" class="form-control" id="endTime" value="23:59" onchange="onDateInputChanged()" style="max-width: 90px;" />
+                    </div>
                 </div>
                 <div class="col-sm-6 col-md-2">
                     <label class="form-label small fw-semibold mb-1 d-block">Tampilkan Garis</label>
@@ -321,17 +327,17 @@ let exportRows   = [];
 // Mapping metricType -> field MasterlistSpsDoubleLayer (camelCase)
 const METRIC_MAP = {
     outer_diameter:    { field:'toleranceOuter',    tol:'toleranceOuter',       label:'Outer Diameter',    unit:'mm'    },
-    inner_diameter:    { field:'innerTarget',        tol:'innerTol',             label:'Inner Diameter',    unit:'mm'    },
-    hose_speed:        { field:'hoseSpeed',          tol:null,                   label:'Hose Speed',        unit:'m/min' },
-    head_temp_inner:   { field:'headTemp1',          tol:5,                      label:'Head Temp Inner',   unit:'°C'    },
-    head_temp_outer:   { field:'headTemp2',          tol:5,                      label:'Head Temp Outer',   unit:'°C'    },
-    chiller_water_temp:{ field:'chillerWaterTemp',   tol:2,                      label:'Chiller Water Temp',unit:'°C'    },
-    screw_speed_inner: { field:'screwSpeed1',        tol:null,                   label:'Screw Speed Inner', unit:'rpm'   },
-    screw_speed_outer: { field:'screwSpeed2',        tol:null,                   label:'Screw Speed Outer', unit:'rpm'   },
-    pressure_inner:    { field:'pressure1',          tol:null,                   label:'Pressure Inner',    unit:'MPa'   },
-    pressure_outer:    { field:'pressure2',          tol:null,                   label:'Pressure Outer',    unit:'MPa'   },
-    spiral_pitch:      { field:'spiralPitchSetting', tol:'toleranceSpiralPitch', label:'Spiral Pitch',      unit:'mm'    },
-    caterpillar_gap:   { field:'caterpillarGap',     tol:null,                   label:'Caterpillar Gap',   unit:'mm'    },
+    inner_diameter:    { field:'innerTarget',       tol:'innerTol',             label:'Inner Diameter',    unit:'mm'    },
+    hose_speed:        { field:'hoseSpeed',         tol:null,                   label:'Hose Speed',        unit:'m/min' },
+    head_temp_inner:   { field:'headTemp1',         tol:null,                   label:'Head Temp Inner',   unit:'°C'    },
+    head_temp_outer:   { field:'headTemp2',         tol:null,                   label:'Head Temp Outer',   unit:'°C'    },
+    chiller_water_temp:{ field:'chillerWaterTemp',  tol:null,                   label:'Chiller Water Temp',unit:'°C'    },
+    screw_speed_inner: { field:'screwSpeed1',       tol:null,                   label:'Screw Speed Inner', unit:'rpm'   },
+    screw_speed_outer: { field:'screwSpeed2',       tol:null,                   label:'Screw Speed Outer', unit:'rpm'   },
+    pressure_inner:    { field:'pressure1',         tol:null,                   label:'Pressure Inner',    unit:'MPa'   },
+    pressure_outer:    { field:'pressure2',         tol:null,                   label:'Pressure Outer',    unit:'MPa'   },
+    spiral_pitch:      { field:'spiralPitchSetting',tol:'toleranceSpiralPitch', label:'Spiral Pitch',      unit:'mm'    },
+    caterpillar_gap:   { field:'caterpillarGap',    tol:null,                   label:'Caterpillar Gap',   unit:'mm'    }
 };
 
 // =================================================================
@@ -426,88 +432,116 @@ function onMetricOrMachineChange() {
 function updateMetricStdDisplay() {
     if (!selectedSps) return;
     const metric = document.getElementById('selMetric').value;
-    const map    = METRIC_MAP[metric];
-    if (!map) return;
+    const cfg = METRIC_MAP[metric];
+    if (!cfg) return;
 
-    const s      = selectedSps;
-    const outerSource = s.toleranceOuter || s.controlValue || s.odSensor;
-    // Untuk OD, data di lapangan kadang tersimpan di kolom berbeda.
-    // Prioritas tetap Tol. Outer, lalu fallback ke ControlValue/OdSensor.
-    const rawVal = metric === 'outer_diameter'
-        ? outerSource
-        : s[map.field];
+    // Reset display dulu agar tidak ada sisa data parameter sebelumnya
+    document.getElementById('dispTarget').textContent  = '...';
+    document.getElementById('dispUcl').textContent     = '...';
+    document.getElementById('dispLcl').textContent     = '...';
+    document.getElementById('dispUclNote').textContent = '';
+    document.getElementById('dispLclNote').textContent = '';
 
-    let target = parseFirst(rawVal);
-    let tolRaw = typeof map.tol === 'number' ? map.tol : (map.tol ? parseTolerance(map.tol ? s[map.tol] : null) : null);
-
-    // Khusus OD: parse target+tolerance dari string yang sama (contoh: "17.0±0.2").
-    if (metric === 'outer_diameter') {
-        const parsed = parseTargetAndTolerance(rawVal);
-        target = parsed.target;
-        tolRaw = parsed.tolerance;
-    }
-
-    // Fallback global: jika metrik terpilih kosong, pakai Tol. Outer SPS agar tidak N/A.
-    if (target == null) {
-        const parsedOuter = parseTargetAndTolerance(outerSource);
-        if (parsedOuter.target != null) {
-            target = parsedOuter.target;
-            tolRaw = parsedOuter.tolerance;
+    // Cari nilai di selectedSps (Handle case-insensitive)
+    const getVal = (fieldName) => {
+        if (!fieldName) return null;
+        if (selectedSps[fieldName] !== undefined) return selectedSps[fieldName];
+        // Fallback: cari yang namanya mirip (case-insensitive)
+        const lower = fieldName.toLowerCase();
+        for (let key in selectedSps) {
+            if (key.toLowerCase() === lower) return selectedSps[key];
         }
-    }
-    const unit   = map.unit;
+        return null;
+    };
+
+    const valStr = getVal(cfg.field) || '';
+    const tolStr = (cfg.tol) ? getVal(cfg.tol) : valStr;
+
+    // Parsing Target & Toleransi
+    let target = parseFirst(valStr);
+    let tol    = parseTolerance(tolStr);
+
+    // Penanganan khusus untuk "Max. XX"
+    let isMaxOnly = String(valStr).toLowerCase().includes('max');
+    const unit = cfg.unit || '';
 
     if (target == null) {
         document.getElementById('dispTarget').textContent  = 'N/A';
-        document.getElementById('dispTol').textContent     = 'Nilai tidak ada di SPS ini untuk metrik ini';
+        document.getElementById('dispTol').textContent     = 'Nilai standar tidak ditemukan di dokumen SPS';
         document.getElementById('dispUcl').textContent     = 'N/A';
         document.getElementById('dispLcl').textContent     = 'N/A';
-        document.getElementById('dispUclNote').textContent = '';
-        document.getElementById('dispLclNote').textContent = '';
         return;
     }
 
-    const ucl = tolRaw != null ? target + tolRaw : null;
-    const lcl = tolRaw != null ? target - tolRaw : null;
+    // Hitung UCL/LCL
+    let ucl = null, lcl = null;
+    
+    if (isMaxOnly) {
+        ucl = target;
+        document.getElementById('dispTol').textContent = 'Batas Maksimum: ' + target + ' ' + unit;
+    } else {
+        ucl = tol != null ? target + tol : null;
+        lcl = tol != null ? target - tol : null;
+        document.getElementById('dispTol').textContent = tol != null ? 'Toleransi: +/- ' + tol + ' ' + unit : 'Toleransi tidak terdefinisi';
+    }
 
     document.getElementById('dispTarget').textContent  = target.toFixed(3) + ' ' + unit;
-    document.getElementById('dispTol').textContent     = tolRaw != null ? 'Toleransi: +/- ' + tolRaw + ' ' + unit : 'Toleransi tidak terdefinisi di SPS';
     document.getElementById('dispUcl').textContent     = ucl != null ? ucl.toFixed(3) + ' ' + unit : 'N/A';
     document.getElementById('dispLcl').textContent     = lcl != null ? lcl.toFixed(3) + ' ' + unit : 'N/A';
-    document.getElementById('dispUclNote').textContent = ucl != null ? '= ' + target.toFixed(3) + ' + ' + tolRaw : '';
-    document.getElementById('dispLclNote').textContent = lcl != null ? '= ' + target.toFixed(3) + ' - ' + tolRaw : '';
+    document.getElementById('dispUclNote').textContent = (ucl != null && !isMaxOnly) ? '= ' + target.toFixed(3) + ' + ' + tol : (isMaxOnly ? '(Max Limit)' : '');
+    document.getElementById('dispLclNote').textContent = (lcl != null && !isMaxOnly) ? '= ' + target.toFixed(3) + ' - ' + tol : '';
 }
 
 function buildAllParamPills(s) {
     const params = [
-        { l:'OD Target',       v:s.controlValue,    u:'mm'    },
-        { l:'Tol OD',          v:s.toleranceDie,    u:'+-mm'  },
-        { l:'Inner Die',       v:s.innerDie,         u:'mm'    },
-        { l:'Tol Tube',        v:s.tol_TubeDie,      u:'+-mm'  },
-        { l:'Head Temp 1',     v:s.headTemp,         u:'C'     },
-        { l:'Head Temp 2',     v:s.headTemp2,        u:'C'     },
-        { l:'Screw Spd 1',     v:s.screwSpeed,       u:'rpm'   },
-        { l:'Screw Spd 2',     v:s.screwSpeed2,      u:'rpm'   },
-        { l:'Pressure 1',      v:s.pressure,         u:'MPa'   },
-        { l:'Pressure 2',      v:s.pressure2,        u:'MPa'   },
-        { l:'Spiral Pitch',    v:s.spiralPitch,      u:'mm'    },
-        { l:'Tol Spiral',      v:s.tol_SpiralPitch,  u:'+-mm'  },
-        { l:'Caterpillar Gap', v:s.caterpillarGap,   u:'mm'    },
-        { l:'Hose Speed',      v:s.hoseSpeed,        u:'m/min' },
-        { l:'Chiller Temp',    v:s.chillerWaterTemp, u:'C'     },
+        { l:'OD Target',       v:s.controlValue,    u:'mm',     m:'outer_diameter' },
+        { l:'Inner Die',       v:s.innerDie,         u:'mm',     m:'inner_diameter' },
+        { l:'Head Temp 1',     v:s.headTemp,         u:'C',      m:'head_temp_inner' },
+        { l:'Head Temp 2',     v:s.headTemp2,        u:'C',      m:'head_temp_outer' },
+        { l:'Screw Spd 1',     v:s.screwSpeed,       u:'rpm',    m:'screw_speed_inner' },
+        { l:'Screw Spd 2',     v:s.screwSpeed2,      u:'rpm',    m:'screw_speed_outer' },
+        { l:'Pressure 1',      v:s.pressure,         u:'MPa',    m:'pressure_inner' },
+        { l:'Pressure 2',      v:s.pressure2,        u:'MPa',    m:'pressure_outer' },
+        { l:'Spiral Pitch',    v:s.spiralPitch,      u:'mm',     m:'spiral_pitch' },
+        { l:'Caterpillar Gap', v:s.caterpillarGap,   u:'mm',     m:'caterpillar_gap' },
+        { l:'Hose Speed',      v:s.hoseSpeed,        u:'m/min',  m:'hose_speed' },
+        { l:'Chiller Temp',    v:s.chillerWaterTemp, u:'C',      m:'chiller_water_temp' },
     ];
+    
     const html = params
         .filter(p => p.v != null && p.v !== 0 && p.v !== '')
-        .map(p => `<span class="param-pill"><span class="pp-label">${p.l}</span><span class="pp-val">${p.v} <small class="text-muted fw-normal">${p.u}</small></span></span>`)
+        .map(p => {
+            const isSelected = document.getElementById('selMetric').value === p.m;
+            return `<span class="param-pill cursor-pointer transition-all ${isSelected ? 'border-info bg-info bg-opacity-10' : ''}" 
+                          onclick="quickSelectMetric('${p.m}')"
+                          style="cursor:pointer; ${isSelected ? 'box-shadow: 0 0 10px rgba(13,202,240,0.2);' : ''}">
+                        <span class="pp-label ${isSelected ? 'text-info' : ''}">${p.l}</span>
+                        <span class="pp-val">${p.v} <small class="text-muted fw-normal">${p.u}</small></span>
+                    </span>`;
+        })
         .join('');
+
     document.getElementById('allParamPills').innerHTML =
-        '<div class="small text-muted mt-1 mb-1">Semua parameter SPS:</div>' + (html || '<span class="text-muted small">-</span>');
+        '<div class="small text-muted mt-1 mb-1">Pilih parameter untuk dianalisis:</div>' + (html || '<span class="text-muted small">-</span>');
+}
+
+function quickSelectMetric(metricKey) {
+    const sel = document.getElementById('selMetric');
+    if (sel) {
+        sel.value = metricKey;
+        // 1. Update kotak kuning besar
+        updateMetricStdDisplay();
+        // 2. Refresh warna border di pills
+        if (selectedSps) buildAllParamPills(selectedSps);
+        // 3. (Manual) Grafik tidak di-load otomatis sesuai permintaan user
+    }
 }
 
 function parseFirst(val) {
     if (val == null || val === '') return null;
     if (typeof val === 'number') return val;
-    const m = String(val).replace(',', '.').match(/[\d.]+/);
+    // Regex ini mencari angka yang diawali angka, bukan sekedar titik sendirian
+    const m = String(val).replace(',', '.').match(/\d+(?:\.\d+)?/);
     if (!m) return null;
     const n = parseFloat(m[0]);
     return isNaN(n) ? null : n;
@@ -520,10 +554,10 @@ function parseTolerance(val) {
     const s = String(val).replace(',', '.');
     const pmIdx = s.indexOf('\u00b1');
     if (pmIdx !== -1) {
-        const after = s.slice(pmIdx + 1).match(/[\d.]+/);
+        const after = s.slice(pmIdx + 1).match(/\d+(?:\.\d+)?/);
         if (after) { const n = parseFloat(after[0]); return isNaN(n) ? null : n; }
     }
-    const m = s.match(/[\d.]+/);
+    const m = s.match(/\d+(?:\.\d+)?/);
     return m ? (isNaN(parseFloat(m[0])) ? null : parseFloat(m[0])) : null;
 }
 
@@ -594,20 +628,18 @@ async function loadAnalysis() {
     const machine = document.getElementById('selMachine').value;
     const metric  = document.getElementById('selMetric').value;
     const startDate = document.getElementById('startDate').value;
+    const startTime = document.getElementById('startTime').value;
     const endDate   = document.getElementById('endDate').value;
+    const endTime   = document.getElementById('endTime').value;
 
     if (!startDate || !endDate) {
         alert('Tanggal awal dan tanggal akhir wajib diisi.');
         return;
     }
-    if (startDate > endDate) {
-        alert('Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
-        return;
-    }
 
     document.getElementById('noSpsWarning').classList.toggle('d-none', !!selectedSps);
 
-    let url = `/api/sensor-readings/analysis-data?metricType=${encodeURIComponent(metric)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+    let url = `/api/sensor-readings/analysis-data?metricType=${encodeURIComponent(metric)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
     if (machine)     url += `&machineCode=${encodeURIComponent(machine)}`;
     if (selectedSps) url += `&spsId=${selectedSps.id}`;
 
