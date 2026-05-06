@@ -1499,36 +1499,43 @@ namespace VelastoProductionSystem.Controllers
             // 1. Find ProductionReport
             var report = await _context.ProductionReports
                 .Include(r => r.ProductionReadings)
+                .Include(r => r.StandardParameterSetting)
                 .FirstOrDefaultAsync(r => r.DocumentNumber == docNum);
 
             if (report == null)
                 return Json(new { success = false, message = $"Production Report '{docNum}' tidak ditemukan." });
 
-            // 2. Find matching SPS Master (cascade: DocNumber → ItemList/VinCode → HoseType+Dimensi)
-            MasterlistSpsDoubleLayer? sps = null;
+            // 2. Check StandardParameterSetting first, then fallback to MasterlistSpsDoubleLayers
+            MasterlistSpsDoubleLayer? spsFallback = null;
+            var hasSps = report.StandardParameterSetting != null;
 
-            // Try exact DocumentNumber match
-            sps = await _context.MasterlistSpsDoubleLayers
-                .FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
-
-            // Fallback: match by VinCode in ItemList
-            if (sps == null && !string.IsNullOrEmpty(report.VinCode))
+            if (!hasSps)
             {
-                var vin = report.VinCode.Trim().ToUpper();
-                sps = await _context.MasterlistSpsDoubleLayers
-                    .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(vin))
-                    .OrderByDescending(m => m.Id)
-                    .FirstOrDefaultAsync();
-            }
+                // Try exact DocumentNumber match
+                spsFallback = await _context.MasterlistSpsDoubleLayers
+                    .FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
 
-            // Fallback: match by HoseType + Dimensi
-            if (sps == null && !string.IsNullOrEmpty(report.HoseType))
-            {
-                sps = await _context.MasterlistSpsDoubleLayers
-                    .Where(m => m.HoseType == report.HoseType &&
-                                (report.Dimension == null || m.Dimensi == report.Dimension))
-                    .OrderByDescending(m => m.Id)
-                    .FirstOrDefaultAsync();
+                // Fallback: match by VinCode in ItemList
+                if (spsFallback == null && !string.IsNullOrEmpty(report.VinCode))
+                {
+                    var vin = report.VinCode.Trim().ToUpper();
+                    spsFallback = await _context.MasterlistSpsDoubleLayers
+                        .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(vin))
+                        .OrderByDescending(m => m.Id)
+                        .FirstOrDefaultAsync();
+                }
+
+                // Fallback: match by HoseType + Dimensi
+                if (spsFallback == null && !string.IsNullOrEmpty(report.HoseType))
+                {
+                    spsFallback = await _context.MasterlistSpsDoubleLayers
+                        .Where(m => m.HoseType == report.HoseType &&
+                                    (report.Dimension == null || m.Dimensi == report.Dimension))
+                        .OrderByDescending(m => m.Id)
+                        .FirstOrDefaultAsync();
+                }
+                
+                hasSps = spsFallback != null;
             }
 
             // 3. Load sensor data linked to this report
@@ -1570,6 +1577,54 @@ namespace VelastoProductionSystem.Controllers
                 }).ToList();
 
             // 5. Build result
+            object? spsPayload = null;
+            if (report.StandardParameterSetting != null)
+            {
+                var s = report.StandardParameterSetting;
+                spsPayload = new {
+                    HeadTemp1 = s.HeadTemp, HeadTemp2 = s.HeadTemp2, HeadTemp3 = s.HeadTemp3,
+                    Cylinder1_1 = s.Cylinder1Temp, Cylinder1_2 = s.Cylinder1_2, Cylinder1_3 = s.Cylinder1_3,
+                    Cylinder2_1 = s.Cylinder2Temp, Cylinder2_2 = s.Cylinder2_2, Cylinder2_3 = s.Cylinder2_3,
+                    Cylinder3_1 = s.Cylinder3Temp, Cylinder3_2 = s.Cylinder3_2, Cylinder3_3 = s.Cylinder3_3,
+                    ScrewTemp1 = s.ScrewTemp, ScrewTemp2 = s.ScrewTemp2, ScrewTemp3 = s.ScrewTemp3,
+                    ScrewSpeed1 = s.ScrewSpeed, ScrewSpeed2 = s.ScrewSpeed2, ScrewSpeed3 = s.ScrewSpeed3,
+                    Pressure1 = s.Pressure, Pressure2 = s.Pressure2, Pressure3 = s.Pressure3,
+                    FeedRollRatio1 = s.FeedRollRatio, FeedRollRatio2 = s.FeedRollRatio2, FeedRollRatio3 = s.FeedRollRatio3,
+                    Feed1 = s.FeedRollRatio, Feed2 = s.FeedRollRatio2, Feed3 = s.FeedRollRatio3,
+                    HoseSpeed = s.HoseSpeed, SpiralSpeed = s.SpiralSpeed,
+                    SpiralPitchSetting = s.SpiralPitch, SpiralPitchDisplay = s.SpiralPitchDisplay,
+                    PresetValue = s.PresetValve, ControlValue = s.ControlValue,
+                    ChillerWaterTemp = s.ChillerWaterTemp, CaterpillarGap = s.CaterpillarGap,
+                    TakeupConveyorSpeed = s.TakeupConveyorSpeed, CoolConveyorSpeed = s.CoolConveyorSpeed,
+                    ConveyorRatio = s.ConveyorRatio, UnsmoothSurface = s.UnsmoothSurface,
+                    InnerMin = s.InnerDie - s.ToleranceDie, InnerMax = s.InnerDie + s.ToleranceDie,
+                    TotalMin = s.OuterDie - s.Tol_OuterDie, TotalMax = s.OuterDie + s.Tol_OuterDie
+                };
+            }
+            else if (spsFallback != null)
+            {
+                spsPayload = new {
+                    spsFallback.HeadTemp1, spsFallback.HeadTemp2, spsFallback.HeadTemp3,
+                    spsFallback.Cylinder1_1, spsFallback.Cylinder1_2, spsFallback.Cylinder1_3,
+                    spsFallback.Cylinder2_1, spsFallback.Cylinder2_2, spsFallback.Cylinder2_3,
+                    spsFallback.Cylinder3_1, spsFallback.Cylinder3_2, spsFallback.Cylinder3_3,
+                    spsFallback.ScrewTemp1, spsFallback.ScrewTemp2, spsFallback.ScrewTemp3,
+                    spsFallback.ScrewSpeed1, spsFallback.ScrewSpeed2, spsFallback.ScrewSpeed3,
+                    spsFallback.Pressure1, spsFallback.Pressure2, spsFallback.Pressure3,
+                    spsFallback.FeedRollRatio1, spsFallback.FeedRollRatio2, spsFallback.FeedRollRatio3,
+                    spsFallback.Feed1, spsFallback.Feed2, spsFallback.Feed3,
+                    spsFallback.HoseSpeed, spsFallback.SpiralSpeed,
+                    spsFallback.SpiralPitchSetting, spsFallback.SpiralPitchDisplay,
+                    spsFallback.PresetValue, spsFallback.ControlValue,
+                    spsFallback.ChillerWaterTemp, spsFallback.CaterpillarGap,
+                    spsFallback.TakeUpConveyorSpeed, spsFallback.CoolConveyorSpeed,
+                    spsFallback.ConveyorRatio, spsFallback.UnsmoothSurface,
+                    spsFallback.InnerMin, spsFallback.InnerMax,
+                    spsFallback.InnerLCL, spsFallback.InnerUCL,
+                    spsFallback.TotalMin, spsFallback.TotalMax
+                };
+            }
+
             return Json(new {
                 success = true,
                 report = new {
@@ -1584,31 +1639,8 @@ namespace VelastoProductionSystem.Controllers
                     productionDate = report.ProductionDate.ToString("yyyy-MM-dd"),
                     report.Status
                 },
-                spsFound = sps != null,
-                spsStandard = sps == null ? null : new {
-                    sps.HeadTemp1, sps.HeadTemp2, sps.HeadTemp3,
-                    sps.Cylinder1_1, sps.Cylinder1_2, sps.Cylinder1_3,
-                    sps.Cylinder2_1, sps.Cylinder2_2, sps.Cylinder2_3,
-                    sps.Cylinder3_1, sps.Cylinder3_2, sps.Cylinder3_3,
-                    sps.ScrewTemp1, sps.ScrewTemp2, sps.ScrewTemp3,
-                    sps.ScrewSpeed1, sps.ScrewSpeed2, sps.ScrewSpeed3,
-                    sps.Pressure1, sps.Pressure2, sps.Pressure3,
-                    sps.FeedRollRatio1, sps.FeedRollRatio2, sps.FeedRollRatio3,
-                    sps.Feed1, sps.Feed2, sps.Feed3,
-                    sps.HoseSpeed, sps.SpiralSpeed,
-                    sps.SpiralPitchSetting, sps.SpiralPitchDisplay,
-                    sps.PresetValue, sps.ControlValue,
-                    sps.ChillerWaterTemp, sps.CaterpillarGap,
-                    sps.TakeUpConveyorSpeed, sps.CoolConveyorSpeed,
-                    sps.ConveyorRatio, sps.UnsmoothSurface,
-                    // Quality Matrix
-                    sps.InnerTarget, sps.InnerTol, sps.InnerLCL, sps.InnerMin, sps.InnerUCL, sps.InnerMax,
-                    sps.ThickTarget, sps.ThickTol, sps.ThickLCL, sps.ThickMin, sps.ThickUCL, sps.ThickMax,
-                    sps.TotalTarget, sps.TotalTol, sps.TotalLCL, sps.TotalMin, sps.TotalUCL, sps.TotalMax,
-                    sps.ToleranceSpiralPitch,
-                    sps.ToleranceInner, sps.ToleranceOuter,
-                    sps.ItemList, sps.DocumentNumber, sps.HoseType, sps.Dimensi
-                },
+                spsFound = hasSps,
+                spsStandard = spsPayload,
                 initials = new {
                     report.InitHeadTempInner, report.InitHeadTempOuter,
                     report.InitCylinder1TempInner, report.InitCylinder1TempOuter,
