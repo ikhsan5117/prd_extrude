@@ -4,6 +4,109 @@
     ViewData["Title"] = "Edit Production Report";
 }
 
+@section Styles {
+    <style>
+        /* --- Planning Search Styles (HUD) --- */
+        .planning-results {
+            position: absolute; top: calc(100% + 5px); left: 0; right: 0; 
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid #0ea5e9; 
+            border-radius: 12px; 
+            z-index: 10000;
+            max-height: 450px; overflow-y: auto; 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.1);
+            animation: dropdownFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 8px;
+        }
+
+        @@keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .custom-tactical-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-tactical-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb { 
+            background: rgba(14, 165, 233, 0.3); border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .custom-tactical-scroll::-webkit-scrollbar-thumb:hover { background: #0ea5e9; }
+
+        .planning-result-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .planning-result-item:hover, .planning-result-highlight {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: rgba(14, 165, 233, 0.3);
+            transform: translateX(5px);
+        }
+
+        .planning-result-highlight {
+            background: rgba(14, 165, 233, 0.15) !important;
+            border-color: #0ea5e9 !important;
+            box-shadow: inset 4px 0 0 #0ea5e9;
+        }
+
+        .planning-result-code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            font-weight: 800;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+        }
+
+        .planning-result-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: #f1f5f9;
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .planning-result-meta {
+            font-size: 9px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .machine-badge-mini {
+            font-size: 9px; 
+            font-weight: 900; 
+            color: #000;
+            background: #f59e0b; 
+            padding: 2px 8px; 
+            border-radius: 50px; 
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .blink-once { animation: blink 0.8s ease-out; }
+        @@keyframes blink { 0% { background: rgba(56, 189, 248, 0.4); } 100% { background: transparent; } }
+    </style>
+}
+
 <div class="production-blueprint no-print-bg pb-5">
     <div class="container-fluid p-1 p-md-2">
 
@@ -22,6 +125,7 @@
             <input type="hidden" asp-for="CreatedDate" />
             <input type="hidden" asp-for="Status" />
             <input type="hidden" id="SpsId" name="SpsId" value="@Model?.SpsId" />
+            <input type="hidden" asp-for="ItemCode" id="ItemCode" />
             <div asp-validation-summary="ModelOnly" class="alert mb-4" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:10px;"></div>
 
             <!-- SECTION 1: COMMAND CONSOLE (HEADER) -->
@@ -62,7 +166,12 @@
                                             </span>
                                         }
                                     </div>
-                                    <input asp-for="ItemCode" id="ItemCode" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size:1rem;outline:none;" placeholder="ITEM CODE / PLANNING..." />
+                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size:1rem;outline:none;" 
+                                           placeholder="KETIK ITEM CODE..." 
+                                           value="@(string.IsNullOrEmpty(Model?.ItemCode) || Model?.ItemCode == "---" ? (Model?.HoseType ?? "") : $"[{Model?.ItemCode}] {Model?.HoseType}")"
+                                           oninput="filterPlanningResults(this.value)" 
+                                           onfocus="openPlanningDropdown()" autocomplete="off" />
+                                    <div id="planningResults" class="planning-results d-none custom-tactical-scroll"></div>
                                 </div>
                             </div>
                         </div>
@@ -1088,23 +1197,21 @@
             }
         }
 
-        function applySpsToForm(sps) {
+        function applySpsToForm(sps, fromPlanning = false) {
             if (!sps) return;
             
             console.log('Applying SPS to form:', sps);
             
-            // Update hidden SPS ID (will be null if SPS comes from Masterlist, not StandardParameterSettings)
+            // Update hidden SPS ID (Critical for database relationship)
             const spsIdEl = document.getElementById('SpsId');
             if (spsIdEl) {
-                const spsId = sps.id || sps.Id;
+                const spsId = sps.id || sps.Id || sps.spsId;
                 spsIdEl.value = spsId != null ? spsId : '';
-                console.log('SpsId set to:', spsIdEl.value || 'NULL');
+                console.log('💾 SpsId set to:', spsIdEl.value || 'NULL');
                 
                 // Warn user if this is from Masterlist (no StandardParameterSettings record)
                 if (!spsId && sps.source === 'Masterlist') {
                     console.warn('⚠️ This SPS is from Masterlist - SpsId will be NULL in database');
-                    console.warn('   Item:', sps.itemList || sps.ItemList);
-                    console.warn('   Masterlist ID:', sps.masterlistId || sps.MasterlistId);
                 }
             }
 
@@ -1121,10 +1228,10 @@
 
             // Populate header inputs
             const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
-            set('DocNo',        sps.documentNumber || sps.DocumentNumber);
-            set('RevNo',        sps.revisionNumber || sps.RevisionNumber);
-            set('HoseType',     sps.hoseType || sps.HoseType);
-            set('CustomerName', sps.customerName || sps.CustomerName);
+            if (fromPlanning || !document.getElementById('DocNo').value) set('DocNo', sps.documentNumber || sps.DocumentNumber);
+            if (fromPlanning || !document.getElementById('RevNo').value || document.getElementById('RevNo').value === '0') set('RevNo', sps.revisionNumber || sps.RevisionNumber);
+            if (fromPlanning || !document.getElementById('HoseType').value) set('HoseType', sps.hoseType || sps.HoseType);
+            if (fromPlanning || !document.getElementById('CustomerName').value) set('CustomerName', sps.customerName || sps.CustomerName);
 
             // Populate material standards (readonly column)
             // Explicitly set material names to form inputs to ensure they save to DB
@@ -1188,27 +1295,27 @@
                 }
             }
             
-            // Map SPS fields to spec labels (support both PascalCase and camelCase)
-            setSpec('HeadTempInner', sps.HeadTempInner || sps.headTempInner);
-            setSpec('Cylinder1TempInner', sps.Cylinder1TempInner || sps.cylinder1TempInner);
-            setSpec('Cylinder2TempInner', sps.Cylinder2TempInner || sps.cylinder2TempInner);
-            setSpec('Cylinder3TempInner', sps.Cylinder3TempInner || sps.cylinder3TempInner);
-            setSpec('ScrewTempInner', sps.ScrewTempInner || sps.screwTempInner);
-            setSpec('ScrewSpeedInner', sps.ScrewSpeedInner || sps.screwSpeedInner);
-            setSpec('FeedRollRatioInner', sps.FeedRollRatioInner || sps.feedRollRatioInner);
-            setSpec('PressureInner', sps.PressureInner || sps.pressureInner);
+            // Map SPS fields to spec labels
+            setSpec('HeadTempInner', sps.HeadTempInner || sps.headTempInner || sps.HeadTemp || sps.HeadTemp1);
+            setSpec('Cylinder1TempInner', sps.Cylinder1TempInner || sps.cylinder1TempInner || sps.Cylinder1Temp || sps.Cylinder1_1);
+            setSpec('Cylinder2TempInner', sps.Cylinder2TempInner || sps.cylinder2TempInner || sps.Cylinder2Temp || sps.Cylinder2_1);
+            setSpec('Cylinder3TempInner', sps.Cylinder3TempInner || sps.cylinder3TempInner || sps.Cylinder3Temp || sps.Cylinder1_3);
+            setSpec('ScrewTempInner', sps.ScrewTempInner || sps.screwTempInner || sps.ScrewTemp || sps.ScrewTemp1);
+            setSpec('ScrewSpeedInner', sps.ScrewSpeedInner || sps.screwSpeedInner || sps.ScrewSpeed || sps.ScrewSpeed1);
+            setSpec('FeedRollRatioInner', sps.FeedRollRatioInner || sps.feedRollRatioInner || sps.FeedRollRatio || sps.Feed1);
+            setSpec('PressureInner', sps.PressureInner || sps.pressureInner || sps.Pressure || sps.Pressure1);
 
-            setSpec('HeadTempOuter', sps.HeadTempOuter || sps.headTempOuter);
-            setSpec('Cylinder1TempOuter', sps.Cylinder1TempOuter || sps.cylinder1TempOuter);
-            setSpec('Cylinder2TempOuter', sps.Cylinder2TempOuter || sps.cylinder2TempOuter);
-            setSpec('Cylinder3TempOuter', sps.Cylinder3TempOuter || sps.cylinder3TempOuter);
-            setSpec('ScrewTempOuter', sps.ScrewTempOuter || sps.screwTempOuter);
-            setSpec('ScrewSpeedOuter', sps.ScrewSpeedOuter || sps.screwSpeedOuter);
-            setSpec('FeedRollRatioOuter', sps.FeedRollRatioOuter || sps.feedRollRatioOuter);
-            setSpec('PressureOuter', sps.PressureOuter || sps.pressureOuter);
+            setSpec('HeadTempOuter', sps.HeadTempOuter || sps.headTempOuter || sps.HeadTemp || sps.HeadTemp2);
+            setSpec('Cylinder1TempOuter', sps.Cylinder1TempOuter || sps.cylinder1TempOuter || sps.Cylinder1Temp || sps.Cylinder1_2);
+            setSpec('Cylinder2TempOuter', sps.Cylinder2TempOuter || sps.cylinder2TempOuter || sps.Cylinder2Temp || sps.Cylinder2_2);
+            setSpec('Cylinder3TempOuter', sps.Cylinder3TempOuter || sps.cylinder3TempOuter || sps.Cylinder3Temp || sps.Cylinder3_2);
+            setSpec('ScrewTempOuter', sps.ScrewTempOuter || sps.screwTempOuter || sps.ScrewTemp || sps.ScrewTemp2);
+            setSpec('ScrewSpeedOuter', sps.ScrewSpeedOuter || sps.screwSpeedOuter || sps.ScrewSpeed || sps.ScrewSpeed2);
+            setSpec('FeedRollRatioOuter', sps.FeedRollRatioOuter || sps.feedRollRatioOuter || sps.FeedRollRatio || sps.Feed2);
+            setSpec('PressureOuter', sps.PressureOuter || sps.pressureOuter || sps.Pressure || sps.Pressure2);
 
             setSpec('SpiralSpeed', sps.SpiralSpeed || sps.spiralSpeed);
-            setSpec('SpiralPitchSetting', sps.SpiralPitch || sps.spiralPitch);
+            setSpec('SpiralPitchSetting', sps.SpiralPitch || sps.spiralPitch || sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch);
             setSpec('HoseSpeed', sps.HoseSpeed || sps.hoseSpeed);
             setSpec('ConveyorRatio', sps.ConveyorRatio || sps.conveyorRatio);
 
@@ -1391,163 +1498,142 @@
             Swal.fire({ icon: 'info', title: 'NEW CHECK ADDED', text: `Point P-${pReadings.length} initialized at ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}.`, toast: true, position: 'top-end', timer: 2000, showConfirmButton: false, background: '#0f172a', color: '#38bdf8' });
         }
 
-        function applySpsToForm(sps) {
-            if (!sps) return;
-            console.log("Applying SPS to Edit Form:", sps);
 
-            // Populate headers if they are empty
-            if (!document.getElementById('DocNo').value) document.getElementById('DocNo').value = sps.documentNumber || sps.DocumentNumber || '';
-            if (!document.getElementById('RevNo').value || document.getElementById('RevNo').value === '0') document.getElementById('RevNo').value = sps.revisionNumber || sps.RevisionNumber || '0';
+
+        // === PLANNING SEARCH VARIABLES ===
+        let planningItemsCache = [];
+        let planningResultItems = [];
+        let planningResultIndex = -1;
+        let userHasSelectedData = false;
+
+        // === PLANNING SEARCH FUNCTIONS ===
+        async function refreshPlanningItems() {
+            const dateInput = document.getElementById('ProductionDate');
+            const shiftInput = document.getElementById('Shift');
+            const planningInput = document.getElementById('planningSearch');
             
-            // Populate standards
-            const formatVal = (val, prefix = '', suffix = '') => {
-                if (val === undefined || val === null || val === '') return '---';
-                let strVal = String(val).trim();
-                if (strVal === '-' || strVal === '' || strVal === '---') return strVal;
-                return `${prefix}${strVal}${suffix}`;
-            };
+            if (!dateInput || !shiftInput || !planningInput) return;
+            
+            const date = dateInput.value;
+            const shift = shiftInput.value;
+            
+            if (!date || !shift) return;
 
-            const specMappings = {
-                'HeadTempInner': formatVal(sps.headTempInner || sps.headTemp || sps.HeadTemp || sps.HeadTemp1, '', ' ± 5'),
-                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_1, '', ' ± 5'),
-                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_1, '', ' ± 5'),
-                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder1_3, '', ' ± 5'),
-                'ScrewTempInner': formatVal(sps.screwTempInner || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp1, '', ' ± 5'),
-                'ScrewSpeedInner': formatVal(sps.screwSpeedInner || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed1, '', ' ± 5'),
-                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.FeedRollRatioInner || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed1, 'Max '),
-                'PressureInner': formatVal(sps.pressureInner || sps.pressure || sps.Pressure || sps.Pressure1, 'Max '),
+            planningInput.placeholder = 'LOADING PLANNING...';
+            // planningInput.disabled = true; // Don't disable to keep user input focus
 
-                'HeadTempOuter': formatVal(sps.headTempOuter || sps.headTemp || sps.HeadTemp || sps.HeadTemp2, '', ' ± 5'),
-                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_2, '', ' ± 5'),
-                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_2, '', ' ± 5'),
-                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder3_2, '', ' ± 5'),
-                'ScrewTempOuter': formatVal(sps.screwTempOuter || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp2, '', ' ± 5'),
-                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed2, '', ' ± 5'),
-                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.FeedRollRatioOuter || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed2, 'Max '),
-                'PressureOuter': formatVal(sps.pressureOuter || sps.pressure || sps.Pressure || sps.Pressure2, 'Max '),
+            try {
+                const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shift)}`);
+                planningItemsCache = await res.json();
+                planningResultItems = planningItemsCache;
+                planningResultIndex = -1;
 
-                'SpiralSpeed': formatVal(sps.spiralSpeed || sps.SpiralSpeed, '', ' ± 20'),
-                'SpiralPitchSetting': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
-                'SpiralPitchDisplay': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
-                'PresetValue': formatVal(sps.presetValue || sps.PresetValue, '', ' ± 0.5'),
-                'ControlValue': formatVal(sps.controlValue || sps.ControlValue),
-                'HoseSpeed': formatVal(sps.hoseSpeed || sps.HoseSpeed),
-                'TakeupConveyorSpeed': formatVal(sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed || sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed),
-                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed || sps.CoolConveyorSpeed),
-                'ConveyorRatio': formatVal(sps.conveyorRatio || sps.ConveyorRatio),
-                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp),
-                'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
-                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface || 'OK'),
-
-                'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple),
-                'TubeDie': formatVal(sps.tubeDie || sps.TubeDie),
-                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie),
-                'CoverDie': formatVal(sps.coverDie || sps.CoverDie),
-                'SpacerDie': formatVal(sps.spacerDie || sps.SpacerDie),
-                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie || sps.toleranceInner || sps.ToleranceInner)
-            };
-
-            for (const [key, val] of Object.entries(specMappings)) {
-                const el = document.getElementById('spec_' + key);
-                const mainInput = document.getElementById('input_' + key);
-                const isNoData = (val === '---' || val === '' || val === null || val.trim() === '--' || val.trim() === '-' || val.trim() === '0');
-
-                if (el) {
-                    el.innerText = val;
-                    el.classList.add('blink-once');
-                    
-                    // Logic to Disable/Lock inputs if no standard exists
-                    if (isNoData) {
-                        if (mainInput) {
-                            mainInput.disabled = true;
-                            mainInput.placeholder = "N/A";
-                            mainInput.value = "";
-                            mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '0.4', 'important');
-                            mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'none', 'important');
-                        }
-                    } else {
-                        if (mainInput) {
-                            mainInput.disabled = false;
-                            mainInput.placeholder = "0.00";
-                            mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '1', 'important');
-                            mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'auto', 'important');
-                        }
+                if (planningItemsCache.length > 0) {
+                    planningInput.placeholder = `SEARCH PLANNING (${planningItemsCache.length} ITEMS)`;
+                    if (document.activeElement === planningInput) {
+                        renderPlanningResults(planningResultItems, true);
                     }
-
-                    if (key.includes('Die') || key === 'ToleranceDie') {
-                        const dieRadios = {
-                            'NippleDie': { field: 'NippleDieOK', init: 'NippleDieInitial', final: 'NippleDieFinal' },
-                            'TubeDie': { field: 'TubeDieOK', init: 'TubeDieInitial', final: 'TubeDieFinal' },
-                            'MiddleDie': { field: 'MiddleDieOK', init: 'MiddleDieInitial', final: 'MiddleDieFinal' },
-                            'CoverDie': { field: 'CoverDieOK', init: 'CoverDieInitial', final: 'CoverDieFinal' },
-                            'SpacerDie': { field: 'SpacerDieOK', init: 'SpacerDieInitial', final: 'SpacerDieFinal' },
-                            'ToleranceDie': { field: 'ToleranceDieOK', init: 'ToleranceInitial', final: 'ToleranceFinal' }
-                        };
-                        const d = dieRadios[key];
-                        if (d) {
-                            const container = document.getElementsByName(d.init)[0]?.closest('.die-card');
-                            if (isNoData) {
-                                document.getElementsByName(d.init)[0].disabled = true;
-                                document.getElementsByName(d.final)[0].disabled = true;
-                                if (container) {
-                                    container.style.opacity = "0.4";
-                                    container.style.pointerEvents = "none";
-                                    container.style.filter = "grayscale(100%)";
-                                }
-                            } else {
-                                document.getElementsByName(d.init)[0].disabled = false;
-                                document.getElementsByName(d.final)[0].disabled = false;
-                                if (container) {
-                                    container.style.opacity = "1";
-                                    container.style.pointerEvents = "auto";
-                                    container.style.filter = "none";
-                                }
-                            }
-                        }
-                    } else {
-                        const inputs = document.querySelectorAll(`[name$="${key}"]`);
-                        inputs.forEach(inp => { 
-                            if (isNoData) {
-                                inp.disabled = true;
-                                inp.placeholder = "N/A";
-                            } else {
-                                inp.disabled = false;
-                            }
-                        });
-                    }
+                } else {
+                    planningInput.placeholder = 'NO ITEMS IN PLAN FOR THIS DATE/SHIFT';
                 }
+            } catch (error) {
+                console.error('Failed to refresh planning items:', error);
+                planningInput.placeholder = 'ERROR LOADING PLANNING';
+            }
+        }
+
+        function filterPlanningResults(query) {
+            const sanitizedQuery = query.trim().toUpperCase();
+            // If query starts with [ and ends with ] something, it's likely an existing selection, don't filter or show all
+            if (sanitizedQuery.startsWith('[') && sanitizedQuery.includes(']')) {
+                 // Keep showing but maybe don't filter
             }
 
-            // EXPLICIT HIDDEN LOGIC FOR DOUBLE LAYER MACHINES
-            const machineHidden = document.getElementById('MachineName')?.value || '';
-            const navbarMachine = Array.from(document.querySelectorAll('.navbar-right .text-warning.fw-bold'))
-                                     .map(el => el.textContent.trim())
-                                     .find(txt => txt.length > 0) || '';
-            const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
-            
-            const midCard = document.getElementById('die_card_MiddleDie');
-            const spacerCard = document.getElementById('die_card_SpacerDie');
-            const midVal = (sps.MiddleDie || sps.middleDie || '').trim();
-            const spacerVal = (sps.SpacerDie || sps.spacerDie || '').trim();
+            const results = sanitizedQuery.length === 0
+                ? planningItemsCache
+                : planningItemsCache.filter(item =>
+                    (item.itemCode && item.itemCode.toUpperCase().includes(sanitizedQuery)) ||
+                    (item.itemName && item.itemName.toUpperCase().includes(sanitizedQuery))
+                );
 
-            if (midCard) {
-                if (isDoubleLayer || !midVal || midVal === '--' || midVal === '0' || midVal === '') {
-                    midCard.classList.add('d-none');
-                    midCard.style.setProperty('display', 'none', 'important');
-                } else {
-                    midCard.classList.remove('d-none');
-                    midCard.style.display = 'block';
-                }
+            planningResultItems = results;
+            planningResultIndex = -1;
+            renderPlanningResults(results, sanitizedQuery.length === 0);
+        }
+
+        function renderPlanningResults(items, showAll = false) {
+            const container = document.getElementById('planningResults');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="planning-result-item" style="text-align:center; opacity:0.5; pointer-events:none;">
+                    <div class="planning-result-code">--- NO MATCHES FOUND ---</div>
+                </div>`;
+                container.classList.remove('d-none');
+                return;
             }
 
-            if (spacerCard) {
-                if (isDoubleLayer || !spacerVal || spacerVal === '--' || spacerVal === '0' || spacerVal === '') {
-                    spacerCard.classList.add('d-none');
-                    spacerCard.style.setProperty('display', 'none', 'important');
-                } else {
-                    spacerCard.classList.remove('d-none');
-                    spacerCard.style.display = 'block';
-                }
+            const header = document.createElement('div');
+            header.style.cssText = 'padding:10px 15px;font-size:9px;font-weight:900;color:#0ea5e9;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:8px;opacity:0.7;display:flex;align-items:center;justify-content:space-between;';
+            header.innerHTML = `<span>PLANNING RESULTS (${items.length})</span> <i class="bi bi-funnel-fill"></i>`;
+            container.appendChild(header);
+
+            items.forEach((item, index) => {
+                const hasSps = item.hasSps === true;
+                const spsBadge = hasSps
+                    ? `<span style="font-size:8px;font-weight:900;color:#10b981;background:rgba(16,185,129,0.15);padding:1px 6px;border-radius:20px;border:1px solid rgba(16,185,129,0.4);white-space:nowrap;"><i class="bi bi-check-circle-fill me-1"></i>SPS</span>`
+                    : `<span style="font-size:8px;font-weight:900;color:#ef4444;background:rgba(239,68,68,0.12);padding:1px 6px;border-radius:20px;border:1px solid rgba(239,68,68,0.35);white-space:nowrap;"><i class="bi bi-x-circle-fill me-1"></i>NO SPS</span>`;
+
+                const div = document.createElement('div');
+                div.className = 'planning-result-item';
+                if (hasSps) div.style.borderLeft = '3px solid #10b981';
+                div.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;gap:8px;">
+                        <div class="planning-result-code">${item.itemCode}</div>
+                        <div style="display:flex;gap:4px;align-items:center;">
+                            ${item.machineName ? `<div class="machine-badge-mini">${item.machineName}</div>` : ''}
+                            ${spsBadge}
+                        </div>
+                    </div>
+                    <div class="planning-result-name">${item.itemName || 'NO DESCRIPTION'}</div>
+                `;
+                div.onclick = () => selectPlanningItem(item);
+                container.appendChild(div);
+            });
+
+            container.classList.remove('d-none');
+        }
+
+        function selectPlanningItem(item) {
+            userHasSelectedData = true;
+            const planningInput = document.getElementById('planningSearch');
+            if (planningInput) {
+                planningInput.value = `[${item.itemCode}] ${item.itemName}`;
+            }
+            document.getElementById('planningResults')?.classList.add('d-none');
+
+            // Update hidden item code
+            const itemCodeField = document.getElementById('ItemCode');
+            if (itemCodeField) {
+                itemCodeField.value = item.itemCode;
+            }
+
+            // Update hose type in form
+            const hoseInput = document.getElementById('HoseType');
+            if (hoseInput) hoseInput.value = item.itemName || item.itemCode; 
+            
+            // Fetch full SPS details
+            fetchSpsByItem(item.itemCode);
+        }
+
+        function openPlanningDropdown() {
+            const results = document.getElementById('planningResults');
+            if (results && planningItemsCache.length > 0) {
+                results.classList.remove('d-none');
+                renderPlanningResults(planningResultItems, true);
+            } else {
+                refreshPlanningItems();
             }
         }
 
@@ -1556,6 +1642,22 @@
             renderTabs();
             loadCurrentReadingToInputs();
             loadExistingMaterialLots();
+            
+            // Initialize Planning Items
+            refreshPlanningItems();
+            
+            // Update Planning items when date or shift changes
+            document.getElementById('ProductionDate')?.addEventListener('change', refreshPlanningItems);
+            document.getElementById('Shift')?.addEventListener('change', refreshPlanningItems);
+
+            // Close dropdowns on outside click
+            document.addEventListener('click', (e) => {
+                const planningContainer = document.querySelector('.planning-master-container');
+                if (planningContainer && !planningContainer.contains(e.target)) {
+                    document.getElementById('planningResults')?.classList.add('d-none');
+                }
+            });
+
             @if (Model?.StandardParameterSetting != null) {
                 <text>
                 applySpsToForm(@Html.Raw(Json.Serialize(new {
@@ -1592,14 +1694,11 @@
                     MeshScreen = Model.StandardParameterSetting.MeshScreen,
                     MeshScreen2 = Model.StandardParameterSetting.MeshScreen2,
                     MeshScreen3 = Model.StandardParameterSetting.MeshScreen3
-                    // Note: MarkingStandard is typically handled via TextMarkingMaterial if available, but StandardParameterSetting doesn't have it explicitly right now, so it defaults gracefully
                 })));
                 </text>
             }
             @if (Model?.StandardParameterSetting == null && !string.IsNullOrWhiteSpace(Model?.ItemCode)) {
                 <text>
-                // StandardParameterSetting not loaded, but ItemCode exists
-                // Auto-fetch SPS data by ItemCode to restore Manual Protocol display
                 console.log('🔄 Auto-loading SPS for ItemCode:', '@Model.ItemCode');
                 fetchSpsByItem('@Model.ItemCode');
                 </text>
