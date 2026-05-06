@@ -57,6 +57,7 @@
             color: #fff;
             text-align: center;
             border-right: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .logo-container {
@@ -265,6 +266,20 @@
             background: rgba(239, 68, 68, 0.1);
             color: #ef4444; padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.85rem;
             border-left: 4px solid #ef4444;
+            backdrop-filter: blur(5px);
+        }
+
+        /* --- ANIMATIONS --- */
+        @@keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        @@keyframes pulse-glow {
+            0% { box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 0px rgba(0, 210, 254, 0); }
+            50% { box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 30px rgba(0, 210, 254, 0.15); }
+            100% { box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 0px rgba(0, 210, 254, 0); }
         }
 
 
@@ -306,6 +321,7 @@
             width: 320px; height: 380px;
             bottom: -80px; right: 8%;
             transform: rotate(15deg);
+            animation: float 12s ease-in-out infinite;
         }
         
         .shard-2 {
@@ -313,6 +329,7 @@
             top: 12%; left: 8%;
             transform: rotate(-25deg);
             opacity: 0.9;
+            animation: float 18s ease-in-out infinite reverse;
         }
 
         .shard-3 {
@@ -321,6 +338,11 @@
             transform: rotate(45deg);
             opacity: 0.6;
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)) blur(2px);
+            animation: float 15s ease-in-out infinite 2s;
+        }
+
+        .login-card {
+            animation: pulse-glow 8s ease-in-out infinite;
         }
 
         .role-btn:hover {
@@ -333,56 +355,50 @@
             transform: scale(0.98);
         }
 
-        /* --- TABLET OPTIMIZATION (768px - 1200px) --- */
-        @@media screen and (min-width: 768px) and (max-width: 1200px) {
-            body {
-                padding: 20px 10px !important;
-            }
-            .login-card { 
-                width: 98% !important;
-                max-width: 98% !important;
-                margin: 0 auto !important;
-            }
-            .left-panel {
-                width: 42% !important;
-                padding: 30px 25px !important;
-            }
-            .right-panel {
-                padding: 30px 30px !important;
-                flex: 1 !important;
-            }
-            .left-panel h1 {
-                font-size: 1.4rem;
-            }
-            .main-heading {
-                font-size: 1.5rem;
-            }
+        /* --- TABLET & DESKTOP (Side-by-Side) --- */
+        @@media screen and (min-width: 992px) {
+            .login-card { width: 860px; }
         }
 
-        /* --- MOBILE OPTIMIZATION (below 768px) --- */
-        @@media screen and (max-width: 767px) {
-            body { display: flex !important; padding: 20px 0 !important; height: auto !important; overflow-y: auto !important; align-items: flex-start !important; justify-content: center !important; }
+        /* --- TABLET PORTRAIT (600px - 991px) --- */
+        @@media screen and (min-width: 600px) and (max-width: 991px) {
+            body { padding: 40px 20px !important; height: auto !important; overflow-y: auto !important; }
             .login-card { 
-                width: 99% !important; 
-                max-width: none !important; 
-                min-width: 0 !important; 
-                margin: 10px auto !important; 
-                border-radius: 20px !important; 
-                flex-direction: column !important; 
-                display: flex !important;
-                border: 1px solid rgba(255,255,255,0.08) !important;
-                box-shadow: 0 40px 100px rgba(0,0,0,0.8) !important;
+                width: 550px !important; 
+                flex-direction: column !important;
+                margin: 20px auto !important;
+            }
+            .left-panel {
+                width: 100% !important;
+                padding: 50px 40px !important;
+                border-right: none !important;
+                border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+            }
+            .right-panel {
+                width: 100% !important;
+                padding: 45px 50px !important;
+            }
+            .left-panel h1 { font-size: 2rem; }
+            .main-heading { font-size: 1.8rem; }
+        }
+
+        /* --- MOBILE (below 600px) --- */
+        @@media screen and (max-width: 599px) {
+            body { padding: 15px !important; height: auto !important; overflow-y: auto !important; align-items: flex-start !important; }
+            .login-card { 
+                width: 100% !important; 
+                max-width: 100% !important;
+                flex-direction: column !important;
+                border-radius: 20px !important;
             }
             .left-panel, .right-panel { 
                 width: 100% !important; 
-                min-width: 0 !important; 
-                max-width: 100% !important; 
-                flex: none !important;
-                padding: 40px 15px !important;
+                padding: 35px 20px !important;
             }
             .left-panel { border-bottom: 1px solid rgba(255,255,255,0.05) !important; border-right: none !important; }
-            .main-heading { font-size: 1.8rem; }
-            .logo-container img { height: 32px; }
+            .main-heading { font-size: 1.6rem; }
+            .logo-container img { height: 28px; }
+            .badge-pill { padding: 4px 10px; font-size: 0.65rem; }
         }
     </style>
 </head>
