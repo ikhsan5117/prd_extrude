@@ -11,8 +11,12 @@
     .sim-card       { border: 1px solid rgba(255,255,255,.1); border-radius: 10px;
                       background: var(--bs-body-bg); transition: box-shadow .2s; }
     .sim-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.25); }
-    .sim-card.running { border-color: rgba(25,135,84,.5); box-shadow: 0 0 0 2px rgba(25,135,84,.2); }
-    .sim-card.stopped { border-color: rgba(108,117,125,.3); }
+    .sim-card.running { 
+        border-color: #198754; 
+        box-shadow: 0 0 20px rgba(25,135,84,0.3);
+        background: linear-gradient(to bottom, rgba(25,135,84,0.05), transparent);
+    }
+    .sim-card.stopped { border-color: rgba(108,117,125,.3); opacity: 0.85; }
 
     /* ── Header strip ──────────────────────────────────────────────── */
     .sensor-header  { border-radius: 8px 8px 0 0; padding: 10px 14px;
@@ -73,6 +77,23 @@
     .badge-spike  { background: rgba(255,193,7,.15);  color:#ffc107; border:1px solid rgba(255,193,7,.3); }
     .badge-drift  { background: rgba(220,53,69,.15);  color:#f85149; border:1px solid rgba(220,53,69,.3); }
     .badge-step   { background: rgba(111,66,193,.15); color:#c084fc; border:1px solid rgba(111,66,193,.3); }
+
+    /* Fix Dropdown & Input Visibility */
+    .form-select, .form-control {
+        background-color: rgba(11, 26, 41, 0.8) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+        transition: all 0.2s;
+    }
+    .form-select:focus, .form-control:focus {
+        background-color: #122a3d !important;
+        border-color: #0dcaf0 !important;
+        box-shadow: 0 0 12px rgba(13, 202, 240, 0.2) !important;
+    }
+    .form-select option {
+        background-color: #051424;
+        color: #fff;
+    }
 </style>
 }
 
@@ -476,8 +497,16 @@ function updateCardState(sensorId, running) {
     header.classList.toggle('running', running);
     header.classList.toggle('stopped', !running);
     dot.className  = 'pulse-dot ' + (running ? 'pulse-green' : 'pulse-grey');
-    if (btnS)  btnS.disabled  = running;
-    if (btnSt) btnSt.disabled = !running;
+    
+    if (btnS) {
+        btnS.disabled  = running;
+        btnS.innerHTML = running ? '<span class="spinner-grow spinner-grow-sm me-1"></span>Running...' : '<i class="bi bi-play-fill"></i> Start';
+        btnS.classList.toggle('opacity-50', running);
+    }
+    if (btnSt) {
+        btnSt.disabled = !running;
+        btnSt.classList.toggle('opacity-50', !running);
+    }
 }
 
 function addChartPoint(sensorId, value) {
