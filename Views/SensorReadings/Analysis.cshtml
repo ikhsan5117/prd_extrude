@@ -34,6 +34,28 @@
     .sps-search { background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#fff; }
     .sps-search:focus { background:rgba(255,255,255,.07);border-color:#0dcaf0;color:#fff;box-shadow:none; }
     .sps-search::placeholder { color:rgba(255,255,255,.35); }
+
+    /* Fix Dropdown Visibility */
+    .form-select, .form-control {
+        background-color: rgba(11, 26, 41, 0.8) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+        transition: all 0.2s;
+    }
+    .form-select:focus, .form-control:focus {
+        background-color: #122a3d !important;
+        border-color: #0dcaf0 !important;
+        box-shadow: 0 0 12px rgba(13, 202, 240, 0.2) !important;
+    }
+    .form-select option {
+        background-color: #051424;
+        color: #fff;
+    }
+    /* Fix for date/time icons in dark mode */
+    ::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+    }
 </style>
 }
 
