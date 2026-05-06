@@ -2006,7 +2006,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderTimeline();
             loadDataToUI();
-            loadMaster(true); // Load standards only to avoid overwriting header info on load
+            loadMaster("@(Model?.HoseType ?? "")", true); // Load standards only to avoid overwriting header info on load
             refreshPlanningItems();
             initSmartNext();
             renderSummaryList(); // Initialize production data summary table
@@ -2365,13 +2365,20 @@
             }
 
             try {
-                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}`);
+                const machine = document.getElementById('h-line')?.innerText || '';
+                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}&machineCode=${encodeURIComponent(machine)}`);
                 const data = await res.json();
                 
                 if(!standardsOnly) Swal.close();
 
                 if(data.success) {
                     const m = data.data;
+                    
+                    // Update SpsId hidden field if available in response
+                    const spsIdField = document.getElementById('SpsId');
+                    if (spsIdField && data.id) {
+                        spsIdField.value = data.id;
+                    }
                     
                     // ONLY UPDATE HEADER IF NOT IN STANDARDS-ONLY MODE
                     if (!standardsOnly) {

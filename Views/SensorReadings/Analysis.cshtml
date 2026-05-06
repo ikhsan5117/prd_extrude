@@ -348,7 +348,7 @@ let exportRows   = [];
 
 // Mapping metricType -> field MasterlistSpsDoubleLayer (camelCase)
 const METRIC_MAP = {
-    outer_diameter:    { field:'toleranceOuter',    tol:'toleranceOuter',       label:'Outer Diameter',    unit:'mm'    },
+    outer_diameter:    { field:'odSensor',          altField:'controlValue',    tol:'toleranceOuter',       label:'Outer Diameter',    unit:'mm'    },
     inner_diameter:    { field:'innerTarget',       tol:'innerTol',             label:'Inner Diameter',    unit:'mm'    },
     hose_speed:        { field:'hoseSpeed',         tol:null,                   label:'Hose Speed',        unit:'m/min' },
     head_temp_inner:   { field:'headTemp1',         tol:null,                   label:'Head Temp Inner',   unit:'°C'    },
@@ -476,7 +476,7 @@ function updateMetricStdDisplay() {
         return null;
     };
 
-    const valStr = getVal(cfg.field) || '';
+    const valStr = getVal(cfg.field) || getVal(cfg.altField) || '';
     const tolStr = (cfg.tol) ? getVal(cfg.tol) : valStr;
 
     // Parsing Target & Toleransi
@@ -516,13 +516,13 @@ function updateMetricStdDisplay() {
 
 function buildAllParamPills(s) {
     const params = [
-        { l:'OD Target',       v:s.controlValue,    u:'mm',     m:'outer_diameter' },
+        { l:'OD Target',       v:s.odSensor || s.controlValue, u:'mm',     m:'outer_diameter' },
         { l:'Inner Die',       v:s.innerDie,         u:'mm',     m:'inner_diameter' },
-        { l:'Head Temp 1',     v:s.headTemp,         u:'C',      m:'head_temp_inner' },
+        { l:'Head Temp 1',     v:s.headTemp1,        u:'C',      m:'head_temp_inner' },
         { l:'Head Temp 2',     v:s.headTemp2,        u:'C',      m:'head_temp_outer' },
-        { l:'Screw Spd 1',     v:s.screwSpeed,       u:'rpm',    m:'screw_speed_inner' },
+        { l:'Screw Spd 1',     v:s.screwSpeed1,      u:'rpm',    m:'screw_speed_inner' },
         { l:'Screw Spd 2',     v:s.screwSpeed2,      u:'rpm',    m:'screw_speed_outer' },
-        { l:'Pressure 1',      v:s.pressure,         u:'MPa',    m:'pressure_inner' },
+        { l:'Pressure 1',      v:s.pressure1,        u:'MPa',    m:'pressure_inner' },
         { l:'Pressure 2',      v:s.pressure2,        u:'MPa',    m:'pressure_outer' },
         { l:'Spiral Pitch',    v:s.spiralPitch,      u:'mm',     m:'spiral_pitch' },
         { l:'Caterpillar Gap', v:s.caterpillarGap,   u:'mm',     m:'caterpillar_gap' },
@@ -863,20 +863,15 @@ function renderChart(data) {
 // Output: "07:42:49"
 function formatSensorTimeLabel(raw) {
     if (!raw) return '-';
+    
+    // Jika formatnya "YYYY-MM-DD HH:mm:ss", kita ambil bagian jamnya saja langsung
     const s = String(raw).trim();
-
-    // Cari pola jam:menit:detik di string
     const match = s.match(/(\d{1,2}):(\d{2}):(\d{2})/);
     if (match) {
-        const hh = match[1].padStart(2, '0');
-        const mm = match[2];
-        const ss = match[3];
-        return hh + ':' + mm + ':' + ss;
+        return match[1].padStart(2, '0') + ':' + match[2] + ':' + match[3];
     }
 
-    // Jika tidak ketemu pola, try parse sebagai Date
-    // (menangani case format tidak expected)
-    const d = new Date(s);
+    const d = new Date(raw);
     if (!isNaN(d.getTime())) {
         const hh = String(d.getHours()).padStart(2, '0');
         const mm = String(d.getMinutes()).padStart(2, '0');
@@ -884,8 +879,7 @@ function formatSensorTimeLabel(raw) {
         return hh + ':' + mm + ':' + ss;
     }
 
-    // Fallback final
-    return String(s).substring(0, 20);
+    return s.substring(11, 19) || s;
 }
 
 function renderTable(data) {
@@ -918,7 +912,7 @@ function renderTable(data) {
 
         return '<tr class="' + (isNg ? 'zone-ng' : '') + '">' +
             '<td class="text-muted">' + idx + '</td>' +
-            '<td>' + d.x + '</td>' +
+            '<td>' + formatSensorTimeLabel(d.x) + '</td>' +
             '<td class="text-end fw-semibold">' + v.toFixed(4) + (unit ? ' <small class="text-muted">' + unit + '</small>' : '') + '</td>' +
             '<td class="text-end text-warning">' + (tgt != null ? tgt.toFixed(3) : '-') + '</td>' +
             '<td class="text-end ' + devCls + '">' + devStr + '</td>' +

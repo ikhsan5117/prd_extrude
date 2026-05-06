@@ -94,7 +94,7 @@ namespace VelastoProductionSystem.Controllers
         //  GET /SensorReadings/Simulator
         // ═══════════════════════════════════════════════════════════════
 
-        public IActionResult Simulator()
+        public async Task<IActionResult> Simulator()
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
                 return RedirectToAction("Login", "Account");
@@ -102,6 +102,22 @@ namespace VelastoProductionSystem.Controllers
             var configuredKey = _configuration["SensorApi:ApiKey"] ?? "VS-SENSOR-KEY-2026";
             ViewBag.ApiKey    = configuredKey;
             ViewBag.IngestUrl = $"{Request.Scheme}://{Request.Host}/api/sensor-readings/ingest";
+
+            // Ambil semua SPS untuk ditampilkan di simulator
+            var spsList = await _context.MasterlistSpsDoubleLayers
+                .OrderBy(s => s.ItemList)
+                .Select(s => new {
+                    s.Id,
+                    s.DocumentNumber,
+                    s.No,
+                    s.ItemList,
+                    s.MachineCode,
+                    s.Customer
+                })
+                .ToListAsync();
+
+            var jsonOpts = new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };
+            ViewBag.SpsList = System.Text.Json.JsonSerializer.Serialize(spsList, jsonOpts);
 
             return View();
         }

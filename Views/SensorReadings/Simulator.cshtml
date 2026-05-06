@@ -94,6 +94,19 @@
         background-color: #051424;
         color: #fff;
     }
+
+    /* ── Compact Table with Borders ────────────────────────────── */
+    .table-compact-sim { font-size: 0.72rem; }
+    .table-compact-sim th, .table-compact-sim td { 
+        padding: 4px 8px !important; 
+        border: 1px solid rgba(255,255,255,0.08) !important;
+    }
+    .table-compact-sim thead th { 
+        background-color: rgba(255,255,255,0.05) !important;
+        color: #0dcaf0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 </style>
 }
 
@@ -194,23 +207,55 @@
         </button>
     </div>
 
-    <!-- ── Log Panel ─────────────────────────────────────────────── -->
-    <div class="sim-card mb-2">
-        <div class="d-flex align-items-center px-3 py-2 border-bottom border-white border-opacity-10">
-            <i class="bi bi-terminal text-secondary me-2"></i>
-            <span class="fw-semibold small">Activity Log</span>
-            <span class="badge bg-secondary ms-2" id="logCount">0</span>
-            <div class="ms-auto d-flex gap-2">
-                <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
-                    <input class="form-check-input" type="checkbox" id="chkAutoScroll" checked>
-                    <label class="form-check-label small" for="chkAutoScroll">Auto Scroll</label>
+    <!-- ── Bottom Panels: SPS & Log (Side-by-Side) ──────────────── -->
+    <div class="row g-3 mb-4">
+        <!-- KIRI: Pilih SPS -->
+        <div class="col-lg-6">
+            <div class="sim-card h-100">
+                <div class="d-flex align-items-center px-3 py-2 border-bottom border-white border-opacity-10">
+                    <i class="bi bi-file-earmark-text text-info me-2"></i>
+                    <span class="fw-semibold small">1. Pilih Dokumen SPS Standar</span>
+                    <div class="ms-auto">
+                        <input type="text" class="form-control form-control-sm" id="spsSearch" placeholder="Cari SPS..." style="width: 150px;">
+                    </div>
                 </div>
-                <button class="btn btn-sm btn-outline-secondary btn-sm py-0" onclick="clearLog()">
-                    <i class="bi bi-x-circle"></i> Clear
-                </button>
+                <div class="p-0" style="height: 350px; overflow-y: auto;">
+                    <table class="table table-dark table-hover table-sm table-bordered table-compact-sim mb-0">
+                        <thead class="sticky-top">
+                            <tr>
+                                <th style="width: 25%;">Item List</th>
+                                <th style="width: 15%;">Mesin</th>
+                                <th style="width: 60%;">No. Dokumen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spsTableBody">
+                            <!-- Diisi JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div id="logPanel"></div>
+
+        <!-- KANAN: Activity Log -->
+        <div class="col-lg-6">
+            <div class="sim-card h-100">
+                <div class="d-flex align-items-center px-3 py-2 border-bottom border-white border-opacity-10">
+                    <i class="bi bi-terminal text-secondary me-2"></i>
+                    <span class="fw-semibold small">2. Activity Log (Pantau Data)</span>
+                    <span class="badge bg-secondary ms-2" id="logCount">0</span>
+                    <div class="ms-auto d-flex gap-2">
+                        <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                            <input class="form-check-input" type="checkbox" id="chkAutoScroll" checked>
+                            <label class="form-check-label small d-none d-sm-block" for="chkAutoScroll">Auto</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary py-0" onclick="clearLog()">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                <div id="logPanel" style="height: 350px; overflow-y: auto;"></div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -314,7 +359,8 @@ let timers         = {};   // sensorId → setInterval handle
 let charts         = {};   // sensorId → Chart.js instance
 let gTotalSent     = 0;
 let gTotalErr      = 0;
-let sessionStart   = Date.now();
+let sessionStart   = parseInt(localStorage.getItem('sim_sessionStart')) || Date.now();
+if (!localStorage.getItem('sim_sessionStart')) localStorage.setItem('sim_sessionStart', sessionStart);
 let logLineCount   = 0;
 
 // Metadata per metricType
@@ -393,6 +439,10 @@ async function sendReading(sensorId) {
     const apiKey   = document.getElementById('cfgApiKey').value.trim();
     const endpoint = document.getElementById('cfgEndpoint').value.trim();
 
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(now - tzOffset)).toISOString().slice(0, -1);
+
     const payload = {
         deviceId:    sensor.deviceId,
         machineCode: sensor.machineCode,
@@ -400,7 +450,7 @@ async function sendReading(sensorId) {
         metricValue: rounded,
         unit:        meta.unit,
         quality:     sensor.quality,
-        timestamp:   new Date().toISOString()
+        timestamp:   localISOTime
     };
 
     try {
@@ -459,6 +509,7 @@ function startSensor(sensorId) {
     updateCardState(sensorId, true);
     logLine('info', `▶ Sensor ${sensor.deviceId} [${sensor.machineCode}] STARTED — interval ${sensor.interval}s, mode: ${sensor.mode}`);
     updateActiveBadge();
+    saveCurrentState(); // Auto save state
 }
 
 function stopSensor(sensorId) {
@@ -471,6 +522,7 @@ function stopSensor(sensorId) {
     updateCardState(sensorId, false);
     logLine('info', `■ Sensor ${sensor.deviceId} STOPPED  (${sensor.sentCount || 0} data terkirim)`);
     updateActiveBadge();
+    saveCurrentState(); // Auto save state
 }
 
 function startAll() { sensors.forEach(s => { if (!s.running) startSensor(s.id); }); }
@@ -781,6 +833,46 @@ function loadConfig() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+//  AUTO RESUME LOGIC
+// ═══════════════════════════════════════════════════════════════════════
+function saveCurrentState() {
+    const state = sensors.map(s => ({
+        deviceId: s.deviceId, machineCode: s.machineCode,
+        metricType: s.metricType, targetVal: s.targetVal,
+        noise: s.noise, interval: s.interval,
+        mode: s.mode, quality: s.quality,
+        running: s.running
+    }));
+    localStorage.setItem('sim_lastState', JSON.stringify(state));
+}
+
+function autoLoadState() {
+    const raw = localStorage.getItem('sim_lastState');
+    if (!raw) return;
+    try {
+        const cfgs = JSON.parse(raw);
+        if (cfgs.length === 0) return;
+        
+        sensors = []; 
+        document.getElementById('sensorGrid').innerHTML = '';
+        cfgs.forEach(cfg => {
+            addSensorCard(cfg);
+            const sensor = sensors[sensors.length - 1];
+            if (cfg.running) {
+                // Delay sedikit agar UI siap
+                setTimeout(() => startSensor(sensor.id), 100);
+            }
+        });
+        logLine('info', `🔄 Sesi sebelumnya dipulihkan: ${cfgs.length} sensor`);
+    } catch (e) { console.error('Gagal restore state:', e); }
+}
+
+// Jalankan saat page load
+window.addEventListener('DOMContentLoaded', () => {
+    autoLoadState();
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 //  LOG PANEL
 // ═══════════════════════════════════════════════════════════════════════
 function logLine(type, msg) {
@@ -830,9 +922,63 @@ function toggleKey() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+//  SPS LIST & SEARCH
+// ═══════════════════════════════════════════════════════════════════════
+let allSps = @Html.Raw(ViewBag.SpsList ?? "[]");
+let selectedSps = null;
+
+function renderSpsTable(filter = "") {
+    const tbody = document.getElementById('spsTableBody');
+    tbody.innerHTML = "";
+    
+    const f = filter.toLowerCase();
+    const filtered = allSps.filter(s => 
+        s.itemList.toLowerCase().includes(f) || 
+        (s.machineCode || "").toLowerCase().includes(f) ||
+        s.documentNumber.toLowerCase().includes(f)
+    ).slice(0, 50);
+
+    filtered.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        if (selectedSps && selectedSps.id === s.id) tr.classList.add('table-info', 'text-dark');
+        
+        tr.innerHTML = `
+            <td>${s.itemList}</td>
+            <td>${s.machineCode || '-'}</td>
+            <td>${s.documentNumber}</td>
+        `;
+        tr.onclick = () => {
+            selectedSps = s;
+            // Update sensor machine code to match SPS machine code
+            sensors.forEach(sensor => {
+                if (!sensor.running && s.machineCode) {
+                    sensor.machineCode = s.machineCode;
+                    const wrap = document.getElementById(`wrap-${sensor.id}`);
+                    if (wrap) {
+                        const pos = sensors.indexOf(sensor);
+                        const cfg = { ...sensor };
+                        removeSensor(sensor.id);
+                        addSensorCard(cfg);
+                    }
+                }
+            });
+            renderSpsTable(filter);
+            logLine('info', `✅ SPS Terpilih: ${s.documentNumber} (${s.itemList}) - Mesin: ${s.machineCode || 'N/A'}`);
+        };
+        tbody.appendChild(tr);
+    });
+}
+
+document.getElementById('spsSearch').addEventListener('input', (e) => {
+    renderSpsTable(e.target.value);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 //  INIT — load 2 sensor default supaya langsung ada isi
 // ═══════════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+    renderSpsTable();
     // Coba load dari localStorage dulu
     const saved = localStorage.getItem('sensorSimConfig');
     if (saved) {
