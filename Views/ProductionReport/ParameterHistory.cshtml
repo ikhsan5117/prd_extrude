@@ -2,8 +2,18 @@
 @{
     ViewData["Title"] = "Parameter History";
     var total = Model.Count();
-    var activeCount = Model.Count(x => x.Status != "COMPLETED");
-    var doneCount = Model.Count(x => x.Status == "COMPLETED");
+    var operatorCount = Model
+        .Select(x => x.CreatedBy)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
+    var machineCount = Model
+        .Select(x => x.MachineName)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
+    var startDate = (ViewBag.StartDate as string) ?? "";
+    var endDate = (ViewBag.EndDate as string) ?? "";
 }
 
 <div class="hud-dashboard-container" style="min-height: 100vh; background: #020617; color: #fff; padding: 1.5rem; font-family: 'Inter', sans-serif;">
@@ -11,9 +21,9 @@
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% -20%, rgba(14, 165, 233, 0.15), transparent 70%); pointer-events: none; z-index: 0;"></div>
 
     <!-- ══ HEADER HUD ══ -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-3 rounded-4 border border-white border-opacity-5" style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); position: relative; z-index: 1;">
+    <div class="ph-top-shell d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-3 rounded-4" style="position: relative; z-index: 1;">
         <div class="d-flex align-items-center gap-3">
-            <div class="hud-icon-box" style="width: 64px; height: 64px; background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #0ea5e9; font-size: 1.8rem;">
+            <div class="hud-icon-box ph-hero-icon" style="width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; color: #0ea5e9; font-size: 1.8rem;">
                 <i class="bi bi-clock-history"></i>
             </div>
             <div>
@@ -27,20 +37,52 @@
         </div>
         
         <div class="d-flex gap-2">
-            <button onclick="exportTable()" class="btn btn-hud-outline px-3 d-flex align-items-center gap-2">
-                <i class="bi bi-download"></i> EXPORT
+            <button type="button" onclick="openDatePopup()" class="btn btn-hud-outline px-3 d-flex align-items-center gap-2">
+                <i class="bi bi-calendar-range"></i> FILTER TANGGAL
             </button>
+            <a asp-action="ExportParameterHistoryExcel" asp-route-startDate="@startDate" asp-route-endDate="@endDate" class="btn btn-hud-outline px-3 d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-excel"></i> EXPORT EXCEL
+            </a>
             <a asp-action="Create" class="btn btn-hud-primary px-4 d-flex align-items-center gap-2">
                 <i class="bi bi-plus-lg fs-5"></i> NEW RECORD
             </a>
         </div>
     </div>
 
+    <div id="datePopupOverlay" class="ph-date-overlay" onclick="closeDatePopup()"></div>
+    <div id="datePopup" class="ph-date-popup">
+        <div class="ph-date-title">Tanggal</div>
+        <div class="ph-date-subtitle">Preset Cepat:</div>
+        <div class="ph-preset-grid">
+            <button type="button" onclick="setDatePreset('today')" class="ph-preset-btn">Hari Ini</button>
+            <button type="button" onclick="setDatePreset('week')" class="ph-preset-btn">Minggu Ini</button>
+            <button type="button" onclick="setDatePreset('month')" class="ph-preset-btn">Bulan Ini</button>
+            <button type="button" onclick="setDatePreset('year')" class="ph-preset-btn">Tahun Ini</button>
+        </div>
+
+        <div class="ph-date-subtitle mt-3">Rentang Tanggal:</div>
+        <div class="ph-date-inputs">
+            <div>
+                <label class="ph-date-label">Dari:</label>
+                <input id="startDateInput" type="date" value="@startDate" class="ph-date-input" />
+            </div>
+            <div>
+                <label class="ph-date-label">Sampai:</label>
+                <input id="endDateInput" type="date" value="@endDate" class="ph-date-input" />
+            </div>
+        </div>
+
+        <div class="ph-date-actions mt-4">
+            <button type="button" class="ph-btn-clear" onclick="clearDateFilter()">Clear</button>
+            <button type="button" class="ph-btn-apply" onclick="applyDateFilter()">Apply</button>
+        </div>
+    </div>
+
     <!-- ══ STATS HUD ══ -->
-    <div class="row g-3 mb-4" style="position: relative; z-index: 1;">
+    <div class="row g-3 mb-4 ph-stats-row" style="position: relative; z-index: 30;">
         <div class="col-md-3">
-            <div class="hud-card p-3 d-flex align-items-center gap-3">
-                <div class="stat-icon-box bg-info bg-opacity-10 text-info rounded-3 p-2 px-3">
+            <div class="hud-card p-3 d-flex align-items-center gap-3 ph-stat-card">
+                <div class="stat-icon-box bg-info bg-opacity-10 text-info rounded-3 p-2 px-3 ph-stat-icon">
                     <i class="bi bi-layers-half fs-4"></i>
                 </div>
                 <div>
@@ -50,36 +92,49 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="hud-card p-3 d-flex align-items-center gap-3">
-                <div class="stat-icon-box bg-warning bg-opacity-10 text-warning rounded-3 p-2 px-3">
-                    <i class="bi bi-activity fs-4"></i>
+            <div class="hud-card p-3 d-flex align-items-center gap-3 ph-stat-card">
+                <div class="stat-icon-box bg-warning bg-opacity-10 text-warning rounded-3 p-2 px-3 ph-stat-icon">
+                    <i class="bi bi-people fs-4"></i>
                 </div>
                 <div>
-                    <div class="h3 fw-900 mb-0">@activeCount</div>
-                    <div class="super-small text-white-50 fw-bold">ACTIVE SESSIONS</div>
+                    <div class="h3 fw-900 mb-0">@operatorCount</div>
+                    <div class="super-small text-white-50 fw-bold">UNIQUE OPERATOR</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="hud-card p-3 d-flex align-items-center gap-3">
-                <div class="stat-icon-box bg-success bg-opacity-10 text-success rounded-3 p-2 px-3">
-                    <i class="bi bi-check-all fs-4"></i>
+            <div class="hud-card p-3 d-flex align-items-center gap-3 ph-stat-card">
+                <div class="stat-icon-box bg-success bg-opacity-10 text-success rounded-3 p-2 px-3 ph-stat-icon">
+                    <i class="bi bi-cpu fs-4"></i>
                 </div>
                 <div>
-                    <div class="h3 fw-900 mb-0">@doneCount</div>
-                    <div class="super-small text-white-50 fw-bold">COMPLETED</div>
+                    <div class="h3 fw-900 mb-0">@machineCount</div>
+                    <div class="super-small text-white-50 fw-bold">UNIQUE MACHINE</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="hud-card p-2 px-3 d-flex align-items-center" style="min-height: 100%;">
+            <div class="hud-card p-2 px-3 d-flex align-items-center ph-search-card" style="min-height: 100%;">
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <i class="bi bi-search text-info small"></i>
                         <span class="super-small text-white-50 fw-bold">SEARCH ENGINE</span>
                     </div>
-                    <input id="phSearch" type="text" class="bg-transparent border-0 text-white w-100 fw-bold" 
-                           placeholder="Filter items..." oninput="filterRows(this.value)" style="outline: none; font-size: 0.95rem;">
+                    <div class="ph-search-shell">
+                        <div class="ph-search-tools">
+                            <select id="phSearchType" class="ph-search-mode" onchange="updateSearchMode()">
+                                <option value="" selected>Search</option>
+                                <option value="item">Items</option>
+                                <option value="doc">Doc Number</option>
+                                <option value="operator">Operator</option>
+                            </select>
+                            <div class="ph-search-input-wrap">
+                                <input id="phSearch" type="text" class="bg-transparent border-0 text-white w-100 fw-bold ph-search-input"
+                                       placeholder="Filter items..." oninput="filterRows(this.value)" onfocus="renderAutocomplete(this.value)" style="outline: none; font-size: 0.95rem;">
+                                <div id="phAutocomplete" class="ph-autocomplete-list"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,7 +165,11 @@
                         var itemCode = item.ItemCode ?? item.StandardParameterSetting?.ItemList ?? "N/A";
                         var searchText = ((item.DocumentNumber ?? "") + " " + itemCode + " " + (item.HoseType ?? "") + " " + (item.Shift ?? "") + " " + (item.MachineName ?? "") + " " + (item.CreatedBy ?? "")).ToLower();
                         
-                        <tr class="align-middle ph-row" data-search="@searchText">
+                        <tr class="align-middle ph-row"
+                            data-search="@searchText"
+                            data-item="@itemCode"
+                            data-doc="@(item.DocumentNumber ?? "")"
+                            data-operator="@(item.CreatedBy ?? "SYSTEM")">
                             <td class="ps-4 fw-bold text-nowrap">@item.ProductionDate.ToString("dd MMM yyyy")</td>
                             <td><code class="text-primary-50">@item.DocumentNumber</code></td>
                             <td><span class="badge shift-badge @(item.Shift?.ToUpper().Contains("I") == true ? "bg-info" : "bg-warning")">@item.Shift</span></td>
@@ -311,6 +370,151 @@
     .btn-action-glass.btn-red { color: #ef4444; background: rgba(220, 38, 38, 0.1); border-color: rgba(239,68,68,0.3); }
     .btn-action-glass:hover { transform: scale(1.1); color: white; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
 
+    .ph-top-shell {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .ph-hero-icon {
+        background: linear-gradient(145deg, rgba(14, 165, 233, 0.18), rgba(37, 99, 235, 0.12));
+        border: 1px solid rgba(14, 165, 233, 0.42);
+        border-radius: 16px;
+        box-shadow: 0 0 24px rgba(14, 165, 233, 0.2), inset 0 0 12px rgba(59, 130, 246, 0.12);
+    }
+
+    .ph-stats-row .ph-stat-card,
+    .ph-search-card {
+        background: linear-gradient(160deg, rgba(14, 24, 45, 0.7), rgba(8, 16, 32, 0.72));
+        border: 1px solid rgba(59, 130, 246, 0.18);
+        border-radius: 14px;
+        box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.07);
+    }
+
+    .ph-search-card {
+        overflow: visible;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .ph-search-shell {
+        position: relative;
+        padding-bottom: 4px;
+    }
+
+    .ph-search-shell::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.45), rgba(59, 130, 246, 0.08), rgba(56, 189, 248, 0.45));
+        transition: all 0.25s ease;
+    }
+
+    .ph-search-shell:focus-within::after {
+        height: 2px;
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.92), rgba(59, 130, 246, 0.55), rgba(56, 189, 248, 0.92));
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.42);
+    }
+
+    .ph-stat-icon {
+        border: 1px solid rgba(59, 130, 246, 0.16);
+        box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.12);
+    }
+
+    .ph-search-card input {
+        letter-spacing: 0.2px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .ph-search-input {
+        font-size: 0.92rem;
+    }
+
+    .ph-search-tools {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .ph-search-mode {
+        background: rgba(8, 20, 44, 0.32);
+        border: 1px solid rgba(14, 165, 233, 0.34);
+        color: #7dd3fc;
+        border-radius: 8px;
+        padding: 4px 22px 4px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        width: 100%;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, #38bdf8 50%), linear-gradient(135deg, #38bdf8 50%, transparent 50%);
+        background-position: calc(100% - 12px) calc(50% - 2px), calc(100% - 8px) calc(50% - 2px);
+        background-size: 4px 4px, 4px 4px;
+        background-repeat: no-repeat;
+        transition: border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .ph-search-mode:hover,
+    .ph-search-mode:focus {
+        border-color: rgba(56, 189, 248, 0.82);
+        color: #e0f2fe;
+    }
+
+    .ph-search-mode option {
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+
+    .ph-search-input-wrap {
+        position: relative;
+        z-index: 80;
+    }
+
+    .ph-autocomplete-list {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        background: #0b1222;
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        border-radius: 8px;
+        box-shadow: 0 14px 28px rgba(2, 6, 23, 0.45);
+        z-index: 120;
+        display: none;
+    }
+
+    .ph-autocomplete-item {
+        padding: 7px 10px;
+        color: #cbd5e1;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        cursor: pointer;
+    }
+
+    .ph-autocomplete-item:last-child {
+        border-bottom: none;
+    }
+
+    .ph-autocomplete-item:hover {
+        background: rgba(59, 130, 246, 0.18);
+        color: #e2e8f0;
+    }
+
+    .ph-search-card input::placeholder {
+        color: rgba(148, 163, 184, 0.72);
+    }
+
     .btn-hud-primary {
         background: linear-gradient(135deg, #0ea5e9, #2563eb);
         border: none;
@@ -355,69 +559,310 @@
     @@keyframes i-pulse { 0% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,0.7); } 50% { opacity: 0.5; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 10px rgba(59,130,246,0); } }
 
     .ph-hidden { display: none !important; }
+
+    .ph-date-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        backdrop-filter: blur(2px);
+        z-index: 2000;
+        display: none;
+    }
+
+    .ph-date-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.96);
+        width: min(420px, 92vw);
+        background: linear-gradient(165deg, #f4f6f9, #eceff4);
+        border: 1px solid #d7dde7;
+        border-radius: 14px;
+        box-shadow: 0 24px 50px rgba(15, 23, 42, 0.42);
+        z-index: 2001;
+        display: none;
+        padding: 16px;
+    }
+
+    .ph-date-popup.show,
+    .ph-date-overlay.show {
+        display: block;
+    }
+
+    .ph-date-title {
+        color: #1e293b;
+        font-weight: 800;
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+
+    .ph-date-subtitle {
+        color: #334155;
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .ph-preset-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .ph-preset-btn {
+        border: 1px solid #c8d1e0;
+        background: #f8fafc;
+        color: #64748b;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 8px 6px;
+    }
+
+    .ph-preset-btn:hover {
+        border-color: #818cf8;
+        color: #4338ca;
+        background: #eef2ff;
+    }
+
+    .ph-date-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .ph-date-label {
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        display: inline-block;
+    }
+
+    .ph-date-input {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: #0f172a;
+        background: #ffffff;
+        font-size: 0.8rem;
+    }
+
+    .ph-date-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .ph-btn-clear,
+    .ph-btn-apply {
+        border-radius: 8px;
+        padding: 8px 20px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        border: 1px solid;
+    }
+
+    .ph-btn-clear {
+        color: #64748b;
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+
+    .ph-btn-apply {
+        color: #fff;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        border-color: #4338ca;
+        box-shadow: 0 8px 18px rgba(67, 56, 202, 0.35);
+    }
+
+    @@media (max-width: 560px) {
+        .ph-preset-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .ph-date-inputs {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
     <script>
-        function filterRows(q) {
-            const t = q.toLowerCase();
-            const items = document.querySelectorAll('.ph-row');
-            items.forEach(r => {
-                const match = r.dataset.search.includes(t);
-                r.classList.toggle('ph-hidden', !match);
-            });
+        function getSearchField() {
+            const mode = document.getElementById('phSearchType')?.value || '';
+            if (mode === 'doc') return 'doc';
+            if (mode === 'operator') return 'operator';
+            if (mode === 'item') return 'item';
+            return '';
         }
 
-        function exportTable() {
-            Swal.fire({
-                title: 'PREPARING EXPORT',
-                text: 'Generating CSV archive...',
-                icon: 'info',
-                background: '#0f172a', color: '#fff',
-                timer: 1500, showConfirmButton: false, toast: true, position: 'top-end'
-            });
-            
-            // Collect visible items
-            const rows = document.querySelectorAll('.ph-row:not(.ph-hidden)');
-            let csv = "Date,DocNumber,ItemCode,HoseType,Shift,Status,Operator\n";
-            
-            rows.forEach(r => {
-                const date = r.querySelector('.badge.bg-info').innerText.trim();
-                const doc = r.querySelector('.text-white-50.font-monospace').innerText.trim();
-                const item = r.querySelector('h4').innerText.trim();
-                const hose = r.querySelector('.text-white-50.small').innerText.trim();
-                const shift = r.querySelector('.badge.bg-primary, .badge.bg-warning').innerText.trim();
-                const status = r.querySelector('.tracking-widest').innerText.trim();
-                const op = r.querySelector('.super-small .text-white').innerText.trim();
-                
-                csv += `"${date}","${doc}","${item}","${hose}","${shift}","${status}","${op}"\n`;
-            });
+        function updateSearchMode() {
+            const mode = getSearchField();
+            const input = document.getElementById('phSearch');
+            if (!input) return;
 
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-            a.download = `ProductionHistory_${new Date().toISOString().slice(0,10)}.csv`;
-            a.click();
+            if (mode === 'doc') input.placeholder = 'Filter doc number...';
+            else if (mode === 'operator') input.placeholder = 'Filter operator...';
+            else if (mode === 'item') input.placeholder = 'Filter items...';
+            else input.placeholder = 'Pilih Search Type...';
+
+            filterRows(input.value || '');
         }
 
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                Swal.fire({
-                    title: '<span style="color:#f87171">DELETE RECORD?</span>',
-                    html: `<span style="color:rgba(255,255,255,0.6)">Permanently remove:<br><strong style="color:#38bdf8">${this.dataset.doc}</strong></span>`,
-                    icon: 'warning', showCancelButton: true,
-                    confirmButtonColor: '#ef4444', cancelButtonColor: '#334155',
-                    confirmButtonText: 'DELETE', cancelButtonText: 'CANCEL',
-                    background: '#0f172a', color: '#fff'
-                }).then(r => {
-                    if (r.isConfirmed) {
-                        document.getElementById('deleteId').value = this.dataset.id;
-                        document.getElementById('deleteForm').submit();
-                    }
+        function hideAutocomplete() {
+            const box = document.getElementById('phAutocomplete');
+            if (box) box.style.display = 'none';
+        }
+
+        function renderAutocomplete(q) {
+            const box = document.getElementById('phAutocomplete');
+            const input = document.getElementById('phSearch');
+            if (!box || !input) return;
+
+            const query = (q || '').trim().toLowerCase();
+            const field = getSearchField();
+            const rows = Array.from(document.querySelectorAll('.ph-row'));
+
+            if (!field) {
+                box.style.display = 'none';
+                box.innerHTML = '';
+                return;
+            }
+
+            const values = [...new Set(rows
+                .map(r => (r.dataset[field] || '').trim())
+                .filter(v => v.length > 0)
+            )]
+            .filter(v => v.toLowerCase().includes(query))
+            .slice(0, 8);
+
+            if (values.length === 0) {
+                box.style.display = 'none';
+                box.innerHTML = '';
+                return;
+            }
+
+            box.innerHTML = values.map(v => `<div class="ph-autocomplete-item" data-value="${v.replace(/"/g, '&quot;')}">${v}</div>`).join('');
+            box.style.display = 'block';
+
+            box.querySelectorAll('.ph-autocomplete-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    input.value = el.dataset.value || '';
+                    filterRows(input.value);
+                    hideAutocomplete();
                 });
             });
+        }
+
+        function filterRows(q) {
+            const t = (q || '').toLowerCase();
+            const field = getSearchField();
+            const items = document.querySelectorAll('.ph-row');
+            items.forEach(r => {
+                const value = field
+                    ? (r.dataset[field] || '').toLowerCase()
+                    : (r.dataset.search || '').toLowerCase();
+                const match = value.includes(t);
+                r.classList.toggle('ph-hidden', !match);
+            });
+
+            renderAutocomplete(q);
+        }
+
+        function openDatePopup() {
+            document.getElementById('datePopup').classList.add('show');
+            document.getElementById('datePopupOverlay').classList.add('show');
+        }
+
+        function closeDatePopup() {
+            document.getElementById('datePopup').classList.remove('show');
+            document.getElementById('datePopupOverlay').classList.remove('show');
+        }
+
+        function formatDateValue(d) {
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${d.getFullYear()}-${m}-${day}`;
+        }
+
+        function setDatePreset(type) {
+            const now = new Date();
+            let from = new Date(now);
+            let to = new Date(now);
+
+            if (type === 'week') {
+                const day = now.getDay();
+                const diffToMonday = day === 0 ? 6 : day - 1;
+                from.setDate(now.getDate() - diffToMonday);
+            } else if (type === 'month') {
+                from = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else if (type === 'year') {
+                from = new Date(now.getFullYear(), 0, 1);
+            }
+
+            document.getElementById('startDateInput').value = formatDateValue(from);
+            document.getElementById('endDateInput').value = formatDateValue(to);
+        }
+
+        function applyDateFilter() {
+            const start = document.getElementById('startDateInput').value;
+            const end = document.getElementById('endDateInput').value;
+            const params = new URLSearchParams(window.location.search);
+
+            if (start) params.set('startDate', start);
+            else params.delete('startDate');
+
+            if (end) params.set('endDate', end);
+            else params.delete('endDate');
+
+            window.location.href = `/ProductionReport/ParameterHistory?${params.toString()}`;
+        }
+
+        function clearDateFilter() {
+            window.location.href = '/ProductionReport/ParameterHistory';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDatePopup();
         });
+
+        document.addEventListener('click', (e) => {
+            const wrap = document.querySelector('.ph-search-input-wrap');
+            if (!wrap || !wrap.contains(e.target)) hideAutocomplete();
+        });
+
+        updateSearchMode();
+
+        function bindEvents() {
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                // Remove existing listener to avoid duplicates if called multiple times
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener('click', function () {
+                    Swal.fire({
+                        title: '<span style="color:#f87171">DELETE RECORD?</span>',
+                        html: `<span style="color:rgba(255,255,255,0.6)">Permanently remove:<br><strong style="color:#38bdf8">${this.dataset.doc}</strong></span>`,
+                        icon: 'warning', showCancelButton: true,
+                        confirmButtonColor: '#ef4444', cancelButtonColor: '#334155',
+                        confirmButtonText: 'DELETE', cancelButtonText: 'CANCEL',
+                        background: '#0f172a', color: '#fff'
+                    }).then(r => {
+                        if (r.isConfirmed) {
+                            document.getElementById('deleteId').value = this.dataset.id;
+                            document.getElementById('deleteForm').submit();
+                        }
+                    });
+                });
+            });
+        }
+
+        // Initial binding
+        bindEvents();
 
         // SignalR Live Sync
         const connection = new signalR.HubConnectionBuilder()
@@ -437,13 +882,44 @@
         connection.on("ReceiveUpdate", function () {
             Swal.fire({
                 title: 'LIVE SYNC',
-                text: 'New data detected. Refreshing...',
+                text: 'New production data detected!',
                 icon: 'info',
                 background: '#0f172a', color: '#fff',
-                timer: 2000, showConfirmButton: false, toast: true, position: 'top-end'
+                timer: 3000, showConfirmButton: false, toast: true, position: 'top-end'
             });
-            setTimeout(() => window.location.reload(), 1500);
+            
+            refreshTable();
         });
+
+        async function refreshTable() {
+            const url = window.location.href;
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update table body
+                const newTbody = doc.querySelector('.sapphire-table tbody');
+                const oldTbody = document.querySelector('.sapphire-table tbody');
+                if (newTbody && oldTbody) {
+                    oldTbody.innerHTML = newTbody.innerHTML;
+                    bindEvents(); // Re-bind listeners for new rows
+                }
+                
+                // Update stats cards (Total, Operators, Machines)
+                const newStats = doc.querySelectorAll('.ph-stat-card .h3');
+                const oldStats = document.querySelectorAll('.ph-stat-card .h3');
+                newStats.forEach((n, i) => {
+                    if (oldStats[i]) oldStats[i].innerText = n.innerText;
+                });
+
+                console.log("Table updated via partial sync.");
+            } catch (err) {
+                console.warn("Partial refresh failed, falling back to full reload:", err);
+                window.location.reload();
+            }
+        }
 
         startSignalR();
     </script>

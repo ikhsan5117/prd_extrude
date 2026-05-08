@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Velasto Production System</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -87,9 +88,9 @@
             @if (Context.Session.GetString("IsAdmin") == "true")
             {
                 <!-- ADMIN - Full Access -->
-                <a asp-controller="Home" asp-action="Index" class="nav-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M120-120v-80l80-80v160h-80Zm160 0v-240l80-80v320h-80Zm160 0v-320l80 81v239h-80Zm160 0v-239l80-80v319h-80Zm160 0v-400l80-80v480h-80ZM120-327v-113l280-280 160 160 280-280v113L560-447 400-607 120-327Z"/></svg>
-                    <span>Dashboard</span>
+                <a asp-controller="ProductionReport" asp-action="ChartAnalysis" class="nav-item">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Chart Analysis</span>
                 </a>
 
                 <div class="nav-group">
@@ -130,10 +131,6 @@
                     <a asp-controller="Dimensi" asp-action="Index" class="nav-item sub">
                         <i class="bi bi-rulers"></i>
                         <span>Input Dimensi</span>
-                    </a>
-                    <a asp-controller="ProductionReport" asp-action="ChartAnalysis" class="nav-item sub">
-                        <i class="bi bi-graph-up"></i>
-                        <span>Chart Analysis</span>
                     </a>
                 </div>
 

@@ -211,9 +211,148 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction("Login", "Account");
             }
             var reports = await _context.DimensionReports
+                .Include(r => r.StandardParameterSetting)
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
             return View(reports);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportHistoryExcel(string? searchType = null, string? query = null, string? startDate = null, string? endDate = null)
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var q = _context.DimensionReports
+                .Include(r => r.StandardParameterSetting)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var sDate))
+            {
+                q = q.Where(r => r.CreatedDate >= sDate.Date);
+            }
+
+            if (!string.IsNullOrWhiteSpace(endDate) && DateTime.TryParse(endDate, out var eDate))
+            {
+                q = q.Where(r => r.CreatedDate <= eDate.Date.AddDays(1).AddTicks(-1));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var s = query.Trim().ToUpper();
+                var mode = (searchType ?? "").Trim().ToLower();
+
+                if (mode == "planning")
+                {
+                    q = q.Where(r => r.ItemCode != null && r.ItemCode.ToUpper().Contains(s));
+                }
+                else if (mode == "operator")
+                {
+                    q = q.Where(r => r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(s));
+                }
+                else if (mode == "docvin")
+                {
+                    q = q.Where(r =>
+                        (r.DocumentNumber != null && r.DocumentNumber.ToUpper().Contains(s)) ||
+                        (r.VinCode != null && r.VinCode.ToUpper().Contains(s))
+                    );
+                }
+                else
+                {
+                    q = q.Where(r =>
+                        (r.DocumentNumber != null && r.DocumentNumber.ToUpper().Contains(s)) ||
+                        (r.VinCode != null && r.VinCode.ToUpper().Contains(s)) ||
+                        (r.ItemCode != null && r.ItemCode.ToUpper().Contains(s)) ||
+                        (r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(s)) ||
+                        (r.HoseType != null && r.HoseType.ToUpper().Contains(s))
+                    );
+                }
+            }
+
+            var rows = await q
+                .OrderByDescending(r => r.CreatedDate)
+                .ToListAsync();
+
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("Dimension History");
+
+            ws.Cells[1, 1].Value = "DIMENSION HISTORY EXPORT";
+            ws.Cells[1, 1, 1, 11].Merge = true;
+            ws.Cells[1, 1].Style.Font.Bold = true;
+            ws.Cells[1, 1].Style.Font.Size = 14;
+            ws.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            ws.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(15, 23, 42));
+            ws.Cells[1, 1].Style.Font.Color.SetColor(System.Drawing.Color.White);
+
+            ws.Cells[2, 1].Value = $"Exported at: {DateTime.Now:dd MMM yyyy HH:mm} | Total rows: {rows.Count}";
+            ws.Cells[2, 1, 2, 11].Merge = true;
+            ws.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[2, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
+
+            var headers = new[]
+            {
+                "Document", "Date", "Planning", "Input By", "Machine", "Product Info", "Passed", "Failed", "VIN", "Shift", "Customer"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cells[4, i + 1];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(30, 64, 175));
+                cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.FromArgb(59, 130, 246));
+                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            }
+
+            int row = 5;
+            foreach (var item in rows)
+            {
+                var spsDoc = item.StandardParameterSetting?.DocumentNumber;
+                var displayDoc = !string.IsNullOrEmpty(spsDoc) ? spsDoc : item.DocumentNumber;
+
+                ws.Cells[row, 1].Value = (displayDoc ?? "").Replace("#", "");
+                ws.Cells[row, 2].Value = item.CreatedDate.ToString("dd MMM yyyy HH:mm");
+                ws.Cells[row, 3].Value = item.ItemCode ?? "-";
+                ws.Cells[row, 4].Value = item.CreatedBy ?? "SYSTEM";
+                ws.Cells[row, 5].Value = item.MachineName ?? "-";
+                ws.Cells[row, 6].Value = item.HoseType ?? "UNDEFINED_PART";
+                ws.Cells[row, 7].Value = item.QtyOk;
+                ws.Cells[row, 8].Value = item.NgDimension;
+                ws.Cells[row, 9].Value = item.VinCode ?? "-";
+                ws.Cells[row, 10].Value = item.Shift ?? "-";
+                ws.Cells[row, 11].Value = item.CustomerName ?? "UNKNOWN_CLIENT";
+
+                for (int col = 1; col <= 11; col++)
+                {
+                    ws.Cells[row, col].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Hair, System.Drawing.Color.FromArgb(148, 163, 184));
+                }
+
+                row++;
+            }
+
+            ws.Column(1).Width = 24;
+            ws.Column(2).Width = 20;
+            ws.Column(3).Width = 14;
+            ws.Column(4).Width = 16;
+            ws.Column(5).Width = 14;
+            ws.Column(6).Width = 28;
+            ws.Column(7).Width = 12;
+            ws.Column(8).Width = 12;
+            ws.Column(9).Width = 16;
+            ws.Column(10).Width = 10;
+            ws.Column(11).Width = 20;
+
+            var fileName = $"DimensionHistory_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+            return File(
+                package.GetAsByteArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
         }
 
         public async Task<IActionResult> Details(int? id)

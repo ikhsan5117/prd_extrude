@@ -27,7 +27,115 @@
     }
     .metric-value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
     .metric-unit  { font-size: .85rem; color: #6c757d; }
-    .live-table td { font-size: .82rem; vertical-align: middle; }
+    .live-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        background: transparent;
+    }
+    .live-table th,
+    .live-table td {
+        font-size: .82rem;
+        vertical-align: middle;
+        border-right: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .live-table th:last-child,
+    .live-table td:last-child {
+        border-right: none;
+    }
+    .live-table thead th {
+        letter-spacing: .03em;
+        font-weight: 700;
+        background: rgba(30, 41, 59, 0.8);
+    }
+    .live-table tbody tr:hover td {
+        background: rgba(13, 110, 253, 0.07);
+    }
+    .live-table-wrap {
+        max-height: 520px;
+        overflow: auto;
+    }
+    .live-table-wrap::-webkit-scrollbar {
+        width: 9px;
+        height: 9px;
+    }
+    .live-table-wrap::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.35);
+        border-radius: 999px;
+    }
+    .live-table-wrap::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.25);
+    }
+    .live-pagination-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 12px;
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(15, 23, 42, 0.35);
+    }
+    .live-pagination-info {
+        font-size: .75rem;
+        color: #94a3b8;
+    }
+    .pagination-popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        display: none;
+        z-index: 1500;
+    }
+    .pagination-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(320px, 92vw);
+        background: #0f172a;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        border-radius: 12px;
+        padding: 14px;
+        display: none;
+        z-index: 1501;
+        box-shadow: 0 24px 40px rgba(2, 6, 23, 0.55);
+    }
+    .pagination-popup.show,
+    .pagination-popup-overlay.show {
+        display: block;
+    }
+    .pagination-popup-title {
+        color: #e2e8f0;
+        font-weight: 800;
+        font-size: .9rem;
+        margin-bottom: 8px;
+    }
+    .pagination-popup-sub {
+        color: #94a3b8;
+        font-size: .74rem;
+        margin-bottom: 10px;
+    }
+    .page-size-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .page-size-btn {
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        border-radius: 8px;
+        background: rgba(30, 41, 59, 0.45);
+        color: #cbd5e1;
+        font-size: .73rem;
+        font-weight: 700;
+        padding: 6px 0;
+        cursor: pointer;
+    }
+    .page-size-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
+    }
     .quality-ok   { color: #198754; }
     .quality-warn { color: #ffc107; }
     .quality-error{ color: #dc3545; }
@@ -128,10 +236,13 @@
     <!-- ── Live Feed Table ────────────────────────────── -->
     <div class="card mb-4">
         <div class="card-header d-flex align-items-center py-2">
-            <span class="fw-semibold small"><i class="bi bi-table me-1"></i>Live Feed (last 50)</span>
-            <span class="badge bg-secondary ms-auto" id="rowCount">0 records</span>
+            <span class="fw-semibold small"><i class="bi bi-table me-1"></i>Live Feed</span>
+            <button type="button" class="btn btn-sm btn-outline-success ms-auto me-2" onclick="downloadLiveExcel()">
+                <i class="bi bi-file-earmark-excel me-1"></i>Download Excel
+            </button>
+            <span class="badge bg-secondary" id="rowCount">0 records</span>
         </div>
-        <div class="card-body p-0" style="overflow-x:auto;">
+        <div class="card-body p-0 live-table-wrap">
             <table class="table table-sm table-hover live-table mb-0" id="liveTable">
                 <thead class="table-dark sticky-top">
                     <tr>
@@ -151,6 +262,38 @@
                     <tr><td colspan="10" class="text-center text-muted py-4 fst-italic small">Menunggu data sensor...</td></tr>
                 </tbody>
             </table>
+        </div>
+        <div class="live-pagination-bar">
+            <div class="live-pagination-info" id="livePaginationInfo">Page 1 / 1</div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPrevPage" onclick="changeLivePage(-1)">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnNextPage" onclick="changeLivePage(1)">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="openPaginationPopup()">
+                    <i class="bi bi-sliders me-1"></i>Pagination
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paginationPopupOverlay" class="pagination-popup-overlay" onclick="closePaginationPopup()"></div>
+    <div id="paginationPopup" class="pagination-popup">
+        <div class="pagination-popup-title">Pengaturan Pagination</div>
+        <div class="pagination-popup-sub">Atur jumlah baris per halaman untuk tabel Live Feed.</div>
+        <div class="page-size-grid">
+            <button type="button" class="page-size-btn" onclick="setLivePageSize(10)">10</button>
+            <button type="button" class="page-size-btn" onclick="setLivePageSize(25)">25</button>
+            <button type="button" class="page-size-btn" onclick="setLivePageSize(50)">50</button>
+            <button type="button" class="page-size-btn" onclick="setLivePageSize(100)">100</button>
+        </div>
+        <label for="livePageSizeInput" class="form-label small text-secondary mb-1">Custom size (5-200)</label>
+        <input type="number" id="livePageSizeInput" min="5" max="200" class="form-control form-control-sm" />
+        <div class="page-size-actions">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closePaginationPopup()">Cancel</button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="applyLivePageSize()">Apply</button>
         </div>
     </div>
 
@@ -271,6 +414,11 @@ Content-Type: application/json
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+    let liveRowsAll = [];
+    let livePage = 1;
+    let livePageSize = 10;
+    const liveFetchLimit = 500;
+
     // ── Chart Setup ──────────────────────────────────────────────────
     const ctx = document.getElementById('liveChart').getContext('2d');
     const liveChart = new Chart(ctx, {
@@ -389,25 +537,50 @@ Content-Type: application/json
     async function refreshLiveTable() {
         const machine = document.getElementById('filterMachine').value;
         const metric  = document.getElementById('filterMetric').value;
-        let url = '/api/sensor-readings/live?last=50';
+        let url = `/api/sensor-readings/live?last=${liveFetchLimit}`;
         if (machine) url += `&machineCode=${encodeURIComponent(machine)}`;
         if (metric)  url += `&metricType=${encodeURIComponent(metric)}`;
 
         const res  = await fetch(url);
         const rows = await res.json();
-        const tbody = document.getElementById('liveTableBody');
-        document.getElementById('rowCount').textContent = `${rows.length} records`;
+        liveRowsAll = [...rows].reverse();
+        const totalPages = Math.max(1, Math.ceil(liveRowsAll.length / livePageSize));
+        livePage = Math.min(livePage, totalPages);
+        renderLiveTablePage();
 
-        if (rows.length === 0) {
+        // Update chart from latest batch
+        if (rows.length > 0) {
+            const latest = rows.slice(-20);
+            liveChart.data.labels   = latest.map(r => r.timestamp);
+            liveChart.data.datasets[0].data = latest.map(r => r.metricValue);
+            liveChart.data.datasets[0].label = metric || 'All Metrics';
+            liveChart.update('none');
+        }
+    }
+
+    function renderLiveTablePage() {
+        const tbody = document.getElementById('liveTableBody');
+        const total = liveRowsAll.length;
+        const totalPages = Math.max(1, Math.ceil(total / livePageSize));
+        livePage = Math.min(Math.max(1, livePage), totalPages);
+
+        document.getElementById('rowCount').textContent = `${total} records`;
+
+        if (total === 0) {
             tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4 fst-italic small">Tidak ada data</td></tr>';
+            document.getElementById('livePaginationInfo').textContent = 'Page 1 / 1';
+            document.getElementById('btnPrevPage').disabled = true;
+            document.getElementById('btnNextPage').disabled = true;
             return;
         }
 
-        // Show newest first
-        const sorted = [...rows].reverse();
-        tbody.innerHTML = sorted.map((r, i) => `
+        const start = (livePage - 1) * livePageSize;
+        const end = Math.min(start + livePageSize, total);
+        const pageRows = liveRowsAll.slice(start, end);
+
+        tbody.innerHTML = pageRows.map((r, i) => `
             <tr>
-                <td class="text-muted">${i + 1}</td>
+                <td class="text-muted">${start + i + 1}</td>
                 <td><span class="badge bg-light text-dark border small">${r.deviceId}</span></td>
                 <td>${r.machineCode || '—'}</td>
                 <td><span class="badge bg-info text-dark badge-metric">${r.metricType}</span></td>
@@ -419,14 +592,38 @@ Content-Type: application/json
                 <td><span class="badge ${statusBadge(r.status)}">${r.status}</span></td>
             </tr>`).join('');
 
-        // Update chart from latest batch
-        if (rows.length > 0) {
-            const latest = rows.slice(-20);
-            liveChart.data.labels   = latest.map(r => r.timestamp);
-            liveChart.data.datasets[0].data = latest.map(r => r.metricValue);
-            liveChart.data.datasets[0].label = metric || 'All Metrics';
-            liveChart.update('none');
-        }
+        document.getElementById('livePaginationInfo').textContent = `Page ${livePage} / ${totalPages}  •  ${start + 1}-${end} of ${total}`;
+        document.getElementById('btnPrevPage').disabled = livePage <= 1;
+        document.getElementById('btnNextPage').disabled = livePage >= totalPages;
+    }
+
+    function changeLivePage(delta) {
+        livePage += delta;
+        renderLiveTablePage();
+    }
+
+    function openPaginationPopup() {
+        document.getElementById('livePageSizeInput').value = livePageSize;
+        document.getElementById('paginationPopup').classList.add('show');
+        document.getElementById('paginationPopupOverlay').classList.add('show');
+    }
+
+    function closePaginationPopup() {
+        document.getElementById('paginationPopup').classList.remove('show');
+        document.getElementById('paginationPopupOverlay').classList.remove('show');
+    }
+
+    function setLivePageSize(size) {
+        livePageSize = Math.min(200, Math.max(5, Number(size) || 10));
+        livePage = 1;
+        renderLiveTablePage();
+        closePaginationPopup();
+    }
+
+    function applyLivePageSize() {
+        const val = Number(document.getElementById('livePageSizeInput').value);
+        if (!Number.isFinite(val)) return;
+        setLivePageSize(val);
     }
 
     // ── Metrics Summary ──────────────────────────────────────────────
@@ -462,6 +659,18 @@ Content-Type: application/json
         refreshDeviceStatus();
         refreshLiveTable();
         refreshSummary();
+    }
+
+    function downloadLiveExcel() {
+        const machine = document.getElementById('filterMachine').value;
+        const metric = document.getElementById('filterMetric').value;
+        const params = new URLSearchParams();
+
+        params.set('last', String(liveFetchLimit));
+        if (machine) params.set('machineCode', machine);
+        if (metric) params.set('metricType', metric);
+
+        window.location.href = `/SensorReadings/ExportLiveExcel?${params.toString()}`;
     }
 
     // ── Test Ingest Form ─────────────────────────────────────────────

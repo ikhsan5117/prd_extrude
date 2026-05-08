@@ -35,17 +35,146 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: ProductionReport/ParameterHistory
-        public async Task<IActionResult> ParameterHistory()
+        public async Task<IActionResult> ParameterHistory(string? startDate = null, string? endDate = null)
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
             {
                 return RedirectToAction("Login", "Account");
             }
-            var reports = await _context.ProductionReports
+
+            var query = _context.ProductionReports
                 .Include(p => p.StandardParameterSetting)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var sDate))
+            {
+                query = query.Where(p => p.ProductionDate >= sDate.Date);
+                ViewBag.StartDate = sDate.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                ViewBag.StartDate = "";
+            }
+
+            if (!string.IsNullOrWhiteSpace(endDate) && DateTime.TryParse(endDate, out var eDate))
+            {
+                query = query.Where(p => p.ProductionDate <= eDate.Date.AddDays(1).AddTicks(-1));
+                ViewBag.EndDate = eDate.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                ViewBag.EndDate = "";
+            }
+
+            var reports = await query
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
             return View(reports);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportParameterHistoryExcel(string? startDate = null, string? endDate = null)
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var query = _context.ProductionReports
+                .Include(p => p.StandardParameterSetting)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var sDate))
+                query = query.Where(p => p.ProductionDate >= sDate.Date);
+
+            if (!string.IsNullOrWhiteSpace(endDate) && DateTime.TryParse(endDate, out var eDate))
+                query = query.Where(p => p.ProductionDate <= eDate.Date.AddDays(1).AddTicks(-1));
+
+            var reports = await query
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("Parameter History");
+
+            ws.Cells[1, 1].Value = "PARAMETER HISTORY EXPORT";
+            ws.Cells[1, 1, 1, 12].Merge = true;
+            ws.Cells[1, 1].Style.Font.Bold = true;
+            ws.Cells[1, 1].Style.Font.Size = 14;
+            ws.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            ws.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(15, 23, 42));
+            ws.Cells[1, 1].Style.Font.Color.SetColor(System.Drawing.Color.White);
+
+            ws.Cells[2, 1].Value = $"Exported at: {DateTime.Now:dd MMM yyyy HH:mm} | Total rows: {reports.Count}";
+            ws.Cells[2, 1, 2, 12].Merge = true;
+            ws.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[2, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
+
+            var headers = new[]
+            {
+                "Production Date", "Doc Number", "Shift", "Machine", "Item Code", "Hose Type",
+                "Dimension", "Yarn", "Inner Material", "Outer Material", "Operator", "Status"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cells[4, i + 1];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(30, 64, 175));
+                cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.FromArgb(59, 130, 246));
+                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            }
+
+            int row = 5;
+            foreach (var item in reports)
+            {
+                var itemCode = item.ItemCode ?? item.StandardParameterSetting?.ItemList ?? "N/A";
+
+                ws.Cells[row, 1].Value = item.ProductionDate.ToString("dd MMM yyyy");
+                ws.Cells[row, 2].Value = item.DocumentNumber;
+                ws.Cells[row, 3].Value = item.Shift;
+                ws.Cells[row, 4].Value = item.MachineName;
+                ws.Cells[row, 5].Value = itemCode;
+                ws.Cells[row, 6].Value = item.HoseType;
+                ws.Cells[row, 7].Value = item.Dimension;
+                ws.Cells[row, 8].Value = item.Yarn;
+                ws.Cells[row, 9].Value = item.InnerMaterial;
+                ws.Cells[row, 10].Value = item.OuterMaterial;
+                ws.Cells[row, 11].Value = item.CreatedBy;
+                ws.Cells[row, 12].Value = item.Status;
+
+                for (int col = 1; col <= 12; col++)
+                {
+                    var cell = ws.Cells[row, col];
+                    cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Hair, System.Drawing.Color.FromArgb(148, 163, 184));
+                }
+
+                row++;
+            }
+
+            ws.Column(1).Width = 18;
+            ws.Column(2).Width = 24;
+            ws.Column(3).Width = 10;
+            ws.Column(4).Width = 16;
+            ws.Column(5).Width = 14;
+            ws.Column(6).Width = 28;
+            ws.Column(7).Width = 16;
+            ws.Column(8).Width = 16;
+            ws.Column(9).Width = 20;
+            ws.Column(10).Width = 20;
+            ws.Column(11).Width = 18;
+            ws.Column(12).Width = 14;
+
+            var fileName = $"ParameterHistory_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+            return File(
+                package.GetAsByteArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
         }
 
         // GET: ProductionReport/DimensionHistory
@@ -148,41 +277,124 @@ namespace VelastoProductionSystem.Controllers
             return Json(sps);
         }
 
-        // AJAX API: Search SPS Items for Autocomplete
+        // AJAX API: Search SPS Items for Autocomplete (by ItemList OR DocumentNumber)
         [HttpGet]
-        public async Task<IActionResult> SearchSpsItems(string query)
+        public async Task<IActionResult> SearchSpsItems(string query, string? startDate = null, string? endDate = null, string? shift = null, string? hoseType = null, string? pic = null)
         {
-            if (string.IsNullOrWhiteSpace(query)) return Json(new List<string>());
+            // Build filter query untuk ProductionReports
+            IQueryable<ProductionReport> reportQuery = _context.ProductionReports;
+            IQueryable<DimensionReport> dimensionQuery = _context.DimensionReports;
+
+            if (!string.IsNullOrWhiteSpace(startDate))
+            {
+                if (DateTime.TryParse(startDate, out DateTime sDate))
+                {
+                    reportQuery = reportQuery.Where(r => r.ProductionDate >= sDate.Date);
+                    dimensionQuery = dimensionQuery.Where(r => r.CreatedDate >= sDate.Date);
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(endDate))
+            {
+                if (DateTime.TryParse(endDate, out DateTime eDate))
+                {
+                    reportQuery = reportQuery.Where(r => r.ProductionDate <= eDate.Date.AddDays(1).AddTicks(-1));
+                    dimensionQuery = dimensionQuery.Where(r => r.CreatedDate <= eDate.Date.AddDays(1).AddTicks(-1));
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(shift) && !shift.Equals("SHIFT ALL", StringComparison.OrdinalIgnoreCase))
+            {
+                var shiftNorm = shift.Trim().ToUpper();
+                reportQuery = reportQuery.Where(r => r.Shift != null && r.Shift.Trim().ToUpper().Contains(shiftNorm));
+                dimensionQuery = dimensionQuery.Where(r => r.Shift != null && r.Shift.Trim().ToUpper().Contains(shiftNorm));
+            }
+            if (!string.IsNullOrWhiteSpace(hoseType))
+            {
+                reportQuery = reportQuery.Where(r => r.HoseType != null && r.HoseType.ToUpper().Contains(hoseType.ToUpper()));
+                dimensionQuery = dimensionQuery.Where(r => r.HoseType != null && r.HoseType.ToUpper().Contains(hoseType.ToUpper()));
+            }
+            if (!string.IsNullOrWhiteSpace(pic))
+            {
+                reportQuery = reportQuery.Where(r => r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(pic.ToUpper()));
+                dimensionQuery = dimensionQuery.Where(r => r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(pic.ToUpper()));
+            }
+
+            // Get ItemCodes dari filtered ProductionReports
+            var itemCodesFromReports = await reportQuery
+                .Where(r => r.ItemCode != null)
+                .Select(r => r.ItemCode)
+                .Distinct()
+                .ToListAsync();
+
+            var itemCodesFromDimension = await dimensionQuery
+                .Where(r => r.ItemCode != null)
+                .Select(r => r.ItemCode)
+                .Distinct()
+                .ToListAsync();
+
+            var allItemCodes = itemCodesFromDimension
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!)
+                .Distinct()
+                .ToList();
+
+            var sanitizedQuery = string.IsNullOrWhiteSpace(query) ? "" : query.Trim().ToUpper();
             
-            var sanitizedQuery = query.Trim().ToUpper();
-            
-            // Get unique ItemList values from both tables
+            // Query SPS items, prioritize yang ada di filtered reports
             var spsItems = await _context.StandardParameterSettings
-                .Where(s => s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedQuery))
-                .Select(s => new { s.ItemList, s.HoseType })
+                .Where(s => s.ItemList != null && (
+                    allItemCodes.Contains(s.ItemList) || 
+                    (sanitizedQuery != "" && (s.ItemList.ToUpper().Contains(sanitizedQuery) || (s.HoseType != null && s.HoseType.ToUpper().Contains(sanitizedQuery))))
+                ))
+                .Select(s => new {
+                    ItemList       = s.ItemList,
+                    HoseType       = s.HoseType,
+                    DocumentNumber = s.DocumentNumber
+                })
                 .Distinct()
-                .Take(10)
                 .ToListAsync();
-            
+
             var masterItems = await _context.MasterlistSpsDoubleLayers
-                .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitizedQuery))
-                .Select(m => new { ItemList = m.ItemList, HoseType = m.HoseType })
+                .Where(m => m.ItemList != null && (
+                    allItemCodes.Contains(m.ItemList) ||
+                    (sanitizedQuery != "" && (m.ItemList.ToUpper().Contains(sanitizedQuery) || (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitizedQuery))))
+                ))
+                .Select(m => new {
+                    ItemList       = m.ItemList,
+                    HoseType       = m.HoseType,
+                    DocumentNumber = m.DocumentNumber
+                })
                 .Distinct()
-                .Take(10)
                 .ToListAsync();
-            
-            // Combine and deduplicate
-            var results = spsItems.Concat(masterItems)
+
+            var dimensionItems = await dimensionQuery
+                .Where(d => d.ItemCode != null && (
+                    allItemCodes.Contains(d.ItemCode) ||
+                    (sanitizedQuery != "" && (
+                        d.ItemCode.ToUpper().Contains(sanitizedQuery) ||
+                        (d.HoseType != null && d.HoseType.ToUpper().Contains(sanitizedQuery))
+                    ))
+                ))
+                .Select(d => new {
+                    ItemList = d.ItemCode,
+                    d.HoseType,
+                    d.DocumentNumber
+                })
+                .Distinct()
+                .ToListAsync();
+
+            var results = spsItems.Concat(masterItems).Concat(dimensionItems)
                 .GroupBy(x => x.ItemList)
                 .Select(g => g.First())
+                .Where(x => !IsPlaceholderItemCode(x.ItemList))
                 .OrderBy(x => x.ItemList)
-                .Take(10)
-                .Select(x => new { 
-                    itemCode = x.ItemList, 
-                    hoseType = x.HoseType ?? "" 
+                .Take(50)
+                .Select(x => new {
+                    itemCode       = x.ItemList,
+                    hoseType       = x.HoseType ?? "",
+                    documentNumber = x.DocumentNumber ?? ""
                 })
                 .ToList();
-            
+
             return Json(results);
         }
 
@@ -1489,7 +1701,7 @@ namespace VelastoProductionSystem.Controllers
 
         // GET: ProductionReport/GetChartData?documentNumber=XXX
         [HttpGet]
-        public async Task<IActionResult> GetChartData(string documentNumber)
+        public async Task<IActionResult> GetChartData(string documentNumber, string? startDate = null, string? endDate = null)
         {
             if (string.IsNullOrWhiteSpace(documentNumber))
                 return BadRequest(new { success = false, message = "Document number is required." });
@@ -1576,52 +1788,258 @@ namespace VelastoProductionSystem.Controllers
                     r.SpiralPitch
                 }).ToList();
 
+            // 4b. Build dimension series from Dimension History when available
+            var dimensionReportQuery = _context.DimensionReports
+                .Include(d => d.Measurements)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var dimStartDate))
+            {
+                dimensionReportQuery = dimensionReportQuery.Where(d => d.CreatedDate >= dimStartDate.Date);
+            }
+
+            if (!string.IsNullOrWhiteSpace(endDate) && DateTime.TryParse(endDate, out var dimEndDate))
+            {
+                dimensionReportQuery = dimensionReportQuery.Where(d => d.CreatedDate <= dimEndDate.Date.AddDays(1).AddTicks(-1));
+            }
+
+            List<DimensionReport> dimensionReports = new();
+
+            if (!string.IsNullOrWhiteSpace(report.ItemCode))
+            {
+                var itemCode = report.ItemCode.Trim().ToUpper();
+                var rows = await dimensionReportQuery
+                    .Where(d => d.ItemCode != null && d.ItemCode.ToUpper() == itemCode)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .Take(120)
+                    .ToListAsync();
+                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
+            }
+
+            if (!dimensionReports.Any())
+            {
+                var rows = await dimensionReportQuery
+                    .Where(d => d.DocumentNumber == report.DocumentNumber)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .Take(120)
+                    .ToListAsync();
+                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
+            }
+
+            if (!dimensionReports.Any() && !string.IsNullOrWhiteSpace(report.VinCode))
+            {
+                var vinCode = report.VinCode.Trim().ToUpper();
+                var rows = await dimensionReportQuery
+                    .Where(d => d.VinCode != null && d.VinCode.ToUpper() == vinCode)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .Take(120)
+                    .ToListAsync();
+                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
+            }
+
+            if (!dimensionReports.Any() && !string.IsNullOrWhiteSpace(report.MachineName))
+            {
+                var machine = report.MachineName.Trim().ToUpper();
+                var rows = await dimensionReportQuery
+                    .Where(d => d.MachineName != null && d.MachineName.ToUpper() == machine)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .Take(120)
+                    .ToListAsync();
+                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
+            }
+
+            object? dimensionSeries = null;
+            var orderedMeasurements = dimensionReports
+                .SelectMany(d => d.Measurements ?? Enumerable.Empty<DimensionMeasurement>())
+                .OrderBy(m => m.RecordedTime)
+                .ToList();
+
+            if (orderedMeasurements.Any())
+            {
+                List<object> BuildDimensionPoints(Func<DimensionMeasurement, bool> predicate)
+                {
+                    return orderedMeasurements
+                        .Where(predicate)
+                        .SelectMany(m => ExpandDimensionReadings(m)
+                            .Select(x => new
+                            {
+                                label = x.label,
+                                value = x.value,
+                                pointName = m.PointName
+                            }))
+                        .Cast<object>()
+                        .ToList();
+                }
+
+                dimensionSeries = new
+                {
+                    reportCount = dimensionReports.Count,
+                    source = "DimensionHistory",
+                    innerDiameter = BuildDimensionPoints(m => ContainsAny(m.PointName, "inner diameter", "inner tube diameter")),
+                    totalThicknessX = BuildDimensionPoints(m => ContainsAny(m.PointName, "total thickness (x)", "outer cover total thickness", "total thickness x")),
+                    totalThicknessY = BuildDimensionPoints(m => ContainsAny(m.PointName, "total thickness (y)", "total thickness y"))
+                };
+            }
+
+            object? dimensionStandard = null;
+            if (report.StandardParameterSetting != null)
+            {
+                var s = report.StandardParameterSetting;
+                var innerTarget = s.InnerDie;
+                var innerTol = s.ToleranceDie;
+                var totalTarget = s.CoverDie > 0 ? s.CoverDie : s.OuterDie;
+                var totalTol = s.Tol_CoverDie > 0 ? s.Tol_CoverDie : s.Tol_OuterDie;
+
+                dimensionStandard = new
+                {
+                    innerDiameter = new
+                    {
+                        target = innerTarget,
+                        min = innerTarget - innerTol,
+                        max = innerTarget + innerTol,
+                        lcl = innerTarget - innerTol,
+                        ucl = innerTarget + innerTol
+                    },
+                    totalThickness = new
+                    {
+                        target = totalTarget,
+                        min = totalTarget - totalTol,
+                        max = totalTarget + totalTol
+                    }
+                };
+            }
+            else if (spsFallback != null)
+            {
+                var innerTarget = ParseStandardValue(spsFallback.Dimensi);
+                var innerMin = ParseStandardValue(spsFallback.InnerMin) ?? (innerTarget.HasValue ? innerTarget.Value - (ParseStandardValue(spsFallback.ToleranceInner) ?? 0.1m) : null);
+                var innerMax = ParseStandardValue(spsFallback.InnerMax) ?? (innerTarget.HasValue ? innerTarget.Value + (ParseStandardValue(spsFallback.ToleranceInner) ?? 0.1m) : null);
+                var innerLcl = ParseStandardValue(spsFallback.InnerLCL) ?? innerMin;
+                var innerUcl = ParseStandardValue(spsFallback.InnerUCL) ?? innerMax;
+
+                var totalTarget = ParseStandardValue(spsFallback.TebalTotal);
+                var totalTol = ParseStandardValue(spsFallback.ToleranceOuter) ?? 0.2m;
+                var totalMin = ParseStandardValue(spsFallback.TotalMin) ?? (totalTarget.HasValue ? totalTarget.Value - totalTol : null);
+                var totalMax = ParseStandardValue(spsFallback.TotalMax) ?? (totalTarget.HasValue ? totalTarget.Value + totalTol : null);
+
+                dimensionStandard = new
+                {
+                    innerDiameter = new
+                    {
+                        target = innerTarget,
+                        min = innerMin,
+                        max = innerMax,
+                        lcl = innerLcl,
+                        ucl = innerUcl
+                    },
+                    totalThickness = new
+                    {
+                        target = totalTarget,
+                        min = totalMin,
+                        max = totalMax
+                    }
+                };
+            }
+
             // 5. Build result
             object? spsPayload = null;
             if (report.StandardParameterSetting != null)
             {
                 var s = report.StandardParameterSetting;
                 spsPayload = new {
-                    HeadTemp1 = s.HeadTemp, HeadTemp2 = s.HeadTemp2, HeadTemp3 = s.HeadTemp3,
-                    Cylinder1_1 = s.Cylinder1Temp, Cylinder1_2 = s.Cylinder1_2, Cylinder1_3 = s.Cylinder1_3,
-                    Cylinder2_1 = s.Cylinder2Temp, Cylinder2_2 = s.Cylinder2_2, Cylinder2_3 = s.Cylinder2_3,
-                    Cylinder3_1 = s.Cylinder3Temp, Cylinder3_2 = s.Cylinder3_2, Cylinder3_3 = s.Cylinder3_3,
-                    ScrewTemp1 = s.ScrewTemp, ScrewTemp2 = s.ScrewTemp2, ScrewTemp3 = s.ScrewTemp3,
-                    ScrewSpeed1 = s.ScrewSpeed, ScrewSpeed2 = s.ScrewSpeed2, ScrewSpeed3 = s.ScrewSpeed3,
-                    Pressure1 = s.Pressure, Pressure2 = s.Pressure2, Pressure3 = s.Pressure3,
-                    FeedRollRatio1 = s.FeedRollRatio, FeedRollRatio2 = s.FeedRollRatio2, FeedRollRatio3 = s.FeedRollRatio3,
-                    Feed1 = s.FeedRollRatio, Feed2 = s.FeedRollRatio2, Feed3 = s.FeedRollRatio3,
-                    HoseSpeed = s.HoseSpeed, SpiralSpeed = s.SpiralSpeed,
-                    SpiralPitchSetting = s.SpiralPitch, SpiralPitchDisplay = s.SpiralPitchDisplay,
-                    PresetValue = s.PresetValve, ControlValue = s.ControlValue,
-                    ChillerWaterTemp = s.ChillerWaterTemp, CaterpillarGap = s.CaterpillarGap,
-                    TakeupConveyorSpeed = s.TakeupConveyorSpeed, CoolConveyorSpeed = s.CoolConveyorSpeed,
-                    ConveyorRatio = s.ConveyorRatio, UnsmoothSurface = s.UnsmoothSurface,
-                    InnerMin = s.InnerDie - s.ToleranceDie, InnerMax = s.InnerDie + s.ToleranceDie,
-                    TotalMin = s.OuterDie - s.Tol_OuterDie, TotalMax = s.OuterDie + s.Tol_OuterDie
+                    HeadTemp1 = ParseRange(s.HeadTemp, 5),
+                    HeadTemp2 = ParseRange(s.HeadTemp2, 5),
+                    HeadTemp3 = ParseRange(s.HeadTemp3, 5),
+                    Cylinder1_1 = ParseRange(s.Cylinder1Temp, 5),
+                    Cylinder1_2 = ParseRange(s.Cylinder1_2, 5),
+                    Cylinder1_3 = ParseRange(s.Cylinder1_3, 5),
+                    Cylinder2_1 = ParseRange(s.Cylinder2Temp, 5),
+                    Cylinder2_2 = ParseRange(s.Cylinder2_2, 5),
+                    Cylinder2_3 = ParseRange(s.Cylinder2_3, 5),
+                    Cylinder3_1 = ParseRange(s.Cylinder3Temp, 5),
+                    Cylinder3_2 = ParseRange(s.Cylinder3_2, 5),
+                    Cylinder3_3 = ParseRange(s.Cylinder3_3, 5),
+                    ScrewTemp1 = ParseRange(s.ScrewTemp, 5),
+                    ScrewTemp2 = ParseRange(s.ScrewTemp2, 5),
+                    ScrewTemp3 = ParseRange(s.ScrewTemp3, 5),
+                    ScrewSpeed1 = ParseRange(s.ScrewSpeed, 2),
+                    ScrewSpeed2 = ParseRange(s.ScrewSpeed2, 2),
+                    ScrewSpeed3 = ParseRange(s.ScrewSpeed3, 2),
+                    Pressure1 = ParseRange(s.Pressure, 1),
+                    Pressure2 = ParseRange(s.Pressure2, 1),
+                    Pressure3 = ParseRange(s.Pressure3, 1),
+                    FeedRollRatio1 = ParseRange(s.FeedRollRatio),
+                    FeedRollRatio2 = ParseRange(s.FeedRollRatio2),
+                    FeedRollRatio3 = ParseRange(s.FeedRollRatio3),
+                    Feed1 = ParseRange(s.FeedRollRatio),
+                    Feed2 = ParseRange(s.FeedRollRatio2),
+                    Feed3 = ParseRange(s.FeedRollRatio3),
+                    HoseSpeed = ParseRange(s.HoseSpeed),
+                    SpiralSpeed = ParseRange(s.SpiralSpeed),
+                    SpiralPitchSetting = ParseRange(s.SpiralPitch),
+                    SpiralPitchDisplay = ParseRange(s.SpiralPitchDisplay),
+                    PresetValue = ParseRange(s.PresetValve),
+                    ControlValue = ParseRange(s.ControlValue),
+                    ChillerWaterTemp = ParseRange(s.ChillerWaterTemp, 3),
+                    CaterpillarGap = ParseRange(s.CaterpillarGap),
+                    TakeupConveyorSpeed = ParseRange(s.TakeupConveyorSpeed),
+                    CoolConveyorSpeed = ParseRange(s.CoolConveyorSpeed),
+                    ConveyorRatio = ParseRange(s.ConveyorRatio),
+                    UnsmoothSurface = ParseRange(s.UnsmoothSurface),
+                    InnerMin = ParseRange(s.InnerDie - s.ToleranceDie).target,
+                    InnerMax = ParseRange(s.InnerDie + s.ToleranceDie).target,
+                    TotalMin = ParseRange(s.OuterDie - s.Tol_OuterDie).target,
+                    TotalMax = ParseRange(s.OuterDie + s.Tol_OuterDie).target
                 };
             }
             else if (spsFallback != null)
             {
+                var s = spsFallback;
                 spsPayload = new {
-                    spsFallback.HeadTemp1, spsFallback.HeadTemp2, spsFallback.HeadTemp3,
-                    spsFallback.Cylinder1_1, spsFallback.Cylinder1_2, spsFallback.Cylinder1_3,
-                    spsFallback.Cylinder2_1, spsFallback.Cylinder2_2, spsFallback.Cylinder2_3,
-                    spsFallback.Cylinder3_1, spsFallback.Cylinder3_2, spsFallback.Cylinder3_3,
-                    spsFallback.ScrewTemp1, spsFallback.ScrewTemp2, spsFallback.ScrewTemp3,
-                    spsFallback.ScrewSpeed1, spsFallback.ScrewSpeed2, spsFallback.ScrewSpeed3,
-                    spsFallback.Pressure1, spsFallback.Pressure2, spsFallback.Pressure3,
-                    spsFallback.FeedRollRatio1, spsFallback.FeedRollRatio2, spsFallback.FeedRollRatio3,
-                    spsFallback.Feed1, spsFallback.Feed2, spsFallback.Feed3,
-                    spsFallback.HoseSpeed, spsFallback.SpiralSpeed,
-                    spsFallback.SpiralPitchSetting, spsFallback.SpiralPitchDisplay,
-                    spsFallback.PresetValue, spsFallback.ControlValue,
-                    spsFallback.ChillerWaterTemp, spsFallback.CaterpillarGap,
-                    spsFallback.TakeUpConveyorSpeed, spsFallback.CoolConveyorSpeed,
-                    spsFallback.ConveyorRatio, spsFallback.UnsmoothSurface,
-                    spsFallback.InnerMin, spsFallback.InnerMax,
-                    spsFallback.InnerLCL, spsFallback.InnerUCL,
-                    spsFallback.TotalMin, spsFallback.TotalMax
+                    HeadTemp1 = ParseRange(s.HeadTemp1, 5),
+                    HeadTemp2 = ParseRange(s.HeadTemp2, 5),
+                    HeadTemp3 = ParseRange(s.HeadTemp3, 5),
+                    Cylinder1_1 = ParseRange(s.Cylinder1_1, 5),
+                    Cylinder1_2 = ParseRange(s.Cylinder1_2, 5),
+                    Cylinder1_3 = ParseRange(s.Cylinder1_3, 5),
+                    Cylinder2_1 = ParseRange(s.Cylinder2_1, 5),
+                    Cylinder2_2 = ParseRange(s.Cylinder2_2, 5),
+                    Cylinder2_3 = ParseRange(s.Cylinder2_3, 5),
+                    Cylinder3_1 = ParseRange(s.Cylinder3_1, 5),
+                    Cylinder3_2 = ParseRange(s.Cylinder3_2, 5),
+                    Cylinder3_3 = ParseRange(s.Cylinder3_3, 5),
+                    ScrewTemp1 = ParseRange(s.ScrewTemp1, 5),
+                    ScrewTemp2 = ParseRange(s.ScrewTemp2, 5),
+                    ScrewTemp3 = ParseRange(s.ScrewTemp3, 5),
+                    ScrewSpeed1 = ParseRange(s.ScrewSpeed1, 2),
+                    ScrewSpeed2 = ParseRange(s.ScrewSpeed2, 2),
+                    ScrewSpeed3 = ParseRange(s.ScrewSpeed3, 2),
+                    Pressure1 = ParseRange(s.Pressure1, 1),
+                    Pressure2 = ParseRange(s.Pressure2, 1),
+                    Pressure3 = ParseRange(s.Pressure3, 1),
+                    FeedRollRatio1 = ParseRange(s.FeedRollRatio1),
+                    FeedRollRatio2 = ParseRange(s.FeedRollRatio2),
+                    FeedRollRatio3 = ParseRange(s.FeedRollRatio3),
+                    Feed1 = ParseRange(s.Feed1),
+                    Feed2 = ParseRange(s.Feed2),
+                    Feed3 = ParseRange(s.Feed3),
+                    HoseSpeed = ParseRange(s.HoseSpeed),
+                    SpiralSpeed = ParseRange(s.SpiralSpeed),
+                    SpiralPitchSetting = ParseRange(s.SpiralPitchSetting),
+                    SpiralPitchDisplay = ParseRange(s.SpiralPitchDisplay),
+                    PresetValue = ParseRange(s.PresetValue),
+                    ControlValue = ParseRange(s.ControlValue),
+                    ChillerWaterTemp = ParseRange(s.ChillerWaterTemp, 3),
+                    CaterpillarGap = ParseRange(s.CaterpillarGap),
+                    TakeupConveyorSpeed = ParseRange(s.TakeUpConveyorSpeed),
+                    CoolConveyorSpeed = ParseRange(s.CoolConveyorSpeed),
+                    ConveyorRatio = ParseRange(s.ConveyorRatio),
+                    UnsmoothSurface = ParseRange(s.UnsmoothSurface),
+                    InnerMin = ParseRange(s.InnerMin).target,
+                    InnerMax = ParseRange(s.InnerMax).target,
+                    InnerLCL = ParseRange(s.InnerLCL).target,
+                    InnerUCL = ParseRange(s.InnerUCL).target,
+                    TotalMin = ParseRange(s.TotalMin).target,
+                    TotalMax = ParseRange(s.TotalMax).target
                 };
             }
 
@@ -1658,8 +2076,90 @@ namespace VelastoProductionSystem.Controllers
                     report.InitUnsmoothSurface
                 },
                 readings,
+                dimensionSeries,
+                dimensionStandard,
                 sensorData
             });
+        }
+
+        private static bool ContainsAny(string? source, params string[] terms)
+        {
+            if (string.IsNullOrWhiteSpace(source)) return false;
+            var value = source.Trim().ToUpperInvariant();
+            return terms.Any(t => value.Contains(t.ToUpperInvariant()));
+        }
+
+        private static IEnumerable<(string label, decimal value)> ExpandDimensionReadings(DimensionMeasurement measurement)
+        {
+            var baseLabel = string.IsNullOrWhiteSpace(measurement.TimeSection)
+                ? measurement.RecordedTime.ToString("HH:mm")
+                : measurement.TimeSection;
+
+            var values = new[]
+            {
+                measurement.R1,
+                measurement.R2,
+                measurement.R3,
+                measurement.R4,
+                measurement.R5
+            };
+
+            for (var index = 0; index < values.Length; index++)
+            {
+                if (values[index].HasValue)
+                {
+                    yield return ($"{baseLabel} • R{index + 1}", values[index]!.Value);
+                }
+            }
+        }
+
+        private static decimal? ParseStandardValue(string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            var normalized = raw.Replace(',', '.');
+            var match = System.Text.RegularExpressions.Regex.Match(normalized, @"-?\d+(?:\.\d+)?");
+            if (!match.Success) return null;
+            return decimal.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var value)
+                ? value
+                : null;
+        }
+
+        private static (decimal? min, decimal? max, decimal? target) ParseRange(object? rawObj, decimal? defaultTolerance = null)
+        {
+            if (rawObj == null) return (null, null, null);
+            string? raw = rawObj.ToString();
+            if (string.IsNullOrWhiteSpace(raw)) return (null, null, null);
+
+            var normalized = raw.Replace(',', '.');
+            var matches = System.Text.RegularExpressions.Regex.Matches(normalized, @"-?\d+(?:\.\d+)?");
+
+            if (matches.Count >= 2)
+            {
+                if (decimal.TryParse(matches[0].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v1) &&
+                    decimal.TryParse(matches[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v2))
+                {
+                    return (Math.Min(v1, v2), Math.Max(v1, v2), (v1 + v2) / 2);
+                }
+            }
+
+            if (matches.Count == 1)
+            {
+                if (decimal.TryParse(matches[0].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                {
+                    if (defaultTolerance.HasValue)
+                        return (v - defaultTolerance.Value, v + defaultTolerance.Value, v);
+                    return (v, v, v);
+                }
+            }
+
+            return (null, null, null);
+        }
+
+        private static bool IsPlaceholderItemCode(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            var normalized = value.Trim().Replace(" ", "");
+            return normalized is "-" or "--" or "---" or "N/A" or "NA";
         }
 
         // GET: ProductionReport/GetDocumentList — for autocomplete search
@@ -1693,5 +2193,220 @@ namespace VelastoProductionSystem.Controllers
 
             return Json(docs);
         }
+
+        // GET: ProductionReport/GetDocumentsByItem — get production reports by SPS ItemCode
+        // Fallback chain: ItemCode/VinCode → HoseType from SPS → All documents
+        [HttpGet]
+        public async Task<IActionResult> GetDocumentsByItem(string? itemCode = null, string? startDate = null, string? endDate = null, string? shift = null, string? hoseType = null, string? pic = null)
+        {
+            // Only show production reports that have corresponding DimensionReports
+            var dimDocNumbers = await _context.DimensionReports.Select(dr => dr.DocumentNumber).Distinct().ToListAsync();
+            var dimItemCodes = await _context.DimensionReports.Select(dr => dr.ItemCode).Distinct().ToListAsync();
+
+            IQueryable<ProductionReport> query = _context.ProductionReports
+                .Where(r => dimDocNumbers.Contains(r.DocumentNumber) || dimItemCodes.Contains(r.ItemCode));
+
+            // Apply Filters (Date Range) - Using direct comparison for better EF compatibility
+            if (!string.IsNullOrWhiteSpace(startDate))
+            {
+                if (DateTime.TryParse(startDate, out DateTime sDate))
+                {
+                    var startOfDay = sDate.Date;
+                    query = query.Where(r => r.ProductionDate >= startOfDay);
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(endDate))
+            {
+                if (DateTime.TryParse(endDate, out DateTime eDate))
+                {
+                    var endOfDay = eDate.Date.AddDays(1).AddTicks(-1);
+                    query = query.Where(r => r.ProductionDate <= endOfDay);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(shift) && !shift.Equals("SHIFT ALL", StringComparison.OrdinalIgnoreCase))
+            {
+                var shiftNorm = shift.Trim().ToUpper();
+                query = query.Where(r => r.Shift != null && r.Shift.Trim().ToUpper().Contains(shiftNorm));
+            }
+
+            if (!string.IsNullOrWhiteSpace(hoseType))
+            {
+                var hup = hoseType.Trim().ToUpper();
+                query = query.Where(r => r.HoseType != null && r.HoseType.ToUpper().Contains(hup));
+            }
+
+            if (!string.IsNullOrWhiteSpace(pic))
+            {
+                var pup = pic.Trim().ToUpper();
+                query = query.Where(r => r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(pup));
+            }
+
+            if (!string.IsNullOrWhiteSpace(itemCode))
+            {
+                var search = itemCode.Trim().ToUpper();
+
+                // Layer 1: Exact match by ItemCode or VinCode
+                var byCode = await query
+                    .Where(r =>
+                        (r.ItemCode != null && r.ItemCode.ToUpper().Contains(search)) ||
+                        (r.VinCode  != null && r.VinCode.ToUpper().Contains(search)))
+                    .OrderByDescending(r => r.ProductionReadings.Count)
+                    .ThenByDescending(r => r.CreatedDate)
+                    .Take(50)
+                    .Select(r => new {
+                        r.DocumentNumber, r.HoseType, r.VinCode, r.ItemCode,
+                        r.MachineName, r.Shift,
+                        date = r.ProductionDate.ToString("dd MMM yyyy"),
+                        readingsCount = r.ProductionReadings.Count
+                    })
+                    .ToListAsync();
+
+                if (byCode.Any()) return Json(byCode);
+
+                // Layer 2: Lookup SPS info (HoseType + DocumentNumber) for that ItemCode
+                var spsInfo = await _context.StandardParameterSettings
+                    .Where(s => s.ItemList != null && s.ItemList.ToUpper().Contains(search))
+                    .Select(s => new { s.HoseType, s.DocumentNumber })
+                    .FirstOrDefaultAsync();
+
+                if (spsInfo == null)
+                {
+                    var masterInfo = await _context.MasterlistSpsDoubleLayers
+                        .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(search))
+                        .Select(m => new { m.HoseType, m.DocumentNumber })
+                        .FirstOrDefaultAsync();
+                    if (masterInfo != null)
+                        spsInfo = new { HoseType = masterInfo.HoseType, DocumentNumber = masterInfo.DocumentNumber };
+                }
+
+                if (spsInfo != null)
+                {
+                    // Layer 2a: Match by HoseType — try keyword-by-keyword (handles format differences)
+                    if (!string.IsNullOrEmpty(spsInfo.HoseType))
+                    {
+                        // Extract meaningful keywords (skip short words like "HOSE", "TUBE")
+                        var keywords = spsInfo.HoseType.ToUpper()
+                            .Split(new[] { ' ', ',', '-', '/' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Where(k => k.Length > 3 && k != "HOSE" && k != "TUBE")
+                            .ToList();
+
+                        if (keywords.Any())
+                        {
+                            // Get all production reports with hoseType, then filter in-memory by keyword
+                            var allHoseTypes = await query
+                                .Where(r => r.HoseType != null)
+                                .Select(r => new {
+                                    r.DocumentNumber, r.HoseType, r.VinCode, r.ItemCode,
+                                    r.MachineName, r.Shift,
+                                    date = r.ProductionDate.ToString("dd MMM yyyy"),
+                                    readingsCount = r.ProductionReadings.Count
+                                })
+                                .OrderByDescending(r => r.readingsCount)
+                                .Take(200)
+                                .ToListAsync();
+
+                            var byKeyword = allHoseTypes
+                                .Where(r => keywords.Any(k => r.HoseType!.ToUpper().Contains(k)))
+                                .Take(50).ToList();
+
+                            if (byKeyword.Any()) return Json(byKeyword);
+                        }
+                    }
+
+                    // Layer 2b: Match by SPS DocumentNumber field against ProductionReport.DocumentNumber
+                    if (!string.IsNullOrEmpty(spsInfo.DocumentNumber))
+                    {
+                        var docSearch = spsInfo.DocumentNumber.Trim().ToUpper();
+                        var byDocNum = await query
+                            .Where(r => r.DocumentNumber != null && r.DocumentNumber.ToUpper().Contains(docSearch))
+                            .OrderByDescending(r => r.ProductionReadings.Count)
+                            .ThenByDescending(r => r.CreatedDate)
+                            .Take(50)
+                            .Select(r => new {
+                                r.DocumentNumber, r.HoseType, r.VinCode, r.ItemCode,
+                                r.MachineName, r.Shift,
+                                date = r.ProductionDate.ToString("dd MMM yyyy"),
+                                readingsCount = r.ProductionReadings.Count
+                            })
+                            .ToListAsync();
+
+                        if (byDocNum.Any()) return Json(byDocNum);
+                    }
+                }
+
+                // Layer 3: Fallback — return all docs (dropdown tidak pernah kosong)
+            }
+
+            // No itemCode filter OR all layers failed — return latest 50 docs
+            var allDocs = await query
+                .OrderByDescending(r => r.ProductionReadings.Count)
+                .ThenByDescending(r => r.CreatedDate)
+                .Take(50)
+                .Select(r => new {
+                    r.DocumentNumber, r.HoseType, r.VinCode, r.ItemCode,
+                    r.MachineName, r.Shift,
+                    date = r.ProductionDate.ToString("dd MMM yyyy"),
+                    readingsCount = r.ProductionReadings.Count
+                })
+                .ToListAsync();
+
+            return Json(allDocs);
+        }
+
+        // GET: ProductionReport/GetFilterOptions — Get unique products and PICs for filters
+        [HttpGet]
+        public async Task<IActionResult> GetFilterOptions(
+            string? startDate = null,
+            string? endDate = null,
+            string? shift = null,
+            string? hoseType = null,
+            string? itemCode = null)
+        {
+            IQueryable<ProductionReport> query = _context.ProductionReports;
+
+            if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var sDate))
+                query = query.Where(r => r.ProductionDate >= sDate.Date);
+
+            if (!string.IsNullOrWhiteSpace(endDate) && DateTime.TryParse(endDate, out var eDate))
+                query = query.Where(r => r.ProductionDate <= eDate.Date.AddDays(1).AddTicks(-1));
+
+            if (!string.IsNullOrWhiteSpace(shift) && !shift.Equals("SHIFT ALL", StringComparison.OrdinalIgnoreCase))
+            {
+                var shiftNorm = shift.Trim().ToUpper();
+                query = query.Where(r => r.Shift != null && r.Shift.Trim().ToUpper().Contains(shiftNorm));
+            }
+
+            if (!string.IsNullOrWhiteSpace(hoseType))
+            {
+                var hup = hoseType.Trim().ToUpper();
+                query = query.Where(r => r.HoseType != null && r.HoseType.ToUpper().Contains(hup));
+            }
+
+            if (!string.IsNullOrWhiteSpace(itemCode))
+            {
+                var iup = itemCode.Trim().ToUpper();
+                query = query.Where(r =>
+                    (r.ItemCode != null && r.ItemCode.ToUpper().Contains(iup)) ||
+                    (r.VinCode != null && r.VinCode.ToUpper().Contains(iup)));
+            }
+
+            var hoseTypes = await query
+                .Where(r => r.HoseType != null && r.HoseType != "")
+                .Select(r => r.HoseType!)
+                .Distinct()
+                .OrderBy(h => h)
+                .ToListAsync();
+
+            var pics = await query
+                .Where(r => r.CreatedBy != null && r.CreatedBy != "")
+                .Select(r => r.CreatedBy!)
+                .Distinct()
+                .OrderBy(p => p)
+                .ToListAsync();
+
+            return Json(new { hoseTypes, pics });
+        }
     }
 }
+

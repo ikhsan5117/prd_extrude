@@ -173,6 +173,119 @@ namespace VelastoProductionSystem.Controllers
             return _context.MasterlistSpsDoubleLayers.Any(e => e.Id == id);
         }
 
+        // GET: MasterlistSpsDoubleLayers/ExportExcel
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel()
+        {
+            var data = await _context.MasterlistSpsDoubleLayers
+                .OrderBy(m => m.DocumentNumber)
+                .ThenBy(m => m.ItemList)
+                .ToListAsync();
+
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("SPS Master");
+
+            // --- Title ---
+            ws.Cells[1, 1].Value = "SPS MASTER - Standard Parameter Setting";
+            ws.Cells[1, 1, 1, 20].Merge = true;
+            ws.Cells[1, 1].Style.Font.Bold = true;
+            ws.Cells[1, 1].Style.Font.Size = 14;
+            ws.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            ws.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(15, 25, 45));
+            ws.Cells[1, 1].Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(100, 160, 255));
+
+            ws.Cells[2, 1].Value = $"Export Date: {DateTime.Now:dd MMM yyyy HH:mm} | Total: {data.Count} records";
+            ws.Cells[2, 1, 2, 20].Merge = true;
+            ws.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[2, 1].Style.Font.Italic = true;
+            ws.Cells[2, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
+
+            // --- Headers ---
+            var headers = new[]
+            {
+                "No", "No. Doc", "Item List", "Hose Type", "Machine", "Dimensi",
+                "Mat. Inner", "Mat. Outer", "Mat. Middle",
+                "Head Temp 1", "Cyl1-1", "Cyl2-1", "Cyl3-1", "Screw Temp 1", "Screw Speed 1", "Pressure 1",
+                "Head Temp 2", "Cyl1-2", "Cyl2-2", "Cyl3-2", "Screw Temp 2", "Screw Speed 2", "Pressure 2",
+                "Head Temp 3", "Cyl1-3", "Cyl2-3", "Cyl3-3", "Screw Temp 3", "Screw Speed 3", "Pressure 3",
+                "Hose Speed", "Takeup Speed", "Chiller Temp",
+                "Tol Inner", "Tol Outer", "Tebal Inner", "Tebal Outer", "Tebal Total",
+                "Nipple Die", "Tube Die", "Cover Die", "Spacer Die",
+                "Customer", "Rev. Number", "Rev. Date"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cells[4, i + 1];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(13, 60, 120));
+                cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.FromArgb(60, 100, 200));
+                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                cell.Style.WrapText = false;
+            }
+
+            // --- Data rows ---
+            int row = 5;
+            int no = 1;
+            foreach (var m in data)
+            {
+                bool isOdd = (no % 2 == 0);
+                var bgColor = isOdd
+                    ? System.Drawing.Color.FromArgb(18, 25, 38)
+                    : System.Drawing.Color.FromArgb(23, 32, 50);
+
+                var values = new object[]
+                {
+                    no, m.DocumentNumber ?? "", m.ItemList ?? "", m.HoseType ?? "", m.Machine ?? "", m.Dimensi ?? "",
+                    m.InnerTube ?? "", m.OuterCover ?? "", m.MiddleTube ?? "",
+                    m.HeadTemp1 ?? "", m.Cylinder1_1 ?? "", m.Cylinder2_1 ?? "", m.Cylinder3_1 ?? "", m.ScrewTemp1 ?? "", m.ScrewSpeed1 ?? "", m.Pressure1 ?? "",
+                    m.HeadTemp2 ?? "", m.Cylinder1_2 ?? "", m.Cylinder2_2 ?? "", m.Cylinder3_2 ?? "", m.ScrewTemp2 ?? "", m.ScrewSpeed2 ?? "", m.Pressure2 ?? "",
+                    m.HeadTemp3 ?? "", m.Cylinder1_3 ?? "", m.Cylinder2_3 ?? "", m.Cylinder3_3 ?? "", m.ScrewTemp3 ?? "", m.ScrewSpeed3 ?? "", m.Pressure3 ?? "",
+                    m.HoseSpeed ?? "", m.TakeUpConveyorSpeed ?? "", m.ChillerWaterTemp ?? "",
+                    m.ToleranceInner ?? "", m.ToleranceOuter ?? "", m.TebalInner ?? "", m.TebalOuter ?? "", m.TebalTotal ?? "",
+                    m.Nipple ?? "", m.TubeDie ?? "", m.CoverDie ?? "", m.SpacerDie ?? "",
+                    m.Customer ?? "", m.RevisionNumber ?? "", m.RevisionDate ?? ""
+                };
+
+                for (int col = 1; col <= values.Length; col++)
+                {
+                    var cell = ws.Cells[row, col];
+                    cell.Value = values[col - 1];
+                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    cell.Style.Fill.BackgroundColor.SetColor(bgColor);
+                    cell.Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(210, 210, 210));
+                    cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Hair, System.Drawing.Color.FromArgb(40, 55, 80));
+                    cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                }
+                // Highlight Item List & Doc columns
+                ws.Cells[row, 2].Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(120, 180, 255));
+                ws.Cells[row, 3].Style.Font.Bold = true;
+                ws.Cells[row, 3].Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(100, 220, 255));
+
+                row++;
+                no++;
+            }
+
+            // Column widths
+            ws.Column(1).Width = 5;
+            ws.Column(2).Width = 20;
+            ws.Column(3).Width = 14;
+            ws.Column(4).Width = 22;
+            ws.Column(5).Width = 12;
+            ws.Column(6).Width = 10;
+            for (int c = 7; c <= headers.Length; c++) ws.Column(c).Width = 13;
+            ws.Row(4).Height = 22;
+
+            var fileName = $"SPS_Master_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+            return File(package.GetAsByteArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName);
+        }
+
         // GET: MasterlistSpsDoubleLayers/DownloadTemplate
         public IActionResult DownloadTemplate(string type = "3L")
         {

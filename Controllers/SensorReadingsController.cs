@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Models;
 using VelastoProductionSystem.Hubs;
+using OfficeOpenXml;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -238,7 +239,7 @@ namespace VelastoProductionSystem.Controllers
                 timestamp   = log.SensorTimestamp.ToString("HH:mm:ss"),
                 reportId    = report?.Id
             });
-            _ = _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+            // _ = _hubContext.Clients.All.SendAsync("ReceiveUpdate"); // DISABLED: Avoid full-page reloads on every sensor tick
 
             _logger.LogInformation("Sensor ingest OK: {Device} {Metric}={Value}{Unit} @ {Time}",
                 log.DeviceId, log.MetricType, log.MetricValue, log.Unit, sensorTime);
@@ -307,7 +308,7 @@ namespace VelastoProductionSystem.Controllers
             if (saved > 0)
             {
                 await _context.SaveChangesAsync();
-                _ = _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+                // _ = _hubContext.Clients.All.SendAsync("ReceiveUpdate"); // DISABLED: Avoid full-page reloads on every sensor tick
             }
 
             return Ok(new { success = true, saved, duplicates = dups, errors });
@@ -356,6 +357,88 @@ namespace VelastoProductionSystem.Controllers
 
             // Kembalikan urutan chronologis untuk chart
             return Json(data.OrderBy(d => d.TimestampFull).ToList());
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  EXPORT — LIVE FEED TO EXCEL
+        //  GET /SensorReadings/ExportLiveExcel?machineCode=EXT-01&metricType=outer_diameter&last=50
+        // ═══════════════════════════════════════════════════════════════
+
+        [HttpGet]
+        public async Task<IActionResult> ExportLiveExcel(
+            string? machineCode = null,
+            string? metricType = null,
+            int last = 50)
+        {
+            var safeLast = Math.Clamp(last, 1, 1000);
+
+            var query = _context.SensorIngestLogs
+                .Where(l => l.Status == "OK")
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(machineCode))
+                query = query.Where(l => l.MachineCode == machineCode);
+
+            if (!string.IsNullOrEmpty(metricType))
+                query = query.Where(l => l.MetricType == metricType.ToLower());
+
+            var rows = await query
+                .OrderByDescending(l => l.SensorTimestamp)
+                .Take(safeLast)
+                .Select(l => new
+                {
+                    l.DeviceId,
+                    l.MachineCode,
+                    l.MetricType,
+                    l.MetricValue,
+                    l.Unit,
+                    l.Quality,
+                    SensorTime = l.SensorTimestamp,
+                    IngestedAt = l.IngestedAt,
+                    l.Status
+                })
+                .ToListAsync();
+
+            using var package = new ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("Sensor Live Feed");
+
+            ws.Cells[1, 1].Value = "No";
+            ws.Cells[1, 2].Value = "Device";
+            ws.Cells[1, 3].Value = "Machine";
+            ws.Cells[1, 4].Value = "Metric";
+            ws.Cells[1, 5].Value = "Value";
+            ws.Cells[1, 6].Value = "Unit";
+            ws.Cells[1, 7].Value = "Quality";
+            ws.Cells[1, 8].Value = "Sensor Time";
+            ws.Cells[1, 9].Value = "Ingested";
+            ws.Cells[1, 10].Value = "Status";
+
+            for (var i = 0; i < rows.Count; i++)
+            {
+                var r = rows[i];
+                var row = i + 2;
+                ws.Cells[row, 1].Value = i + 1;
+                ws.Cells[row, 2].Value = r.DeviceId;
+                ws.Cells[row, 3].Value = r.MachineCode;
+                ws.Cells[row, 4].Value = r.MetricType;
+                ws.Cells[row, 5].Value = r.MetricValue;
+                ws.Cells[row, 6].Value = r.Unit;
+                ws.Cells[row, 7].Value = r.Quality;
+                ws.Cells[row, 8].Value = r.SensorTime.ToString("yyyy-MM-dd HH:mm:ss");
+                ws.Cells[row, 9].Value = r.IngestedAt.ToString("yyyy-MM-dd HH:mm:ss");
+                ws.Cells[row, 10].Value = r.Status;
+            }
+
+            ws.Cells[ws.Dimension.Address].AutoFitColumns();
+
+            var machineTag = string.IsNullOrWhiteSpace(machineCode) ? "ALL" : machineCode;
+            var metricTag = string.IsNullOrWhiteSpace(metricType) ? "ALL" : metricType;
+            var fileName = $"sensor-live-{machineTag}-{metricTag}-{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+            var bytes = package.GetAsByteArray();
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName);
         }
 
         // ═══════════════════════════════════════════════════════════════

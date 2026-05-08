@@ -21,7 +21,7 @@ namespace VelastoProductionSystem.Controllers
             if (!string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
             {
                 if (HttpContext.Session.GetString("IsAdmin") == "true")
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("ChartAnalysis", "ProductionReport");
                 return RedirectToAction("Create", "ProductionReport");
             }
 
@@ -110,7 +110,7 @@ namespace VelastoProductionSystem.Controllers
                 HttpContext.Session.SetString("MachineName", machineName);
                 HttpContext.Session.SetInt32("MachineId", machineIdValue);
 
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("ChartAnalysis", "ProductionReport");
             }
 
             // --- OPERATOR LOGIN ---

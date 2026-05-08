@@ -236,6 +236,120 @@ namespace VelastoProductionSystem.Controllers
             return File(bytes, "text/csv", fileName);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(DateTime? filterDate, string? query, int? machineId)
+        {
+            var machinesMap = await _elwpContext.ElwpMachines
+                .ToDictionaryAsync(x => x.Id, x => $"{(x.KodeMesin ?? x.Id.ToString())} - {x.NamaMesin}");
+
+            var elwpQuery = _elwpContext.ElwpPlannings.AsQueryable();
+
+            if (filterDate.HasValue)
+            {
+                var start = filterDate.Value.Date;
+                var end = start.AddDays(1);
+                elwpQuery = elwpQuery.Where(x => x.TanggalPlanning >= start && x.TanggalPlanning < end);
+            }
+            if (machineId.HasValue)
+                elwpQuery = elwpQuery.Where(x => x.MesinId == machineId.Value);
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var q = query.Trim().ToLower();
+                elwpQuery = elwpQuery.Where(x =>
+                    (x.KodeItem != null && x.KodeItem.ToLower().Contains(q)) ||
+                    (x.PartName != null && x.PartName.ToLower().Contains(q)) ||
+                    (x.PnSap != null && x.PnSap.ToLower().Contains(q)) ||
+                    (x.Shift != null && x.Shift.ToLower().Contains(q)));
+            }
+
+            var rows = await elwpQuery
+                .OrderByDescending(x => x.TanggalPlanning)
+                .ThenBy(x => x.MesinId)
+                .ThenBy(x => x.Shift)
+                .ToListAsync();
+
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("Planning Master");
+
+            // Title row
+            ws.Cells[1, 1].Value = "PLANNING MASTER - ELWP Production System";
+            ws.Cells[1, 1, 1, 7].Merge = true;
+            ws.Cells[1, 1].Style.Font.Bold = true;
+            ws.Cells[1, 1].Style.Font.Size = 14;
+            ws.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            ws.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(15, 25, 35));
+            ws.Cells[1, 1].Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(0, 255, 136));
+
+            // Sub-title
+            ws.Cells[2, 1].Value = $"Export Date: {DateTime.Now:dd MMM yyyy HH:mm}";
+            ws.Cells[2, 1, 2, 7].Merge = true;
+            ws.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            ws.Cells[2, 1].Style.Font.Italic = true;
+            ws.Cells[2, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
+
+            // Header row
+            var headers = new[] { "No", "Tanggal", "Mesin", "Shift", "Kode Item", "Part Name", "PN SAP", "Target (pcs)" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cells[4, i + 1];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(10, 20, 30));
+                cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.FromArgb(0, 180, 100));
+                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            }
+
+            // Data rows
+            int row = 5;
+            int no = 1;
+            foreach (var r in rows)
+            {
+                var date = r.TanggalPlanning.HasValue ? r.TanggalPlanning.Value.ToString("dd/MM/yyyy") : "";
+                var machine = r.MesinId.HasValue && machinesMap.TryGetValue(r.MesinId.Value, out var mname) ? mname : r.MesinId?.ToString() ?? "-";
+                bool isOdd = (no % 2 == 0);
+                var bgColor = isOdd ? System.Drawing.Color.FromArgb(20, 28, 38) : System.Drawing.Color.FromArgb(25, 34, 46);
+
+                var rowData = new object[] { no, date, machine, r.Shift ?? "-", r.KodeItem ?? "-", r.PartName ?? "-", r.PnSap ?? "-", r.QtyPlanning ?? 0 };
+                for (int col = 1; col <= rowData.Length; col++)
+                {
+                    var cell = ws.Cells[row, col];
+                    cell.Value = rowData[col - 1];
+                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    cell.Style.Fill.BackgroundColor.SetColor(bgColor);
+                    cell.Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(220, 220, 220));
+                    cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Hair, System.Drawing.Color.FromArgb(50, 60, 70));
+                    cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                }
+                // Highlight Kode Item column
+                ws.Cells[row, 5].Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(100, 200, 255));
+                ws.Cells[row, 5].Style.Font.Bold = true;
+                // Highlight qty
+                ws.Cells[row, 8].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                ws.Cells[row, 8].Style.Font.Bold = true;
+
+                row++;
+                no++;
+            }
+
+            // Auto fit columns
+            ws.Column(1).Width = 6;
+            ws.Column(2).Width = 18;
+            ws.Column(3).Width = 32;
+            ws.Column(4).Width = 10;
+            ws.Column(5).Width = 14;
+            ws.Column(6).Width = 50;
+            ws.Column(7).Width = 24;
+            ws.Column(8).Width = 14;
+            ws.Row(4).Height = 20;
+
+            var fileName = $"ELWP_Planning_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+            var content = package.GetAsByteArray();
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+
         [HttpPost]
         public async Task<IActionResult> ClearData()
         {

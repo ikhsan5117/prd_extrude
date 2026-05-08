@@ -45,18 +45,25 @@
         font-size: 0.6rem; 
         text-transform: uppercase; 
         padding: 14px 10px; 
-        border: none; 
         letter-spacing: 1.5px;
         font-weight: 900;
-        border-bottom: 2px solid rgba(0, 255, 136, 0.1);
+        border-bottom: 2px solid rgba(0, 255, 136, 0.2);
+        border-right: 1px solid rgba(0, 255, 136, 0.12);
+        border-top: none;
+        border-left: none;
     }
+    .hist-table th:last-child { border-right: none; }
     .hist-table td { 
         font-size: 0.77rem; 
         padding: 12px 10px; 
-        border-color: rgba(255,255,255,0.03); 
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-right: 1px solid rgba(255,255,255,0.05);
+        border-top: none;
+        border-left: none;
         vertical-align: middle; 
     }
-    .hist-table tr:hover { background: rgba(0, 255, 136, 0.03) !important; }
+    .hist-table td:last-child { border-right: none; }
+    .hist-table tr:hover td { background: rgba(0, 255, 136, 0.03) !important; }
     
     .neon-btn {
         background: var(--neon-green);
@@ -193,8 +200,12 @@
                     <!-- Action Buttons in Card -->
                     <div class="d-flex h-100 gap-2">
                         <a asp-action="ExportCsv" asp-route-filterDate="@(ViewBag.FilterDate?.ToString("yyyy-MM-dd"))" asp-route-query="@ViewBag.Query" asp-route-machineId="@ViewBag.MachineId" class="btn btn-outline-info flex-grow-1 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1" style="border-style: dashed; background: rgba(0, 150, 255, 0.05);">
-                            <i class="bi bi-file-earmark-spreadsheet fs-5"></i>
+                            <i class="bi bi-file-earmark-text fs-5"></i>
                             <span style="font-size: 0.65rem; font-weight: 800;">EXPORT CSV</span>
+                        </a>
+                        <a asp-action="ExportExcel" asp-route-filterDate="@(ViewBag.FilterDate?.ToString("yyyy-MM-dd"))" asp-route-query="@ViewBag.Query" asp-route-machineId="@ViewBag.MachineId" class="btn btn-outline-success flex-grow-1 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1" style="border-style: dashed; background: rgba(0, 200, 100, 0.05);">
+                            <i class="bi bi-file-earmark-excel fs-5"></i>
+                            <span style="font-size: 0.65rem; font-weight: 800;">DOWNLOAD EXCEL</span>
                         </a>
                         <button type="button" class="btn btn-outline-warning flex-grow-1 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1" style="border-style: dashed; background: rgba(255, 193, 7, 0.05);" data-bs-toggle="modal" data-bs-target="#syncModal">
                             <i class="bi bi-arrow-repeat fs-5"></i>

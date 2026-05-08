@@ -15,6 +15,21 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 .s-box select option{background:#0d1117;color:#fff}
 .btn-load{background:var(--accent);color:#fff;border:none;padding:0 28px;height:46px;font-weight:900;font-size:.75rem;letter-spacing:1px;cursor:pointer;transition:.3s}
 .btn-load:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--glow)}
+/* ── Autocomplete Dropdown ── */
+.ac-wrap{position:relative;flex:1}
+.ac-input{background:0 0;border:none;color:#fff;width:100%;height:100%;font-size:.8rem;font-weight:600;outline:0;text-transform:uppercase;letter-spacing:.5px}
+.ac-clear{background:none;border:none;color:#484f58;cursor:pointer;padding:0 4px;font-size:.85rem;line-height:1;flex-shrink:0;transition:.2s}
+.ac-clear:hover{color:#ff4d4d}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:-15px;right:0;background:#0d1117;border:1px solid rgba(0,102,255,.4);border-radius:8px;z-index:9999;max-height:280px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.7);display:none}
+.ac-dropdown.open{display:block}
+.ac-item{padding:10px 14px;cursor:pointer;transition:.15s;border-bottom:1px solid rgba(255,255,255,.04)}
+.ac-item:hover,.ac-item.highlighted{background:rgba(0,102,255,.15)}
+.ac-item-doc{font-size:.78rem;font-weight:900;color:#38bdf8;letter-spacing:.5px}
+.ac-item-sub{font-size:.65rem;color:#8b949e;margin-top:2px;font-weight:600}
+.ac-badge{display:inline-block;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);color:#00ff88;font-size:.55rem;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:6px;letter-spacing:.5px;vertical-align:middle}
+.ac-badge.no-data{background:rgba(255,77,77,.08);border-color:rgba(255,77,77,.3);color:#ff4d4d}
+.ac-no-result{padding:16px 14px;text-align:center;color:#484f58;font-size:.75rem;font-weight:700}
+.ac-loading{padding:14px;text-align:center;color:#8b949e;font-size:.7rem}
 .info-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}
 .i-card{padding:14px 18px;background:linear-gradient(145deg,rgba(21,27,38,.7),rgba(1,4,9,.8));border:1px solid rgba(255,255,255,.05);border-radius:2px}
 .i-lbl{font-size:.5rem;font-weight:800;color:#484f58;text-transform:uppercase;letter-spacing:1.5px}
@@ -42,15 +57,115 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 .legend-box span::before{content:'';display:inline-block;width:20px;height:3px;margin-right:6px;vertical-align:middle}
 .leg-actual::before{background:#0088ff}.leg-upper::before{background:#ff4d4d;border-top:2px dashed #ff4d4d;height:0}.leg-lower::before{background:#fbbf24;border-top:2px dashed #fbbf24;height:0}
 @@media(max-width:900px){.search-panel{grid-template-columns:1fr}.info-cards{grid-template-columns:repeat(2,1fr)}}
+
+  /* ── Filter Row Styles ── */
+  .filter-row{grid-column:span 3;display:flex;gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,.05);align-items:center}
+  .combined-filter-box{flex:1;display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.1);height:38px;overflow:hidden}
+  .combined-filter-box:focus-within{border-color:var(--accent);background:rgba(15,23,42,.9)}
+  .mini-filter{display:flex;align-items:center;padding:0 10px;border-right:1px solid rgba(255,255,255,.08)}
+  .mini-filter:last-child{border-right:none}
+  .mini-filter i{color:#64748b;font-size:.8rem;margin-right:8px;flex-shrink:0}
+  .mini-filter select{background:transparent;border:none;color:#fff;font-size:.68rem;font-weight:700;width:100%;height:100%;outline:none;text-transform:uppercase;letter-spacing:.45px}
+  .mini-filter select option{background:#0d1117;color:#fff}
+  .mini-filter select:invalid{color:#64748b}
+  .btn-reset-f{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
+  .btn-reset-f:hover{background:#ef4444;color:#fff}
+
+  /* ── Date Popup ── */
+  .date-filter-wrap{position:relative;min-width:220px;max-width:220px}
+  .btn-date-popup{width:100%;height:38px;display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.1);color:#e2e8f0;font-size:.72rem;font-weight:800;letter-spacing:.5px;padding:0 12px;cursor:pointer;transition:.2s;text-transform:uppercase}
+  .btn-date-popup:hover{border-color:var(--accent);background:rgba(15,23,42,.9)}
+  .btn-date-popup .date-pill{margin-left:auto;font-size:.6rem;color:#94a3b8;font-weight:700;text-transform:none}
+  .date-popup{position:absolute;top:calc(100% + 8px);left:0;z-index:10050;width:360px;max-width:min(94vw,360px);background:#0f172a;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.6);border-radius:10px;padding:14px;display:none}
+  .date-popup.open{display:block}
+  .dp-title{font-size:.78rem;color:#cbd5e1;font-weight:900;letter-spacing:.6px;margin-bottom:10px}
+  .dp-sec-title{font-size:.65rem;color:#94a3b8;font-weight:800;letter-spacing:.5px;margin:8px 0 6px}
+  .dp-preset-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .dp-preset-btn{height:30px;background:#1e293b;border:1px solid rgba(255,255,255,.12);color:#cbd5e1;font-size:.62rem;font-weight:800;cursor:pointer;border-radius:6px;transition:.2s}
+  .dp-preset-btn:hover{background:#334155;border-color:#60a5fa}
+  .dp-range{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .dp-input-wrap label{display:block;font-size:.62rem;color:#94a3b8;font-weight:800;margin-bottom:4px}
+  .dp-input-wrap input{width:100%;height:32px;background:#111827;border:1px solid rgba(255,255,255,.14);color:#e2e8f0;padding:0 8px;border-radius:6px;font-size:.7rem}
+  .dp-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+  .dp-btn-clear,.dp-btn-apply{height:32px;min-width:86px;padding:0 12px;border-radius:7px;font-size:.68rem;font-weight:900;letter-spacing:.5px;border:1px solid transparent;cursor:pointer}
+  .dp-btn-clear{background:#1f2937;border-color:rgba(255,255,255,.16);color:#cbd5e1}
+  .dp-btn-apply{background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff}
+  @@media(max-width:900px){.date-filter-wrap{min-width:100%;max-width:none}.date-popup{left:0;right:0;width:100%}.dp-preset-grid{grid-template-columns:repeat(2,1fr)}.combined-filter-box{grid-template-columns:1fr}}
 </style>
 
 <div class="ca-page">
 <div class="ca-header"><div><div class="ca-title">Chart Analysis</div><div class="ca-sub">Production Parameter vs SPS Standard</div></div></div>
 
 <div class="search-panel">
-<div class="s-box"><i class="bi bi-search"></i><input id="docSearch" placeholder="CARI NO. DOCUMENT / VIN CODE..." list="docList" /><datalist id="docList"></datalist></div>
+<!-- Autocomplete Search Box: SPS Item List -->
+<div class="s-box" id="acWrapper">
+  <i class="bi bi-upc-scan"></i>
+  <div class="ac-wrap">
+    <input id="docSearch" class="ac-input" placeholder="CARI ITEM LIST SPS (TA1080, NA2033...)" autocomplete="off" spellcheck="false" />
+    <div id="acDropdown" class="ac-dropdown"></div>
+  </div>
+  <button class="ac-clear" id="acClear" title="Clear" style="display:none"><i class="bi bi-x-circle-fill"></i></button>
+</div>
+<!-- Dropdown: Production Report berdasarkan Item yang dipilih -->
 <div class="s-box"><i class="bi bi-cpu"></i><select id="docSelect"><option value="">-- PILIH DOCUMENT --</option></select></div>
 <button class="btn-load" onclick="loadChart()"><i class="bi bi-lightning-charge-fill"></i> LOAD</button>
+
+<!-- Sub Filters -->
+<div class="filter-row">
+  <div class="date-filter-wrap" id="dateFilterWrap">
+    <button class="btn-date-popup" type="button" onclick="toggleDatePopup()">
+      <i class="bi bi-calendar-range" style="color:#38bdf8;"></i>
+      FILTER TANGGAL
+      <span class="date-pill" id="dateRangeLabel">ALL</span>
+    </button>
+    <div class="date-popup" id="datePopup">
+      <div class="dp-title">Tanggal</div>
+
+      <div class="dp-sec-title">Preset Cepat</div>
+      <div class="dp-preset-grid">
+        <button type="button" class="dp-preset-btn" onclick="setDatePreset('today')">Hari Ini</button>
+        <button type="button" class="dp-preset-btn" onclick="setDatePreset('week')">Minggu Ini</button>
+        <button type="button" class="dp-preset-btn" onclick="setDatePreset('month')">Bulan Ini</button>
+        <button type="button" class="dp-preset-btn" onclick="setDatePreset('year')">Tahun Ini</button>
+      </div>
+
+      <div class="dp-sec-title">Rentang Tanggal</div>
+      <div class="dp-range">
+        <div class="dp-input-wrap">
+          <label>Dari</label>
+          <input type="date" id="filterStartDate">
+        </div>
+        <div class="dp-input-wrap">
+          <label>Sampai</label>
+          <input type="date" id="filterEndDate">
+        </div>
+      </div>
+
+      <div class="dp-actions">
+        <button type="button" class="dp-btn-clear" onclick="clearDateFilter()">Clear</button>
+        <button type="button" class="dp-btn-apply" onclick="applyDateFilter()">Apply</button>
+      </div>
+    </div>
+  </div>
+  <div class="combined-filter-box">
+    <div class="mini-filter">
+      <i class="bi bi-clock"></i>
+      <select id="filterShift" onchange="onSubFilterChanged()">
+        <option value="">SHIFT ALL</option>
+        <option value="Shift 1">SHIFT 1</option>
+        <option value="Shift 2">SHIFT 2</option>
+        <option value="Shift 3">SHIFT 3</option>
+      </select>
+    </div>
+    <div class="mini-filter">
+      <i class="bi bi-person-badge"></i>
+      <select id="filterPic" onchange="onSubFilterChanged()">
+        <option value="">PIC / OPERATOR ALL</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn-reset-f" onclick="resetFilters()" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></button>
+</div>
 </div>
 
 <div id="noData"><i class="bi bi-bar-chart-line" style="font-size:3rem;display:block;margin-bottom:10px"></i>PILIH DOCUMENT UNTUK MEMUAT DATA</div>
@@ -59,13 +174,13 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 <div class="info-cards" id="infoCards"></div>
 
 <div class="tab-bar">
-<button class="tab-btn active" onclick="switchTab('temp',this)">Temperature</button>
-<button class="tab-btn" onclick="switchTab('speed',this)">Speed / Pressure</button>
-<button class="tab-btn" onclick="switchTab('dim',this)">Dimension</button>
-<button class="tab-btn" onclick="switchTab('table',this)">Detail Table</button>
+<button class="tab-btn" onclick="switchTab('temp',this)" style="display:none">Temperature</button>
+<button class="tab-btn" onclick="switchTab('speed',this)" style="display:none">Speed / Pressure</button>
+<button class="tab-btn active" onclick="switchTab('dim',this)">Dimension</button>
+<button class="tab-btn" onclick="switchTab('table',this)" style="display:none">Detail Table</button>
 </div>
 
-<div id="pane-temp" class="tab-pane active">
+<div id="pane-temp" class="tab-pane">
 <div class="chart-card"><h3>Inner (Material 1) — Head / Cylinder / Screw Temperature</h3><div class="chart-wrap"><canvas id="chartTempInner"></canvas></div>
 <div class="legend-box"><span class="leg-actual">Actual (solid)</span><span class="leg-upper">Batas Atas (dashed)</span><span class="leg-lower">Batas Bawah (dashed)</span></div></div>
 <div class="chart-card"><h3>Outer (Material 2) — Head / Cylinder / Screw Temperature</h3><div class="chart-wrap"><canvas id="chartTempOuter"></canvas></div></div>
@@ -76,7 +191,7 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 <div class="chart-card"><h3>Hose Speed &amp; Machine Parameters</h3><div class="chart-wrap"><canvas id="chartMachine"></canvas></div></div>
 </div>
 
-<div id="pane-dim" class="tab-pane">
+<div id="pane-dim" class="tab-pane active">
 <div class="chart-card"><h3>Inner Diameter — SPC Chart</h3><div class="chart-wrap"><canvas id="chartDimInner"></canvas></div></div>
 <div class="chart-card"><h3>Total Thickness — SPC Chart</h3><div class="chart-wrap"><canvas id="chartDimTotal"></canvas></div></div>
 </div>
@@ -93,19 +208,330 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 let DATA=null, CHARTS={};
 const P=v=>{if(!v)return null;let s=String(v);if(s.includes('~')){let p=s.split('~').map(Number);return(p[0]+p[1])/2}return parseFloat(s)||null};
 const RANGE=v=>{if(!v)return null;let s=String(v);if(s.includes('~'))return s.split('~').map(Number);return null};
+const toYMD=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
 
+// ── Autocomplete State (SPS Item List → Production Report) ──
+let AC_IDX=-1, AC_DEBOUNCE=null, AC_SELECTED=null, AC_SELECTED_ITEM=null;
+// _DISPLAYED_RESULTS selalu sinkron dengan apa yang dirender di dropdown
+window._DISPLAYED_RESULTS=[];
+
+// Init: Load dokumen terbaru ke dropdown kanan saat halaman pertama dibuka
 async function loadDocList(){
-  try{const r=await fetch('/ProductionReport/GetDocumentList');const d=await r.json();
-  const sel=document.getElementById('docSelect');const dl=document.getElementById('docList');
-  sel.innerHTML='<option value="">-- PILIH --</option>';dl.innerHTML='';
-  d.forEach(x=>{sel.innerHTML+=`<option value="${x.documentNumber}">${x.documentNumber} | ${x.hoseType||'-'} | ${x.vinCode||'-'}</option>`;
-  dl.innerHTML+=`<option value="${x.documentNumber}">${x.hoseType} - ${x.vinCode} (${x.date})</option>`;});
-  // Auto-load first document with readings, fallback to first available
-  const docWithData=d.find(x=>x.readingsCount>0);
-  const firstDoc=docWithData||d[0];
-  if(firstDoc){sel.value=firstDoc.documentNumber;await loadChart();}
+  // Fetch filter options (HoseTypes & PICs)
+  fetchFilterOptions();
+
+  try{
+    const r=await fetch('/ProductionReport/GetDocumentsByItem');
+    const d=await r.json();
+    populateDocSelect(d,false);
   }catch(e){console.error('Error loading doc list:',e);}
 }
+
+// Populate dropdown kanan dengan daftar dokumen
+function populateDocSelect(docs,autoSelect=false){
+  const sel=document.getElementById('docSelect');
+  if(!docs||docs.length===0){
+    sel.innerHTML='<option value="">-- TIDAK ADA DOKUMEN --</option>';
+    AC_SELECTED=null;
+    return;
+  }
+  sel.innerHTML='<option value="">-- PILIH DOCUMENT --</option>';
+  docs.forEach(x=>{
+    const cnt=x.readingsCount>0?` [${x.readingsCount} data]`:' [no data]';
+    sel.innerHTML+=`<option value="${x.documentNumber}">${x.documentNumber} | ${x.hoseType||'-'} | ${x.shift||'-'} | ${x.date||'-'}${cnt}</option>`;
+  });
+  if(autoSelect){
+    const first=docs.find(x=>x.readingsCount>0)||docs[0];
+    if(first){
+      sel.value=first.documentNumber;
+      AC_SELECTED=first.documentNumber;
+    }
+  }else{
+    sel.value='';
+    AC_SELECTED=null;
+  }
+}
+
+// Set value autocomplete setelah item SPS dipilih
+function setAcSpsValue(item){
+  const inp=document.getElementById('docSearch');
+  const clr=document.getElementById('acClear');
+  const rawCode=(item.itemCode||'').trim();
+  const rawDoc=(item.documentNumber||'').trim();
+  const codeIsPlaceholder = !rawCode || ['-','--','---','N/A','NA'].includes(rawCode.toUpperCase());
+  const displayCode = codeIsPlaceholder ? (rawDoc || 'ITEM') : rawCode;
+  inp.value=`${displayCode}  —  ${item.hoseType||''}`.trim();
+  if(clr)clr.style.display='inline-flex';
+  closeAcDropdown();
+  AC_SELECTED_ITEM=item;
+  window.AC_SELECTED_ITEM=item; // Keep compatibility with existing references
+  refreshDocList(true);
+}
+
+// Fetch dokumen dengan filter lengkap
+async function refreshDocList(autoSelect=false){
+  const sel=document.getElementById('docSelect');
+  const itemCode=AC_SELECTED_ITEM ? AC_SELECTED_ITEM.itemCode : '';
+  
+  const startDate=document.getElementById('filterStartDate').value;
+  const endDate=document.getElementById('filterEndDate').value;
+  const shift=document.getElementById('filterShift').value;
+  const pic=document.getElementById('filterPic').value;
+
+  sel.innerHTML='<option value="">⏳ Memuat dokumen...</option>';
+  
+  try{
+    const params=new URLSearchParams({
+      itemCode: itemCode,
+      startDate: startDate,
+      endDate: endDate,
+      shift: shift,
+      pic: pic
+    });
+    const r=await fetch(`/ProductionReport/GetDocumentsByItem?${params.toString()}`);
+    const d=await r.json();
+    populateDocSelect(d,autoSelect);
+  }catch(e){console.error('Error refreshing docs:',e);}
+}
+
+async function onSubFilterChanged(){
+  await fetchFilterOptions();
+  refreshDocList(!!AC_SELECTED_ITEM);
+
+  // Force autocomplete source to reload with current subfilters/date.
+  window._SPS_RESULTS=[];
+  const searchInput=document.getElementById('docSearch');
+  if(searchInput && document.activeElement===searchInput){
+    fetchAllSpsItems();
+  }
+}
+
+// Legacy function mapping for backward compatibility with existing code
+async function fetchDocsByItem(itemCode){
+  // Update internal state if needed, but the refreshDocList handles the fetch
+  refreshDocList();
+}
+
+let RF_DEBOUNCE=null;
+function debouncedRefresh(){
+  clearTimeout(RF_DEBOUNCE);
+  RF_DEBOUNCE=setTimeout(refreshDocList,400);
+}
+
+function resetFilters(){
+  document.getElementById('filterStartDate').value='';
+  document.getElementById('filterEndDate').value='';
+  document.getElementById('filterShift').value='';
+  document.getElementById('filterPic').value='';
+  updateDateLabel();
+  onSubFilterChanged();
+}
+
+function toggleDatePopup(){
+  document.getElementById('datePopup').classList.toggle('open');
+}
+
+function closeDatePopup(){
+  document.getElementById('datePopup').classList.remove('open');
+}
+
+function updateDateLabel(){
+  const s=document.getElementById('filterStartDate').value;
+  const e=document.getElementById('filterEndDate').value;
+  const lbl=document.getElementById('dateRangeLabel');
+  if(!s&&!e){lbl.textContent='ALL';return;}
+  if(s&&e){lbl.textContent=`${s} - ${e}`;return;}
+  lbl.textContent=s||e;
+}
+
+function setDatePreset(type){
+  const now=new Date();
+  const start=new Date(now);
+  const end=new Date(now);
+
+  if(type==='week'){
+    const day=(now.getDay()+6)%7; // Monday as first day
+    start.setDate(now.getDate()-day);
+  }else if(type==='month'){
+    start.setDate(1);
+  }else if(type==='year'){
+    start.setMonth(0,1);
+  }
+
+  document.getElementById('filterStartDate').value=toYMD(start);
+  document.getElementById('filterEndDate').value=toYMD(end);
+  updateDateLabel();
+}
+
+function clearDateFilter(){
+  document.getElementById('filterStartDate').value='';
+  document.getElementById('filterEndDate').value='';
+  updateDateLabel();
+  onSubFilterChanged();
+}
+
+function applyDateFilter(){
+  const s=document.getElementById('filterStartDate').value;
+  const e=document.getElementById('filterEndDate').value;
+  if(s&&e&&s>e){
+    showMsg('warning','Tanggal Tidak Valid','Tanggal mulai tidak boleh lebih besar dari tanggal selesai');
+    return;
+  }
+  updateDateLabel();
+  closeDatePopup();
+  onSubFilterChanged();
+}
+
+async function fetchFilterOptions(){
+  try{
+    const selectedPic=document.getElementById('filterPic').value;
+    const itemCode=AC_SELECTED_ITEM ? AC_SELECTED_ITEM.itemCode : '';
+
+    const params=new URLSearchParams({
+      startDate: document.getElementById('filterStartDate').value || '',
+      endDate: document.getElementById('filterEndDate').value || '',
+      shift: document.getElementById('filterShift').value || '',
+      itemCode: itemCode || ''
+    });
+
+    const r=await fetch(`/ProductionReport/GetFilterOptions?${params.toString()}`);
+    const d=await r.json();
+    const pics = d.pics || [];
+
+    const picSel = document.getElementById('filterPic');
+
+    picSel.innerHTML = '<option value="">PIC / OPERATOR ALL</option>' +
+      pics.map(x => `<option value="${x.replace(/"/g, '&quot;')}">${x}</option>`).join('');
+
+    if (selectedPic && pics.includes(selectedPic))
+      picSel.value = selectedPic;
+  }catch(e){console.error('Error fetching filter options:',e);}
+}
+
+function openAcDropdown(){
+  document.getElementById('acDropdown').classList.add('open');
+}
+function closeAcDropdown(){
+  const dd=document.getElementById('acDropdown');dd.classList.remove('open');AC_IDX=-1;
+}
+
+function renderAcItems(items,loading){
+  const dd=document.getElementById('acDropdown');
+  if(loading){dd.innerHTML='<div class="ac-loading"><i class="bi bi-hourglass-split"></i> Mencari di SPS Master...</div>';openAcDropdown();window._DISPLAYED_RESULTS=[];return;}
+  if(!items||items.length===0){dd.innerHTML='<div class="ac-no-result"><i class="bi bi-upc-scan"></i> Item List tidak ditemukan</div>';openAcDropdown();window._DISPLAYED_RESULTS=[];return;}
+  // Simpan items yang sedang dirender — ini yang dipakai selectSpsItem
+  window._DISPLAYED_RESULTS=items.slice();
+  dd.innerHTML=items.map((x,i)=>{
+    const docBadge=x.documentNumber?`<span style="color:#8b949e;font-size:.6rem;margin-left:8px">${x.documentNumber}</span>`:'';
+    return`<div class="ac-item" data-idx="${i}" onclick="selectSpsItem(${i})">
+      <div class="ac-item-doc"><i class="bi bi-upc" style="color:#fbbf24;margin-right:6px"></i>${x.itemCode}${docBadge}</div>
+      <div class="ac-item-sub">${x.hoseType||'—'}</div>
+    </div>`;
+  }).join('');
+  AC_IDX=-1;
+  openAcDropdown();
+}
+
+function selectSpsItem(idx){
+  // Selalu gunakan _DISPLAYED_RESULTS (yang sinkron dengan dropdown yang dirender)
+  // BUKAN _SPS_RESULTS, karena index bisa berbeda setelah filtering
+  const item=window._DISPLAYED_RESULTS[idx];
+  if(!item)return;
+  setAcSpsValue(item);
+}
+
+async function fetchAllSpsItems(){
+  renderAcItems(null,true);
+  try{
+    // Ambil filter values saat ini
+    const startDate=document.getElementById('filterStartDate').value;
+    const endDate=document.getElementById('filterEndDate').value;
+    const shift=document.getElementById('filterShift').value;
+    const pic=document.getElementById('filterPic').value;
+    
+    const params=new URLSearchParams({
+      query: '',
+      startDate: startDate,
+      endDate: endDate,
+      shift: shift,
+      pic: pic
+    });
+    const r=await fetch(`/ProductionReport/SearchSpsItems?${params.toString()}`);
+    const d=await r.json();
+    window._SPS_RESULTS=d;
+    window._FILTER_APPLIED={startDate,endDate,shift,pic}; // Cache filter criteria
+    renderAcItems(d,false);
+  }catch(e){
+    console.error('Fetch SPS items error:', e);
+    renderAcItems([],false);
+  }
+}
+
+function filterSpsItems(q){
+  if(!window._SPS_RESULTS || window._SPS_RESULTS.length === 0) return;
+  const query=q.trim().toUpperCase();
+  const filtered=query ? window._SPS_RESULTS.filter(x=>
+    (x.itemCode && x.itemCode.toUpperCase().includes(query)) ||
+    (x.hoseType && x.hoseType.toUpperCase().includes(query))
+  ) : window._SPS_RESULTS;
+  renderAcItems(filtered,false);
+}
+
+(function initAutocomplete(){
+  const inp=document.getElementById('docSearch');
+  const clr=document.getElementById('acClear');
+  const dd=document.getElementById('acDropdown');
+  window._SPS_RESULTS=[];
+
+  // Focus: tampilkan semua items sesuai filter
+  inp.addEventListener('focus',function(){
+    if(this.value.length === 0){
+      // Always refetch to respect current filter values
+      window._SPS_RESULTS=[]; // Clear cache
+      fetchAllSpsItems();
+    }
+  });
+
+  // Input: real-time filter
+  inp.addEventListener('input',function(){
+    const v=this.value.trim();
+    AC_SELECTED=null;
+    clr.style.display=v?'inline-flex':'none';
+    clearTimeout(AC_DEBOUNCE);
+    
+    if(window._SPS_RESULTS && window._SPS_RESULTS.length > 0){
+      filterSpsItems(v); // Filter dari cache
+    } else if(v.length > 0){
+      AC_DEBOUNCE=setTimeout(()=>fetchAllSpsItems().then(()=>filterSpsItems(v)),200);
+    } else {
+      closeAcDropdown();
+    }
+  });
+
+  inp.addEventListener('keydown',function(e){
+    const items=dd.querySelectorAll('.ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();AC_IDX=Math.min(AC_IDX+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('highlighted',i===AC_IDX));}
+    else if(e.key==='ArrowUp'){e.preventDefault();AC_IDX=Math.max(AC_IDX-1,0);items.forEach((el,i)=>el.classList.toggle('highlighted',i===AC_IDX));}
+    else if(e.key==='Enter'){if(AC_IDX>=0&&window._DISPLAYED_RESULTS[AC_IDX]){selectSpsItem(AC_IDX);}else{loadChart();}}
+    else if(e.key==='Escape'){closeAcDropdown();}
+  });
+
+  clr.addEventListener('click',function(){
+    inp.value='';AC_SELECTED=null;AC_SELECTED_ITEM=null;this.style.display='none';
+    document.getElementById('docSelect').innerHTML='<option value="">-- PILIH DOCUMENT --</option>';
+    closeAcDropdown();inp.focus();
+  });
+
+  // Sinkron: saat user pilih dari dropdown kanan, update AC_SELECTED
+  document.getElementById('docSelect').addEventListener('change',function(){
+    AC_SELECTED=this.value||null;
+  });
+
+  document.addEventListener('click',function(e){
+    if(!document.getElementById('acWrapper').contains(e.target))closeAcDropdown();
+    if(!document.getElementById('dateFilterWrap').contains(e.target))closeDatePopup();
+  });
+})();
 
 function showMsg(icon,title,text){
   if(typeof Swal!=='undefined')Swal.fire({icon,title,text,background:'#0d1117',color:'#fff'});
@@ -114,9 +540,11 @@ function showMsg(icon,title,text){
 
 async function loadChart(){
   const selVal=document.getElementById('docSelect').value;
-  const searchVal=document.getElementById('docSearch').value.trim();
-  const doc=selVal||searchVal;
-  if(!doc){showMsg('warning','Pilih Document','Masukkan No. Document terlebih dahulu');return;}
+  const startDate=document.getElementById('filterStartDate').value;
+  const endDate=document.getElementById('filterEndDate').value;
+  // Prioritaskan AC_SELECTED (dari autocomplete), fallback ke select dropdown
+  const doc=AC_SELECTED||selVal;
+  if(!doc){showMsg('warning','Pilih Document','Pilih atau cari No. Document terlebih dahulu');return;}
   
   const nd=document.getElementById('noData');
   const mc=document.getElementById('chartMainContent');
@@ -126,7 +554,10 @@ async function loadChart(){
   
   try{
     console.log('[ChartAnalysis] Loading doc:', doc);
-    const r=await fetch('/ProductionReport/GetChartData?documentNumber='+encodeURIComponent(doc));
+    const p=new URLSearchParams({ documentNumber: doc });
+    if(startDate)p.set('startDate',startDate);
+    if(endDate)p.set('endDate',endDate);
+    const r=await fetch('/ProductionReport/GetChartData?'+p.toString());
     if(!r.ok){showMsg('error','HTTP Error','Status: '+r.status);nd.innerHTML='<i class="bi bi-bar-chart-line" style="font-size:3rem;display:block;margin-bottom:10px"></i>GAGAL MEMUAT DATA';return;}
     DATA=await r.json();
     console.log('[ChartAnalysis] Response:', DATA);
@@ -134,6 +565,36 @@ async function loadChart(){
     nd.style.display='none';
     mc.style.display='block';
     renderInfo();renderCharts();renderTable();
+
+    // ── Popup peringatan jika SPS tidak ditemukan ──
+    if(!DATA.spsFound){
+      mc.style.display='none';
+      nd.style.display='block';
+      nd.innerHTML='<i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;display:block;margin-bottom:10px;color:#f59e0b"></i>SPS TIDAK DITEMUKAN<br><small style="font-size:.8rem;color:#8b949e">Analisis dibatalkan karena tidak ada batas standar (SPS)</small>';
+
+      const rp=DATA.report||{};
+      Swal.fire({
+        icon:'warning',
+        title:'⚠️ SPS Tidak Ditemukan',
+        html:`
+          <div style="text-align:left;font-size:.85rem;line-height:1.8;">
+            <p>Standard Parameter Setting (SPS) <b>tidak ditemukan</b> untuk dokumen ini.</p>
+            <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:.8rem;">
+              <tr><td style="color:#94a3b8;padding:3px 8px 3px 0">Document</td><td style="font-weight:900;color:#38bdf8">${rp.documentNumber||'—'}</td></tr>
+              <tr><td style="color:#94a3b8;padding:3px 8px 3px 0">Hose Type</td><td style="font-weight:900;color:#fbbf24">${rp.hoseType||'—'}</td></tr>
+              <tr><td style="color:#94a3b8;padding:3px 8px 3px 0">VIN / Item</td><td style="font-weight:900;color:#fff">${rp.vinCode||'—'}</td></tr>
+            </table>
+            <p style="color:#94a3b8;font-size:.78rem;">⚡ Analisis tidak dapat dilanjutkan tanpa batas standar. Pastikan data SPS sudah diinput di <b>SPS Master</b>.</p>
+          </div>`,
+        background:'#0d1117',
+        color:'#e6edf3',
+        confirmButtonText:'Tutup',
+        confirmButtonColor:'#f59e0b',
+        showCloseButton:true
+      });
+      return;
+    }
+
     if((DATA.readings||[]).length===0){showMsg('info','Data Tersedia','Report ditemukan tapi belum ada data readings (interval). Tabel comparison tetap ditampilkan dari data initial.');}
   }catch(e){
     console.error('[ChartAnalysis] Error:', e);
@@ -167,17 +628,22 @@ function stdLine(label,val,len,color,dash){
 
 function renderCharts(){
   const rd=DATA.readings||[];const sp=DATA.spsStandard;const labels=rd.length>0?rd.map(r=>r.timeLabel):['No Data'];const len=Math.max(labels.length,1);
+  const dim=DATA.dimensionSeries||null;
+  const dimStd=DATA.dimensionStandard||null;
 
   // TEMP INNER
+  const stdL=(lbl,obj,len,cMx,cMn)=>{
+    let r=[]; if(!obj||obj.target==null)return r;
+    if(obj.max!=null)r.push({label:lbl+' Max',data:Array(len).fill(obj.max),borderColor:cMx,borderWidth:1,borderDash:[5,5],pointRadius:0,fill:false});
+    if(obj.min!=null)r.push({label:lbl+' Min',data:Array(len).fill(obj.min),borderColor:cMn,borderWidth:1,borderDash:[5,5],pointRadius:0,fill:false});
+    return r;
+  };
   let dsTI=[{label:'Head Temp',data:rd.map(r=>r.headTempInner),borderColor:'#0088ff',borderWidth:2.5,pointRadius:3,tension:.3},
   {label:'Cyl1',data:rd.map(r=>r.cylinder1TempInner),borderColor:'#22d3ee',borderWidth:2,pointRadius:2,tension:.3},
   {label:'Cyl2',data:rd.map(r=>r.cylinder2TempInner),borderColor:'#a78bfa',borderWidth:2,pointRadius:2,tension:.3},
   {label:'Cyl3',data:rd.map(r=>r.cylinder3TempInner),borderColor:'#34d399',borderWidth:2,pointRadius:2,tension:.3},
   {label:'Screw',data:rd.map(r=>r.screwTempInner),borderColor:'#f472b6',borderWidth:2,pointRadius:2,tension:.3}];
-  if(sp){[['HeadTemp1 ↑','headTemp1','#ff4d4d'],['HeadTemp1 ↓','headTemp1','#fbbf24']].forEach(([l,f,c])=>{
-    const v=P(sp[f.charAt(0).toLowerCase()+f.slice(1)]);if(v!=null){
-    if(l.includes('↑'))dsTI.push({label:l,data:Array(len).fill(v+5),borderColor:c,borderWidth:1,borderDash:[5,5],pointRadius:0});
-    else dsTI.push({label:l,data:Array(len).fill(v-5),borderColor:c,borderWidth:1,borderDash:[5,5],pointRadius:0});}});}
+  if(sp){dsTI.push(...stdL('HeadTemp',sp.headTemp1,len,'#ff4d4d','#fbbf24'));}
   makeChart('chartTempInner',labels,dsTI.filter(Boolean),'°C');
 
   // TEMP OUTER
@@ -186,6 +652,7 @@ function renderCharts(){
   {label:'Cyl2',data:rd.map(r=>r.cylinder2TempOuter),borderColor:'#a78bfa',borderWidth:2,pointRadius:2,tension:.3},
   {label:'Cyl3',data:rd.map(r=>r.cylinder3TempOuter),borderColor:'#34d399',borderWidth:2,pointRadius:2,tension:.3},
   {label:'Screw',data:rd.map(r=>r.screwTempOuter),borderColor:'#f472b6',borderWidth:2,pointRadius:2,tension:.3}];
+  if(sp){dsTO.push(...stdL('HeadTemp Outer',sp.headTemp2,len,'#ff4d4d','#fbbf24'));}
   makeChart('chartTempOuter',labels,dsTO.filter(Boolean),'°C');
 
   // SPEED
@@ -193,9 +660,7 @@ function renderCharts(){
   {label:'ScrewSpd Outer',data:rd.map(r=>r.screwSpeedOuter),borderColor:'#22d3ee',borderWidth:2.5,pointRadius:3,tension:.3},
   {label:'Pressure Inner',data:rd.map(r=>r.pressureInner),borderColor:'#f472b6',borderWidth:2,pointRadius:2,tension:.3,yAxisID:'y1'},
   {label:'Pressure Outer',data:rd.map(r=>r.pressureOuter),borderColor:'#fbbf24',borderWidth:2,pointRadius:2,tension:.3,yAxisID:'y1'}];
-  if(sp){const s1=P(sp.screwSpeed1),s2=P(sp.screwSpeed2);
-  if(s1!=null){dsS.push(stdLine('ScrewSpd1 ↑',s1+2,len,'#ff4d4d',[5,5]));dsS.push(stdLine('ScrewSpd1 ↓',s1-2,len,'#fbbf24',[5,5]));}
-  if(s2!=null){dsS.push(stdLine('ScrewSpd2 ↑',s2+2,len,'#ff4d4d',[5,5]));dsS.push(stdLine('ScrewSpd2 ↓',s2-2,len,'#fbbf24',[5,5]));}}
+  if(sp){dsS.push(...stdL('ScrewSpd1',sp.screwSpeed1,len,'#ff4d4d','#fbbf24'));dsS.push(...stdL('ScrewSpd2',sp.screwSpeed2,len,'#f472b6','#a78bfa'));}
   dsS=dsS.filter(Boolean);
   if(CHARTS['chartSpeed'])CHARTS['chartSpeed'].destroy();
   const ctxS=document.getElementById('chartSpeed');
@@ -207,69 +672,78 @@ function renderCharts(){
 
   // MACHINE
   let dsM=[{label:'Hose Speed',data:rd.map(r=>r.hoseSpeed),borderColor:'#0088ff',borderWidth:2.5,pointRadius:3,tension:.3}];
-  if(sp){const rng=RANGE(sp.hoseSpeed);if(rng){dsM.push(stdLine('HoseSpd ↑',rng[1],len,'#ff4d4d',[5,5]));dsM.push(stdLine('HoseSpd ↓',rng[0],len,'#fbbf24',[5,5]));}}
+  if(sp){dsM.push(...stdL('HoseSpd',sp.hoseSpeed,len,'#ff4d4d','#fbbf24'));}
   dsM=dsM.filter(Boolean);
   makeChart('chartMachine',labels,dsM,'m/min');
 
   // DIM INNER
-  let dsDI=[{label:'Inner Diameter',data:rd.map(r=>r.innerDiameter),borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3}];
-  if(sp){const mn=P(sp.innerMin),mx=P(sp.innerMax),lcl=P(sp.innerLCL),ucl=P(sp.innerUCL);
-  if(mx!=null)dsDI.push(stdLine('Max',mx,len,'#ff4d4d',[5,5]));
-  if(mn!=null)dsDI.push(stdLine('Min',mn,len,'#fbbf24',[5,5]));
-  if(ucl!=null)dsDI.push(stdLine('UCL',ucl,len,'rgba(255,77,77,.4)',[3,3]));
-  if(lcl!=null)dsDI.push(stdLine('LCL',lcl,len,'rgba(251,191,36,.4)',[3,3]));}
-  dsDI=dsDI.filter(Boolean);makeChart('chartDimInner',labels,dsDI,'mm');
+  const dimInnerLabels=(dim&&dim.innerDiameter&&dim.innerDiameter.length>0)?dim.innerDiameter.map(r=>r.label):labels;
+  const dimInnerValues=(dim&&dim.innerDiameter&&dim.innerDiameter.length>0)?dim.innerDiameter.map(r=>r.value):rd.map(r=>r.innerDiameter);
+  let dsDI=[{label:'Inner Diameter',data:dimInnerValues,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3}];
+  if(dimStd&&dimStd.innerDiameter){
+    const s=dimStd.innerDiameter; const iLen=Math.max(dimInnerLabels.length,1);
+    if(s.target!=null)dsDI.push(stdLine('Target',s.target,iLen,'#22d3ee',[2,4]));
+    if(s.max!=null)dsDI.push(stdLine('Max',s.max,iLen,'#ff4d4d',[5,5]));
+    if(s.min!=null)dsDI.push(stdLine('Min',s.min,iLen,'#fbbf24',[5,5]));
+    if(s.ucl!=null)dsDI.push(stdLine('UCL',s.ucl,iLen,'rgba(255,77,77,.4)',[3,3]));
+    if(s.lcl!=null)dsDI.push(stdLine('LCL',s.lcl,iLen,'rgba(251,191,36,.4)',[3,3]));
+  }
+  dsDI=dsDI.filter(Boolean);makeChart('chartDimInner',dimInnerLabels,dsDI,'mm');
 
   // DIM TOTAL
-  let dsDT=[{label:'Total Thick X',data:rd.map(r=>r.totalThicknessX),borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3},
-  {label:'Total Thick Y',data:rd.map(r=>r.totalThicknessY),borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
-  if(sp){const mn=P(sp.totalMin),mx=P(sp.totalMax);
-  if(mx!=null)dsDT.push(stdLine('Max',mx,len,'#ff4d4d',[5,5]));
-  if(mn!=null)dsDT.push(stdLine('Min',mn,len,'#fbbf24',[5,5]));}
-  dsDT=dsDT.filter(Boolean);makeChart('chartDimTotal',labels,dsDT,'mm');
+  const dimTotalLabels=(dim&&((dim.totalThicknessX&&dim.totalThicknessX.length>0)||(dim.totalThicknessY&&dim.totalThicknessY.length>0)))
+    ? ((dim.totalThicknessX&&dim.totalThicknessX.length>0)?dim.totalThicknessX:dim.totalThicknessY).map(r=>r.label)
+    : labels;
+  const dimTotalX=(dim&&dim.totalThicknessX&&dim.totalThicknessX.length>0)?dim.totalThicknessX.map(r=>r.value):rd.map(r=>r.totalThicknessX);
+  const dimTotalY=(dim&&dim.totalThicknessY&&dim.totalThicknessY.length>0)?dim.totalThicknessY.map(r=>r.value):rd.map(r=>r.totalThicknessY);
+  let dsDT=[{label:'Total Thick X',data:dimTotalX,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3},
+  {label:'Total Thick Y',data:dimTotalY,borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
+  if(dimStd&&dimStd.totalThickness){
+    const s=dimStd.totalThickness; const tLen=Math.max(dimTotalLabels.length,1);
+    if(s.target!=null)dsDT.push(stdLine('Target',s.target,tLen,'#a78bfa',[2,4]));
+    if(s.max!=null)dsDT.push(stdLine('Max',s.max,tLen,'#ff4d4d',[5,5]));
+    if(s.min!=null)dsDT.push(stdLine('Min',s.min,tLen,'#fbbf24',[5,5]));
+  }
+  dsDT=dsDT.filter(Boolean);makeChart('chartDimTotal',dimTotalLabels,dsDT,'mm');
 }
 
-function evalParam(name,actual,spsVal,tolOrRange){
+function evalParam(name,actual,stdObj){
   if(actual==null||actual==undefined)return null;
   const a=parseFloat(actual);if(isNaN(a))return null;
-  let std=null,lo=null,hi=null;
-  if(spsVal==null||spsVal==undefined||spsVal==='')return{name,actual:a,standard:'—',lo:'—',hi:'—',status:'NO_STD'};
-  const sv=String(spsVal);
-  if(sv.includes('~')){const p=sv.split('~').map(Number);lo=p[0];hi=p[1];std=(lo+hi)/2;}
-  else{std=parseFloat(sv);if(isNaN(std))return{name,actual:a,standard:sv,lo:'—',hi:'—',status:'NO_STD'};
-  if(tolOrRange!=null){const t=parseFloat(tolOrRange);lo=std-Math.abs(t);hi=std+Math.abs(t);}else{lo=std*0.9;hi=std*1.1;}}
-  const status=(a>=lo&&a<=hi)?'OK':'NG';
+  if(!stdObj||stdObj.target==null)return{name,actual:a,standard:'—',lo:'—',hi:'—',status:'NO_STD'};
+  const lo=stdObj.min, hi=stdObj.max, std=stdObj.target;
+  const status=(lo!=null&&hi!=null)?(a>=lo&&a<=hi?'OK':'NG'):'OK';
   return{name,actual:a,standard:std,lo:lo!=null?lo.toFixed(1):'—',hi:hi!=null?hi.toFixed(1):'—',status};
 }
 
 function renderTable(){
   const sp=DATA.spsStandard||{};const ini=DATA.initials||{};const body=document.getElementById('cmpBody');
   const params=[
-    ['Head Temp Inner',ini.initHeadTempInner,sp.headTemp1,5],
-    ['Cyl1 Temp Inner',ini.initCylinder1TempInner,sp.cylinder1_1,5],
-    ['Cyl2 Temp Inner',ini.initCylinder2TempInner,sp.cylinder2_1,5],
-    ['Cyl3 Temp Inner',ini.initCylinder3TempInner,sp.cylinder3_1,5],
-    ['Screw Temp Inner',ini.initScrewTempInner,sp.screwTemp1,5],
-    ['Screw Speed Inner',ini.initScrewSpeedInner,sp.screwSpeed1,2],
-    ['Pressure Inner',ini.initPressureInner,sp.pressure1,1],
-    ['Feed Roll Inner',ini.initFeedRollRatioInner,sp.feedRollRatio1||sp.feed1,null],
-    ['—','—','—',null],
-    ['Head Temp Outer',ini.initHeadTempOuter,sp.headTemp2,5],
-    ['Cyl1 Temp Outer',ini.initCylinder1TempOuter,sp.cylinder1_2,5],
-    ['Cyl2 Temp Outer',ini.initCylinder2TempOuter,sp.cylinder2_2,5],
-    ['Cyl3 Temp Outer',ini.initCylinder3TempOuter,sp.cylinder3_2,5],
-    ['Screw Temp Outer',ini.initScrewTempOuter,sp.screwTemp2,5],
-    ['Screw Speed Outer',ini.initScrewSpeedOuter,sp.screwSpeed2,2],
-    ['Pressure Outer',ini.initPressureOuter,sp.pressure2,1],
-    ['—','—','—',null],
-    ['Hose Speed',ini.initHoseSpeed,sp.hoseSpeed,null],
-    ['Chiller Water Temp',ini.initChillerWaterTemp,sp.chillerWaterTemp,3],
-    ['Caterpillar Gap',ini.initCaterpillarGap,sp.caterpillarGap,null],
+    ['Head Temp Inner',ini.initHeadTempInner,sp.headTemp1],
+    ['Cyl1 Temp Inner',ini.initCylinder1TempInner,sp.cylinder1_1],
+    ['Cyl2 Temp Inner',ini.initCylinder2TempInner,sp.cylinder2_1],
+    ['Cyl3 Temp Inner',ini.initCylinder3TempInner,sp.cylinder3_1],
+    ['Screw Temp Inner',ini.initScrewTempInner,sp.screwTemp1],
+    ['Screw Speed Inner',ini.initScrewSpeedInner,sp.screwSpeed1],
+    ['Pressure Inner',ini.initPressureInner,sp.pressure1],
+    ['Feed Roll Inner',ini.initFeedRollRatioInner,sp.feedRollRatio1],
+    ['—','—','—'],
+    ['Head Temp Outer',ini.initHeadTempOuter,sp.headTemp2],
+    ['Cyl1 Temp Outer',ini.initCylinder1TempOuter,sp.cylinder1_2],
+    ['Cyl2 Temp Outer',ini.initCylinder2TempOuter,sp.cylinder2_2],
+    ['Cyl3 Temp Outer',ini.initCylinder3TempOuter,sp.cylinder3_2],
+    ['Screw Temp Outer',ini.initScrewTempOuter,sp.screwTemp2],
+    ['Screw Speed Outer',ini.initScrewSpeedOuter,sp.screwSpeed2],
+    ['Pressure Outer',ini.initPressureOuter,sp.pressure2],
+    ['—','—','—'],
+    ['Hose Speed',ini.initHoseSpeed,sp.hoseSpeed],
+    ['Chiller Water Temp',ini.initChillerWaterTemp,sp.chillerWaterTemp],
+    ['Caterpillar Gap',ini.initCaterpillarGap,sp.caterpillarGap],
   ];
   let html='';let alerts=[];
-  params.forEach(([name,act,std,tol])=>{
-    if(name==='—'){html+=`<tr><td colspan="6" style="color:#484f58;font-weight:900;font-size:.7rem;letter-spacing:2px;text-align:center">── OUTER ──</td></tr>`;return;}
-    const ev=evalParam(name,act,std,tol);
+  params.forEach(([name,act,std])=>{
+    if(name==='—'){html+=`<tr><td colspan="6" style="color:#484f58;font-weight:900;font-size:.7rem;letter-spacing:2px;text-align:center">── SEPARATOR ──</td></tr>`;return;}
+    const ev=evalParam(name,act,std);
     if(!ev)return;
     const cls=ev.status==='OK'?'st-ok':ev.status==='NG'?'st-ng':'';
     const icon=ev.status==='OK'?'✅':ev.status==='NG'?'⚠️':'—';
@@ -289,10 +763,7 @@ function switchTab(id,btn){
   btn.classList.add('active');
 }
 
-document.getElementById('docSearch').addEventListener('input',function(){
-  const v=this.value;if(v.length>2){const sel=document.getElementById('docSelect');
-  for(let o of sel.options){if(o.value&&o.value.toUpperCase().includes(v.toUpperCase())){sel.value=o.value;break;}}}
-});
+// (autocomplete listener sudah terpasang di initAutocomplete() di atas)
 
 window.addEventListener('load',loadDocList);
 </script>

@@ -306,28 +306,33 @@
                 </text>
             }
 
-            $('.delete-btn').on('click', function() {
-                const id = $(this).data('id');
-                const docNumber = $(this).data('doc');
+            function bindEvents() {
+                $('.delete-btn').off('click').on('click', function() {
+                    const id = $(this).data('id');
+                    const docNumber = $(this).data('doc');
 
-                Swal.fire({
-                    title: 'Hapus Laporan?',
-                    text: `Apakah Anda yakin ingin menghapus "${docNumber}"?`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#334155',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal',
-                    background: '#0f172a',
-                    color: '#fff'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $('#deleteId').val(id);
-                        $('#deleteForm').submit();
-                    }
+                    Swal.fire({
+                        title: 'Hapus Laporan?',
+                        text: `Apakah Anda yakin ingin menghapus "${docNumber}"?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#334155',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal',
+                        background: '#0f172a',
+                        color: '#fff'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('#deleteId').val(id);
+                            $('#deleteForm').submit();
+                        }
+                    });
                 });
-            });
+            }
+
+            window.bindMonitorEvents = bindEvents;
+            bindEvents();
         });
 
         // SignalR Live Sync for Monitor Page
@@ -362,11 +367,35 @@
                 position: 'top-end'
             });
 
-            // Reload page to show new data after a short delay
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            refreshTable();
         });
+
+        async function refreshTable() {
+            const url = window.location.href;
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update table body
+                const newTbody = doc.querySelector('.sapphire-table tbody');
+                const oldTbody = document.querySelector('.sapphire-table tbody');
+                if (newTbody && oldTbody) {
+                    oldTbody.innerHTML = newTbody.innerHTML;
+                    // Note: bindEvents is already defined in the $(document).ready block, 
+                    // but we need it to be accessible here. Moving it to global scope or 
+                    // making it accessible.
+                    if (typeof window.bindMonitorEvents === 'function') {
+                        window.bindMonitorEvents();
+                    }
+                }
+                console.log("Monitor table updated via partial sync.");
+            } catch (err) {
+                console.warn("Partial refresh failed, falling back to full reload:", err);
+                window.location.reload();
+            }
+        }
 
         startSignalR();
     </script>
