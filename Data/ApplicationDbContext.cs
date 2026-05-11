@@ -28,6 +28,7 @@ namespace VelastoProductionSystem.Data
         public DbSet<ShiftMaster> ShiftMasters { get; set; }
         public DbSet<ProductionMaterialLot> ProductionMaterialLots { get; set; }
         public DbSet<SensorIngestLog> SensorIngestLogs { get; set; }
+        public DbSet<SpsImportTrialRow> SpsImportTrialRows { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -130,6 +131,12 @@ namespace VelastoProductionSystem.Data
                 .HasIndex(s => new { s.MachineCode, s.SensorTimestamp });
             modelBuilder.Entity<SensorIngestLog>()
                 .HasIndex(s => s.DeviceId);
+
+            modelBuilder.Entity<SpsImportTrialRow>()
+                .HasIndex(s => new { s.ExcelId, s.ItemCode })
+                .IsUnique();
+            modelBuilder.Entity<SpsImportTrialRow>()
+                .HasIndex(s => s.BatchId);
 
             // Seed initial data (optional)
             SeedData(modelBuilder);

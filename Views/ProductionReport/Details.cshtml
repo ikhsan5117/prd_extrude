@@ -13,8 +13,30 @@
     <div class="no-print sticky-top mb-4 p-2 p-md-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px); margin-top: 70px; border-radius: 0 0 20px 20px;">
         <div class="container-fluid d-flex flex-column flex-xl-row align-items-center justify-content-between gap-3">
             <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 gap-md-3">
-                <a href="/ProductionReport/Create" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
-                    <i class="bi bi-arrow-left me-1 me-md-2"></i> <span class="d-none d-sm-inline">KEMBALI KE INPUT</span><span class="d-inline d-sm-none">KEMBALI</span>
+                @{
+                    var backUrl = "/ProductionReport/Index";
+                    var backLabel = "MONITOR";
+                    var userRole = Context.Session.GetString("UserRole");
+                    var isOperator = userRole != "ADMIN_ENG" && userRole != "LEADER_QC";
+                    var referer = Context.Request.Headers["Referer"].ToString();
+                    
+                    if (isOperator) {
+                        if (!string.IsNullOrEmpty(referer) && (referer.Contains("/Dimensi/Index") || referer.Contains("/ProductionReport/Create"))) {
+                            backUrl = referer;
+                        } else {
+                            backUrl = "/ProductionReport/Create";
+                        }
+                        backLabel = "MENU INPUT";
+                    } else if (currentPortal == "dimension") {
+                        backUrl = "/Dimensi/History";
+                        backLabel = "HISTORY";
+                    } else if (referer.Contains("ParameterHistory")) {
+                        backUrl = "/ProductionReport/ParameterHistory";
+                        backLabel = "HISTORY";
+                    }
+                }
+                <a href="@backUrl" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
+                    <i class="bi bi-arrow-left me-1 me-md-2"></i> <span class="d-none d-sm-inline">KEMBALI KE @backLabel</span><span class="d-inline d-sm-none">KEMBALI</span>
                 </a>
                 <div class="vr bg-white opacity-25 d-none d-md-block" style="height: 24px;"></div>
                 <div class="btn-group btn-group-sm rounded-pill p-1 bg-black bg-opacity-25 border border-white border-opacity-10">

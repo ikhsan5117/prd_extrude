@@ -259,6 +259,9 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("Shift")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SpsId")
+                        .HasColumnType("int");
+
                     b.Property<string>("StandardLength")
                         .HasColumnType("nvarchar(max)");
 
@@ -273,6 +276,8 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SpsId");
 
                     b.ToTable("DimensionReports");
                 });
@@ -1904,6 +1909,88 @@ namespace VelastoProductionSystem.Migrations
                     b.ToTable("ShiftMasters");
                 });
 
+            modelBuilder.Entity("VelastoProductionSystem.Models.SpsImportTrialRow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BatchId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Customer")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("DetectedFormat")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Dimensi")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("DocumentNumber")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ExcelId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<bool>("ExistsInProduction")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("HoseType")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("ImportedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImportedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Machine")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("SourceFileName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("SourceRowIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SourceSheet")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("ExcelId", "ItemCode")
+                        .IsUnique();
+
+                    b.ToTable("SpsImportTrialRows");
+                });
+
             modelBuilder.Entity("VelastoProductionSystem.Models.StandardParameterSetting", b =>
                 {
                     b.Property<int>("Id")
@@ -2216,6 +2303,16 @@ namespace VelastoProductionSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("DimensionReport");
+                });
+
+            modelBuilder.Entity("VelastoProductionSystem.Models.DimensionReport", b =>
+                {
+                    b.HasOne("VelastoProductionSystem.Models.StandardParameterSetting", "StandardParameterSetting")
+                        .WithMany()
+                        .HasForeignKey("SpsId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("StandardParameterSetting");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.DimensionSummary", b =>

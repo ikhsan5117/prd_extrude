@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ExcelDataReader;
 using System.Data;
 using System.Text;
+using System.Globalization;
 using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Models;
 
@@ -741,7 +742,13 @@ namespace VelastoProductionSystem.Controllers
 
                         int startRow = 6;
                         var existingData = await _context.MasterlistSpsDoubleLayers.ToListAsync();
-                        int newCount = 0, updateCount = 0;
+                        var existingMap = existingData
+                            .Where(x => !string.IsNullOrWhiteSpace(x.ExcelId) && !string.IsNullOrWhiteSpace(x.ItemList))
+                            .GroupBy(x => BuildImportKey(x.ExcelId, x.ItemList))
+                            .ToDictionary(g => g.Key, g => g.First());
+
+                        var processedInFile = new HashSet<string>(StringComparer.Ordinal);
+                        int newCount = 0, updateCount = 0, skippedEmptyItemCount = 0, skippedDuplicateInFileCount = 0;
 
                         for (int i = startRow; i < table.Rows.Count; i++)
                         {
@@ -750,7 +757,10 @@ namespace VelastoProductionSystem.Controllers
                             if (string.IsNullOrEmpty(idExcel) || idExcel.Length > 20 || idExcel == "1" || idExcel == "2") continue;
 
                             string rawItems = GetV(row, idxItem);
-                            if (string.IsNullOrEmpty(rawItems)) continue;
+                            if (string.IsNullOrWhiteSpace(rawItems)) {
+                                skippedEmptyItemCount++;
+                                continue;
+                            }
 
                             var itemsList = rawItems.Split(',')
                                 .Select(s => s.Trim())
@@ -760,7 +770,16 @@ namespace VelastoProductionSystem.Controllers
 
                             foreach (var itemCode in itemsList)
                             {
-                                var target = existingData.FirstOrDefault(x => x.ExcelId == idExcel && x.ItemList == itemCode) ?? new MasterlistSpsDoubleLayer();
+                                var key = BuildImportKey(idExcel, itemCode);
+                                if (processedInFile.Contains(key)) {
+                                    skippedDuplicateInFileCount++;
+                                    continue;
+                                }
+                                processedInFile.Add(key);
+
+                                var target = existingMap.TryGetValue(key, out var existingTarget)
+                                    ? existingTarget
+                                    : new MasterlistSpsDoubleLayer();
                                 bool isNew = (target.Id == 0);
 
                                 target.ExcelId = idExcel;
@@ -994,6 +1013,10 @@ namespace VelastoProductionSystem.Controllers
 
                                 if (isNew) { _context.MasterlistSpsDoubleLayers.Add(target); newCount++; }
                                 else { _context.MasterlistSpsDoubleLayers.Update(target); updateCount++; }
+
+                                if (isNew) {
+                                    existingMap[key] = target;
+                                }
                             }
                         }
                         await _context.SaveChangesAsync();
@@ -1022,6 +1045,8 @@ namespace VelastoProductionSystem.Controllers
                                                         $"Kolom Item: {idxItem}\n" +
                                                         $"Data baru: {newCount}\n" +
                                                         $"Data diperbarui: {updateCount}\n" +
+                                                        $"Baris ITEM kosong di-skip: {skippedEmptyItemCount}\n" +
+                                                        $"Duplikat di file di-skip: {skippedDuplicateInFileCount}\n" +
                                                         $"Total: {newCount + updateCount} records";
                             
                             _logger.LogInformation($"Import sukses: {detectedFormat}, {newCount} new, {updateCount} updated");
@@ -1036,12 +1061,207 @@ namespace VelastoProductionSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ImportExcelTrial(List<IFormFile> files)
+        {
+            if (files == null || files.Count == 0)
+            {
+                TempData["ErrorMessage"] = "File uji coba tidak ditemukan.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var validFiles = files.Where(f => f != null && f.Length > 0).ToList();
+            if (validFiles.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Semua file uji coba kosong.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            int insertedCount = 0;
+            int updatedCount = 0;
+            int skippedEmptyItemCount = 0;
+            int skippedDuplicateInBatchCount = 0;
+            int skippedInvalidIdCount = 0;
+            var batchId = DateTime.UtcNow.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            var processedInBatch = new HashSet<string>(StringComparer.Ordinal);
+
+            var existingTrialRows = await _context.SpsImportTrialRows.ToListAsync();
+            var trialMap = existingTrialRows
+                .Where(x => !string.IsNullOrWhiteSpace(x.ExcelId) && !string.IsNullOrWhiteSpace(x.ItemCode))
+                .GroupBy(x => BuildImportKey(x.ExcelId, x.ItemCode))
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var existingProductionKeys = (await _context.MasterlistSpsDoubleLayers
+                    .Where(x => !string.IsNullOrWhiteSpace(x.ExcelId) && !string.IsNullOrWhiteSpace(x.ItemList))
+                    .Select(x => new { x.ExcelId, x.ItemList })
+                    .ToListAsync())
+                .Select(x => BuildImportKey(x.ExcelId, x.ItemList))
+                .ToHashSet(StringComparer.Ordinal);
+
+            foreach (var file in validFiles)
+            {
+                try
+                {
+                    using var stream = new MemoryStream();
+                    await file.CopyToAsync(stream);
+                    stream.Position = 0;
+
+                    using var reader = ExcelReaderFactory.CreateReader(stream);
+                    var result = reader.AsDataSet();
+                    var table = SelectBestSheet(result);
+
+                    bool isDig3L, isDig2L, isLegacy;
+                    string detectionLog = DetectFormatWithLogging(table, out isDig3L, out isDig2L, out isLegacy);
+
+                    string validationError;
+                    if (!ValidateExcelStructure(table, isDig3L, isDig2L, isLegacy, out validationError))
+                    {
+                        _logger.LogWarning("Trial import skipped file {FileName}. Validation failed: {ValidationError}. {DetectionLog}", file.FileName, validationError, detectionLog);
+                        continue;
+                    }
+
+                    if (!isDig3L && !isDig2L && !isLegacy)
+                    {
+                        _logger.LogWarning("Trial import skipped file {FileName}. Format not detected. {DetectionLog}", file.FileName, detectionLog);
+                        continue;
+                    }
+
+                    int idxItem, idxCust, idxDim, idxType;
+                    int idxDoc = 3;
+
+                    if (isDig3L)
+                    {
+                        idxItem = 107;
+                        idxCust = 7;
+                        idxType = 10;
+                        idxDim = 11;
+                    }
+                    else if (isDig2L)
+                    {
+                        idxItem = 89;
+                        idxCust = 7;
+                        idxType = 10;
+                        idxDim = 11;
+                    }
+                    else
+                    {
+                        idxItem = 50;
+                        idxCust = 5;
+                        idxType = 8;
+                        idxDim = 9;
+                    }
+
+                    int startRow = 6;
+                    string detectedFormat = isDig3L ? "CHS 3 Layer" : (isDig2L ? "CHS 2 Layer" : "Legacy/Non-CHS");
+
+                    for (int i = startRow; i < table.Rows.Count; i++)
+                    {
+                        var row = table.Rows[i];
+                        string idExcel = GetV(row, 0);
+
+                        if (string.IsNullOrWhiteSpace(idExcel) || idExcel.Length > 20 || idExcel == "1" || idExcel == "2")
+                        {
+                            skippedInvalidIdCount++;
+                            continue;
+                        }
+
+                        string rawItems = GetV(row, idxItem);
+                        if (string.IsNullOrWhiteSpace(rawItems))
+                        {
+                            skippedEmptyItemCount++;
+                            continue;
+                        }
+
+                        var itemsList = rawItems.Split(',')
+                            .Select(s => s.Trim())
+                            .Where(s => !string.IsNullOrWhiteSpace(s))
+                            .Select(s => (isDig3L && s.Contains("-")) ? s.Replace("-", "") : s)
+                            .ToList();
+
+                        foreach (var itemCode in itemsList)
+                        {
+                            var key = BuildImportKey(idExcel, itemCode);
+                            if (processedInBatch.Contains(key))
+                            {
+                                skippedDuplicateInBatchCount++;
+                                continue;
+                            }
+
+                            processedInBatch.Add(key);
+
+                            var target = trialMap.TryGetValue(key, out var existingTrial)
+                                ? existingTrial
+                                : new SpsImportTrialRow();
+
+                            bool isNew = target.Id == 0;
+                            target.BatchId = batchId;
+                            target.SourceFileName = file.FileName;
+                            target.SourceSheet = table.TableName;
+                            target.DetectedFormat = detectedFormat;
+                            target.ExcelId = idExcel.Trim();
+                            target.ItemCode = itemCode.Trim();
+                            target.Machine = GetV(row, 2);
+                            target.DocumentNumber = GetV(row, idxDoc);
+                            target.Customer = GetV(row, idxCust);
+                            target.HoseType = GetV(row, idxType);
+                            target.Dimensi = GetV(row, idxDim);
+                            target.SourceRowIndex = i + 1;
+                            target.ExistsInProduction = existingProductionKeys.Contains(key);
+                            target.ImportedAt = DateTime.UtcNow;
+                            target.ImportedBy = User?.Identity?.Name ?? "system";
+
+                            if (isNew)
+                            {
+                                _context.SpsImportTrialRows.Add(target);
+                                insertedCount++;
+                                trialMap[key] = target;
+                            }
+                            else
+                            {
+                                _context.SpsImportTrialRows.Update(target);
+                                updatedCount++;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in trial import for file {FileName}", file.FileName);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"Trial import selesai. Batch: {batchId}\n" +
+                $"Jumlah file diproses: {validFiles.Count}\n" +
+                $"Insert baru: {insertedCount}\n" +
+                $"Update existing trial: {updatedCount}\n" +
+                $"Skip ITEM kosong: {skippedEmptyItemCount}\n" +
+                $"Skip ID tidak valid: {skippedInvalidIdCount}\n" +
+                $"Skip duplikat antar-file: {skippedDuplicateInBatchCount}";
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private string GetV(DataRow row, int colIndex)
         {
             try {
                 if (colIndex < 0 || colIndex >= row.Table.Columns.Count) return "";
                 return row[colIndex]?.ToString()?.Trim() ?? "";
             } catch { return ""; }
+        }
+
+        private static string BuildImportKey(string? excelId, string? itemCode)
+        {
+            return $"{NormalizeImportToken(excelId)}|{NormalizeImportToken(itemCode)}";
+        }
+
+        private static string NormalizeImportToken(string? value)
+        {
+            return (value ?? string.Empty).Trim().ToUpperInvariant();
         }
 
         /// <summary>

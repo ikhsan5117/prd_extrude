@@ -120,7 +120,21 @@
 </style>
 
 <div class="no-print-btns">
-    <a href="/Dimensi/Index" class="btn btn-secondary btn-sm shadow">← Kembali</a>
+    @{
+        var backUrl = "/Dimensi/History";
+        var userRole = Context.Session.GetString("UserRole");
+        var isOperator = userRole != "ADMIN_ENG" && userRole != "LEADER_QC";
+        var referer = Context.Request.Headers["Referer"].ToString();
+
+        if (isOperator) {
+            if (!string.IsNullOrEmpty(referer) && (referer.Contains("/Dimensi/Index") || referer.Contains("/ProductionReport/Create"))) {
+                backUrl = referer;
+            } else {
+                backUrl = "/Dimensi/Index";
+            }
+        }
+    }
+    <a href="@backUrl" class="btn btn-secondary btn-sm shadow">← Kembali</a>
     <button onclick="window.print()" class="btn btn-primary btn-sm shadow">Cetak A4 Landscape</button>
 </div>
 

@@ -629,11 +629,11 @@ namespace VelastoProductionSystem.Controllers
                 // jika operator memiliki session mesin, hanya tampilkan planning untuk mesin tersebut
                 if (!isAdmin && !string.IsNullOrEmpty(machineFilter))
                 {
+                    var normalizedFilter = new string(machineFilter.Where(char.IsLetterOrDigit).ToArray()).ToUpper();
                     elwpRows = elwpRows.Where(x =>
-                        (x.MachineName ?? "").ToUpper().Contains(machineFilter.ToUpper()) ||
-                        (x.MachineCode ?? "").ToUpper().Contains(machineFilter.ToUpper())
+                        (x.MachineName != null && new string(x.MachineName.Where(char.IsLetterOrDigit).ToArray()).ToUpper().Contains(normalizedFilter)) ||
+                        (x.MachineCode != null && new string(x.MachineCode.Where(char.IsLetterOrDigit).ToArray()).ToUpper().Contains(normalizedFilter))
                     ).ToList();
-                    // Tidak ada fallback ke semua data - operator hanya boleh lihat mesinnya sendiri
                 }
 
                 // Batch-check SPS availability for all item codes
@@ -702,8 +702,9 @@ namespace VelastoProductionSystem.Controllers
 
             // Batch-check SPS for fallback items (must be outside Select)
             var fallbackCodes = filtered
-                .Where(p => !string.IsNullOrEmpty(p.PartName1))
-                .Select(p => p.PartName1!.Trim().ToUpper())
+                .Select(p => !string.IsNullOrWhiteSpace(p.Kode) ? p.Kode : p.PartName1)
+                .Where(c => !string.IsNullOrWhiteSpace(c))
+                .Select(c => c!.Trim().ToUpper())
                 .Distinct().ToList();
 
             var fbSpsCodes = await _context.StandardParameterSettings
@@ -722,13 +723,14 @@ namespace VelastoProductionSystem.Controllers
 
             var result = filtered.Select(p => {
                 var parsed = ParseDateShiftString(p.DateShiftString);
+                var fallbackItemCode = !string.IsNullOrWhiteSpace(p.Kode) ? p.Kode : p.PartName1;
                 return new {
-                    itemCode = p.PartName1, 
+                    itemCode = fallbackItemCode,
                     itemName = (p.PartName2 ?? "") + (string.IsNullOrEmpty(p.Kode) ? "" : " | " + p.Kode),
                     dateShift = p.DateShiftString,
                     date = parsed.date,
                     shift = parsed.shift,
-                    hasSps = FbHasSps(p.PartName1)
+                    hasSps = FbHasSps(fallbackItemCode)
                 };
             }).Distinct().OrderBy(p => p.itemName).ToList();
 

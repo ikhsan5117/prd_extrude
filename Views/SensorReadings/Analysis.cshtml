@@ -272,7 +272,19 @@
         <!-- Chart -->
         <div class="card mb-3">
             <div class="card-header py-2 d-flex align-items-center flex-wrap gap-2">
-                <i class="bi bi-graph-up text-info"></i>
+                <button class="btn btn-sm btn-warning fw-bold text-dark py-0 px-2" style="box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);" onclick="openChartSettings()" title="Atur Rentang Y-Axis">
+                    <i class="bi bi-gear-fill me-1"></i> Range
+                </button>
+                <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="zoomInChart()" title="Perbesar (Zoom In)">
+                    <i class="bi bi-zoom-in me-1"></i>+
+                </button>
+                <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="zoomOutChart()" title="Perkecil (Zoom Out)">
+                    <i class="bi bi-zoom-out me-1"></i>- 
+                </button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="resetChartZoom()" title="Reset Zoom">
+                    <i class="bi bi-arrows-fullscreen me-1"></i>Reset
+                </button>
+                <i class="bi bi-graph-up text-info ms-2"></i>
                 <span class="fw-semibold small" id="chartTitle">-</span>
                 <div class="ms-auto d-flex gap-3 align-items-center small flex-wrap">
                     <span class="d-none" id="legActual">
@@ -335,6 +347,7 @@
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script>
 // =================================================================
 //  DATA & STATE
@@ -345,6 +358,18 @@ let chart        = null;
 let autoTimer    = null;
 let isAuto       = false;
 let exportRows   = [];
+
+// Chart range state
+let chartYMin = null;
+let chartYMax = null;
+
+// Register plugin zoom untuk mode browser/CDN.
+if (window.Chart) {
+    const zoomPlugin = window.ChartZoom || window['chartjs-plugin-zoom'];
+    if (zoomPlugin && !Chart.registry.plugins.get('zoom')) {
+        Chart.register(zoomPlugin);
+    }
+}
 
 // Mapping metricType -> field MasterlistSpsDoubleLayer (camelCase)
 const METRIC_MAP = {
@@ -741,7 +766,8 @@ function renderChart(data) {
         return;
     }
 
-    const labels  = sd.map(d => formatSensorTimeLabel(d.x));
+    const labels  = sd.map(d => formatSensorTimeAxis(d.x));
+    const fullLabels = sd.map(d => formatSensorTimeFull(d.x));
     const actuals = sd.map(d => +d.y);
     const unit    = std?.unit || '';
 
@@ -760,9 +786,11 @@ function renderChart(data) {
         backgroundColor: 'rgba(13,110,253,.07)',
         pointBackgroundColor: pointColors,
         pointBorderColor: pointColors,
-        pointRadius: actuals.length <= 200 ? 4 : 2,
+        pointRadius: actuals.length <= 200 ? 3 : 0,
+        pointHoverRadius: 4,
         tension: 0.3,
         fill: true,
+        clip: false,
         order: 1
     }];
 
@@ -810,6 +838,7 @@ function renderChart(data) {
             responsive: true,
             maintainAspectRatio: false,
             animation: { duration: 400 },
+            layout: { padding: { bottom: 10 } },
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
@@ -817,7 +846,14 @@ function renderChart(data) {
                     labels: { usePointStyle: true, font: { size: 11 } }
                 },
                 tooltip: {
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
+                        title: function(items) {
+                            if (!items || !items.length) return '';
+                            const idx = items[0].dataIndex;
+                            return 'Waktu: ' + (fullLabels[idx] || labels[idx] || '-');
+                        },
                         label: function(ctx) {
                             let lbl = ctx.dataset.label + ': ' + (+ctx.parsed.y).toFixed(4) + (unit ? ' ' + unit : '');
                             if (ctx.datasetIndex === 0 && std) {
@@ -832,16 +868,58 @@ function renderChart(data) {
                                 }
                             }
                             return lbl;
+                        },
+                        afterBody: function(items) {
+                            if (!items || !items.length || !std) return [];
+                            const idx = items[0].dataIndex;
+                            const v = +sd[idx]?.y;
+                            if (isNaN(v)) return [];
+
+                            const rows = [];
+                            if (std.target != null) {
+                                const dev = v - (+std.target);
+                                rows.push('Deviasi: ' + (dev >= 0 ? '+' : '') + dev.toFixed(4) + (unit ? ' ' + unit : ''));
+                            }
+                            rows.push('Target: ' + (std.target != null ? (+std.target).toFixed(3) : '-') + (unit ? ' ' + unit : ''));
+                            rows.push('UCL: ' + (std.ucl != null ? (+std.ucl).toFixed(3) : '-') + (unit ? ' ' + unit : ''));
+                            rows.push('LCL: ' + (std.lcl != null ? (+std.lcl).toFixed(3) : '-') + (unit ? ' ' + unit : ''));
+                            return rows;
                         }
+                    }
+                },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x'
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        drag: {
+                            enabled: false
+                        },
+                        mode: 'x'
+                    },
+                    limits: {
+                        x: { min: 0, max: labels.length - 1 }
                     }
                 }
             },
             scales: {
                 x: {
+                    offset: true,
                     ticks: {
                         font:{size:10},
-                        maxTicksLimit:20,
-                        maxRotation:30,
+                        autoSkip: true,
+                        autoSkipPadding: 16,
+                        maxTicksLimit: 12,
+                        minRotation: 0,
+                        maxRotation: 0,
+                        padding: 8,
                         callback: function(value, index, ticks) {
                             // Format ulang label sebelum ditampilkan di chart
                             const lbl = labels[index];
@@ -850,6 +928,8 @@ function renderChart(data) {
                     }
                 },
                 y: {
+                    min: chartYMin !== null ? chartYMin : undefined,
+                    max: chartYMax !== null ? chartYMax : undefined,
                     ticks: { font:{size:10}, callback: v => (+v).toFixed(2) + (unit ? ' '+unit : '') },
                     title: { display: true, text: mLabel + (unit ? ' (' + unit + ')' : ''), font:{size:11} }
                 }
@@ -880,6 +960,33 @@ function formatSensorTimeLabel(raw) {
     }
 
     return s.substring(11, 19) || s;
+}
+
+function formatSensorTimeAxis(raw) {
+    const time = formatSensorTimeLabel(raw);
+    if (!time || time === '-') return '-';
+    // Ringkas label axis ke HH:mm agar bagian bawah chart tetap rapi.
+    return time.length >= 5 ? time.substring(0, 5) : time;
+}
+
+function formatSensorTimeFull(raw) {
+    if (!raw) return '-';
+    const s = String(raw).trim();
+    const normalized = s.replace('T', ' ').replace('Z', '');
+    const exact = normalized.match(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/);
+    if (exact) return exact[0];
+
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        const ss = String(d.getSeconds()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+    }
+    return s;
 }
 
 function renderTable(data) {
@@ -922,6 +1029,85 @@ function renderTable(data) {
             '<td class="text-muted">' + (d.device || '') + '</td>' +
             '</tr>';
     }).join('');
+}
+
+function zoomInChart() {
+    if (!chart || typeof chart.zoom !== 'function') return;
+    chart.zoom(1.25);
+}
+
+function zoomOutChart() {
+    if (!chart || typeof chart.zoom !== 'function') return;
+    chart.zoom(0.8);
+}
+
+function resetChartZoom() {
+    if (chart && typeof chart.resetZoom === 'function') {
+        chart.resetZoom();
+    }
+}
+
+// =================================================================
+//  CHART SETTINGS (RANGE)
+// =================================================================
+async function openChartSettings() {
+    const { value: formValues } = await Swal.fire({
+        title: 'Pengaturan Skala Y-Axis',
+        html: `
+            <div class="text-start mb-3">
+                <label class="form-label small text-muted">Batas Bawah (Min)</label>
+                <input id="swal-ymin" type="number" step="0.001" class="form-control bg-dark text-white border-secondary" placeholder="Otomatis" value="${chartYMin !== null ? chartYMin : ''}">
+            </div>
+            <div class="text-start">
+                <label class="form-label small text-muted">Batas Atas (Max)</label>
+                <input id="swal-ymax" type="number" step="0.001" class="form-control bg-dark text-white border-secondary" placeholder="Otomatis" value="${chartYMax !== null ? chartYMax : ''}">
+            </div>
+            <div class="mt-3 small text-muted text-start text-warning">
+                <i class="bi bi-info-circle me-1"></i> Kosongkan input untuk kembali ke mode otomatis.
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonColor: '#0dcaf0',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-check-circle me-1"></i> Terapkan',
+        cancelButtonText: 'Batal',
+        background: '#151b26',
+        color: '#fff',
+        preConfirm: () => {
+            const minVal = document.getElementById('swal-ymin').value;
+            const maxVal = document.getElementById('swal-ymax').value;
+            const min = minVal === '' ? null : parseFloat(minVal);
+            const max = maxVal === '' ? null : parseFloat(maxVal);
+
+            if (min !== null && Number.isNaN(min)) {
+                Swal.showValidationMessage('Batas bawah (Min) tidak valid.');
+                return false;
+            }
+            if (max !== null && Number.isNaN(max)) {
+                Swal.showValidationMessage('Batas atas (Max) tidak valid.');
+                return false;
+            }
+            if (min !== null && max !== null && min >= max) {
+                Swal.showValidationMessage('Batas bawah harus lebih kecil dari batas atas.');
+                return false;
+            }
+
+            return { min, max };
+        }
+    });
+
+    if (formValues) {
+        chartYMin = formValues.min;
+        chartYMax = formValues.max;
+        
+        // Update existing chart if loaded
+        if (chart) {
+            chart.options.scales.y.min = chartYMin !== null ? chartYMin : undefined;
+            chart.options.scales.y.max = chartYMax !== null ? chartYMax : undefined;
+            chart.update();
+        }
+    }
 }
 
 // =================================================================

@@ -1469,7 +1469,9 @@
         function parseDisplayDate(displayText) {
             const monthMap = {
                 JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06',
-                JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12'
+                JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12',
+                // Indonesian Month Support
+                MEI: '05', AGU: '08', OKT: '10', DES: '12'
             };
             const parts = (displayText || '').trim().split(' ');
             if (parts.length !== 3) return null;
@@ -2236,6 +2238,13 @@
                     // Update search input to full name
                     const searchInput = document.getElementById('main-item-search');
                     if(searchInput) searchInput.value = m.itemList || m.hoseType || code;
+
+                    // FALLBACK: If no planning was selected, treat the scanned SPS as the ItemCode
+                    if (!window._dimSelectedItemCode || window._dimSelectedItemCode === "") {
+                        window._dimSelectedItemCode = code;
+                        const itemCodeInput = document.getElementById('itemCode');
+                        if (itemCodeInput) itemCodeInput.value = code;
+                    }
 
                     // Populate Data Summary
                     const partEl = document.getElementById('disp-part-no');

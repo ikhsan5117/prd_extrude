@@ -35,8 +35,7 @@ namespace VelastoProductionSystem.Controllers
             ViewBag.ItemCodes = _elwpContext.ElwpPlannings
                 .Where(p => !string.IsNullOrEmpty(p.KodeItem)
                          && p.TanggalPlanning >= today
-                         && p.TanggalPlanning < today.AddDays(1)
-                         && p.AreaId == 1)
+                         && p.TanggalPlanning < today.AddDays(1))
                 .Select(p => p.KodeItem)
                 .Distinct()
                 .OrderBy(p => p)
@@ -105,26 +104,32 @@ namespace VelastoProductionSystem.Controllers
                 query = query.Where(m => m.MachineCode != null && m.MachineCode.ToUpper() == sanitizedMachine);
             }
 
-            var standard = await query.FirstOrDefaultAsync(m => 
-                (m.HoseType != null && m.HoseType.Trim().ToUpper() == sanitized) || 
-                (m.ItemList != null && m.ItemList.Trim().ToUpper() == sanitized) ||
-                (m.ExcelId != null && m.ExcelId.Trim().ToUpper() == sanitized) || 
-                (m.DocumentNumber != null && m.DocumentNumber.Trim().ToUpper() == sanitized) ||
-                (m.ItemList != null && m.ItemList.ToUpper().Contains(sanitized)) ||
-                (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitized))
-            );
+            IQueryable<MasterlistSpsDoubleLayer> ApplyMasterlistMatch(IQueryable<MasterlistSpsDoubleLayer> q)
+            {
+                return q
+                    .Where(m =>
+                        (m.HoseType != null && m.HoseType.Trim().ToUpper() == sanitized) ||
+                        (m.ItemList != null && m.ItemList.Trim().ToUpper() == sanitized) ||
+                        (m.ExcelId != null && m.ExcelId.Trim().ToUpper() == sanitized) ||
+                        (m.DocumentNumber != null && m.DocumentNumber.Trim().ToUpper() == sanitized) ||
+                        (m.ItemList != null && m.ItemList.ToUpper().Contains(sanitized)) ||
+                        (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitized))
+                    )
+                    .OrderByDescending(m => m.ItemList != null && m.ItemList.Trim().ToUpper() == sanitized)
+                    .ThenByDescending(m => m.HoseType != null && m.HoseType.Trim().ToUpper() == sanitized)
+                    .ThenByDescending(m => m.ExcelId != null && m.ExcelId.Trim().ToUpper() == sanitized)
+                    .ThenByDescending(m => m.DocumentNumber != null && m.DocumentNumber.Trim().ToUpper() == sanitized)
+                    .ThenByDescending(m => m.ItemList != null && m.ItemList.ToUpper().Contains(sanitized))
+                    .ThenByDescending(m => m.HoseType != null && m.HoseType.ToUpper().Contains(sanitized))
+                    .ThenByDescending(m => m.Id);
+            }
+
+            var standard = await ApplyMasterlistMatch(query).FirstOrDefaultAsync();
             
             // Fallback: If no machine-specific SPS found, search without machine filter
             if (standard == null && !string.IsNullOrEmpty(sanitizedMachine))
             {
-                standard = await _context.MasterlistSpsDoubleLayers.FirstOrDefaultAsync(m => 
-                    (m.HoseType != null && m.HoseType.Trim().ToUpper() == sanitized) || 
-                    (m.ItemList != null && m.ItemList.Trim().ToUpper() == sanitized) ||
-                    (m.ExcelId != null && m.ExcelId.Trim().ToUpper() == sanitized) || 
-                    (m.DocumentNumber != null && m.DocumentNumber.Trim().ToUpper() == sanitized) ||
-                    (m.ItemList != null && m.ItemList.ToUpper().Contains(sanitized)) ||
-                    (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitized))
-                );
+                standard = await ApplyMasterlistMatch(_context.MasterlistSpsDoubleLayers).FirstOrDefaultAsync();
             }
 
             if (standard != null)
@@ -246,7 +251,10 @@ namespace VelastoProductionSystem.Controllers
 
                 if (mode == "planning")
                 {
-                    q = q.Where(r => r.ItemCode != null && r.ItemCode.ToUpper().Contains(s));
+                    q = q.Where(r =>
+                        (r.ItemCode != null && r.ItemCode.ToUpper().Contains(s)) ||
+                        (r.StandardParameterSetting != null && r.StandardParameterSetting.ItemList != null && r.StandardParameterSetting.ItemList.ToUpper().Contains(s))
+                    );
                 }
                 else if (mode == "operator")
                 {
@@ -317,10 +325,22 @@ namespace VelastoProductionSystem.Controllers
 
                 ws.Cells[row, 1].Value = (displayDoc ?? "").Replace("#", "");
                 ws.Cells[row, 2].Value = item.CreatedDate.ToString("dd MMM yyyy HH:mm");
-                ws.Cells[row, 3].Value = item.ItemCode ?? "-";
+                var rawPlanning = (item.ItemCode ?? string.Empty).Trim();
+                var spsItem = (item.StandardParameterSetting?.ItemList ?? string.Empty).Trim();
+                var planningDisplay = rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem)
+                    ? spsItem
+                    : rawPlanning;
+                var rawHose = (item.HoseType ?? string.Empty).Trim();
+                var spsHose = (item.StandardParameterSetting?.HoseType ?? string.Empty).Trim();
+                var productInfoDisplay = (!string.IsNullOrWhiteSpace(spsHose) &&
+                    !string.IsNullOrWhiteSpace(rawPlanning) &&
+                    rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase))
+                    ? spsHose
+                    : rawHose;
+                ws.Cells[row, 3].Value = string.IsNullOrWhiteSpace(planningDisplay) ? "-" : planningDisplay;
                 ws.Cells[row, 4].Value = item.CreatedBy ?? "SYSTEM";
                 ws.Cells[row, 5].Value = item.MachineName ?? "-";
-                ws.Cells[row, 6].Value = item.HoseType ?? "UNDEFINED_PART";
+                ws.Cells[row, 6].Value = string.IsNullOrWhiteSpace(productInfoDisplay) ? "UNDEFINED_PART" : productInfoDisplay;
                 ws.Cells[row, 7].Value = item.QtyOk;
                 ws.Cells[row, 8].Value = item.NgDimension;
                 ws.Cells[row, 9].Value = item.VinCode ?? "-";

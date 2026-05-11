@@ -844,9 +844,22 @@
                 <tbody id="tableBody">
                     @foreach (var item in Model.OrderByDescending(x => x.CreatedDate))
                     {
+                        var rawPlanning = (item.ItemCode ?? string.Empty).Trim();
+                        var spsItem = (item.StandardParameterSetting?.ItemList ?? string.Empty).Trim();
+                        var planningDisplay = rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem)
+                            ? spsItem
+                            : rawPlanning;
+                        var rawHose = (item.HoseType ?? string.Empty).Trim();
+                        var spsHose = (item.StandardParameterSetting?.HoseType ?? string.Empty).Trim();
+                        var productInfoDisplay = (!string.IsNullOrWhiteSpace(spsHose) &&
+                            !string.IsNullOrWhiteSpace(rawPlanning) &&
+                            rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase))
+                            ? spsHose
+                            : rawHose;
+
                         <tr class="record-item"
                             data-date="@item.CreatedDate.ToString("yyyy-MM-dd")"
-                            data-planning="@(item.ItemCode ?? "")"
+                            data-planning="@planningDisplay"
                             data-operator="@(item.CreatedBy ?? "")"
                             data-docvin="@((item.DocumentNumber ?? "") + " " + (item.VinCode ?? ""))"
                             data-ok="@item.QtyOk"
@@ -866,7 +879,7 @@
                             </td>
 
                             <td>
-                                <div class="planning-name">@(item.ItemCode ?? "---")</div>
+                                <div class="planning-name">@(string.IsNullOrWhiteSpace(planningDisplay) ? "---" : planningDisplay)</div>
                             </td>
 
                             <td>
@@ -878,7 +891,7 @@
                             </td>
 
                             <td>
-                                <div class="hose-type" style="margin-bottom: 3px;">@(item.HoseType ?? "UNDEFINED_PART")</div>
+                                <div class="hose-type" style="margin-bottom: 3px;">@(string.IsNullOrWhiteSpace(productInfoDisplay) ? "UNDEFINED_PART" : productInfoDisplay)</div>
                                 <div class="cust-name">@(item.CustomerName ?? "UNKNOWN_CLIENT")</div>
                             </td>
 
