@@ -870,7 +870,7 @@
                                     var spsDoc = item.StandardParameterSetting?.DocumentNumber;
                                     var displayDoc = !string.IsNullOrEmpty(spsDoc) ? spsDoc : item.DocumentNumber;
                                 }
-                                <div class="doc-num">#@displayDoc.Replace("#", "")</div>
+                                <div class="doc-num">#@(displayDoc?.Replace("#", "") ?? "")</div>
                             </td>
 
                             <td>

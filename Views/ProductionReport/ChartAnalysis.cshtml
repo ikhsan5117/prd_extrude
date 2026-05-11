@@ -30,7 +30,7 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 .ac-badge.no-data{background:rgba(255,77,77,.08);border-color:rgba(255,77,77,.3);color:#ff4d4d}
 .ac-no-result{padding:16px 14px;text-align:center;color:#484f58;font-size:.75rem;font-weight:700}
 .ac-loading{padding:14px;text-align:center;color:#8b949e;font-size:.7rem}
-.info-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}
+.info-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px}
 .i-card{padding:14px 18px;background:linear-gradient(145deg,rgba(21,27,38,.7),rgba(1,4,9,.8));border:1px solid rgba(255,255,255,.05);border-radius:2px}
 .i-lbl{font-size:.5rem;font-weight:800;color:#484f58;text-transform:uppercase;letter-spacing:1.5px}
 .i-val{font-size:1.1rem;font-weight:900;color:#fff;margin-top:2px}
@@ -304,6 +304,14 @@ async function onSubFilterChanged(){
   if(searchInput && document.activeElement===searchInput){
     fetchAllSpsItems();
   }
+
+  // Auto-reload chart if document is already selected
+  const selVal=document.getElementById('docSelect').value;
+  const doc=AC_SELECTED||selVal;
+  if(doc && DATA){
+    console.log('[ChartAnalysis] Filter changed, auto-reloading chart...');
+    loadChart();
+  }
 }
 
 // Legacy function mapping for backward compatibility with existing code
@@ -542,6 +550,8 @@ async function loadChart(){
   const selVal=document.getElementById('docSelect').value;
   const startDate=document.getElementById('filterStartDate').value;
   const endDate=document.getElementById('filterEndDate').value;
+  const shift=document.getElementById('filterShift').value;
+  const pic=document.getElementById('filterPic').value;
   // Prioritaskan AC_SELECTED (dari autocomplete), fallback ke select dropdown
   const doc=AC_SELECTED||selVal;
   if(!doc){showMsg('warning','Pilih Document','Pilih atau cari No. Document terlebih dahulu');return;}
@@ -553,10 +563,12 @@ async function loadChart(){
   mc.style.display='none';
   
   try{
-    console.log('[ChartAnalysis] Loading doc:', doc);
+    console.log('[ChartAnalysis] Loading doc:', doc, 'with filters:', { startDate, endDate, shift, pic });
     const p=new URLSearchParams({ documentNumber: doc });
     if(startDate)p.set('startDate',startDate);
     if(endDate)p.set('endDate',endDate);
+    if(shift)p.set('shift',shift);
+    if(pic)p.set('pic',pic);
     const r=await fetch('/ProductionReport/GetChartData?'+p.toString());
     if(!r.ok){showMsg('error','HTTP Error','Status: '+r.status);nd.innerHTML='<i class="bi bi-bar-chart-line" style="font-size:3rem;display:block;margin-bottom:10px"></i>GAGAL MEMUAT DATA';return;}
     DATA=await r.json();
@@ -605,11 +617,23 @@ async function loadChart(){
 
 function renderInfo(){
   const rp=DATA.report;const sp=DATA.spsFound;
+  const dim=DATA.dimensionSeries||null;
+  const dimSource = dim ? (dim.source || 'Unknown') : 'ProductionReadings';
+  const dimCount = dim ? (dim.reportCount || 0) : 0;
+  const dimStatus = dimCount > 0 ? `✅ ${dimCount} reports` : '⚠️ No data';
+  
+  // Smart display for VIN/ItemCode - prioritize non-empty value
+  const vinDisplay = rp.vinCode || rp.itemCode || '—';
+  const dimensionDisplay = rp.dimension || '—';
+  
   document.getElementById('infoCards').innerHTML=`
   <div class="i-card"><div class="i-lbl">Hose Type</div><div class="i-val cyan">${rp.hoseType||'—'}</div></div>
   <div class="i-card"><div class="i-lbl">Machine</div><div class="i-val yellow">${rp.machineName||'—'}</div></div>
-  <div class="i-card"><div class="i-lbl">VIN / Dimension</div><div class="i-val">${rp.vinCode||'—'} | ${rp.dimension||'—'}</div></div>
-  <div class="i-card"><div class="i-lbl">SPS Match</div><div class="i-val ${sp?'green':'red'}">${sp?'✅ MATCHED':'❌ NOT FOUND'}</div></div>`;
+  <div class="i-card"><div class="i-lbl">VIN Code / Item Code</div><div class="i-val" style="font-size:.95rem">${vinDisplay}</div></div>
+  <div class="i-card"><div class="i-lbl">Dimension</div><div class="i-val">${dimensionDisplay}</div></div>
+  <div class="i-card"><div class="i-lbl">SPS Match</div><div class="i-val ${sp?'green':'red'}">${sp?'✅ MATCHED':'❌ NOT FOUND'}</div></div>
+  <div class="i-card"><div class="i-lbl">Dimension Source</div><div class="i-val ${dimCount>0?'green':'yellow'}" style="font-size:.85rem">${dimSource}</div></div>
+  <div class="i-card"><div class="i-lbl">Dimension Data</div><div class="i-val ${dimCount>0?'green':'red'}">${dimStatus}</div></div>`;
 }
 
 function makeChart(id,labels,datasets,yLabel){
@@ -630,6 +654,17 @@ function renderCharts(){
   const rd=DATA.readings||[];const sp=DATA.spsStandard;const labels=rd.length>0?rd.map(r=>r.timeLabel):['No Data'];const len=Math.max(labels.length,1);
   const dim=DATA.dimensionSeries||null;
   const dimStd=DATA.dimensionStandard||null;
+
+  // Debug: Log dimension data from Dimension History
+  if(dim){
+    console.log('[ChartAnalysis] Dimension data loaded from:', dim.source || 'Unknown');
+    console.log('[ChartAnalysis] Dimension report count:', dim.reportCount || 0);
+    console.log('[ChartAnalysis] Inner Diameter points:', dim.innerDiameter ? dim.innerDiameter.length : 0);
+    console.log('[ChartAnalysis] Total Thickness X points:', dim.totalThicknessX ? dim.totalThicknessX.length : 0);
+    console.log('[ChartAnalysis] Total Thickness Y points:', dim.totalThicknessY ? dim.totalThicknessY.length : 0);
+  } else {
+    console.warn('[ChartAnalysis] No dimension data available - using fallback from ProductionReadings');
+  }
 
   // TEMP INNER
   const stdL=(lbl,obj,len,cMx,cMn)=>{

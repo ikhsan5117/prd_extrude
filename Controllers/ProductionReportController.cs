@@ -377,7 +377,7 @@ namespace VelastoProductionSystem.Controllers
                 .Select(d => new {
                     ItemList = d.ItemCode,
                     d.HoseType,
-                    d.DocumentNumber
+                    DocumentNumber = (string?)d.DocumentNumber
                 })
                 .Distinct()
                 .ToListAsync();
@@ -1703,7 +1703,7 @@ namespace VelastoProductionSystem.Controllers
 
         // GET: ProductionReport/GetChartData?documentNumber=XXX
         [HttpGet]
-        public async Task<IActionResult> GetChartData(string documentNumber, string? startDate = null, string? endDate = null)
+        public async Task<IActionResult> GetChartData(string documentNumber, string? startDate = null, string? endDate = null, string? shift = null, string? pic = null)
         {
             if (string.IsNullOrWhiteSpace(documentNumber))
                 return BadRequest(new { success = false, message = "Document number is required." });
@@ -1795,6 +1795,7 @@ namespace VelastoProductionSystem.Controllers
                 .Include(d => d.Measurements)
                 .AsQueryable();
 
+            // Apply date filters
             if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var dimStartDate))
             {
                 dimensionReportQuery = dimensionReportQuery.Where(d => d.CreatedDate >= dimStartDate.Date);
@@ -1805,30 +1806,24 @@ namespace VelastoProductionSystem.Controllers
                 dimensionReportQuery = dimensionReportQuery.Where(d => d.CreatedDate <= dimEndDate.Date.AddDays(1).AddTicks(-1));
             }
 
+            // Apply shift filter
+            if (!string.IsNullOrWhiteSpace(shift) && !shift.Equals("SHIFT ALL", StringComparison.OrdinalIgnoreCase))
+            {
+                var shiftNorm = shift.Trim().ToUpper();
+                dimensionReportQuery = dimensionReportQuery.Where(d => d.Shift != null && d.Shift.ToUpper().Contains(shiftNorm));
+            }
+
+            // Apply PIC/Operator filter
+            if (!string.IsNullOrWhiteSpace(pic))
+            {
+                var picNorm = pic.Trim().ToUpper();
+                dimensionReportQuery = dimensionReportQuery.Where(d => d.CreatedBy != null && d.CreatedBy.ToUpper().Contains(picNorm));
+            }
+
             List<DimensionReport> dimensionReports = new();
 
-            if (!string.IsNullOrWhiteSpace(report.ItemCode))
-            {
-                var itemCode = report.ItemCode.Trim().ToUpper();
-                var rows = await dimensionReportQuery
-                    .Where(d => d.ItemCode != null && d.ItemCode.ToUpper() == itemCode)
-                    .OrderByDescending(d => d.CreatedDate)
-                    .Take(120)
-                    .ToListAsync();
-                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
-            }
-
-            if (!dimensionReports.Any())
-            {
-                var rows = await dimensionReportQuery
-                    .Where(d => d.DocumentNumber == report.DocumentNumber)
-                    .OrderByDescending(d => d.CreatedDate)
-                    .Take(120)
-                    .ToListAsync();
-                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
-            }
-
-            if (!dimensionReports.Any() && !string.IsNullOrWhiteSpace(report.VinCode))
+            // Priority 1: Match by VinCode (most reliable for item-based search)
+            if (!string.IsNullOrWhiteSpace(report.VinCode))
             {
                 var vinCode = report.VinCode.Trim().ToUpper();
                 var rows = await dimensionReportQuery
@@ -1839,6 +1834,30 @@ namespace VelastoProductionSystem.Controllers
                 dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
             }
 
+            // Priority 2: Match by ItemCode
+            if (!dimensionReports.Any() && !string.IsNullOrWhiteSpace(report.ItemCode))
+            {
+                var itemCode = report.ItemCode.Trim().ToUpper();
+                var rows = await dimensionReportQuery
+                    .Where(d => d.ItemCode != null && d.ItemCode.ToUpper() == itemCode)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .Take(120)
+                    .ToListAsync();
+                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
+            }
+
+            // Priority 3: Match by DocumentNumber
+            if (!dimensionReports.Any())
+            {
+                var rows = await dimensionReportQuery
+                    .Where(d => d.DocumentNumber == report.DocumentNumber)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .Take(120)
+                    .ToListAsync();
+                dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
+            }
+
+            // Priority 4: Match by MachineName as fallback
             if (!dimensionReports.Any() && !string.IsNullOrWhiteSpace(report.MachineName))
             {
                 var machine = report.MachineName.Trim().ToUpper();
@@ -2052,6 +2071,7 @@ namespace VelastoProductionSystem.Controllers
                     report.DocumentNumber,
                     report.HoseType,
                     report.VinCode,
+                    report.ItemCode,
                     report.MachineName,
                     report.Dimension,
                     report.CustomerName,

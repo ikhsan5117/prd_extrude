@@ -12,6 +12,10 @@
     <Content Remove="scratch\**" />
     <EmbeddedResource Remove="scratch\**" />
     <None Remove="scratch\**" />
+    <Compile Remove="test_sql\**" />
+    <Content Remove="test_sql\**" />
+    <EmbeddedResource Remove="test_sql\**" />
+    <None Remove="test_sql\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,140 @@
+@model VelastoProductionSystem.Models.SpsMaster
+
+@{
+    ViewData["Title"] = "Detail Master SPS";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card" style="background: rgba(25, 30, 40, 0.8); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-eye me-2"></i>Detail Master SPS - @Model.ItemList
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong class="text-white">ID:</strong>
+                            <p class="text-muted">@Model.Id</p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong class="text-white">Excel ID:</strong>
+                            <p class="text-muted">@Model.ExcelId</p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong class="text-white">Machine:</strong>
+                            <p class="text-muted">@Model.Machine</p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong class="text-white">Machine Code:</strong>
+                            <p class="text-muted">@Model.MachineCode</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong class="text-white">Document Number:</strong>
+                            <p class="text-muted">@Model.DocumentNumber</p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong class="text-white">Revision:</strong>
+                            <p class="text-muted">@Model.RevisionNumber</p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong class="text-white">Date:</strong>
+                            <p class="text-muted">@Model.RevisionDate</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong class="text-white">Item List:</strong>
+                            <p class="text-info fw-bold">@Model.ItemList</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-white">Customer:</strong>
+                            <p class="text-muted">@Model.Customer</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-white">Hose Type:</strong>
+                            <p class="text-muted">@Model.HoseType</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong class="text-white">Dimensi:</strong>
+                            <p class="text-muted">@Model.Dimensi</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-white">Formulasi:</strong>
+                            <p class="text-muted">@Model.Formulasi</p>
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary" />
+
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-rulers me-2"></i>Tolerance (Format: min|asli|max)
+                    </h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong class="text-warning">Tolerance Inner:</strong>
+                            <p class="text-warning fs-5"><code>@Model.ToleranceInner</code></p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-warning">Tolerance Outer:</strong>
+                            <p class="text-warning fs-5"><code>@Model.ToleranceOuter</code></p>
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary" />
+
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-box-seam me-2"></i>Material
+                    </h5>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong class="text-white">Material TSM:</strong>
+                            <p class="text-muted">@Model.Material</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-white">Inner Tube:</strong>
+                            <p class="text-muted">@Model.InnerTube</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-white">Middle Tube:</strong>
+                            <p class="text-muted">@Model.MiddleTube</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong class="text-white">Outer Cover:</strong>
+                            <p class="text-muted">@Model.OuterCover</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-white">Tebal Inner:</strong>
+                            <p class="text-muted">@Model.TebalInner</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-white">Tebal Total:</strong>
+                            <p class="text-muted">@Model.TebalTotal</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                            <i class="bi bi-pencil me-2"></i>Edit
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Kembali
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

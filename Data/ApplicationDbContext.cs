@@ -17,6 +17,7 @@ namespace VelastoProductionSystem.Data
         public DbSet<LotTag> LotTags { get; set; }
         public DbSet<PackingStandard> PackingStandards { get; set; }
         public DbSet<MasterlistSpsDoubleLayer> MasterlistSpsDoubleLayers { get; set; }
+        public DbSet<SpsMaster> SpsMasters { get; set; }
         public DbSet<DimensionReport> DimensionReports { get; set; }
         public DbSet<DimensionMeasurement> DimensionMeasurements { get; set; }
         public DbSet<DimensionSummary> DimensionSummaries { get; set; }
