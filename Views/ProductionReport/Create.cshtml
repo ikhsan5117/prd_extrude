@@ -1330,6 +1330,11 @@
             const midEl = document.getElementById('MiddleMaterial');
             if (midEl) midEl.value = middleStd;
 
+            // Set Yarn/Benang field
+            const yarnStd = sps.yarnType || sps.YarnType || sps.yarn || sps.Yarn || '';
+            const yarnEl = document.getElementById('Yarn');
+            if (yarnEl) yarnEl.value = yarnStd;
+
             // Show/hide Middle material card based on LayerType (CHS 3 Layer)
             const layerType3L = (sps.layerType || sps.LayerType || '').toLowerCase();
             const machineName3L = (window.SESSION_MACHINE_NAME || '').toLowerCase();

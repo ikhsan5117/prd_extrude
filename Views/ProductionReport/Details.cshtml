@@ -20,16 +20,19 @@
                     var isOperator = userRole != "ADMIN_ENG" && userRole != "LEADER_QC";
                     var referer = Context.Request.Headers["Referer"].ToString();
                     
-                    if (isOperator) {
+                    if (currentPortal == "dimension") {
+                        backUrl = "/ProductionReport/DimensionHistory";
+                        backLabel = "HISTORY";
+                    } else if (currentPortal == "parameter") {
+                        backUrl = "/ProductionReport/ParameterHistory";
+                        backLabel = "HISTORY";
+                    } else if (isOperator) {
                         if (!string.IsNullOrEmpty(referer) && (referer.Contains("/Dimensi/Index") || referer.Contains("/ProductionReport/Create"))) {
                             backUrl = referer;
                         } else {
                             backUrl = "/ProductionReport/Create";
                         }
                         backLabel = "MENU INPUT";
-                    } else if (currentPortal == "dimension") {
-                        backUrl = "/Dimensi/History";
-                        backLabel = "HISTORY";
                     } else if (referer.Contains("ParameterHistory")) {
                         backUrl = "/ProductionReport/ParameterHistory";
                         backLabel = "HISTORY";

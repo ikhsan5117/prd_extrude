@@ -1256,6 +1256,11 @@
                 }
             }
 
+            // Set Yarn/Benang field
+            const yarnStd = sps.yarnType || sps.YarnType || sps.yarn || sps.Yarn || '';
+            const yarnEl = document.getElementById('Yarn');
+            if (yarnEl) yarnEl.value = yarnStd;
+
             // Populate parameter standards
             const setSpec = (id, val) => {
                 const el = document.getElementById('spec_' + id);

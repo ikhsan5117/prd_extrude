@@ -40,9 +40,12 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 .tab-btn.active{background:rgba(0,102,255,.15);color:#38bdf8}
 .tab-btn:hover:not(.active){background:rgba(255,255,255,.04);color:#e2e8f0}
 .tab-pane{display:none}.tab-pane.active{display:block}
-.chart-card{background:rgba(21,27,38,.4);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
-.chart-card h3{font-size:.7rem;font-weight:900;color:#8b949e;letter-spacing:2px;text-transform:uppercase;margin-bottom:15px}
+.chart-card{background:rgba(21,27,38,.4);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;position:relative}
+.chart-card h3{font-size:.7rem;font-weight:900;color:#8b949e;letter-spacing:2px;text-transform:uppercase;margin-bottom:15px;display:inline-block}
 .chart-wrap{position:relative;height:300px}
+.btn-reset-zoom{position:absolute;top:18px;right:20px;background:rgba(0,102,255,.1);border:1px solid rgba(0,102,255,.3);color:#38bdf8;font-size:.6rem;font-weight:900;padding:6px 12px;border-radius:6px;cursor:pointer;transition:.2s;letter-spacing:.5px;z-index:10}
+.btn-reset-zoom:hover{background:#0066ff;color:#fff;transform:translateY(-1px)}
+.btn-reset-zoom i{margin-right:4px}
 .tbl-wrap{background:rgba(21,27,38,.4);border:1px solid var(--border);border-radius:12px;overflow-x:auto;margin-bottom:20px}
 .cmp-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:700px}
 .cmp-table th{padding:10px 14px;text-align:left;font-weight:900;font-size:.6rem;letter-spacing:1px;text-transform:uppercase;color:#8b949e;border-bottom:2px solid rgba(0,102,255,.3);white-space:nowrap}
@@ -97,11 +100,11 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 <div class="ca-header"><div><div class="ca-title">Chart Analysis</div><div class="ca-sub">Production Parameter vs SPS Standard</div></div></div>
 
 <div class="search-panel">
-<!-- Autocomplete Search Box: SPS Item List -->
+<!-- Autocomplete Search Box: Item Planning dari Dimension History -->
 <div class="s-box" id="acWrapper">
   <i class="bi bi-upc-scan"></i>
   <div class="ac-wrap">
-    <input id="docSearch" class="ac-input" placeholder="CARI ITEM LIST SPS (TA1080, NA2033...)" autocomplete="off" spellcheck="false" />
+    <input id="docSearch" class="ac-input" placeholder="CARI ITEM PLANNING (TA2634, NA1470, ALO310...)" autocomplete="off" spellcheck="false" />
     <div id="acDropdown" class="ac-dropdown"></div>
   </div>
   <button class="ac-clear" id="acClear" title="Clear" style="display:none"><i class="bi bi-x-circle-fill"></i></button>
@@ -181,19 +184,20 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 </div>
 
 <div id="pane-temp" class="tab-pane">
-<div class="chart-card"><h3>Inner (Material 1) — Head / Cylinder / Screw Temperature</h3><div class="chart-wrap"><canvas id="chartTempInner"></canvas></div>
+<div class="chart-card"><h3>Inner (Material 1) — Head / Cylinder / Screw Temperature</h3><button class="btn-reset-zoom" onclick="resetZoom('chartTempInner')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartTempInner"></canvas></div>
 <div class="legend-box"><span class="leg-actual">Actual (solid)</span><span class="leg-upper">Batas Atas (dashed)</span><span class="leg-lower">Batas Bawah (dashed)</span></div></div>
-<div class="chart-card"><h3>Outer (Material 2) — Head / Cylinder / Screw Temperature</h3><div class="chart-wrap"><canvas id="chartTempOuter"></canvas></div></div>
+<div class="chart-card"><h3>Outer (Material 2) — Head / Cylinder / Screw Temperature</h3><button class="btn-reset-zoom" onclick="resetZoom('chartTempOuter')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartTempOuter"></canvas></div></div>
 </div>
 
 <div id="pane-speed" class="tab-pane">
-<div class="chart-card"><h3>Screw Speed &amp; Pressure — Inner vs Outer</h3><div class="chart-wrap"><canvas id="chartSpeed"></canvas></div></div>
-<div class="chart-card"><h3>Hose Speed &amp; Machine Parameters</h3><div class="chart-wrap"><canvas id="chartMachine"></canvas></div></div>
+<div class="chart-card"><h3>Screw Speed &amp; Pressure — Inner vs Outer</h3><button class="btn-reset-zoom" onclick="resetZoom('chartSpeed')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartSpeed"></canvas></div></div>
+<div class="chart-card"><h3>Hose Speed &amp; Machine Parameters</h3><button class="btn-reset-zoom" onclick="resetZoom('chartMachine')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartMachine"></canvas></div></div>
 </div>
 
 <div id="pane-dim" class="tab-pane active">
-<div class="chart-card"><h3>Inner Diameter — SPC Chart</h3><div class="chart-wrap"><canvas id="chartDimInner"></canvas></div></div>
-<div class="chart-card"><h3>Total Thickness — SPC Chart</h3><div class="chart-wrap"><canvas id="chartDimTotal"></canvas></div></div>
+<div class="chart-card"><h3>Inner Diameter — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartDimInner')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartDimInner"></canvas></div></div>
+<div class="chart-card"><h3>Inner Thickness — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartInnerThick')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartInnerThick"></canvas></div></div>
+<div class="chart-card"><h3>Total Thickness — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartDimTotal')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartDimTotal"></canvas></div></div>
 </div>
 
 <div id="pane-table" class="tab-pane">
@@ -204,6 +208,8 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script>
 let DATA=null, CHARTS={};
 const P=v=>{if(!v)return null;let s=String(v);if(s.includes('~')){let p=s.split('~').map(Number);return(p[0]+p[1])/2}return parseFloat(s)||null};
@@ -425,8 +431,12 @@ function closeAcDropdown(){
 
 function renderAcItems(items,loading){
   const dd=document.getElementById('acDropdown');
-  if(loading){dd.innerHTML='<div class="ac-loading"><i class="bi bi-hourglass-split"></i> Mencari di SPS Master...</div>';openAcDropdown();window._DISPLAYED_RESULTS=[];return;}
-  if(!items||items.length===0){dd.innerHTML='<div class="ac-no-result"><i class="bi bi-upc-scan"></i> Item List tidak ditemukan</div>';openAcDropdown();window._DISPLAYED_RESULTS=[];return;}
+  if(loading){dd.innerHTML='<div class="ac-loading"><i class="bi bi-hourglass-split"></i> Memuat Item Planning...</div>';openAcDropdown();window._DISPLAYED_RESULTS=[];return;}
+  if(!items||items.length===0){
+    console.warn('[ChartAnalysis] renderAcItems: No items to display');
+    dd.innerHTML='<div class="ac-no-result"><i class="bi bi-upc-scan"></i> Item Planning tidak ditemukan</div>';openAcDropdown();window._DISPLAYED_RESULTS=[];return;
+  }
+  console.log('[ChartAnalysis] renderAcItems: Rendering', items.length, 'items');
   // Simpan items yang sedang dirender — ini yang dipakai selectSpsItem
   window._DISPLAYED_RESULTS=items.slice();
   dd.innerHTML=items.map((x,i)=>{
@@ -464,13 +474,16 @@ async function fetchAllSpsItems(){
       shift: shift,
       pic: pic
     });
+    console.log('[ChartAnalysis] Fetching items with params:', Object.fromEntries(params));
     const r=await fetch(`/ProductionReport/SearchSpsItems?${params.toString()}`);
+    console.log('[ChartAnalysis] Response status:', r.status);
     const d=await r.json();
+    console.log('[ChartAnalysis] Received items:', d.length, d.length > 0 ? d.slice(0,5) : 'EMPTY');
     window._SPS_RESULTS=d;
     window._FILTER_APPLIED={startDate,endDate,shift,pic}; // Cache filter criteria
     renderAcItems(d,false);
   }catch(e){
-    console.error('Fetch SPS items error:', e);
+    console.error('[ChartAnalysis] Fetch items error:', e);
     renderAcItems([],false);
   }
 }
@@ -622,31 +635,70 @@ function renderInfo(){
   const dimCount = dim ? (dim.reportCount || 0) : 0;
   const dimStatus = dimCount > 0 ? `✅ ${dimCount} reports` : '⚠️ No data';
   
-  // Smart display for VIN/ItemCode - prioritize non-empty value
-  const vinDisplay = rp.vinCode || rp.itemCode || '—';
+  // Smart display for VIN/ItemCode - ensure non-null values
+  const vinCode = rp.vinCode && rp.vinCode !== '' ? rp.vinCode : null;
+  const itemCode = rp.itemCode && rp.itemCode !== '' ? rp.itemCode : null;
+  const vinDisplay = vinCode || itemCode || '—';
   const dimensionDisplay = rp.dimension || '—';
+  
+  // Debug logging
+  console.log('[ChartAnalysis] Report data:', {
+    vinCode: rp.vinCode,
+    itemCode: rp.itemCode,
+    vinDisplay: vinDisplay,
+    documentNumber: rp.documentNumber,
+    hoseType: rp.hoseType
+  });
   
   document.getElementById('infoCards').innerHTML=`
   <div class="i-card"><div class="i-lbl">Hose Type</div><div class="i-val cyan">${rp.hoseType||'—'}</div></div>
   <div class="i-card"><div class="i-lbl">Machine</div><div class="i-val yellow">${rp.machineName||'—'}</div></div>
-  <div class="i-card"><div class="i-lbl">VIN Code / Item Code</div><div class="i-val" style="font-size:.95rem">${vinDisplay}</div></div>
-  <div class="i-card"><div class="i-lbl">Dimension</div><div class="i-val">${dimensionDisplay}</div></div>
-  <div class="i-card"><div class="i-lbl">SPS Match</div><div class="i-val ${sp?'green':'red'}">${sp?'✅ MATCHED':'❌ NOT FOUND'}</div></div>
-  <div class="i-card"><div class="i-lbl">Dimension Source</div><div class="i-val ${dimCount>0?'green':'yellow'}" style="font-size:.85rem">${dimSource}</div></div>
-  <div class="i-card"><div class="i-lbl">Dimension Data</div><div class="i-val ${dimCount>0?'green':'red'}">${dimStatus}</div></div>`;
+  <div class="i-card"><div class="i-lbl">VIN Code / Item Code</div><div class="i-val" style="font-size:.95rem;font-weight:bold;color:#38bdf8">${vinDisplay}</div></div>
+  <div class="i-card"><div class="i-lbl">SPS Match</div><div class="i-val ${sp?'green':'red'}">${sp?'✅ MATCHED':'❌ NOT FOUND'}</div></div>`;
 }
 
 function makeChart(id,labels,datasets,yLabel){
   if(CHARTS[id])CHARTS[id].destroy();
   const ctx=document.getElementById(id);if(!ctx)return;
   CHARTS[id]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,
-  interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#8b949e',font:{size:10,weight:'bold'}}}},
-  scales:{x:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}},
-  y:{title:{display:!!yLabel,text:yLabel||'',color:'#8b949e'},ticks:{color:'#8b949e',font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}}}});
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{labels:{color:'#8b949e',font:{size:10,weight:'bold'}}},
+    zoom:{
+      pan:{enabled:true,mode:'xy',modifierKey:'shift'},
+      zoom:{wheel:{enabled:true,speed:0.1},pinch:{enabled:true},mode:'xy'}
+    }
+  },
+  scales:{
+    x:{
+      ticks:{
+        color:'#8b949e',
+        font:{size:9},
+        maxRotation:45,
+        minRotation:45,
+        autoSkip:true,
+        maxTicksLimit:20
+      },
+      grid:{color:'rgba(255,255,255,.03)'}
+    },
+    y:{
+      title:{display:!!yLabel,text:yLabel||'',color:'#8b949e'},
+      ticks:{color:'#8b949e',font:{size:9}},
+      grid:{color:'rgba(255,255,255,.05)'}
+    }
+  }}});
+}
+
+function resetZoom(chartId){
+  if(CHARTS[chartId]){
+    CHARTS[chartId].resetZoom();
+  }
 }
 
 function stdLine(label,val,len,color,dash){
-  const v=P(val);if(v==null)return null;
+  const v=P(val);
+  console.log(`[stdLine] Creating line: ${label}, input=${val}, parsed=${v}, len=${len}, color=${color}`);
+  if(v==null)return null;
   return{label,data:Array(len).fill(v),borderColor:color,borderWidth:1.5,borderDash:dash,pointRadius:0,fill:false};
 }
 
@@ -660,10 +712,34 @@ function renderCharts(){
     console.log('[ChartAnalysis] Dimension data loaded from:', dim.source || 'Unknown');
     console.log('[ChartAnalysis] Dimension report count:', dim.reportCount || 0);
     console.log('[ChartAnalysis] Inner Diameter points:', dim.innerDiameter ? dim.innerDiameter.length : 0);
-    console.log('[ChartAnalysis] Total Thickness X points:', dim.totalThicknessX ? dim.totalThicknessX.length : 0);
-    console.log('[ChartAnalysis] Total Thickness Y points:', dim.totalThicknessY ? dim.totalThicknessY.length : 0);
+  }
+  
+  // Debug: Log dimension standards
+  if(dimStd){
+    console.log('[ChartAnalysis] Dimension Standards loaded:', dimStd);
+    if(dimStd.innerDiameter){
+      console.log('[ChartAnalysis] Inner Diameter Standards:', {
+        target: dimStd.innerDiameter.target,
+        min: dimStd.innerDiameter.min,
+        max: dimStd.innerDiameter.max
+      });
+    }
+    if(dimStd.innerThickness){
+      console.log('[ChartAnalysis] Inner Thickness Standards:', {
+        target: dimStd.innerThickness.target,
+        min: dimStd.innerThickness.min,
+        max: dimStd.innerThickness.max
+      });
+    }
+    if(dimStd.totalThickness){
+      console.log('[ChartAnalysis] Total Thickness Standards:', {
+        target: dimStd.totalThickness.target,
+        min: dimStd.totalThickness.min,
+        max: dimStd.totalThickness.max
+      });
+    }
   } else {
-    console.warn('[ChartAnalysis] No dimension data available - using fallback from ProductionReadings');
+    console.log('[ChartAnalysis] ⚠️ No dimension standards (dimStd is null)');
   }
 
   // TEMP INNER
@@ -700,10 +776,29 @@ function renderCharts(){
   if(CHARTS['chartSpeed'])CHARTS['chartSpeed'].destroy();
   const ctxS=document.getElementById('chartSpeed');
   if(ctxS)CHARTS['chartSpeed']=new Chart(ctxS,{type:'line',data:{labels,datasets:dsS},options:{responsive:true,maintainAspectRatio:false,
-  interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#8b949e',font:{size:10,weight:'bold'}}}},
-  scales:{x:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}},
-  y:{title:{display:true,text:'RPM',color:'#8b949e'},ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.05)'}},
-  y1:{position:'right',title:{display:true,text:'MPa',color:'#8b949e'},ticks:{color:'#8b949e'},grid:{display:false}}}}});
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{labels:{color:'#8b949e',font:{size:10,weight:'bold'}}},
+    zoom:{
+      pan:{enabled:true,mode:'xy',modifierKey:'shift'},
+      zoom:{wheel:{enabled:true,speed:0.1},pinch:{enabled:true},mode:'xy'}
+    }
+  },
+  scales:{
+    x:{
+      ticks:{
+        color:'#8b949e',
+        font:{size:9},
+        maxRotation:45,
+        minRotation:45,
+        autoSkip:true,
+        maxTicksLimit:20
+      },
+      grid:{color:'rgba(255,255,255,.03)'}
+    },
+    y:{title:{display:true,text:'RPM',color:'#8b949e'},ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.05)'}},
+    y1:{position:'right',title:{display:true,text:'MPa',color:'#8b949e'},ticks:{color:'#8b949e'},grid:{display:false}}
+  }}});
 
   // MACHINE
   let dsM=[{label:'Hose Speed',data:rd.map(r=>r.hoseSpeed),borderColor:'#0088ff',borderWidth:2.5,pointRadius:3,tension:.3}];
@@ -717,6 +812,14 @@ function renderCharts(){
   let dsDI=[{label:'Inner Diameter',data:dimInnerValues,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3}];
   if(dimStd&&dimStd.innerDiameter){
     const s=dimStd.innerDiameter; const iLen=Math.max(dimInnerLabels.length,1);
+    console.log('[ChartAnalysis] Rendering Inner Diameter lines:', {
+      target: s.target, 
+      min: s.min, 
+      max: s.max, 
+      ucl: s.ucl, 
+      lcl: s.lcl,
+      dataLength: iLen
+    });
     if(s.target!=null)dsDI.push(stdLine('Target',s.target,iLen,'#22d3ee',[2,4]));
     if(s.max!=null)dsDI.push(stdLine('Max',s.max,iLen,'#ff4d4d',[5,5]));
     if(s.min!=null)dsDI.push(stdLine('Min',s.min,iLen,'#fbbf24',[5,5]));
@@ -724,6 +827,28 @@ function renderCharts(){
     if(s.lcl!=null)dsDI.push(stdLine('LCL',s.lcl,iLen,'rgba(251,191,36,.4)',[3,3]));
   }
   dsDI=dsDI.filter(Boolean);makeChart('chartDimInner',dimInnerLabels,dsDI,'mm');
+
+  // INNER THICKNESS
+  const dimInnerThickLabels=(dim&&((dim.innerThicknessX&&dim.innerThicknessX.length>0)||(dim.innerThicknessY&&dim.innerThicknessY.length>0)))
+    ? ((dim.innerThicknessX&&dim.innerThicknessX.length>0)?dim.innerThicknessX:dim.innerThicknessY).map(r=>r.label)
+    : labels;
+  const dimInnerThickX=(dim&&dim.innerThicknessX&&dim.innerThicknessX.length>0)?dim.innerThicknessX.map(r=>r.value):rd.map(r=>r.innerThicknessX);
+  const dimInnerThickY=(dim&&dim.innerThicknessY&&dim.innerThicknessY.length>0)?dim.innerThicknessY.map(r=>r.value):rd.map(r=>r.innerThicknessY);
+  let dsIT=[{label:'Inner Thick X',data:dimInnerThickX,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3},
+  {label:'Inner Thick Y',data:dimInnerThickY,borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
+  if(dimStd&&dimStd.innerThickness){
+    const s=dimStd.innerThickness; const itLen=Math.max(dimInnerThickLabels.length,1);
+    console.log('[ChartAnalysis] Rendering Inner Thickness lines:', {
+      target: s.target, 
+      min: s.min, 
+      max: s.max,
+      dataLength: itLen
+    });
+    if(s.target!=null)dsIT.push(stdLine('Target',s.target,itLen,'#a78bfa',[2,4]));
+    if(s.max!=null)dsIT.push(stdLine('Max',s.max,itLen,'#ff4d4d',[5,5]));
+    if(s.min!=null)dsIT.push(stdLine('Min',s.min,itLen,'#fbbf24',[5,5]));
+  }
+  dsIT=dsIT.filter(Boolean);makeChart('chartInnerThick',dimInnerThickLabels,dsIT,'mm');
 
   // DIM TOTAL
   const dimTotalLabels=(dim&&((dim.totalThicknessX&&dim.totalThicknessX.length>0)||(dim.totalThicknessY&&dim.totalThicknessY.length>0)))
@@ -735,6 +860,12 @@ function renderCharts(){
   {label:'Total Thick Y',data:dimTotalY,borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
   if(dimStd&&dimStd.totalThickness){
     const s=dimStd.totalThickness; const tLen=Math.max(dimTotalLabels.length,1);
+    console.log('[ChartAnalysis] Rendering Total Thickness lines:', {
+      target: s.target, 
+      min: s.min, 
+      max: s.max,
+      dataLength: tLen
+    });
     if(s.target!=null)dsDT.push(stdLine('Target',s.target,tLen,'#a78bfa',[2,4]));
     if(s.max!=null)dsDT.push(stdLine('Max',s.max,tLen,'#ff4d4d',[5,5]));
     if(s.min!=null)dsDT.push(stdLine('Min',s.min,tLen,'#fbbf24',[5,5]));

@@ -437,6 +437,7 @@ namespace VelastoProductionSystem.Controllers
                 };
 
                 // Add 186 Tolerance Values
+                #pragma warning disable CS8604 // Null values are acceptable for Excel cells
                 // Spesifikasi & Dies (7 fields)
                 valuesList.Add(m.PitchYarn_Min); valuesList.Add(m.PitchYarn_Asli); valuesList.Add(m.PitchYarn_Max);
                 valuesList.Add(m.Nipple_Min); valuesList.Add(m.Nipple_Asli); valuesList.Add(m.Nipple_Max);
@@ -532,6 +533,7 @@ namespace VelastoProductionSystem.Controllers
                 valuesList.Add(m.DancerPosition_Min); valuesList.Add(m.DancerPosition_Asli); valuesList.Add(m.DancerPosition_Max);
                 valuesList.Add(m.OdSensor_Min); valuesList.Add(m.OdSensor_Asli); valuesList.Add(m.OdSensor_Max);
                 valuesList.Add(m.CuttingSpeed_Min); valuesList.Add(m.CuttingSpeed_Asli); valuesList.Add(m.CuttingSpeed_Max);
+                #pragma warning restore CS8604
 
                 var values = valuesList.ToArray();
 

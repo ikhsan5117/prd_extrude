@@ -121,12 +121,16 @@
 
 <div class="no-print-btns">
     @{
+        var currentPortal = Context.Request.Query["portal"].ToString();
         var backUrl = "/Dimensi/History";
+        var backLabel = "Kembali";
         var userRole = Context.Session.GetString("UserRole");
         var isOperator = userRole != "ADMIN_ENG" && userRole != "LEADER_QC";
         var referer = Context.Request.Headers["Referer"].ToString();
 
-        if (isOperator) {
+        if (currentPortal == "dimension") {
+            backUrl = "/Dimensi/History";
+        } else if (isOperator) {
             if (!string.IsNullOrEmpty(referer) && (referer.Contains("/Dimensi/Index") || referer.Contains("/ProductionReport/Create"))) {
                 backUrl = referer;
             } else {
@@ -134,7 +138,7 @@
             }
         }
     }
-    <a href="@backUrl" class="btn btn-secondary btn-sm shadow">← Kembali</a>
+    <a href="@backUrl" class="btn btn-secondary btn-sm shadow">← @backLabel</a>
     <button onclick="window.print()" class="btn btn-primary btn-sm shadow">Cetak A4 Landscape</button>
 </div>
 

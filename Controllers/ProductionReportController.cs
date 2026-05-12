@@ -281,121 +281,172 @@ namespace VelastoProductionSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> SearchSpsItems(string query, string? startDate = null, string? endDate = null, string? shift = null, string? hoseType = null, string? pic = null)
         {
-            // Build filter query untuk ProductionReports
-            IQueryable<ProductionReport> reportQuery = _context.ProductionReports;
-            IQueryable<DimensionReport> dimensionQuery = _context.DimensionReports;
-
-            if (!string.IsNullOrWhiteSpace(startDate))
+            try
             {
-                if (DateTime.TryParse(startDate, out DateTime sDate))
+                Console.WriteLine($"[SearchSpsItems] === START ===");
+                Console.WriteLine($"[SearchSpsItems] Params: query='{query}', startDate='{startDate}', endDate='{endDate}', shift='{shift}', pic='{pic}'");
+                
+                var sanitizedQuery = string.IsNullOrWhiteSpace(query) ? "" : query.Trim().ToUpper();
+                
+                // Step 1: Count total DimensionReports in database
+                var totalDimensions = await _context.DimensionReports.CountAsync();
+                Console.WriteLine($"[SearchSpsItems] Total DimensionReports in DB: {totalDimensions}");
+                
+                // Step 2: Query DimensionReports with minimal filters
+                IQueryable<DimensionReport> dimensionQuery = _context.DimensionReports;
+
+                // Apply date filters only if provided
+                if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out DateTime sDate))
                 {
-                    reportQuery = reportQuery.Where(r => r.ProductionDate >= sDate.Date);
+                    var beforeFilter = await dimensionQuery.CountAsync();
                     dimensionQuery = dimensionQuery.Where(r => r.CreatedDate >= sDate.Date);
+                    var afterFilter = await dimensionQuery.CountAsync();
+                    Console.WriteLine($"[SearchSpsItems] Date filter (>= {sDate:yyyy-MM-dd}): {beforeFilter} → {afterFilter}");
                 }
-            }
-            if (!string.IsNullOrWhiteSpace(endDate))
-            {
-                if (DateTime.TryParse(endDate, out DateTime eDate))
+                if (!string.IsNullOrWhiteSpace(endDate) && DateTime.TryParse(endDate, out DateTime eDate))
                 {
-                    reportQuery = reportQuery.Where(r => r.ProductionDate <= eDate.Date.AddDays(1).AddTicks(-1));
+                    var beforeFilter = await dimensionQuery.CountAsync();
                     dimensionQuery = dimensionQuery.Where(r => r.CreatedDate <= eDate.Date.AddDays(1).AddTicks(-1));
+                    var afterFilter = await dimensionQuery.CountAsync();
+                    Console.WriteLine($"[SearchSpsItems] Date filter (<= {eDate:yyyy-MM-dd}): {beforeFilter} → {afterFilter}");
                 }
+                if (!string.IsNullOrWhiteSpace(shift) && !shift.Equals("SHIFT ALL", StringComparison.OrdinalIgnoreCase))
+                {
+                    var shiftNorm = shift.Trim().ToUpper();
+                    dimensionQuery = dimensionQuery.Where(r => r.Shift != null && r.Shift.Trim().ToUpper().Contains(shiftNorm));
+                }
+                if (!string.IsNullOrWhiteSpace(pic))
+                {
+                    dimensionQuery = dimensionQuery.Where(r => r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(pic.ToUpper()));
+                }
+
+                // Load dimension data
+                var dimensionData = await dimensionQuery
+                    .Include(d => d.StandardParameterSetting)
+                    .ToListAsync();
+
+                Console.WriteLine($"[SearchSpsItems] Loaded {dimensionData.Count} dimension reports after filters");
+                
+                // Check ItemCode distribution
+                var withItemCode = dimensionData.Where(d => !string.IsNullOrWhiteSpace(d.ItemCode)).ToList();
+                var withoutItemCode = dimensionData.Count - withItemCode.Count;
+                Console.WriteLine($"[SearchSpsItems] ItemCode distribution: {withItemCode.Count} have ItemCode, {withoutItemCode} are null/empty");
+                
+                if (withItemCode.Count > 0)
+                {
+                    Console.WriteLine($"[SearchSpsItems] Sample ItemCodes: {string.Join(", ", withItemCode.Take(10).Select(d => d.ItemCode))}");
+                }
+
+                // Map dimension data to search results
+                var dimensionItems = withItemCode
+                    .Select(d => {
+                        var itemCode = d.ItemCode!.Trim();
+                        var spsItemList = (d.StandardParameterSetting?.ItemList ?? "").Trim();
+                        var hoseType = (d.HoseType ?? "").Trim();
+                        
+                        // Display: prefer SPS ItemList for numeric codes, otherwise use ItemCode as-is
+                        string displayCode;
+                        if (!string.IsNullOrWhiteSpace(itemCode) && itemCode.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItemList))
+                        {
+                            displayCode = spsItemList;
+                        }
+                        else
+                        {
+                            displayCode = itemCode;
+                        }
+                        
+                        return new {
+                            ItemList = displayCode,
+                            OriginalCode = itemCode,
+                            HoseType = hoseType,
+                            DocumentNumber = d.DocumentNumber ?? "",
+                            CreatedDate = d.CreatedDate
+                        };
+                    })
+                    .Where(x => !string.IsNullOrWhiteSpace(x.ItemList))
+                    .ToList();
+
+                Console.WriteLine($"[SearchSpsItems] Mapped to {dimensionItems.Count} items");
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(sanitizedQuery))
+                {
+                    var beforeSearch = dimensionItems.Count;
+                    dimensionItems = dimensionItems
+                        .Where(x => 
+                            x.ItemList.ToUpper().Contains(sanitizedQuery) ||
+                            x.OriginalCode.ToUpper().Contains(sanitizedQuery) ||
+                            x.HoseType.ToUpper().Contains(sanitizedQuery))
+                        .ToList();
+                    Console.WriteLine($"[SearchSpsItems] After search filter '{sanitizedQuery}': {beforeSearch} → {dimensionItems.Count}");
+                }
+
+                // Group by display code and get latest
+                var grouped = dimensionItems
+                    .GroupBy(x => x.ItemList)
+                    .Select(g => g.OrderByDescending(item => item.CreatedDate).First())
+                    .ToList();
+
+                Console.WriteLine($"[SearchSpsItems] After grouping: {grouped.Count} unique items");
+
+                // Filter out placeholder values AND numeric codes (incomplete planning)
+                var filtered = grouped
+                    .Where(x => !IsPlaceholderItemCode(x.ItemList))
+                    .ToList();
+
+                Console.WriteLine($"[SearchSpsItems] After placeholder filter: {filtered.Count} items");
+
+                // If still empty, try adding from SPS Master as fallback
+                if (filtered.Count == 0)
+                {
+                    Console.WriteLine($"[SearchSpsItems] No dimension items, trying SPS Master...");
+                    var spsFallback = await _context.StandardParameterSettings
+                        .Where(s => s.ItemList != null)
+                        .Select(s => new {
+                            ItemList = s.ItemList!,
+                            OriginalCode = s.ItemList!,
+                            HoseType = s.HoseType ?? "",
+                            DocumentNumber = s.DocumentNumber ?? "",
+                            CreatedDate = DateTime.MinValue
+                        })
+                        .ToListAsync();
+                    
+                    // Filter out placeholder and numeric codes from SPS Master too
+                    spsFallback = spsFallback
+                        .Where(x => !IsPlaceholderItemCode(x.ItemList))
+                        .Take(50)
+                        .ToList();
+                    
+                    Console.WriteLine($"[SearchSpsItems] SPS Master fallback (after filter): {spsFallback.Count} items");
+                    filtered = spsFallback;
+                }
+
+                // Final results
+                var results = filtered
+                    .OrderByDescending(x => x.CreatedDate)
+                    .ThenBy(x => x.ItemList)
+                    .Take(50)
+                    .Select(x => new {
+                        itemCode = x.ItemList,
+                        hoseType = x.HoseType,
+                        documentNumber = x.DocumentNumber
+                    })
+                    .ToList();
+
+                Console.WriteLine($"[SearchSpsItems] === FINAL RESULTS: {results.Count} items ===");
+                if (results.Count > 0)
+                {
+                    Console.WriteLine($"[SearchSpsItems] Sample results: {string.Join(", ", results.Take(5).Select(r => r.itemCode))}");
+                }
+                
+                return Json(results);
             }
-            if (!string.IsNullOrWhiteSpace(shift) && !shift.Equals("SHIFT ALL", StringComparison.OrdinalIgnoreCase))
+            catch (Exception ex)
             {
-                var shiftNorm = shift.Trim().ToUpper();
-                reportQuery = reportQuery.Where(r => r.Shift != null && r.Shift.Trim().ToUpper().Contains(shiftNorm));
-                dimensionQuery = dimensionQuery.Where(r => r.Shift != null && r.Shift.Trim().ToUpper().Contains(shiftNorm));
+                Console.WriteLine($"[SearchSpsItems ERROR] {ex.Message}");
+                Console.WriteLine($"[SearchSpsItems STACK] {ex.StackTrace}");
+                return Json(new List<object>());
             }
-            if (!string.IsNullOrWhiteSpace(hoseType))
-            {
-                reportQuery = reportQuery.Where(r => r.HoseType != null && r.HoseType.ToUpper().Contains(hoseType.ToUpper()));
-                dimensionQuery = dimensionQuery.Where(r => r.HoseType != null && r.HoseType.ToUpper().Contains(hoseType.ToUpper()));
-            }
-            if (!string.IsNullOrWhiteSpace(pic))
-            {
-                reportQuery = reportQuery.Where(r => r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(pic.ToUpper()));
-                dimensionQuery = dimensionQuery.Where(r => r.CreatedBy != null && r.CreatedBy.ToUpper().Contains(pic.ToUpper()));
-            }
-
-            // Get ItemCodes dari filtered ProductionReports
-            var itemCodesFromReports = await reportQuery
-                .Where(r => r.ItemCode != null)
-                .Select(r => r.ItemCode)
-                .Distinct()
-                .ToListAsync();
-
-            var itemCodesFromDimension = await dimensionQuery
-                .Where(r => r.ItemCode != null)
-                .Select(r => r.ItemCode)
-                .Distinct()
-                .ToListAsync();
-
-            var allItemCodes = itemCodesFromDimension
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x!)
-                .Distinct()
-                .ToList();
-
-            var sanitizedQuery = string.IsNullOrWhiteSpace(query) ? "" : query.Trim().ToUpper();
-            
-            // Query SPS items, prioritize yang ada di filtered reports
-            var spsItems = await _context.StandardParameterSettings
-                .Where(s => s.ItemList != null && (
-                    allItemCodes.Contains(s.ItemList) || 
-                    (sanitizedQuery != "" && (s.ItemList.ToUpper().Contains(sanitizedQuery) || (s.HoseType != null && s.HoseType.ToUpper().Contains(sanitizedQuery))))
-                ))
-                .Select(s => new {
-                    ItemList       = s.ItemList,
-                    HoseType       = s.HoseType,
-                    DocumentNumber = s.DocumentNumber
-                })
-                .Distinct()
-                .ToListAsync();
-
-            var masterItems = await _context.MasterlistSpsDoubleLayers
-                .Where(m => m.ItemList != null && (
-                    allItemCodes.Contains(m.ItemList) ||
-                    (sanitizedQuery != "" && (m.ItemList.ToUpper().Contains(sanitizedQuery) || (m.HoseType != null && m.HoseType.ToUpper().Contains(sanitizedQuery))))
-                ))
-                .Select(m => new {
-                    ItemList       = m.ItemList,
-                    HoseType       = m.HoseType,
-                    DocumentNumber = m.DocumentNumber
-                })
-                .Distinct()
-                .ToListAsync();
-
-            var dimensionItems = await dimensionQuery
-                .Where(d => d.ItemCode != null && (
-                    allItemCodes.Contains(d.ItemCode) ||
-                    (sanitizedQuery != "" && (
-                        d.ItemCode.ToUpper().Contains(sanitizedQuery) ||
-                        (d.HoseType != null && d.HoseType.ToUpper().Contains(sanitizedQuery))
-                    ))
-                ))
-                .Select(d => new {
-                    ItemList = d.ItemCode,
-                    d.HoseType,
-                    DocumentNumber = (string?)d.DocumentNumber
-                })
-                .Distinct()
-                .ToListAsync();
-
-            var results = spsItems.Concat(masterItems).Concat(dimensionItems)
-                .GroupBy(x => x.ItemList)
-                .Select(g => g.First())
-                .Where(x => !IsPlaceholderItemCode(x.ItemList))
-                .OrderBy(x => x.ItemList)
-                .Take(50)
-                .Select(x => new {
-                    itemCode       = x.ItemList,
-                    hoseType       = x.HoseType ?? "",
-                    documentNumber = x.DocumentNumber ?? ""
-                })
-                .ToList();
-
-            return Json(results);
         }
 
         // AJAX API: Get SPS by Item Code (Scanner)
@@ -486,7 +537,7 @@ namespace VelastoProductionSystem.Controllers
                 InnerMaterial = master.InnerTube,
                 MiddleMaterial = master.MiddleTube,
                 OuterMaterial = master.OuterCover,
-                YarnType = master.Material,
+                YarnType = master.Yarn,
                 LayerType = !string.IsNullOrWhiteSpace(master.MiddleTube) ? "CHS 3 Layer" : "CHS 2 Layer",
                 
                 HeadTempInner = master.HeadTemp1,
@@ -723,7 +774,9 @@ namespace VelastoProductionSystem.Controllers
 
             var result = filtered.Select(p => {
                 var parsed = ParseDateShiftString(p.DateShiftString);
-                var fallbackItemCode = !string.IsNullOrWhiteSpace(p.Kode) ? p.Kode : p.PartName1;
+                // BUGFIX: PartName1 adalah KodeItem asli (TA1670, NA1860), Kode adalah PnSap
+                // Prioritaskan PartName1, fallback ke Kode hanya jika PartName1 kosong
+                var fallbackItemCode = !string.IsNullOrWhiteSpace(p.PartName1) ? p.PartName1 : p.Kode;
                 return new {
                     itemCode = fallbackItemCode,
                     itemName = (p.PartName2 ?? "") + (string.IsNullOrEmpty(p.Kode) ? "" : " | " + p.Kode),
@@ -1719,37 +1772,103 @@ namespace VelastoProductionSystem.Controllers
             if (report == null)
                 return Json(new { success = false, message = $"Production Report '{docNum}' tidak ditemukan." });
 
-            // 2. Check StandardParameterSetting first, then fallback to MasterlistSpsDoubleLayers
+            Console.WriteLine($"[GetChartData] === START ===");
+            Console.WriteLine($"[GetChartData] Document: {report.DocumentNumber}");
+            Console.WriteLine($"[GetChartData] Report VinCode: {report.VinCode ?? "NULL"}");
+            Console.WriteLine($"[GetChartData] Report ItemCode: {report.ItemCode ?? "NULL"}");
+            Console.WriteLine($"[GetChartData] Report HoseType: {report.HoseType ?? "NULL"}");
+
+            // 2. Match SPS by VinCode/ItemCode FIRST (more accurate than linked SpsId)
             MasterlistSpsDoubleLayer? spsFallback = null;
-            var hasSps = report.StandardParameterSetting != null;
+            StandardParameterSetting? matchedSps = null;
+            var hasSps = false;
+            string spsMatchMethod = "NONE";
+
+            // Priority 1: Try matching by VinCode in MasterlistSpsDoubleLayers
+            if (!string.IsNullOrEmpty(report.VinCode))
+            {
+                var vin = report.VinCode.Trim().ToUpper();
+                spsFallback = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == vin)
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+                
+                if (spsFallback != null)
+                {
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by VinCode '{vin}'";
+                    hasSps = true;
+                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
+                    Console.WriteLine($"[GetChartData] SPS ItemList: {spsFallback.ItemList}");
+                }
+            }
+
+            // Priority 2: Try matching by ItemCode in MasterlistSpsDoubleLayers
+            if (!hasSps && !string.IsNullOrEmpty(report.ItemCode))
+            {
+                var itemCode = report.ItemCode.Trim().ToUpper();
+                spsFallback = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == itemCode)
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+                
+                if (spsFallback != null)
+                {
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by ItemCode '{itemCode}'";
+                    hasSps = true;
+                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
+                    Console.WriteLine($"[GetChartData] SPS ItemList: {spsFallback.ItemList}");
+                }
+            }
+
+            // Priority 3: Fallback to linked StandardParameterSetting (may be inaccurate)
+            if (!hasSps && report.StandardParameterSetting != null)
+            {
+                matchedSps = report.StandardParameterSetting;
+                spsMatchMethod = $"Linked StandardParameterSetting (SpsId={matchedSps.Id})";
+                hasSps = true;
+                Console.WriteLine($"[GetChartData] ⚠️ SPS Found (Fallback): {spsMatchMethod}");
+                Console.WriteLine($"[GetChartData] SPS ItemList: {matchedSps.ItemList ?? "NULL"}");
+                Console.WriteLine($"[GetChartData] ⚠️ WARNING: Using linked SPS, may not match VinCode/ItemCode!");
+            }
+
+            // Priority 4: Try DocumentNumber match in MasterlistSpsDoubleLayers
+            if (!hasSps)
+            {
+                spsFallback = await _context.MasterlistSpsDoubleLayers
+                    .FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
+                
+                if (spsFallback != null)
+                {
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by DocumentNumber";
+                    hasSps = true;
+                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
+                }
+            }
+
+            // Priority 5: Try HoseType + Dimensi match
+            if (!hasSps && !string.IsNullOrEmpty(report.HoseType))
+            {
+                spsFallback = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.HoseType == report.HoseType &&
+                                (report.Dimension == null || m.Dimensi == report.Dimension))
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+                
+                if (spsFallback != null)
+                {
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by HoseType+Dimension";
+                    hasSps = true;
+                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
+                }
+            }
 
             if (!hasSps)
             {
-                // Try exact DocumentNumber match
-                spsFallback = await _context.MasterlistSpsDoubleLayers
-                    .FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
-
-                // Fallback: match by VinCode in ItemList
-                if (spsFallback == null && !string.IsNullOrEmpty(report.VinCode))
-                {
-                    var vin = report.VinCode.Trim().ToUpper();
-                    spsFallback = await _context.MasterlistSpsDoubleLayers
-                        .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(vin))
-                        .OrderByDescending(m => m.Id)
-                        .FirstOrDefaultAsync();
-                }
-
-                // Fallback: match by HoseType + Dimensi
-                if (spsFallback == null && !string.IsNullOrEmpty(report.HoseType))
-                {
-                    spsFallback = await _context.MasterlistSpsDoubleLayers
-                        .Where(m => m.HoseType == report.HoseType &&
-                                    (report.Dimension == null || m.Dimensi == report.Dimension))
-                        .OrderByDescending(m => m.Id)
-                        .FirstOrDefaultAsync();
-                }
-                
-                hasSps = spsFallback != null;
+                Console.WriteLine($"[GetChartData] ❌ NO SPS FOUND!");
+            }
+            else
+            {
+                Console.WriteLine($"[GetChartData] Final SPS Match Method: {spsMatchMethod}");
             }
 
             // 3. Load sensor data linked to this report
@@ -1829,7 +1948,7 @@ namespace VelastoProductionSystem.Controllers
                 var rows = await dimensionReportQuery
                     .Where(d => d.VinCode != null && d.VinCode.ToUpper() == vinCode)
                     .OrderByDescending(d => d.CreatedDate)
-                    .Take(120)
+                    .Take(30)
                     .ToListAsync();
                 dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
             }
@@ -1841,7 +1960,7 @@ namespace VelastoProductionSystem.Controllers
                 var rows = await dimensionReportQuery
                     .Where(d => d.ItemCode != null && d.ItemCode.ToUpper() == itemCode)
                     .OrderByDescending(d => d.CreatedDate)
-                    .Take(120)
+                    .Take(30)
                     .ToListAsync();
                 dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
             }
@@ -1852,7 +1971,7 @@ namespace VelastoProductionSystem.Controllers
                 var rows = await dimensionReportQuery
                     .Where(d => d.DocumentNumber == report.DocumentNumber)
                     .OrderByDescending(d => d.CreatedDate)
-                    .Take(120)
+                    .Take(30)
                     .ToListAsync();
                 dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
             }
@@ -1864,7 +1983,7 @@ namespace VelastoProductionSystem.Controllers
                 var rows = await dimensionReportQuery
                     .Where(d => d.MachineName != null && d.MachineName.ToUpper() == machine)
                     .OrderByDescending(d => d.CreatedDate)
-                    .Take(120)
+                    .Take(30)
                     .ToListAsync();
                 dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
             }
@@ -1872,8 +1991,14 @@ namespace VelastoProductionSystem.Controllers
             object? dimensionSeries = null;
             var orderedMeasurements = dimensionReports
                 .SelectMany(d => d.Measurements ?? Enumerable.Empty<DimensionMeasurement>())
-                .OrderBy(m => m.RecordedTime)
+                .OrderBy(m => m.RecordedTime)  // Sort by time for hourly grouping
                 .ToList();
+            
+            Console.WriteLine($"[GetChartData] Total measurements loaded: {orderedMeasurements.Count}");
+            if (orderedMeasurements.Count > 0)
+            {
+                Console.WriteLine($"[GetChartData] Time range: {orderedMeasurements.First().RecordedTime:yyyy-MM-dd HH:mm} to {orderedMeasurements.Last().RecordedTime:yyyy-MM-dd HH:mm}");
+            }
 
             if (orderedMeasurements.Any())
             {
@@ -1897,17 +2022,74 @@ namespace VelastoProductionSystem.Controllers
                     reportCount = dimensionReports.Count,
                     source = "DimensionHistory",
                     innerDiameter = BuildDimensionPoints(m => ContainsAny(m.PointName, "inner diameter", "inner tube diameter")),
+                    innerThicknessX = BuildDimensionPoints(m => ContainsAny(m.PointName, "inner thickness (x)", "inner thickness x", "inner tube thickness x")),
+                    innerThicknessY = BuildDimensionPoints(m => ContainsAny(m.PointName, "inner thickness (y)", "inner thickness y", "inner tube thickness y")),
                     totalThicknessX = BuildDimensionPoints(m => ContainsAny(m.PointName, "total thickness (x)", "outer cover total thickness", "total thickness x")),
                     totalThicknessY = BuildDimensionPoints(m => ContainsAny(m.PointName, "total thickness (y)", "total thickness y"))
                 };
             }
 
             object? dimensionStandard = null;
-            if (report.StandardParameterSetting != null)
+            
+            // Prioritize spsFallback (exact match by VinCode) over linked StandardParameterSetting
+            if (spsFallback != null)
             {
-                var s = report.StandardParameterSetting;
+                Console.WriteLine($"[GetChartData] Using MasterlistSpsDoubleLayers for dimension standards");
+                Console.WriteLine($"[GetChartData] SPS Raw Values - Dimensi:{spsFallback.Dimensi}, InnerMin:{spsFallback.InnerMin}, InnerMax:{spsFallback.InnerMax}");
+                Console.WriteLine($"[GetChartData] SPS Raw Values - ThickTarget:{spsFallback.ThickTarget}, ThickMin:{spsFallback.ThickMin}, ThickMax:{spsFallback.ThickMax}");
+                Console.WriteLine($"[GetChartData] SPS Raw Values - TotalTarget:{spsFallback.TotalTarget}, TotalMin:{spsFallback.TotalMin}, TotalMax:{spsFallback.TotalMax}");
+                
+                var innerTarget = ParseStandardValue(spsFallback.Dimensi);
+                var innerTol = ParseStandardValue(spsFallback.InnerTol);
+                var innerMin = ParseStandardValue(spsFallback.InnerMin);
+                var innerMax = ParseStandardValue(spsFallback.InnerMax);
+                var innerLcl = ParseStandardValue(spsFallback.InnerLCL);
+                var innerUcl = ParseStandardValue(spsFallback.InnerUCL);
+
+                var innerThickTarget = ParseStandardValue(spsFallback.ThickTarget);
+                var innerThickMin = ParseStandardValue(spsFallback.ThickMin);
+                var innerThickMax = ParseStandardValue(spsFallback.ThickMax);
+
+                var totalTarget = ParseStandardValue(spsFallback.TotalTarget);
+                var totalMin = ParseStandardValue(spsFallback.TotalMin);
+                var totalMax = ParseStandardValue(spsFallback.TotalMax);
+
+                Console.WriteLine($"[GetChartData] Parsed Inner Diameter: Target={innerTarget}, Min={innerMin}, Max={innerMax}");
+                Console.WriteLine($"[GetChartData] Parsed Inner Thickness: Target={innerThickTarget}, Min={innerThickMin}, Max={innerThickMax}");
+                Console.WriteLine($"[GetChartData] Parsed Total Thickness: Target={totalTarget}, Min={totalMin}, Max={totalMax}");
+
+                dimensionStandard = new
+                {
+                    innerDiameter = new
+                    {
+                        target = innerTarget,
+                        min = innerMin,
+                        max = innerMax,
+                        lcl = innerLcl,
+                        ucl = innerUcl
+                    },
+                    innerThickness = new
+                    {
+                        target = innerThickTarget,
+                        min = innerThickMin,
+                        max = innerThickMax
+                    },
+                    totalThickness = new
+                    {
+                        target = totalTarget,
+                        min = totalMin,
+                        max = totalMax
+                    }
+                };
+            }
+            else if (matchedSps != null)
+            {
+                Console.WriteLine($"[GetChartData] Using linked StandardParameterSetting for dimension standards");
+                var s = matchedSps;
                 var innerTarget = s.InnerDie;
                 var innerTol = s.ToleranceDie;
+                var innerThickTarget = s.TubeDie;
+                var innerThickTol = s.Tol_TubeDie;
                 var totalTarget = s.CoverDie > 0 ? s.CoverDie : s.OuterDie;
                 var totalTol = s.Tol_CoverDie > 0 ? s.Tol_CoverDie : s.Tol_OuterDie;
 
@@ -1921,6 +2103,12 @@ namespace VelastoProductionSystem.Controllers
                         lcl = innerTarget - innerTol,
                         ucl = innerTarget + innerTol
                     },
+                    innerThickness = new
+                    {
+                        target = innerThickTarget,
+                        min = innerThickTarget - innerThickTol,
+                        max = innerThickTarget + innerThickTol
+                    },
                     totalThickness = new
                     {
                         target = totalTarget,
@@ -1929,43 +2117,65 @@ namespace VelastoProductionSystem.Controllers
                     }
                 };
             }
-            else if (spsFallback != null)
-            {
-                var innerTarget = ParseStandardValue(spsFallback.Dimensi);
-                var innerMin = ParseStandardValue(spsFallback.InnerMin) ?? (innerTarget.HasValue ? innerTarget.Value - (ParseStandardValue(spsFallback.ToleranceInner) ?? 0.1m) : null);
-                var innerMax = ParseStandardValue(spsFallback.InnerMax) ?? (innerTarget.HasValue ? innerTarget.Value + (ParseStandardValue(spsFallback.ToleranceInner) ?? 0.1m) : null);
-                var innerLcl = ParseStandardValue(spsFallback.InnerLCL) ?? innerMin;
-                var innerUcl = ParseStandardValue(spsFallback.InnerUCL) ?? innerMax;
-
-                var totalTarget = ParseStandardValue(spsFallback.TebalTotal);
-                var totalTol = ParseStandardValue(spsFallback.ToleranceOuter) ?? 0.2m;
-                var totalMin = ParseStandardValue(spsFallback.TotalMin) ?? (totalTarget.HasValue ? totalTarget.Value - totalTol : null);
-                var totalMax = ParseStandardValue(spsFallback.TotalMax) ?? (totalTarget.HasValue ? totalTarget.Value + totalTol : null);
-
-                dimensionStandard = new
-                {
-                    innerDiameter = new
-                    {
-                        target = innerTarget,
-                        min = innerMin,
-                        max = innerMax,
-                        lcl = innerLcl,
-                        ucl = innerUcl
-                    },
-                    totalThickness = new
-                    {
-                        target = totalTarget,
-                        min = totalMin,
-                        max = totalMax
-                    }
-                };
-            }
 
             // 5. Build result
             object? spsPayload = null;
-            if (report.StandardParameterSetting != null)
+            
+            // Prioritize spsFallback (exact match) for spsPayload too
+            if (spsFallback != null)
             {
-                var s = report.StandardParameterSetting;
+                Console.WriteLine($"[GetChartData] Using MasterlistSpsDoubleLayers for SPS payload");
+                var s = spsFallback;
+                spsPayload = new {
+                    HeadTemp1 = ParseRange(s.HeadTemp1, 5),
+                    HeadTemp2 = ParseRange(s.HeadTemp2, 5),
+                    HeadTemp3 = ParseRange(s.HeadTemp3, 5),
+                    Cylinder1_1 = ParseRange(s.Cylinder1_1, 5),
+                    Cylinder1_2 = ParseRange(s.Cylinder1_2, 5),
+                    Cylinder1_3 = ParseRange(s.Cylinder1_3, 5),
+                    Cylinder2_1 = ParseRange(s.Cylinder2_1, 5),
+                    Cylinder2_2 = ParseRange(s.Cylinder2_2, 5),
+                    Cylinder2_3 = ParseRange(s.Cylinder2_3, 5),
+                    Cylinder3_1 = ParseRange(s.Cylinder3_1, 5),
+                    Cylinder3_2 = ParseRange(s.Cylinder3_2, 5),
+                    Cylinder3_3 = ParseRange(s.Cylinder3_3, 5),
+                    ScrewTemp1 = ParseRange(s.ScrewTemp1, 5),
+                    ScrewTemp2 = ParseRange(s.ScrewTemp2, 5),
+                    ScrewTemp3 = ParseRange(s.ScrewTemp3, 5),
+                    ScrewSpeed1 = ParseRange(s.ScrewSpeed1, 2),
+                    ScrewSpeed2 = ParseRange(s.ScrewSpeed2, 2),
+                    ScrewSpeed3 = ParseRange(s.ScrewSpeed3, 2),
+                    Pressure1 = ParseRange(s.Pressure1, 1),
+                    Pressure2 = ParseRange(s.Pressure2, 1),
+                    Pressure3 = ParseRange(s.Pressure3, 1),
+                    FeedRollRatio1 = ParseRange(s.FeedRollRatio1),
+                    FeedRollRatio2 = ParseRange(s.FeedRollRatio2),
+                    FeedRollRatio3 = ParseRange(s.FeedRollRatio3),
+                    Feed1 = ParseRange(s.Feed1),
+                    Feed2 = ParseRange(s.Feed2),
+                    Feed3 = ParseRange(s.Feed3),
+                    HoseSpeed = ParseRange(s.HoseSpeed),
+                    SpiralSpeed = ParseRange(s.SpiralSpeed),
+                    SpiralPitchSetting = ParseRange(s.SpiralPitchSetting),
+                    SpiralPitchDisplay = ParseRange(s.SpiralPitchDisplay),
+                    PresetValue = ParseRange(s.PresetValue),
+                    ControlValue = ParseRange(s.ControlValue),
+                    ChillerWaterTemp = ParseRange(s.ChillerWaterTemp, 3),
+                    CaterpillarGap = ParseRange(s.CaterpillarGap),
+                    TakeupConveyorSpeed = ParseRange(s.TakeUpConveyorSpeed),
+                    CoolConveyorSpeed = ParseRange(s.CoolConveyorSpeed),
+                    ConveyorRatio = ParseRange(s.ConveyorRatio),
+                    UnsmoothSurface = ParseRange(s.UnsmoothSurface),
+                    InnerMin = ParseStandardValue(s.InnerMin),
+                    InnerMax = ParseStandardValue(s.InnerMax),
+                    TotalMin = ParseStandardValue(s.TotalMin),
+                    TotalMax = ParseStandardValue(s.TotalMax)
+                };
+            }
+            else if (matchedSps != null)
+            {
+                Console.WriteLine($"[GetChartData] Using linked StandardParameterSetting for SPS payload (fallback)");
+                var s = matchedSps;
                 spsPayload = new {
                     HeadTemp1 = ParseRange(s.HeadTemp, 5),
                     HeadTemp2 = ParseRange(s.HeadTemp2, 5),
@@ -2012,72 +2222,27 @@ namespace VelastoProductionSystem.Controllers
                     TotalMax = ParseRange(s.OuterDie + s.Tol_OuterDie).target
                 };
             }
-            else if (spsFallback != null)
-            {
-                var s = spsFallback;
-                spsPayload = new {
-                    HeadTemp1 = ParseRange(s.HeadTemp1, 5),
-                    HeadTemp2 = ParseRange(s.HeadTemp2, 5),
-                    HeadTemp3 = ParseRange(s.HeadTemp3, 5),
-                    Cylinder1_1 = ParseRange(s.Cylinder1_1, 5),
-                    Cylinder1_2 = ParseRange(s.Cylinder1_2, 5),
-                    Cylinder1_3 = ParseRange(s.Cylinder1_3, 5),
-                    Cylinder2_1 = ParseRange(s.Cylinder2_1, 5),
-                    Cylinder2_2 = ParseRange(s.Cylinder2_2, 5),
-                    Cylinder2_3 = ParseRange(s.Cylinder2_3, 5),
-                    Cylinder3_1 = ParseRange(s.Cylinder3_1, 5),
-                    Cylinder3_2 = ParseRange(s.Cylinder3_2, 5),
-                    Cylinder3_3 = ParseRange(s.Cylinder3_3, 5),
-                    ScrewTemp1 = ParseRange(s.ScrewTemp1, 5),
-                    ScrewTemp2 = ParseRange(s.ScrewTemp2, 5),
-                    ScrewTemp3 = ParseRange(s.ScrewTemp3, 5),
-                    ScrewSpeed1 = ParseRange(s.ScrewSpeed1, 2),
-                    ScrewSpeed2 = ParseRange(s.ScrewSpeed2, 2),
-                    ScrewSpeed3 = ParseRange(s.ScrewSpeed3, 2),
-                    Pressure1 = ParseRange(s.Pressure1, 1),
-                    Pressure2 = ParseRange(s.Pressure2, 1),
-                    Pressure3 = ParseRange(s.Pressure3, 1),
-                    FeedRollRatio1 = ParseRange(s.FeedRollRatio1),
-                    FeedRollRatio2 = ParseRange(s.FeedRollRatio2),
-                    FeedRollRatio3 = ParseRange(s.FeedRollRatio3),
-                    Feed1 = ParseRange(s.Feed1),
-                    Feed2 = ParseRange(s.Feed2),
-                    Feed3 = ParseRange(s.Feed3),
-                    HoseSpeed = ParseRange(s.HoseSpeed),
-                    SpiralSpeed = ParseRange(s.SpiralSpeed),
-                    SpiralPitchSetting = ParseRange(s.SpiralPitchSetting),
-                    SpiralPitchDisplay = ParseRange(s.SpiralPitchDisplay),
-                    PresetValue = ParseRange(s.PresetValue),
-                    ControlValue = ParseRange(s.ControlValue),
-                    ChillerWaterTemp = ParseRange(s.ChillerWaterTemp, 3),
-                    CaterpillarGap = ParseRange(s.CaterpillarGap),
-                    TakeupConveyorSpeed = ParseRange(s.TakeUpConveyorSpeed),
-                    CoolConveyorSpeed = ParseRange(s.CoolConveyorSpeed),
-                    ConveyorRatio = ParseRange(s.ConveyorRatio),
-                    UnsmoothSurface = ParseRange(s.UnsmoothSurface),
-                    InnerMin = ParseRange(s.InnerMin).target,
-                    InnerMax = ParseRange(s.InnerMax).target,
-                    InnerLCL = ParseRange(s.InnerLCL).target,
-                    InnerUCL = ParseRange(s.InnerUCL).target,
-                    TotalMin = ParseRange(s.TotalMin).target,
-                    TotalMax = ParseRange(s.TotalMax).target
-                };
-            }
 
+            Console.WriteLine($"[GetChartData] === FINAL JSON RESPONSE ===");
+            Console.WriteLine($"[GetChartData] VinCode: {report.VinCode ?? "NULL"}");
+            Console.WriteLine($"[GetChartData] ItemCode: {report.ItemCode ?? "NULL"}");
+            Console.WriteLine($"[GetChartData] SPS Found: {hasSps}");
+            Console.WriteLine($"[GetChartData] Dimension Standard is null: {dimensionStandard == null}");
+            
             return Json(new {
                 success = true,
                 report = new {
-                    report.Id,
-                    report.DocumentNumber,
-                    report.HoseType,
-                    report.VinCode,
-                    report.ItemCode,
-                    report.MachineName,
-                    report.Dimension,
-                    report.CustomerName,
-                    report.Shift,
+                    id = report.Id,
+                    documentNumber = report.DocumentNumber,
+                    hoseType = report.HoseType,
+                    vinCode = report.VinCode ?? "",  // Ensure empty string instead of null
+                    itemCode = report.ItemCode ?? "",
+                    machineName = report.MachineName,
+                    dimension = report.Dimension,
+                    customerName = report.CustomerName,
+                    shift = report.Shift,
                     productionDate = report.ProductionDate.ToString("yyyy-MM-dd"),
-                    report.Status
+                    status = report.Status
                 },
                 spsFound = hasSps,
                 spsStandard = spsPayload,
@@ -2181,7 +2346,9 @@ namespace VelastoProductionSystem.Controllers
         {
             if (string.IsNullOrWhiteSpace(value)) return true;
             var normalized = value.Trim().Replace(" ", "");
-            return normalized is "-" or "--" or "---" or "N/A" or "NA";
+            // Filter placeholder values AND pure numeric codes (incomplete planning data)
+            return normalized is "-" or "--" or "---" or "N/A" or "NA" 
+                || normalized.All(char.IsDigit);  // Filter: 3110, 1290, etc.
         }
 
         // GET: ProductionReport/GetDocumentList — for autocomplete search
