@@ -162,7 +162,7 @@
                     @foreach (var item in Model.OrderByDescending(x => x.ProductionDate).ThenByDescending(x => x.Id))
                     {
                         var isCompleted = item.Status == "COMPLETED";
-                        var itemCode = item.ItemCode ?? item.StandardParameterSetting?.ItemList ?? "N/A";
+                        var itemCode = item.ItemCode ?? "N/A";
                         var searchText = ((item.DocumentNumber ?? "") + " " + itemCode + " " + (item.HoseType ?? "") + " " + (item.Shift ?? "") + " " + (item.MachineName ?? "") + " " + (item.CreatedBy ?? "")).ToLower();
                         
                         <tr class="align-middle ph-row"

@@ -4,8 +4,22 @@
 @{
     ViewData["Title"] = "Production Monitoring Dashboard";
     var readings = Model.ProductionReadings.OrderBy(r => r.ReadingTime).ToList();
-    var std = Model.StandardParameterSetting ?? new VelastoProductionSystem.Models.StandardParameterSetting();
+    var std = (VelastoProductionSystem.Models.SpsMaster)ViewBag.Sps ?? new VelastoProductionSystem.Models.SpsMaster();
     var currentPortal = Context.Request.Query["portal"].ToString();
+
+    // Helpers for robust parsing
+    decimal D(string? s, decimal def) {
+        if (string.IsNullOrEmpty(s)) return def;
+        var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+        return (matches.Count > 0) ? decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture) : def;
+    }
+    decimal DTol(string? s, decimal def) {
+        if (string.IsNullOrEmpty(s)) return def;
+        var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
+        if (matches.Count == 0) return def;
+        decimal val = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        return (val > 2.0m) ? def : val;
+    }
 }
 
 <div class="production-dashboard-sapphire fade-in">
@@ -324,30 +338,16 @@
                         </thead>
                         <tbody>
                             @{
-                                var master = _context.MasterlistSpsDoubleLayers.FirstOrDefault(m => m.HoseType == Model.HoseType);
-                                var stdVal = Model.StandardParameterSetting;
+                                var master = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                                var stdVal = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
 
-                                // Helpers for robust parsing
-                                decimal D(string? s, decimal def) {
-                                    if (string.IsNullOrEmpty(s)) return def;
-                                    var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
-                                    return (matches.Count > 0) ? decimal.Parse(matches[0].Value, System.Globalization.CultureInfo.InvariantCulture) : def;
-                                }
-                                decimal DTol(string? s, decimal def) {
-                                    if (string.IsNullOrEmpty(s)) return def;
-                                    var matches = System.Text.RegularExpressions.Regex.Matches(s.Replace(",", "."), @"\d+(?:\.\d+)?");
-                                    if (matches.Count == 0) return def;
-                                    decimal val = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
-                                    return (val > 2.0m) ? def : val;
-                                }
-
-                                // PRIORITY: SPS (stdVal) > Masterlist > Default
-                                decimal idNom = (stdVal?.InnerDie > 0) ? stdVal.InnerDie : D(master?.Dimensi, 11.0m);
-                                decimal idTol = (stdVal?.ToleranceDie > 0) ? stdVal.ToleranceDie : DTol(master?.ToleranceInner, 0.1m);
-                                decimal tubeNom = (stdVal?.TubeDie > 0) ? stdVal.TubeDie : D(master?.TebalInner, 1.8m);
-                                decimal tubeTol = (stdVal?.Tol_TubeDie > 0) ? stdVal.Tol_TubeDie : DTol(master?.ToleranceOuter, 0.2m);
-                                decimal coverNom = (stdVal?.CoverDie > 0) ? stdVal.CoverDie : D(master?.TebalTotal, 3.3m);
-                                decimal coverTol = (stdVal?.Tol_CoverDie > 0) ? stdVal.Tol_CoverDie : DTol(master?.ToleranceOuter, 0.2m);
+                                // PRIORITY: SpsMaster (stdVal) > Masterlist > Default
+                                decimal idNom = (stdVal != null) ? D(stdVal.InnerTarget, 11.0m) : D(master?.Dimensi, 11.0m);
+                                decimal idTol = (stdVal != null) ? D(stdVal.InnerTol, 0.1m) : DTol(master?.ToleranceInner, 0.1m);
+                                decimal tubeNom = (stdVal != null) ? D(stdVal.ThickTarget, 1.8m) : D(master?.TebalInner, 1.8m);
+                                decimal tubeTol = (stdVal != null) ? D(stdVal.ThickTol, 0.2m) : DTol(master?.ToleranceOuter, 0.2m);
+                                decimal coverNom = (stdVal != null) ? D(stdVal.TotalTarget, 3.3m) : D(master?.TebalTotal, 3.3m);
+                                decimal coverTol = (stdVal != null) ? D(stdVal.TotalTol, 0.2m) : DTol(master?.ToleranceOuter, 0.2m);
 
                                 var sections = new[] {
                                     new { Label = "Inner Diameter", Nom = idNom, Tol = idTol, Prop = "InnerDiameter" },
@@ -402,7 +402,7 @@
                                 <td class="text-white-50" style="font-size: 9px;">30m Sekali</td>
                                 <td class="text-warning fw-bold" style="font-size: 11px;">
                                     @{
-                                        string spiralStr = master?.ToleranceSpiralPitch ?? $"{stdVal?.SpiralPitch ?? 38} ± {stdVal?.Tol_SpiralPitch ?? 5}";
+                                        string spiralStr = stdVal?.ToleranceSpiralPitch ?? master?.ToleranceSpiralPitch ?? "38 ± 5";
                                     }
                                     @spiralStr
                                 </td>
@@ -519,7 +519,7 @@
                                 <tr>
                                     <td class="border-bottom-form py-1 ps-2">PART NO.</td>
                                     <td class="border-bottom-form py-1 text-center">:</td>
-                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-info">@(Model.StandardParameterSetting?.ProductCode ?? "-")</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-info">@(std?.ItemList ?? "-")</td>
                                 </tr>
                                 <tr>
                                     <td class="border-bottom-form py-1 ps-2">DATE</td>
@@ -546,7 +546,7 @@
                                 <tr>
                                     <td class="py-1 ps-2">LAYER</td>
                                     <td class="py-1 text-center">:</td>
-                                    <td class="py-1 pe-2 ps-1">@(Model.StandardParameterSetting?.LayerType ?? "-")</td>
+                                    <td class="py-1 pe-2 ps-1">@Model.HoseType</td>
                                 </tr>
                             </table>
                         </div>
@@ -669,7 +669,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.NippleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.Nipple, std.InnerDie, "8.8±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.Nipple, D(std.InnerTarget, 0), "8.8±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.NippleDieInitial == "0" ? "" : Model.NippleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.NippleDieFinal" placeholder="" /></td>
                             </tr>
@@ -681,7 +681,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.TubeDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.TubeDie, std.TubeDie, "11.1±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.TubeDie, D(std.ThickTarget, 0), "11.1±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.TubeDieInitial == "0" ? "" : Model.TubeDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.TubeDieFinal" placeholder="" /></td>
                             </tr>
@@ -693,7 +693,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(null, std.MiddleDie, "14.2±0.1")</td>
+                                <td class="text-center">@FDie(null, D(std.InnerMidTarget, 0), "14.2±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.MiddleDieInitial == "0" ? "" : Model.MiddleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.MiddleDieFinal" placeholder="" /></td>
                             </tr>
@@ -705,7 +705,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.CoverDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.CoverDie, std.CoverDie, "15.1±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.CoverDie, D(std.TotalTarget, 0), "15.1±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.CoverDieInitial == "0" ? "" : Model.CoverDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.CoverDieFinal" placeholder="" /></td>
                             </tr>
@@ -717,7 +717,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(null, std.SpacerDie, "7.3±0.1")</td>
+                                <td class="text-center">@FDie(null, D(std.SpacerDie, 0), "7.3±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.SpacerDieInitial == "0" ? "" : Model.SpacerDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.SpacerDieFinal" placeholder="" /></td>
                             </tr>
@@ -729,7 +729,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(null, std.ToleranceDie, "0.4±0.1")</td>
+                                <td class="text-center">@FDie(null, D(std.InnerTol, 0), "0.4±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.ToleranceInitial == "0" ? "" : Model.ToleranceInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.ToleranceFinal" placeholder="" /></td>
                             </tr>
@@ -873,14 +873,14 @@
                                 }
 
                                 var innerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = F(sMaster?.HeadTemp1, std.HeadTemp, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = F(sMaster?.Cylinder1_1, std.Cylinder1Temp, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = F(sMaster?.Cylinder2_1, std.Cylinder2Temp, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = F(null, std.Cylinder3Temp, "", "±5"), U = "°C" },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = F(sMaster?.ScrewTemp1, std.ScrewTemp, "", "±5"), U = "°C" },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = F(sMaster?.ScrewSpeed1, std.ScrewSpeed, "", "±2.5"), U = "rpm" },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = F(sMaster?.Feed1, std.FeedRollRatio, "MAX ", ""), U = "%" },
-                                    new { L = "PRESSURE", K = "PressureInner", S = F(sMaster?.Pressure1, std.Pressure, "MAX ", ""), U = "MPa" }
+                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = F(sMaster?.HeadTemp1, std.HeadTemp1_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = F(sMaster?.Cylinder1_1, std.Cylinder1_1_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = F(sMaster?.Cylinder2_1, std.Cylinder1_2_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = F(null, std.Cylinder1_3_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = F(sMaster?.ScrewTemp1, D(std.ScrewTemp1, 0), "", "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = F(sMaster?.ScrewSpeed1, D(std.ScrewSpeed1, 0), "", "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = F(sMaster?.Feed1, D(std.FeedRollRatio1, 0), "MAX ", ""), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureInner", S = F(sMaster?.Pressure1, D(std.Pressure1, 0), "MAX ", ""), U = "MPa" }
                                 };
                             }
                             @for(int r = 0; r < innerRows.Length; r++) {
@@ -901,14 +901,14 @@
                             <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var outerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp2 ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder1_2 ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2_2 ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder3_2 ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, std.ScrewTemp2 ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, std.ScrewSpeed2 ?? 0, "", "±2.5"), U = "rpm" },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, std.FeedRollRatio2 ?? 0, "MAX ", ""), U = "%" },
-                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, std.Pressure2 ?? 0, "MAX ", ""), U = "MPa" }
+                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std.HeadTemp2_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std.Cylinder2_1_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std.Cylinder2_2_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std.Cylinder2_3_Asli ?? 0, "", "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, D(std.ScrewTemp2, 0), "", "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, D(std.ScrewSpeed2, 0), "", "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, D(std.FeedRollRatio2, 0), "MAX ", ""), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, D(std.Pressure2, 0), "MAX ", ""), U = "MPa" }
                                 };
                             }
                             @for(int r = 0; r < outerRows.Length; r++) {
@@ -929,17 +929,17 @@
                             <tr class="bg-secondary text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var otherRows = new[] {
-                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, std.SpiralSpeed, "", "±20"), U = "rpm" },
-                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(sMaster?.ToleranceSpiralPitch, std.SpiralPitch, "", "±5"), U = "mm" },
-                                    new { L = "PRESET VALVE", K = "PresetValue", S = F(null, std.PresetValve, "", ""), U = "mm" },
+                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, D(std.SpiralSpeed, 0), "", "±20"), U = "rpm" },
+                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(sMaster?.ToleranceSpiralPitch, D(std.SpiralPitchSetting, 0), "", "±5"), U = "mm" },
+                                    new { L = "PRESET VALVE", K = "PresetValue", S = F(null, D(std.PresetValue, 0), "", ""), U = "mm" },
                                     new { L = "CONTROL VAL.", K = "ControlValue", S = (std.ControlValue ?? "-"), U = "mm" },
                                     new { L = "HOSE SPEED", K = "HoseSpeed", S = (std.HoseSpeed ?? "-"), U = "m/min" },
-                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = (sMaster?.TakeUpConveyorSpeed ?? std.TakeupConveyorSpeed ?? "-"), U = "m/min" },
+                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = (sMaster?.TakeUpConveyorSpeed ?? std.TakeUpConveyorSpeed ?? "-"), U = "m/min" },
                                     new { L = "COOL SPEED", K = "CoolConveyorSpeed", S = (std.CoolConveyorSpeed ?? "-"), U = "m/min" },
                                     new { L = "CONV. RATIO", K = "ConveyorRatio", S = (std.ConveyorRatio ?? "-"), U = "%" },
                                     new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = (sMaster?.ChillerWaterTemp ?? std.ChillerWaterTemp ?? "-"), U = "°C" },
                                     new { L = "CATERPIL. GAP", K = "CaterpillarGap", S = (std.CaterpillarGap ?? "-"), U = "mm" },
-                                    new { L = "SURFACE", K = "UnsmoothSurface", S = F(null, std.UnsmoothSurface, "OK", ""), U = "" }
+                                    new { L = "SURFACE", K = "UnsmoothSurface", S = (std.UnsmoothSurface ?? "OK"), U = "" }
                                 };
                             }
                             @for(int r = 0; r < otherRows.Length; r++) {

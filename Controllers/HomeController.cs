@@ -29,7 +29,6 @@ namespace VelastoProductionSystem.Controllers
                 .Where(p => p.Status == "InProgress").Count();
             ViewBag.TodayProductions = _context.ProductionReports
                 .Where(p => p.ProductionDate.Date == DateTime.Today).Count();
-            ViewBag.TotalLotTags = _context.LotTags.Count();
 
             return View();
         }

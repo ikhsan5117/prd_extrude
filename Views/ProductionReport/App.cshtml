@@ -593,7 +593,7 @@
             
             <div class="row g-4" id="dimGridHUD">
                 @{
-                    var stdVal = Model.StandardParameterSetting;
+                    var stdVal = (VelastoProductionSystem.Models.SpsMaster)ViewBag.Sps;
                     var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
 
                     decimal D(string? s, decimal def) {
@@ -606,28 +606,28 @@
                         return def;
                     }
 
-                    decimal idNom = stdVal?.InnerDie > 0 ? stdVal.InnerDie : (master != null ? D(master.Dimensi, 0m) : 0m);
-                    decimal idTol = stdVal?.ToleranceDie > 0 ? stdVal.ToleranceDie : (master != null ? D(master.ToleranceInner, 0m) : 0m);
-                    decimal tubeNom = stdVal?.TubeDie > 0 ? stdVal.TubeDie : (master != null ? D(master.TebalInner, 0m) : 0m);
-                    decimal tubeTol = stdVal?.Tol_TubeDie > 0 ? stdVal.Tol_TubeDie : 0m;
-                    decimal coverNom = stdVal?.CoverDie > 0 ? stdVal.CoverDie : (master != null ? D(master.TebalTotal, 0m) : 0m);
-                    decimal coverTol = stdVal?.Tol_CoverDie > 0 ? stdVal.Tol_CoverDie : (master != null ? D(master.ToleranceOuter, 0m) : 0m);
+                    decimal idNom = stdVal != null ? D(stdVal.InnerTarget, 0m) : (master != null ? D(master.Dimensi, 0m) : 0m);
+                    decimal idTol = stdVal != null ? D(stdVal.InnerTol, 0.1m) : (master != null ? D(master.ToleranceInner, 0.1m) : 0.1m);
+                    decimal tubeNom = stdVal != null ? D(stdVal.ThickTarget, 0m) : (master != null ? D(master.TebalInner, 0m) : 0m);
+                    decimal tubeTol = stdVal != null ? D(stdVal.ThickTol, 0.2m) : 0.2m;
+                    decimal coverNom = stdVal != null ? D(stdVal.TotalTarget, 0m) : (master != null ? D(master.TebalTotal, 0m) : 0m);
+                    decimal coverTol = stdVal != null ? D(stdVal.TotalTol, 0.3m) : (master != null ? D(master.ToleranceOuter, 0.3m) : 0.3m);
 
-                    var idNomDisp = idNom.ToString("0.0");
-                    var idTolDisp = idTol.ToString("0.0");
+                    var idNomDisp = idNom.ToString("0.00");
+                    var idTolDisp = idTol.ToString("0.00");
                     var idFull = $"{idNomDisp} ± {idTolDisp}";
 
-                    var tubeNomDisp = tubeNom.ToString("0.0");
-                    var tubeTolDisp = tubeTol.ToString("0.0");
-                    var tubeFull = $"{tubeNomDisp} ± {tubeTolDisp}";
+                    var tubeNomDisp = tubeNom.ToString("0.00");
+                    var tubeTolDisp = tubeTol.ToString("0.00");
+                    var tubeFull = tubeNom > 0 ? $"{tubeNomDisp} ± {tubeTolDisp}" : "0.00 ± 0.00";
 
-                    var coverNomDisp = coverNom.ToString("0.0");
-                    var coverTolDisp = coverTol.ToString("0.0");
-                    var coverFull = $"{coverNomDisp} ± {coverTolDisp}";
+                    var coverNomDisp = coverNom.ToString("0.00");
+                    var coverTolDisp = coverTol.ToString("0.00");
+                    var coverFull = coverNom > 0 ? $"{coverNomDisp} ± {coverTolDisp}" : "0.00 ± 0.00";
 
-                    var pitchNom = (stdVal?.SpiralPitch ?? 38);
-                    var pitchTol = (stdVal?.Tol_SpiralPitch ?? 5);
-                    var pitchFull = $"{pitchNom} ± {pitchTol}";
+                    var pitchNom = stdVal != null ? D(stdVal.SpiralPitchSetting, 38m) : 38m;
+                    var pitchTol = stdVal != null ? D(stdVal.ToleranceSpiralPitch, 5m) : 5m;
+                    var pitchFull = $"{pitchNom.ToString("0")} ± {pitchTol.ToString("0")}";
 
                     var dimensionPoints = new[] {
                         new { Name = "Inner Diameter", Key = "ID", Std = idFull, Icon = "bi-circle" },
@@ -717,7 +717,7 @@
                 <div class="data-row">
                     <div class="data-item">
                         <span class="label">PART NUMBER</span>
-                        <span class="value">@(Model.StandardParameterSetting?.ProductCode ?? "-")</span>
+                        <span class="value">@Model.HoseType</span>
                     </div>
                     <div class="data-item">
                         <span class="label">VIN KODE</span>
@@ -813,7 +813,7 @@
         // DRAFT POKAYOKE SYSTEM (localStorage per product code)
         // ─────────────────────────────────────────────────────────────────────
         const DRAFT_PREFIX = 'velasto_app_draft_v1_';
-        const _currentProductCode = '@(Model.StandardParameterSetting?.ProductCode ?? "NA")';
+        const _currentProductCode = '@(Model.ItemCode ?? "NA")';
         let _autoSaveTimer = null;
 
         function _draftKey() { return DRAFT_PREFIX + _currentProductCode; }

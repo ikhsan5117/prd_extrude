@@ -213,7 +213,7 @@
                 </tr>
                 @{
                     var measurements = Model.Measurements?.ToDictionary(m => m.PointName, StringComparer.OrdinalIgnoreCase) ?? new Dictionary<string, VelastoProductionSystem.Models.DimensionMeasurement>(StringComparer.OrdinalIgnoreCase);
-                    var sps = ViewBag.Sps as VelastoProductionSystem.Models.StandardParameterSetting;
+                    var sps = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
                     var master = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
                     
                     var mainPoints = new[] {
@@ -226,11 +226,20 @@
                             decimal target = 0, tol = 0;
                             decimal defaultTol = point.Contains("Thick") ? 0.2m : 0.1m;
 
-                            // 1. PRIORITIZE SPS (StandardParameterSetting) for Clean Numerics
+                            // 1. PRIORITIZE SPS (SpsMaster) for Clean Numerics
                             if (sps != null) {
-                                if (point.Contains("Diameter")) { target = sps.InnerDie; tol = sps.ToleranceDie; }
-                                else if (point.Contains("Inner Thick")) { target = sps.TubeDie; tol = sps.Tol_TubeDie; }
-                                else if (point.Contains("Total Thick")) { target = sps.CoverDie; tol = sps.Tol_CoverDie; }
+                                if (point.Contains("Diameter")) { 
+                                    target = ParseNum(sps.InnerTarget); 
+                                    tol = ParseTol(sps.InnerTol, 0.1m); 
+                                }
+                                else if (point.Contains("Inner Thick")) { 
+                                    target = ParseNum(sps.ThickTarget); 
+                                    tol = ParseTol(sps.ThickTol, 0.2m); 
+                                }
+                                else if (point.Contains("Total Thick")) { 
+                                    target = ParseNum(sps.TotalTarget); 
+                                    tol = ParseTol(sps.TotalTol, 0.3m); 
+                                }
                             }
 
                             // 2. USE MASTERLIST for TARGET (Dimensi) if SPS is missing
@@ -342,7 +351,9 @@
                 @{
                     var spiralRow = measurements.ContainsKey("Spiral Pitch") ? measurements["Spiral Pitch"] : null;
                     var visualRow = measurements.ContainsKey("Visual Check") ? measurements["Visual Check"] : null;
-                    var spiralStd = (sps != null && sps.SpiralPitch > 0) ? $"{sps.SpiralPitch.ToString("0")} ± {sps.Tol_SpiralPitch.ToString("0")}" : (spiralRow?.StandardDimension ?? "38 ± 5");
+                    var spiralStd = (sps != null && ParseNum(sps.SpiralPitchSetting) > 0) 
+                        ? $"{ParseNum(sps.SpiralPitchSetting).ToString("0")} ± {ParseTol(sps.ToleranceSpiralPitch, 5.0m).ToString("0")}" 
+                        : (spiralRow?.StandardDimension ?? "38 ± 5");
                 }
                 <tr>
                     <td class="row-point">Spiral Pitch</td>

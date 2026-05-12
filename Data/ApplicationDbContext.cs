@@ -10,20 +10,14 @@ namespace VelastoProductionSystem.Data
         {
         }
 
-        public DbSet<StandardParameterSetting> StandardParameterSettings { get; set; }
         public DbSet<ProductionReport> ProductionReports { get; set; }
         public DbSet<ProductionReading> ProductionReadings { get; set; }
-        public DbSet<NowProducing> NowProducings { get; set; }
-        public DbSet<LotTag> LotTags { get; set; }
-        public DbSet<PackingStandard> PackingStandards { get; set; }
         public DbSet<MasterlistSpsDoubleLayer> MasterlistSpsDoubleLayers { get; set; }
         public DbSet<SpsMaster> SpsMasters { get; set; }
         public DbSet<DimensionReport> DimensionReports { get; set; }
         public DbSet<DimensionMeasurement> DimensionMeasurements { get; set; }
         public DbSet<DimensionSummary> DimensionSummaries { get; set; }
         public DbSet<PlanningMaster> PlanningMasters { get; set; }
-        public DbSet<DailyPlanExecution> DailyPlanExecutions { get; set; }
-        public DbSet<DailyPlanActivity> DailyPlanActivities { get; set; }
         public DbSet<Machine> Machines { get; set; }
         public DbSet<PartMaster> PartMasters { get; set; }
         public DbSet<ShiftMaster> ShiftMasters { get; set; }
@@ -36,17 +30,6 @@ namespace VelastoProductionSystem.Data
             base.OnModelCreating(modelBuilder);
 
             // Configure relationships
-            modelBuilder.Entity<ProductionReport>()
-                .HasOne(p => p.StandardParameterSetting)
-                .WithMany()
-                .HasForeignKey(p => p.SpsId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<DimensionReport>()
-                .HasOne(d => d.StandardParameterSetting)
-                .WithMany()
-                .HasForeignKey(d => d.SpsId)
-                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<ProductionReading>()
                 .HasOne(p => p.ProductionReport)
@@ -66,25 +49,7 @@ namespace VelastoProductionSystem.Data
                 .HasForeignKey(s => s.DimensionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<LotTag>()
-                .HasOne(l => l.ProductionReport)
-                .WithMany()
-                .HasForeignKey(l => l.ProductionReportId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // Configure decimal precision for SQL Server compatibility
-            var decimalProps = new[] { 
-                "InnerDie", "OuterDie", "TubeDie", "MiddleDie", "CoverDie", "SpacerDie", 
-                "ToleranceDie", "Tol_TubeDie", "Tol_MiddleDie", "Tol_OuterDie", "Tol_CoverDie", "Tol_SpiralPitch",
-                "ScrewSpeed", "FeedRollRatio", "Pressure", "AirPressureA", "PresetValve", 
-                "SpiralSpeed", "SpiralPitch", "SpiralSpeedDisplay", "SpiralPitchDisplay", "PresetTemp",
-                "UnsmoothSurface", "MarkingMaterialInner", "MarkingMaterialOuter"
-            };
-
-            foreach (var prop in decimalProps)
-            {
-                modelBuilder.Entity<StandardParameterSetting>().Property(prop).HasPrecision(18, 4);
-            }
+            // Decimal precision for removed models cleaned up
 
             modelBuilder.Entity<ProductionReading>().Property(p => p.ScrewSpeedInner).HasPrecision(18, 4);
             modelBuilder.Entity<ProductionReading>().Property(p => p.PressureInner).HasPrecision(18, 4);
@@ -103,25 +68,10 @@ namespace VelastoProductionSystem.Data
             modelBuilder.Entity<ProductionReading>().Property(p => p.CaterpillarGap).HasPrecision(18, 4);
 
             // Configure indexes for better performance
-            modelBuilder.Entity<StandardParameterSetting>()
-                .HasIndex(s => s.DocumentNumber);
-            modelBuilder.Entity<StandardParameterSetting>()
-                .HasIndex(s => s.CustomerName);
-
             modelBuilder.Entity<ProductionReport>()
                 .HasIndex(p => p.ProductionDate);
             modelBuilder.Entity<ProductionReport>()
                 .HasIndex(p => p.DocumentNumber);
-
-            modelBuilder.Entity<LotTag>()
-                .HasIndex(l => l.LotTagNumber)
-                .IsUnique();
-            modelBuilder.Entity<LotTag>()
-                .HasIndex(l => l.PartNumber);
-
-            modelBuilder.Entity<PackingStandard>()
-                .HasIndex(p => p.NACode)
-                .IsUnique();
 
             // SensorIngestLogs indexes
             modelBuilder.Entity<SensorIngestLog>()

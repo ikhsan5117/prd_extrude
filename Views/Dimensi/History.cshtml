@@ -845,12 +845,12 @@
                     @foreach (var item in Model.OrderByDescending(x => x.CreatedDate))
                     {
                         var rawPlanning = (item.ItemCode ?? string.Empty).Trim();
-                        var spsItem = (item.StandardParameterSetting?.ItemList ?? string.Empty).Trim();
+                        var spsItem = ""; // Legacy fallback removed
                         var planningDisplay = rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem)
                             ? spsItem
                             : rawPlanning;
                         var rawHose = (item.HoseType ?? string.Empty).Trim();
-                        var spsHose = (item.StandardParameterSetting?.HoseType ?? string.Empty).Trim();
+                        var spsHose = ""; // Legacy fallback removed
                         var productInfoDisplay = (!string.IsNullOrWhiteSpace(spsHose) &&
                             !string.IsNullOrWhiteSpace(rawPlanning) &&
                             rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase))
@@ -867,7 +867,7 @@
 
                             <td>
                                 @{
-                                    var spsDoc = item.StandardParameterSetting?.DocumentNumber;
+                                    var spsDoc = ""; // Legacy fallback removed
                                     var displayDoc = !string.IsNullOrEmpty(spsDoc) ? spsDoc : item.DocumentNumber;
                                 }
                                 <div class="doc-num">#@(displayDoc?.Replace("#", "") ?? "")</div>

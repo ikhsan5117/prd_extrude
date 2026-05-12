@@ -29,47 +29,7 @@ namespace VelastoProductionSystem.Data
         //         System.Diagnostics.Debug.WriteLine($"ElwpContext seeding skipped: {ex.Message}");
         //     }
         // }
-            // Seed Standard Parameter Settings
-            if (!context.StandardParameterSettings.Any())
-            {
-                var paramSettings = new List<StandardParameterSetting>
-                {
-                    new StandardParameterSetting
-                    {
-                        DocumentNumber = "VH-STD-TEST", ItemList = "DIE-TEST-001", HoseType = "TEST DIES HOSE",
-                        CustomerName = "LAB TEST", ProductCode = "TEST-99", IsActive = true,
-                        InnerDie = 10.0m, TubeDie = 12.0m, MiddleDie = 11.0m, 
-                        CoverDie = 13.0m, SpacerDie = 0.5m, ToleranceDie = 2.0m,
-                        HeadTemp = 180, Cylinder1Temp = 175, ScrewSpeed = 45, Pressure = 12
-                    },
-                    new StandardParameterSetting
-                    {
-                        DocumentNumber = "VH-FH8-001", ItemList = "ITEM-001", HoseType = "Fuel Hose 8mm",
-                        CustomerName = "TOYOTA", ProductCode = "FH8-TYT", IsActive = true,
-                        InnerDie = 8.0m, TubeDie = 10.5m, MiddleDie = 11.0m, 
-                        CoverDie = 13.0m, SpacerDie = 0.4m, ToleranceDie = 1.5m,
-                        HeadTemp = 175, Cylinder1Temp = 170, ScrewSpeed = 40, Pressure = 10
-                    },
-                    new StandardParameterSetting
-                    {
-                        DocumentNumber = "VH-OH10-001", ItemList = "ITEM-002", HoseType = "Oil Hose 10mm",
-                        CustomerName = "HONDA", ProductCode = "OH10-HND", IsActive = true,
-                        InnerDie = 10.0m, TubeDie = 12.5m, MiddleDie = 13.0m, 
-                        CoverDie = 15.0m, SpacerDie = 0.6m, ToleranceDie = 1.8m,
-                        HeadTemp = 185, Cylinder1Temp = 180, ScrewSpeed = 35, Pressure = 14
-                    },
-                    new StandardParameterSetting
-                    {
-                        DocumentNumber = "VH-BH6-001", ItemList = "ITEM-003", HoseType = "Brake Hose 6mm",
-                        CustomerName = "SUZUKI", ProductCode = "BH6-SZK", IsActive = true,
-                        InnerDie = 6.0m, TubeDie = 8.5m, MiddleDie = 9.0m, 
-                        CoverDie = 11.0m, SpacerDie = 0.3m, ToleranceDie = 1.2m,
-                        HeadTemp = 170, Cylinder1Temp = 165, ScrewSpeed = 50, Pressure = 12
-                    }
-                };
-                context.StandardParameterSettings.AddRange(paramSettings);
-                context.SaveChanges();
-            }
+            // StandardParameterSettings seeding removed (table dropped)
 
             // Seed Masterlist SPS (Fallback Master) - Ensuring ITEM-001/002/003 have standards
             if (!context.MasterlistSpsDoubleLayers.Any())
@@ -124,29 +84,7 @@ namespace VelastoProductionSystem.Data
             }
             context.SaveChanges();
 
-            // Seed Packing Standards
-            if (!context.PackingStandards.Any())
-            {
-                var packingStandards = new List<PackingStandard>
-                {
-                    new PackingStandard
-                    {
-                        NACode = "NA-001",
-                        MaterialName = "Fuel Hose 8mm",
-                        PartNumber = "90445-12073",
-                        VinCode = "VIN-FH8",
-                        Dandori = 150,
-                        DH = 200,
-                        StdQty = 100,
-                        ActualQty = 100,
-                        EffectiveDate = new DateTime(2026, 1, 1),
-                        IsActive = true,
-                        Remarks = "Standard quantity per box"
-                    }
-                };
-                context.PackingStandards.AddRange(packingStandards);
-                context.SaveChanges();
-            }
+            // PackingStandards seeding removed (table dropped)
 
             // Seed Planning Master (Local Active Planning)
             if (!context.PlanningMasters.Any())
@@ -200,32 +138,7 @@ namespace VelastoProductionSystem.Data
             }
             context.SaveChanges();
 
-            // Seed Now Producing
-            if (!context.NowProducings.Any())
-            {
-                var nowProducing = new NowProducing
-                {
-                    ProductionDate = DateTime.Now.Date,
-                    HoseType = "Fuel Hose",
-                    Class = "A",
-                    Dimension = "8mm x 2.5mm",
-                    Yarn = "Polyester 1500D",
-                    MaterialInner = "NBR Grade A",
-                    MaterialInnerLotNo = "NBR20260310-001",
-                    MaterialInnerSG = 1.18m,
-                    MaterialOuter = "CR Grade Premium",
-                    MaterialOuterLotNo = "CR20260310-001",
-                    MaterialOuterSG = 1.22m,
-                    DandoriStartProdTime = DateTime.Now.AddHours(-2),
-                    DandoriEndProdTime = DateTime.Now.AddHours(-1),
-                    ProductionStartTime = DateTime.Now.AddHours(-1),
-                    Status = "In Progress",
-                    CreatedBy = "Operator 1",
-                    CreatedDate = DateTime.Now
-                };
-                context.NowProducings.Add(nowProducing);
-                context.SaveChanges();
-            }
+            // NowProducings seeding removed (table dropped)
             // Seed Production Reports
             if (!context.ProductionReports.Any())
             {
@@ -253,35 +166,7 @@ namespace VelastoProductionSystem.Data
                 context.SaveChanges();
             }
 
-            // Seed Lot Tags
-            if (!context.LotTags.Any())
-            {
-                var lotTag = new LotTag
-                {
-                    LotTagNumber = "VH" + DateTime.Now.ToString("yyMMddHHmmss"),
-                    NoLot = "LOT-001-20260309",
-                    PartNumber = "90445-12073",
-                    PartDescription = "HOSE, FUEL 8MM",
-                    BomText = "8mm Fuel Hose - NBR/CR",
-                    CompoundCode = "NBR-CR-001",
-                    CompoundQty = 250,
-                    DaftarKomponen = "Inner: NBR, Outer: CR, Yarn: Polyester",
-                    LotPackaging = 100,
-                    Plant = "2504 PT Velasto Mfg Fac 4 - Tango",
-                    TargetQty = 500,
-                    QtyOK = 485,
-                    QtyNG = 15,
-                    ActualQty = 485,
-                    Status = "Completed",
-                    Barcode = "90445-12073",
-                    CreatedBy = "QC Team",
-                    CreatedDate = DateTime.Now.AddDays(-1),
-                    PrintedDate = DateTime.Now.AddDays(-1),
-                    PrintCount = 1
-                };
-                context.LotTags.Add(lotTag);
-                context.SaveChanges();
-            }
+            // LotTags seeding removed (table dropped)
 
             // Seed Dimension Reports & Measurements for Chart Analysis
             if (!context.DimensionReports.Any(d => d.DocumentNumber == "DIM-NA2060-REF"))

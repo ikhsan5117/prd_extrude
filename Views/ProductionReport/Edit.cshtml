@@ -1663,49 +1663,15 @@
                 }
             });
 
-            @if (Model?.StandardParameterSetting != null) {
+            @if (ViewBag.Sps != null) {
                 <text>
-                applySpsToForm(@Html.Raw(Json.Serialize(new {
-                    Model.StandardParameterSetting.Id,
-                    Model.StandardParameterSetting.ItemList,
-                    Model.StandardParameterSetting.HoseType,
-                    Model.StandardParameterSetting.DocumentNumber,
-                    Model.StandardParameterSetting.RevisionNumber,
-                    Model.StandardParameterSetting.CustomerName,
-                    Model.StandardParameterSetting.InnerMaterial,
-                    Model.StandardParameterSetting.OuterMaterial,
-                    Model.StandardParameterSetting.YarnType,
-                    Model.StandardParameterSetting.LayerType,
-                    HeadTempInner = Model.StandardParameterSetting.HeadTemp,
-                    Cylinder1TempInner = Model.StandardParameterSetting.Cylinder1Temp,
-                    Cylinder2TempInner = Model.StandardParameterSetting.Cylinder2Temp,
-                    Cylinder3TempInner = Model.StandardParameterSetting.Cylinder3Temp,
-                    ScrewTempInner = Model.StandardParameterSetting.ScrewTemp,
-                    ScrewSpeedInner = Model.StandardParameterSetting.ScrewSpeed,
-                    FeedRollRatioInner = Model.StandardParameterSetting.FeedRollRatio,
-                    PressureInner = Model.StandardParameterSetting.Pressure,
-                    HeadTempOuter = Model.StandardParameterSetting.HeadTemp2,
-                    Cylinder1TempOuter = Model.StandardParameterSetting.Cylinder1_2,
-                    Cylinder2TempOuter = Model.StandardParameterSetting.Cylinder2_2,
-                    Cylinder3TempOuter = Model.StandardParameterSetting.Cylinder3_2,
-                    ScrewTempOuter = Model.StandardParameterSetting.ScrewTemp2,
-                    ScrewSpeedOuter = Model.StandardParameterSetting.ScrewSpeed2,
-                    FeedRollRatioOuter = Model.StandardParameterSetting.FeedRollRatio2,
-                    PressureOuter = Model.StandardParameterSetting.Pressure2,
-                    Model.StandardParameterSetting.SpiralSpeed,
-                    Model.StandardParameterSetting.SpiralPitch,
-                    Model.StandardParameterSetting.HoseSpeed,
-                    Model.StandardParameterSetting.ConveyorRatio,
-                    MeshScreen = Model.StandardParameterSetting.MeshScreen,
-                    MeshScreen2 = Model.StandardParameterSetting.MeshScreen2,
-                    MeshScreen3 = Model.StandardParameterSetting.MeshScreen3
-                })));
+                applySpsToForm(@Html.Raw(Json.Serialize(ViewBag.Sps)));
                 </text>
             }
-            @if (Model?.StandardParameterSetting == null && !string.IsNullOrWhiteSpace(Model?.ItemCode)) {
+            @if (ViewBag.Sps == null && !string.IsNullOrWhiteSpace(Model?.ItemCode)) {
                 <text>
-                console.log('🔄 Auto-loading SPS for ItemCode:', '@Model.ItemCode');
-                fetchSpsByItem('@Model.ItemCode');
+                console.log('🔄 Auto-loading SPS for ItemCode:', '@Model?.ItemCode');
+                fetchSpsByItem('@Model?.ItemCode');
                 </text>
             }
         });

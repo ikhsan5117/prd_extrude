@@ -139,7 +139,7 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th colspan="16" class="tipe-row"><span>Tipe :</span> @Model.HoseType ; @Model.Dimension ; REF: @(Model.StandardParameterSetting?.ProductCode ?? "-")</th>
+                    <th colspan="16" class="tipe-row"><span>Tipe :</span> @Model.HoseType ; @Model.Dimension</th>
                 </tr>
                 <tr>
                     <th rowspan="2" width="100">POINT</th>
@@ -199,7 +199,7 @@
                             
                             @if (i == 0 && g.Name == "Inner Diameter")
                             {
-                                <td rowspan="27">@(Model.StandardParameterSetting?.ProductCode ?? "-")</td>
+                                <td rowspan="27">@(Model.HoseType ?? "-")</td>
                                 <td rowspan="27">@Model.VinCode</td>
                                 <td rowspan="27">@(master?.Dimensi ?? Model.StandardLength)</td>
                                 <td rowspan="27" style="font-weight: bold;">@Model.ActualLength</td>

@@ -136,12 +136,6 @@
 
                     <div class="tile-header">
                         <div class="doc-num">
-                            @if (item.StandardParameterSetting != null)
-                            {
-                                <div style="font-size: 11px; color: #0066ff; font-weight: 1000; letter-spacing: 1px; margin-bottom: 4px;">
-                                    <i class="bi bi-tag-fill"></i> @item.StandardParameterSetting.ItemList
-                                </div>
-                            }
                             <span style="opacity: 0.4;">@item.DocumentNumber</span>
                         </div>
                         <div class="date-stamp">@item.ProductionDate.ToString("dd MMM yyyy")</div>

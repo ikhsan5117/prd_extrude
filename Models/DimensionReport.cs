@@ -64,7 +64,6 @@ namespace VelastoProductionSystem.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         // Navigation
-        public StandardParameterSetting? StandardParameterSetting { get; set; }
         public ICollection<DimensionMeasurement> Measurements { get; set; } = new List<DimensionMeasurement>();
         public ICollection<DimensionSummary> Summaries { get; set; } = new List<DimensionSummary>();
     }

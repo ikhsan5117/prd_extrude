@@ -161,15 +161,13 @@ namespace VelastoProductionSystem.Controllers
                 });
             }
 
-            // 2. Fallback to StandardParameterSettings (SPS Parameter)
-            var sps = await _context.StandardParameterSettings
+            // 2. Fallback to SpsMasters (SPS Parameter)
+            var sps = await _context.SpsMasters
                 .FirstOrDefaultAsync(s => 
                     (s.ItemList != null && s.ItemList.Trim().ToUpper() == sanitized) || 
-                    (s.ProductCode != null && s.ProductCode.Trim().ToUpper() == sanitized) ||
                     (s.HoseType != null && s.HoseType.Trim().ToUpper() == sanitized) ||
                     (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitized)) ||
-                    (s.HoseType != null && s.HoseType.ToUpper().Contains(sanitized)) ||
-                    (s.ProductCode != null && s.ProductCode.ToUpper().Contains(sanitized)));
+                    (s.HoseType != null && s.HoseType.ToUpper().Contains(sanitized)));
 
             if (sps != null)
             {
@@ -177,20 +175,20 @@ namespace VelastoProductionSystem.Controllers
                     success = true, 
                     data = new {
                         hoseType = sps.HoseType,
-                        dimensi = sps.Diameter,
-                        innerTube = sps.InnerMaterial,
-                        outerCover = sps.OuterMaterial,
-                        toleranceInner = sps.ToleranceDie.ToString("G29"),
-                        toleranceOuter = sps.Tol_CoverDie.ToString("G29"),
-                        tebalInner = sps.TubeDie.ToString("G29"),
-                        tebalTotal = sps.CoverDie.ToString("G29"),
-                        yarn = sps.YarnType ?? "GENERAL",
-                        customer = sps.CustomerName,
+                        dimensi = sps.Dimensi,
+                        innerTube = sps.InnerTube,
+                        outerCover = sps.OuterCover,
+                        toleranceInner = sps.InnerTol,
+                        toleranceOuter = sps.TotalTol,
+                        tebalInner = sps.InnerTarget,
+                        tebalTotal = sps.TotalTarget,
+                        yarn = sps.Yarn ?? "GENERAL",
+                        customer = sps.Customer,
                         docNo = sps.DocumentNumber,
                         revNo = sps.RevisionNumber,
                         itemList = sps.ItemList,
-                        toleranceSpiralPitch = sps.SpiralPitch.ToString("G29"),
-                        spiralPitchSetting = sps.SpiralPitch.ToString("G29"),
+                        toleranceSpiralPitch = sps.ToleranceSpiralPitch,
+                        spiralPitchSetting = sps.SpiralPitchSetting,
                         spiralPitchDisplay = sps.SpiralPitchDisplay,
                         bypass = "2.0 mm" 
                     }
@@ -216,7 +214,6 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction("Login", "Account");
             }
             var reports = await _context.DimensionReports
-                .Include(r => r.StandardParameterSetting)
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
             return View(reports);
@@ -231,7 +228,6 @@ namespace VelastoProductionSystem.Controllers
             }
 
             var q = _context.DimensionReports
-                .Include(r => r.StandardParameterSetting)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var sDate))
@@ -252,8 +248,7 @@ namespace VelastoProductionSystem.Controllers
                 if (mode == "planning")
                 {
                     q = q.Where(r =>
-                        (r.ItemCode != null && r.ItemCode.ToUpper().Contains(s)) ||
-                        (r.StandardParameterSetting != null && r.StandardParameterSetting.ItemList != null && r.StandardParameterSetting.ItemList.ToUpper().Contains(s))
+                        (r.ItemCode != null && r.ItemCode.ToUpper().Contains(s))
                     );
                 }
                 else if (mode == "operator")
@@ -320,23 +315,10 @@ namespace VelastoProductionSystem.Controllers
             int row = 5;
             foreach (var item in rows)
             {
-                var spsDoc = item.StandardParameterSetting?.DocumentNumber;
-                var displayDoc = !string.IsNullOrEmpty(spsDoc) ? spsDoc : item.DocumentNumber;
-
-                ws.Cells[row, 1].Value = (displayDoc ?? "").Replace("#", "");
+                ws.Cells[row, 1].Value = (item.DocumentNumber ?? "").Replace("#", "");
                 ws.Cells[row, 2].Value = item.CreatedDate.ToString("dd MMM yyyy HH:mm");
-                var rawPlanning = (item.ItemCode ?? string.Empty).Trim();
-                var spsItem = (item.StandardParameterSetting?.ItemList ?? string.Empty).Trim();
-                var planningDisplay = rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem)
-                    ? spsItem
-                    : rawPlanning;
-                var rawHose = (item.HoseType ?? string.Empty).Trim();
-                var spsHose = (item.StandardParameterSetting?.HoseType ?? string.Empty).Trim();
-                var productInfoDisplay = (!string.IsNullOrWhiteSpace(spsHose) &&
-                    !string.IsNullOrWhiteSpace(rawPlanning) &&
-                    rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase))
-                    ? spsHose
-                    : rawHose;
+                var planningDisplay = (item.ItemCode ?? string.Empty).Trim();
+                var productInfoDisplay = (item.HoseType ?? string.Empty).Trim();
                 ws.Cells[row, 3].Value = string.IsNullOrWhiteSpace(planningDisplay) ? "-" : planningDisplay;
                 ws.Cells[row, 4].Value = item.CreatedBy ?? "SYSTEM";
                 ws.Cells[row, 5].Value = item.MachineName ?? "-";
@@ -388,8 +370,8 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
 
-            ViewBag.Sps = await _context.StandardParameterSettings
-                .FirstOrDefaultAsync(s => s.ProductCode == report.HoseType);
+            ViewBag.Sps = await _context.SpsMasters
+                .FirstOrDefaultAsync(s => s.HoseType == report.HoseType || s.ItemList == report.HoseType);
             ViewBag.Master = await _context.MasterlistSpsDoubleLayers
                 .FirstOrDefaultAsync(m => m.HoseType == report.HoseType || m.ItemList == report.HoseType);
 
@@ -404,7 +386,6 @@ namespace VelastoProductionSystem.Controllers
             }
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
-                .Include(r => r.StandardParameterSetting)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
             return View("Edit", report);
@@ -419,9 +400,9 @@ namespace VelastoProductionSystem.Controllers
             var sanitizedQuery = query.Trim().ToUpper();
             
             // Get unique ItemList values from both tables
-            var spsItems = await _context.StandardParameterSettings
+            var spsItems = await _context.SpsMasters
                 .Where(s => s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedQuery))
-                .Select(s => new { s.ItemList, s.HoseType })
+                .Select(s => new { ItemList = s.ItemList, HoseType = s.HoseType })
                 .Distinct()
                 .Take(10)
                 .ToListAsync();
@@ -456,11 +437,10 @@ namespace VelastoProductionSystem.Controllers
             
             var sanitizedCode = itemCode.Trim().ToUpper();
             
-            // Try StandardParameterSettings first (Detailed)
-            var sps = await _context.StandardParameterSettings
+            // Use SpsMasters for detailed lookup
+            var sps = await _context.SpsMasters
                 .FirstOrDefaultAsync(s => 
-                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedCode)) || 
-                    (s.ProductCode != null && s.ProductCode.ToUpper().Contains(sanitizedCode)));
+                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedCode)));
             
             if (sps != null) return Json(sps);
 
@@ -472,14 +452,8 @@ namespace VelastoProductionSystem.Controllers
 
             if (master != null)
             {
-                // FIX: Try to find matching SPS ID in StandardParameterSettings even if source is Masterlist
-                var spsId = await _context.StandardParameterSettings
-                    .Where(s => s.ItemList == master.ItemList)
-                    .Select(s => (int?)s.Id)
-                    .FirstOrDefaultAsync();
-
                 return Json(new {
-                    Id = spsId, // Use found SPS ID instead of null
+                    Id = (int?)null,
                     Source = "Masterlist",
                     MasterlistId = master.Id,
                     ItemList = master.ItemList,

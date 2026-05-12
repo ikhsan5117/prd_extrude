@@ -1667,8 +1667,8 @@
                 }
             });
             
-            // Auto-fetch SPS if ItemCode exists but no StandardParameterSetting
-            @if (Model?.StandardParameterSetting == null && !string.IsNullOrWhiteSpace(Model?.ItemCode))
+            // Auto-fetch SPS if ItemCode exists but no SpsId linked
+            @if (Model?.SpsId == null && !string.IsNullOrWhiteSpace(Model?.ItemCode))
             {
                 <text>
                 const autoItemCode = '@(Model?.ItemCode ?? "")';
