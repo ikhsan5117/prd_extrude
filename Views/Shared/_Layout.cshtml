@@ -281,13 +281,8 @@
             backdrop.classList.remove('show');
         });
 
-        // Update datetime every minute
-        function updateDateTime() {
-            const now = new Date();
-            const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('id-ID', options);
-        }
-        setInterval(updateDateTime, 60000);
+
+
 
         // Active nav item highlight
         const currentPath = window.location.pathname;
@@ -635,32 +630,49 @@
                 } catch(e){}
             });
 
-            function toggleFullScreen() {
-                const icon = document.getElementById('fs-icon');
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-                    });
-                    icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                        icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
-                    }
+        </script>
+    }
+    
+    <script>
+        // Global Utility Functions (Available for both Admin & Operator)
+        function toggleFullScreen() {
+            const icon = document.getElementById('fs-icon');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+                if(icon) icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    if(icon) icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
                 }
             }
+        }
 
-            // Sync icon if user presses ESC to exit fullscreen
-            document.addEventListener('fullscreenchange', () => {
-                const icon = document.getElementById('fs-icon');
+        // Sync icon if user presses ESC to exit fullscreen
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.getElementById('fs-icon');
+            if(icon) {
                 if (!document.fullscreenElement) {
                     icon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
                 } else {
                     icon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
                 }
-            });
-        </script>
-    }
-        @await RenderSectionAsync("Scripts", required: false)
+            }
+        });
+
+        // Update datetime every minute
+        function updateDateTime() {
+            const el = document.getElementById('currentDateTime');
+            if(!el) return;
+            const now = new Date();
+            const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            el.textContent = now.toLocaleDateString('id-ID', options);
+        }
+        setInterval(updateDateTime, 60000);
+        updateDateTime(); // Initial call
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
     </body>
 </html>

@@ -3,10 +3,80 @@
 <style>
 :root{--bg:#010409;--tile:rgba(21,27,38,.7);--accent:#0066ff;--glow:rgba(0,102,255,.4);--ok:#00ff88;--ng:#ff4d4d;--warn:#fbbf24;--border:rgba(255,255,255,.06)}
 body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
-.ca-page{padding:20px 15px 60px}
+.ca-page{padding:20px 15px 60px; transition: all 0.3s ease;}
 .ca-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:30px;border-bottom:1px solid var(--border);padding-bottom:25px}
 .ca-title{font-size:2.8rem;font-weight:1000;letter-spacing:-2px;color:#fff;line-height:.9}
 .ca-sub{color:#8b949e;font-size:.75rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:10px}
+
+/* ── MONITORING MODE (TV) ── */
+body.monitoring-mode .sidebar, 
+body.monitoring-mode .top-navbar,
+body.monitoring-mode .ca-sub,
+body.monitoring-mode .filter-row,
+body.monitoring-mode .footer-content { display: none !important; }
+
+body.monitoring-mode .main-content { margin: 0 !important; padding: 0 !important; width: 100vw; }
+body.monitoring-mode .ca-page { padding: 30px 40px; max-width: 100%; }
+body.monitoring-mode .ca-header { margin-bottom: 40px; padding-bottom: 30px; border-color: rgba(0,102,255,0.3); }
+body.monitoring-mode .ca-title { font-size: 4rem; color: #38bdf8; text-shadow: 0 0 20px rgba(56,189,248,0.3); }
+body.monitoring-mode .i-card { padding: 25px; border-width: 2px; }
+body.monitoring-mode .i-lbl { font-size: 0.75rem; letter-spacing: 3px; }
+body.monitoring-mode .i-val { font-size: 2rem; }
+body.monitoring-mode .chart-card { padding: 30px; border-radius: 20px; border-width: 2px; }
+body.monitoring-mode .chart-card h3 { font-size: 1.2rem; margin-bottom: 25px; color: #fff; }
+body.monitoring-mode .chart-wrap { height: 500px !important; }
+body.monitoring-mode .tab-btn { font-size: 1rem; padding: 15px 30px; border-radius: 12px; }
+
+.tv-toggle-btn {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.tv-toggle-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tv-toggle-btn.active { background: #ef4444; color: #fff; border-color: #ef4444; }
+.tv-toggle-btn.nav-btn { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }
+.tv-toggle-btn.nav-btn:hover { background: #38bdf8; color: #fff; }
+
+.nav-tile {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; padding: 25px; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+    color: #fff; text-decoration: none; transition: all 0.2s;
+    font-weight: 800; font-size: 0.85rem; letter-spacing: 1px;
+}
+.nav-tile i { font-size: 2.5rem; color: #38bdf8; }
+.nav-tile:hover { background: var(--accent); transform: translateY(-5px); border-color: #fff; }
+.nav-tile:hover i { color: #fff; }
+
+.refresh-badge {
+    position: fixed; top: 20px; right: 20px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #10b981;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 900;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    z-index: 10005;
+    backdrop-filter: blur(10px);
+}
+.refresh-badge i { animation: spin 4s linear infinite; }
+@@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
 .search-panel{display:grid;grid-template-columns:2fr 1fr auto;gap:15px;margin-bottom:30px}
 .s-box{position:relative;display:flex;align-items:center;background:rgba(10,15,25,.8);border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--accent);padding:0 15px;height:46px}
 .s-box i{color:var(--accent);margin-right:12px;flex-shrink:0}
@@ -96,8 +166,26 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
   @@media(max-width:900px){.date-filter-wrap{min-width:100%;max-width:none}.date-popup{left:0;right:0;width:100%}.dp-preset-grid{grid-template-columns:repeat(2,1fr)}.combined-filter-box{grid-template-columns:1fr}}
 </style>
 
+<div class="refresh-badge" id="refreshBadge"><i class="bi bi-arrow-repeat"></i> AUTO-REFRESH ACTIVE</div>
+
 <div class="ca-page">
-<div class="ca-header"><div><div class="ca-title">Chart Analysis</div><div class="ca-sub">Production Parameter vs SPS Standard</div></div></div>
+<div class="ca-header">
+    <div>
+        <div class="ca-title">Chart Analysis</div>
+        <div class="ca-sub">Production Parameter vs SPS Standard</div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="tv-toggle-btn nav-btn" id="tvNavBtn" onclick="openQuickNav()" style="display:none">
+            <i class="bi bi-grid-fill"></i> QUICK NAV
+        </button>
+        <button class="tv-toggle-btn" id="refreshToggle" onclick="toggleAutoRefresh()" title="Auto update data every 5 minutes">
+            <i class="bi bi-clock-history"></i> AUTO-REFRESH: OFF
+        </button>
+        <button class="tv-toggle-btn" id="tvModeBtn" onclick="toggleTVMode()">
+            <i class="bi bi-tv"></i> ENTER TV MODE
+        </button>
+    </div>
+</div>
 
 <div class="search-panel">
 <!-- Autocomplete Search Box: Item Planning dari Dimension History -->
@@ -217,6 +305,85 @@ const toYMD=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOff
 
 // ── Autocomplete State (SPS Item List → Production Report) ──
 let AC_IDX=-1, AC_DEBOUNCE=null, AC_SELECTED=null, AC_SELECTED_ITEM=null;
+let REFRESH_TIMER = null;
+
+// TV Mode State
+function toggleTVMode() {
+    const isTV = document.body.classList.toggle('monitoring-mode');
+    const btn = document.getElementById('tvModeBtn');
+    const navBtn = document.getElementById('tvNavBtn');
+    
+    if (isTV) {
+        btn.innerHTML = '<i class="bi bi-x-lg"></i> EXIT TV MODE';
+        btn.classList.add('active');
+        navBtn.style.display = 'flex';
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(e => console.warn('FS failed:', e));
+        }
+    } else {
+        btn.innerHTML = '<i class="bi bi-tv"></i> ENTER TV MODE';
+        btn.classList.remove('active');
+        navBtn.style.display = 'none';
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(e => console.warn('Exit FS failed:', e));
+        }
+    }
+}
+
+// Quick Nav for TV Mode
+function openQuickNav() {
+    Swal.fire({
+        title: '<div style="letter-spacing:2px;font-weight:900;font-size:1rem">QUICK NAVIGATION</div>',
+        html: `
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:15px; padding:10px;">
+                <a href="/SensorReadings/Monitor" class="nav-tile"><i class="bi bi-activity"></i><span>SENSOR MONITOR</span></a>
+                <a href="/Dimensi/History" class="nav-tile"><i class="bi bi-clock-history"></i><span>DIMENSION HISTORY</span></a>
+                <a href="/SensorReadings/Analysis" class="nav-tile"><i class="bi bi-graph-up-arrow"></i><span>ANALISIS VS STANDAR</span></a>
+                <a href="/ProductionReport/ParameterHistory" class="nav-tile"><i class="bi bi-archive-fill"></i><span>PARAMETER HISTORY</span></a>
+            </div>
+            <div style="margin-top:20px; font-size:0.6rem; color:#64748b; font-weight:800; letter-spacing:1px;">VELASTO PRODUCTION SYSTEM v2.0</div>
+        `,
+        showConfirmButton: false,
+        background: '#0f172a',
+        color: '#fff',
+        width: '650px',
+        padding: '2rem'
+    });
+}
+
+// Auto Refresh Logic
+function toggleAutoRefresh() {
+    const btn = document.getElementById('refreshToggle');
+    const badge = document.getElementById('refreshBadge');
+    
+    if (REFRESH_TIMER) {
+        clearInterval(REFRESH_TIMER);
+        REFRESH_TIMER = null;
+        btn.innerHTML = '<i class="bi bi-clock-history"></i> AUTO-REFRESH: OFF';
+        btn.classList.remove('active');
+        badge.style.display = 'none';
+        showMsg('info', 'Auto-Refresh Off', 'Penyegaran data otomatis dinonaktifkan.');
+    } else {
+        // Refresh every 5 minutes
+        REFRESH_TIMER = setInterval(() => {
+            console.log('[ChartAnalysis] Auto-refreshing data...');
+            loadChart();
+        }, 300000);
+        
+        btn.innerHTML = '<i class="bi bi-clock-history"></i> AUTO-REFRESH: ON';
+        btn.classList.add('active');
+        badge.style.display = 'flex';
+        showMsg('success', 'Auto-Refresh Active', 'Data akan diperbarui otomatis setiap 5 menit.');
+    }
+}
+
+// Sync TV Mode with Fullscreen changes
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && document.body.classList.contains('monitoring-mode')) {
+        toggleTVMode();
+    }
+});
+
 // _DISPLAYED_RESULTS selalu sinkron dengan apa yang dirender di dropdown
 window._DISPLAYED_RESULTS=[];
 
