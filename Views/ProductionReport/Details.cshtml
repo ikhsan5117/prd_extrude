@@ -841,8 +841,15 @@
                             <tr class="bg-light">
                                 <th colspan="2" style="width: 180px;" class="text-start ps-2 py-1">INSTRUMENT PARAMETER</th>
                                 <th style="width: 80px;">STANDARD</th>
-                                <th style="width: 80px;" class="bg-light text-dark">INITIAL</th>
-                                @for(int i=1; i<=7; i++) { <th style="width: 65px;">#@i</th> }
+                                <th style="width: 80px;" class="bg-light text-dark py-1">
+                                    <span style="font-size: 11px;">@(readings.FirstOrDefault()?.ReadingTime.ToString("HH:mm") ?? "--:--")</span>
+                                </th>
+                                @for(int i=1; i<=7; i++) { 
+                                    var rTime = readings.Skip(i).FirstOrDefault()?.ReadingTime;
+                                    <th style="width: 65px;" class="py-1">
+                                        <span style="font-size: 11px;">@(rTime?.ToString("HH:mm") ?? "--:--")</span>
+                                    </th> 
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -1118,7 +1125,7 @@
         background: #fff; 
         color: #000; 
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-        border: 1px solid #000;
+        border: none;
         border-radius: 0;
         width: 1100px;
         min-width: 1100px;
