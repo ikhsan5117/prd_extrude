@@ -196,7 +196,6 @@ body{background:var(--bg);color:#e6edf3;font-family:'Outfit',sans-serif}
 
 <div id="pane-dim" class="tab-pane active">
 <div class="chart-card"><h3>Inner Diameter — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartDimInner')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartDimInner"></canvas></div></div>
-<div class="chart-card"><h3>Inner Thickness — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartInnerThick')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartInnerThick"></canvas></div></div>
 <div class="chart-card"><h3>Total Thickness — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartDimTotal')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartDimTotal"></canvas></div></div>
 </div>
 
@@ -582,6 +581,12 @@ async function loadChart(){
     if(endDate)p.set('endDate',endDate);
     if(shift)p.set('shift',shift);
     if(pic)p.set('pic',pic);
+    
+    // Pass the searched itemCode to the backend for strict SPC trend filtering
+    if(window.AC_SELECTED_ITEM && window.AC_SELECTED_ITEM.itemCode){
+      p.set('itemCode', window.AC_SELECTED_ITEM.itemCode);
+    }
+    
     const r=await fetch('/ProductionReport/GetChartData?'+p.toString());
     if(!r.ok){showMsg('error','HTTP Error','Status: '+r.status);nd.innerHTML='<i class="bi bi-bar-chart-line" style="font-size:3rem;display:block;margin-bottom:10px"></i>GAGAL MEMUAT DATA';return;}
     DATA=await r.json();
@@ -828,27 +833,7 @@ function renderCharts(){
   }
   dsDI=dsDI.filter(Boolean);makeChart('chartDimInner',dimInnerLabels,dsDI,'mm');
 
-  // INNER THICKNESS
-  const dimInnerThickLabels=(dim&&((dim.innerThicknessX&&dim.innerThicknessX.length>0)||(dim.innerThicknessY&&dim.innerThicknessY.length>0)))
-    ? ((dim.innerThicknessX&&dim.innerThicknessX.length>0)?dim.innerThicknessX:dim.innerThicknessY).map(r=>r.label)
-    : labels;
-  const dimInnerThickX=(dim&&dim.innerThicknessX&&dim.innerThicknessX.length>0)?dim.innerThicknessX.map(r=>r.value):rd.map(r=>r.innerThicknessX);
-  const dimInnerThickY=(dim&&dim.innerThicknessY&&dim.innerThicknessY.length>0)?dim.innerThicknessY.map(r=>r.value):rd.map(r=>r.innerThicknessY);
-  let dsIT=[{label:'Inner Thick X',data:dimInnerThickX,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3},
-  {label:'Inner Thick Y',data:dimInnerThickY,borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
-  if(dimStd&&dimStd.innerThickness){
-    const s=dimStd.innerThickness; const itLen=Math.max(dimInnerThickLabels.length,1);
-    console.log('[ChartAnalysis] Rendering Inner Thickness lines:', {
-      target: s.target, 
-      min: s.min, 
-      max: s.max,
-      dataLength: itLen
-    });
-    if(s.target!=null)dsIT.push(stdLine('Target',s.target,itLen,'#a78bfa',[2,4]));
-    if(s.max!=null)dsIT.push(stdLine('Max',s.max,itLen,'#ff4d4d',[5,5]));
-    if(s.min!=null)dsIT.push(stdLine('Min',s.min,itLen,'#fbbf24',[5,5]));
-  }
-  dsIT=dsIT.filter(Boolean);makeChart('chartInnerThick',dimInnerThickLabels,dsIT,'mm');
+
 
   // DIM TOTAL
   const dimTotalLabels=(dim&&((dim.totalThicknessX&&dim.totalThicknessX.length>0)||(dim.totalThicknessY&&dim.totalThicknessY.length>0)))

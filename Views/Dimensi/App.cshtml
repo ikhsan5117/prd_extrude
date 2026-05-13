@@ -2298,19 +2298,29 @@
 
                     try {
                         const configs = [
-                            { id: 'innerdia', v: m.dimensi || m.innerDie || m.diameter, t: m.toleranceInner || m.toleranceDie, el: 'inner-dia', dt: 0.1 },
-                            { id: 'innertx', v: m.tebalInner || m.tubeDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'inner-tx', dt: 0.2 },
-                            { id: 'innerty', v: m.tebalInner || m.tubeDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'inner-ty', dt: 0.2 },
-                            { id: 'innermidtx', v: m.tebalInnerMiddle, t: m.toleranceOuter, el: 'innermid-tx', dt: 0.2 },
-                            { id: 'innermidty', v: m.tebalInnerMiddle, t: m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
-                            { id: 'totaltx', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-tx', dt: 0.2 },
-                            { id: 'totalty', v: m.tebalTotal || m.coverDie, t: m.toleranceOuter || m.tol_CoverDie, el: 'total-ty', dt: 0.2 },
+                            { id: 'innerdia', v: (m.toleranceInner && m.toleranceInner.toString().includes('±') ? m.toleranceInner : m.dimensi) || m.innerDie || m.diameter, t: m.toleranceInner || m.innerTol || m.toleranceDie, el: 'inner-dia', dt: 0.1 },
+                            { id: 'innertx', v: m.tebalInner || m.tubeDie, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                            { id: 'innerty', v: m.tebalInner || m.tubeDie, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                            { id: 'innermidtx', v: m.tebalInnerMiddle, t: m.thickTol || m.toleranceOuter, el: 'innermid-tx', dt: 0.2 },
+                            { id: 'innermidty', v: m.tebalInnerMiddle, t: m.thickTol || m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
+                            { id: 'totaltx', v: m.tebalTotal || m.coverDie, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                            { id: 'totalty', v: m.tebalTotal || m.coverDie, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
                             { id: 'spiral', v: m.spiralPitchSetting || m.toleranceSpiralPitch || m.spiralPitch, t: m.spiralPitchDisplay || m.toleranceSpiralPitch || m.spiralPitch, el: 'spiral', dt: 5 }
                         ];
 
                         configs.forEach(p => {
-                            const target = parseV(p.v);
-                            const tol = parseT(p.t, p.dt);
+                            let target = parseV(p.v);
+                            let tol = parseT(p.t, p.dt);
+                            
+                            // Smart fallback: If the primary value string explicitly contains ± (e.g. "2.2±0.1")
+                            // We MUST use its tolerance to avoid cross-column pollution.
+                            if (p.v && p.v.toString().includes('±')) {
+                                const mPlusMinus = p.v.toString().replace(/,/g, '.').match(/±\s*([0-9.]+)/);
+                                if (mPlusMinus) {
+                                    tol = parseFloat(mPlusMinus[1]);
+                                }
+                            }
+
                             activeStandards[p.id] = { val: target, tol: tol };
                             
                             const targetEl = document.getElementById(`std-${p.el}`);

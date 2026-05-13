@@ -326,23 +326,24 @@ namespace VelastoProductionSystem.Controllers
                 Console.WriteLine($"[SearchSpsItems] Loaded {dimensionData.Count} dimension reports after filters");
                 
                 // Check ItemCode distribution
-                var withItemCode = dimensionData.Where(d => !string.IsNullOrWhiteSpace(d.ItemCode)).ToList();
+                var withItemCode = dimensionData.Where(d => !string.IsNullOrWhiteSpace(d.ItemCode) || !string.IsNullOrWhiteSpace(d.VinCode)).ToList();
                 var withoutItemCode = dimensionData.Count - withItemCode.Count;
-                Console.WriteLine($"[SearchSpsItems] ItemCode distribution: {withItemCode.Count} have ItemCode, {withoutItemCode} are null/empty");
+                Console.WriteLine($"[SearchSpsItems] ItemCode/VinCode distribution: {withItemCode.Count} have identifiers, {withoutItemCode} are null/empty");
                 
                 if (withItemCode.Count > 0)
                 {
-                    Console.WriteLine($"[SearchSpsItems] Sample ItemCodes: {string.Join(", ", withItemCode.Take(10).Select(d => d.ItemCode))}");
+                    Console.WriteLine($"[SearchSpsItems] Sample ItemCodes: {string.Join(", ", withItemCode.Take(10).Select(d => d.ItemCode ?? d.VinCode))}");
                 }
 
                 // Map dimension data to search results
                 var dimensionItems = withItemCode
                     .Select(d => {
-                        var itemCode = d.ItemCode!.Trim();
+                        var itemCode = (d.ItemCode ?? "").Trim();
+                        var vinCode = (d.VinCode ?? "").Trim();
                         var spsItemList = ""; // StandardParameterSetting removed
                         var hoseType = (d.HoseType ?? "").Trim();
                         
-                        // Display: prefer SPS ItemList for numeric codes, otherwise use ItemCode as-is
+                        // Display: prefer SPS ItemList for numeric codes, otherwise use ItemCode as-is (fallback to VinCode if empty)
                         string displayCode;
                         if (!string.IsNullOrWhiteSpace(itemCode) && itemCode.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItemList))
                         {
@@ -350,12 +351,13 @@ namespace VelastoProductionSystem.Controllers
                         }
                         else
                         {
-                            displayCode = itemCode;
+                            displayCode = string.IsNullOrWhiteSpace(itemCode) ? vinCode : itemCode;
                         }
                         
                         return new {
                             ItemList = displayCode,
                             OriginalCode = itemCode,
+                            VinCode = vinCode,
                             HoseType = hoseType,
                             DocumentNumber = d.DocumentNumber ?? "",
                             CreatedDate = d.CreatedDate
@@ -374,6 +376,7 @@ namespace VelastoProductionSystem.Controllers
                         .Where(x => 
                             x.ItemList.ToUpper().Contains(sanitizedQuery) ||
                             x.OriginalCode.ToUpper().Contains(sanitizedQuery) ||
+                            x.VinCode.ToUpper().Contains(sanitizedQuery) ||
                             x.HoseType.ToUpper().Contains(sanitizedQuery))
                         .ToList();
                     Console.WriteLine($"[SearchSpsItems] After search filter '{sanitizedQuery}': {beforeSearch} → {dimensionItems.Count}");
@@ -403,6 +406,7 @@ namespace VelastoProductionSystem.Controllers
                         .Select(s => new {
                             ItemList = s.ItemList!,
                             OriginalCode = s.ItemList!,
+                            VinCode = "",
                             HoseType = s.HoseType ?? "",
                             DocumentNumber = s.DocumentNumber ?? "",
                             CreatedDate = DateTime.MinValue
@@ -1727,7 +1731,7 @@ namespace VelastoProductionSystem.Controllers
 
         // GET: ProductionReport/GetChartData?documentNumber=XXX
         [HttpGet]
-        public async Task<IActionResult> GetChartData(string documentNumber, string? startDate = null, string? endDate = null, string? shift = null, string? pic = null)
+        public async Task<IActionResult> GetChartData(string documentNumber, string? startDate = null, string? endDate = null, string? shift = null, string? pic = null, string? itemCode = null)
         {
             if (string.IsNullOrWhiteSpace(documentNumber))
                 return BadRequest(new { success = false, message = "Document number is required." });
@@ -1746,43 +1750,46 @@ namespace VelastoProductionSystem.Controllers
             Console.WriteLine($"[GetChartData] Document: {report.DocumentNumber}");
             Console.WriteLine($"[GetChartData] Report VinCode: {report.VinCode ?? "NULL"}");
             Console.WriteLine($"[GetChartData] Report ItemCode: {report.ItemCode ?? "NULL"}");
+            Console.WriteLine($"[GetChartData] Requested ItemCode: {itemCode ?? "NULL"}");
             Console.WriteLine($"[GetChartData] Report HoseType: {report.HoseType ?? "NULL"}");
+
+            // Use requested itemCode from frontend if report.ItemCode is NULL (common in simulator)
+            var effectiveItemCode = (itemCode ?? report.ItemCode ?? "").Trim().ToUpper();
+            var effectiveVinCode = (report.VinCode ?? "").Trim().ToUpper();
 
             // 2. Match SPS by VinCode/ItemCode FIRST (more accurate than linked SpsId)
             MasterlistSpsDoubleLayer? spsFallback = null;
             var hasSps = false;
             string spsMatchMethod = "NONE";
 
-            // Priority 1: Try matching by VinCode in MasterlistSpsDoubleLayers
-            if (!string.IsNullOrEmpty(report.VinCode))
+            // Priority 1: Try matching by VinCode
+            if (!string.IsNullOrEmpty(effectiveVinCode))
             {
-                var vin = report.VinCode.Trim().ToUpper();
                 spsFallback = await _context.MasterlistSpsDoubleLayers
-                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == vin)
+                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == effectiveVinCode)
                     .OrderByDescending(m => m.Id)
                     .FirstOrDefaultAsync();
                 
                 if (spsFallback != null)
                 {
-                    spsMatchMethod = $"MasterlistSpsDoubleLayers by VinCode '{vin}'";
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by VinCode '{effectiveVinCode}'";
                     hasSps = true;
                     Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
                     Console.WriteLine($"[GetChartData] SPS ItemList: {spsFallback.ItemList}");
                 }
             }
 
-            // Priority 2: Try matching by ItemCode in MasterlistSpsDoubleLayers
-            if (!hasSps && !string.IsNullOrEmpty(report.ItemCode))
+            // Priority 2: Try matching by ItemCode
+            if (!hasSps && !string.IsNullOrEmpty(effectiveItemCode))
             {
-                var itemCode = report.ItemCode.Trim().ToUpper();
                 spsFallback = await _context.MasterlistSpsDoubleLayers
-                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == itemCode)
+                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == effectiveItemCode)
                     .OrderByDescending(m => m.Id)
                     .FirstOrDefaultAsync();
                 
                 if (spsFallback != null)
                 {
-                    spsMatchMethod = $"MasterlistSpsDoubleLayers by ItemCode '{itemCode}'";
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by ItemCode '{effectiveItemCode}'";
                     hasSps = true;
                     Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
                     Console.WriteLine($"[GetChartData] SPS ItemList: {spsFallback.ItemList}");
@@ -1900,24 +1907,21 @@ namespace VelastoProductionSystem.Controllers
 
             List<DimensionReport> dimensionReports = new();
 
-            // Priority 1: Match by VinCode (most reliable for item-based search)
-            if (!string.IsNullOrWhiteSpace(report.VinCode))
+            // Priority 1: Match by VinCode or effective ItemCode (most reliable for item-based search)
+            if (!string.IsNullOrWhiteSpace(effectiveVinCode))
             {
-                var vinCode = report.VinCode.Trim().ToUpper();
                 var rows = await dimensionReportQuery
-                    .Where(d => d.VinCode != null && d.VinCode.ToUpper() == vinCode)
+                    .Where(d => d.VinCode != null && d.VinCode.ToUpper() == effectiveVinCode)
                     .OrderByDescending(d => d.CreatedDate)
                     .Take(30)
                     .ToListAsync();
                 dimensionReports = rows.OrderBy(d => d.CreatedDate).ToList();
             }
 
-            // Priority 2: Match by ItemCode
-            if (!dimensionReports.Any() && !string.IsNullOrWhiteSpace(report.ItemCode))
+            if (!dimensionReports.Any() && !string.IsNullOrWhiteSpace(effectiveItemCode))
             {
-                var itemCode = report.ItemCode.Trim().ToUpper();
                 var rows = await dimensionReportQuery
-                    .Where(d => d.ItemCode != null && d.ItemCode.ToUpper() == itemCode)
+                    .Where(d => d.ItemCode != null && d.ItemCode.ToUpper() == effectiveItemCode)
                     .OrderByDescending(d => d.CreatedDate)
                     .Take(30)
                     .ToListAsync();
@@ -1948,32 +1952,37 @@ namespace VelastoProductionSystem.Controllers
             }
 
             object? dimensionSeries = null;
-            var orderedMeasurements = dimensionReports
-                .SelectMany(d => d.Measurements ?? Enumerable.Empty<DimensionMeasurement>())
-                .OrderBy(m => m.RecordedTime)  // Sort by time for hourly grouping
-                .ToList();
-            
-            Console.WriteLine($"[GetChartData] Total measurements loaded: {orderedMeasurements.Count}");
-            if (orderedMeasurements.Count > 0)
-            {
-                Console.WriteLine($"[GetChartData] Time range: {orderedMeasurements.First().RecordedTime:yyyy-MM-dd HH:mm} to {orderedMeasurements.Last().RecordedTime:yyyy-MM-dd HH:mm}");
-            }
 
-            if (orderedMeasurements.Any())
+            Console.WriteLine($"[GetChartData] Total reports loaded: {dimensionReports.Count}");
+
+            if (dimensionReports.Any())
             {
+                // Group measurements with their parent report's production date to include in labels
                 List<object> BuildDimensionPoints(Func<DimensionMeasurement, bool> predicate)
                 {
-                    return orderedMeasurements
-                        .Where(predicate)
-                        .SelectMany(m => ExpandDimensionReadings(m)
-                            .Select(x => new
+                    var points = new List<object>();
+                    foreach (var dReport in dimensionReports)
+                    {
+                        if (dReport.Measurements == null) continue;
+                        
+                        var matches = dReport.Measurements.Where(predicate);
+                        foreach (var m in matches)
+                        {
+                            foreach (var reading in ExpandDimensionReadings(m, dReport.CreatedDate))
                             {
-                                label = x.label,
-                                value = x.value,
-                                pointName = m.PointName
-                            }))
-                        .Cast<object>()
-                        .ToList();
+                                points.Add(new
+                                {
+                                    label = reading.label,
+                                    value = reading.value,
+                                    pointName = m.PointName,
+                                    recordedTime = m.RecordedTime // Keep for sorting
+                                });
+                            }
+                        }
+                    }
+
+                    // Sort all points chronologically to ensure the chart line flows correctly across days
+                    return points.OrderBy(p => ((dynamic)p).recordedTime).ToList();
                 }
 
                 dimensionSeries = new
@@ -1998,24 +2007,26 @@ namespace VelastoProductionSystem.Controllers
                 Console.WriteLine($"[GetChartData] SPS Raw Values - ThickTarget:{spsFallback.ThickTarget}, ThickMin:{spsFallback.ThickMin}, ThickMax:{spsFallback.ThickMax}");
                 Console.WriteLine($"[GetChartData] SPS Raw Values - TotalTarget:{spsFallback.TotalTarget}, TotalMin:{spsFallback.TotalMin}, TotalMax:{spsFallback.TotalMax}");
                 
-                var innerTarget = ParseStandardValue(spsFallback.Dimensi);
-                var innerTol = ParseStandardValue(spsFallback.InnerTol);
-                var innerMin = ParseStandardValue(spsFallback.InnerMin);
-                var innerMax = ParseStandardValue(spsFallback.InnerMax);
+                // Standardize with Dimensi Controller Logic
+                // 1. Inner Diameter: Primary=Dimensi, Tol=ToleranceInner or InnerTol
+                var innerTolValue = ExtractTolerance(spsFallback.ToleranceInner) ?? ExtractTolerance(spsFallback.InnerTol);
+                var innerDimSource = spsFallback.ToleranceInner?.Contains("±") == true ? spsFallback.ToleranceInner : spsFallback.Dimensi;
+                var (innerMin, innerMax, innerTarget) = ParseRange(innerDimSource, innerTolValue);
+
                 var innerLcl = ParseStandardValue(spsFallback.InnerLCL);
                 var innerUcl = ParseStandardValue(spsFallback.InnerUCL);
 
-                var innerThickTarget = ParseStandardValue(spsFallback.ThickTarget);
-                var innerThickMin = ParseStandardValue(spsFallback.ThickMin);
-                var innerThickMax = ParseStandardValue(spsFallback.ThickMax);
+                // 2. Inner Thickness: Primary=TebalInner, Tol=ThickTol
+                var thickTolValue = ExtractTolerance(spsFallback.ThickTol);
+                var (innerThickMin, innerThickMax, innerThickTarget) = ParseRange(spsFallback.TebalInner, thickTolValue);
+                
+                // 3. Total Thickness: Primary=TebalTotal, Tol=TotalTol
+                var totalTolValue = ExtractTolerance(spsFallback.TotalTol);
+                var (totalMin, totalMax, totalTarget) = ParseRange(spsFallback.TebalTotal, totalTolValue);
 
-                var totalTarget = ParseStandardValue(spsFallback.TotalTarget);
-                var totalMin = ParseStandardValue(spsFallback.TotalMin);
-                var totalMax = ParseStandardValue(spsFallback.TotalMax);
-
-                Console.WriteLine($"[GetChartData] Parsed Inner Diameter: Target={innerTarget}, Min={innerMin}, Max={innerMax}");
-                Console.WriteLine($"[GetChartData] Parsed Inner Thickness: Target={innerThickTarget}, Min={innerThickMin}, Max={innerThickMax}");
-                Console.WriteLine($"[GetChartData] Parsed Total Thickness: Target={totalTarget}, Min={totalMin}, Max={totalMax}");
+                Console.WriteLine($"[GetChartData] Corrected Parsed Inner Diameter: Target={innerTarget}, Min={innerMin}, Max={innerMax}");
+                Console.WriteLine($"[GetChartData] Corrected Parsed Inner Thickness: Target={innerThickTarget}, Min={innerThickMin}, Max={innerThickMax}");
+                Console.WriteLine($"[GetChartData] Corrected Parsed Total Thickness: Target={totalTarget}, Min={totalMin}, Max={totalMax}");
 
                 dimensionStandard = new
                 {
@@ -2093,15 +2104,31 @@ namespace VelastoProductionSystem.Controllers
                     InnerMin = ParseStandardValue(s.InnerMin),
                     InnerMax = ParseStandardValue(s.InnerMax),
                     TotalMin = ParseStandardValue(s.TotalMin),
-                    TotalMax = ParseStandardValue(s.TotalMax)
+                    TotalMax = ParseStandardValue(s.TotalMax),
+                    ItemList = s.ItemList // Added to payload
                 };
             }
 
             Console.WriteLine($"[GetChartData] === FINAL JSON RESPONSE ===");
-            Console.WriteLine($"[GetChartData] VinCode: {report.VinCode ?? "NULL"}");
-            Console.WriteLine($"[GetChartData] ItemCode: {report.ItemCode ?? "NULL"}");
+            
+            // Smart Fallback for VIN/Item Code display
+            string displayVin = report.VinCode ?? "";
+            string displayItem = report.ItemCode ?? "";
+            
+            // Only fallback to ItemCode if the report has no item/vin AND we have a direct SPS match
+            if (string.IsNullOrEmpty(displayItem) && !string.IsNullOrEmpty(effectiveItemCode))
+            {
+                displayItem = effectiveItemCode;
+            }
+
+            if (string.IsNullOrEmpty(displayVin) && string.IsNullOrEmpty(displayItem) && hasSps && spsFallback != null)
+            {
+                // displayVin = spsFallback.ItemList ?? ""; // REMOVED: This causes fake labels based on HoseType
+            }
+
+            Console.WriteLine($"[GetChartData] VinCode: {displayVin}");
+            Console.WriteLine($"[GetChartData] ItemCode: {displayItem}");
             Console.WriteLine($"[GetChartData] SPS Found: {hasSps}");
-            Console.WriteLine($"[GetChartData] Dimension Standard is null: {dimensionStandard == null}");
             
             return Json(new {
                 success = true,
@@ -2109,8 +2136,8 @@ namespace VelastoProductionSystem.Controllers
                     id = report.Id,
                     documentNumber = report.DocumentNumber,
                     hoseType = report.HoseType,
-                    vinCode = report.VinCode ?? "",  // Ensure empty string instead of null
-                    itemCode = report.ItemCode ?? "",
+                    vinCode = displayVin,
+                    itemCode = displayItem,
                     machineName = report.MachineName,
                     dimension = report.Dimension,
                     customerName = report.CustomerName,
@@ -2150,12 +2177,12 @@ namespace VelastoProductionSystem.Controllers
             return terms.Any(t => value.Contains(t.ToUpperInvariant()));
         }
 
-        private static IEnumerable<(string label, decimal value)> ExpandDimensionReadings(DimensionMeasurement measurement)
+        private static IEnumerable<(string label, decimal value)> ExpandDimensionReadings(DimensionMeasurement measurement, DateTime productionDate)
         {
-            var baseLabel = string.IsNullOrWhiteSpace(measurement.TimeSection)
-                ? measurement.RecordedTime.ToString("HH:mm")
-                : measurement.TimeSection;
-
+            // Handle multiple times if they are stored as a comma-separated string (e.g., from Input Dimensi Timeline)
+            var times = (measurement.TimeSection ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+            var dateLabel = productionDate.ToString("dd MMM");
+            
             var values = new[]
             {
                 measurement.R1,
@@ -2169,7 +2196,21 @@ namespace VelastoProductionSystem.Controllers
             {
                 if (values[index].HasValue)
                 {
-                    yield return ($"{baseLabel} • R{index + 1}", values[index]!.Value);
+                    // Pick the specific time for this reading index if available, 
+                    // otherwise fallback to the last time or recorded time.
+                    string exactTime;
+                    if (index < times.Length)
+                    {
+                        exactTime = times[index].Trim();
+                    }
+                    else
+                    {
+                        exactTime = times.Length > 0 
+                            ? times.Last().Trim() 
+                            : (string.IsNullOrWhiteSpace(measurement.TimeSection) ? measurement.RecordedTime.ToString("HH:mm") : measurement.TimeSection);
+                    }
+
+                    yield return ($"{dateLabel} {exactTime} • R{index + 1}", values[index]!.Value);
                 }
             }
         }
@@ -2192,8 +2233,37 @@ namespace VelastoProductionSystem.Controllers
             if (string.IsNullOrWhiteSpace(raw)) return (null, null, null);
 
             var normalized = raw.Replace(',', '.');
+
+            // 1. Explicit ± format (e.g. "1.8±0.2")
+            if (normalized.Contains('±'))
+            {
+                var mPlusMinus = System.Text.RegularExpressions.Regex.Match(normalized, @"(-?\d+(?:\.\d+)?)\s*±\s*(-?\d+(?:\.\d+)?)");
+                if (mPlusMinus.Success)
+                {
+                    if (decimal.TryParse(mPlusMinus.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) &&
+                        decimal.TryParse(mPlusMinus.Groups[2].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var tol))
+                    {
+                        return (v - Math.Abs(tol), v + Math.Abs(tol), v);
+                    }
+                }
+            }
+
+            // 1.5. If string contains 'x' or '×', it's a dimension (e.g. "16 x 24"), not a range.
+            // First number is Inner Diameter.
+            if (normalized.Contains("x", StringComparison.OrdinalIgnoreCase) || normalized.Contains('×'))
+            {
+                var matchesDim = System.Text.RegularExpressions.Regex.Matches(normalized, @"-?\d+(?:\.\d+)?");
+                if (matchesDim.Count > 0 && decimal.TryParse(matchesDim[0].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                {
+                    if (defaultTolerance.HasValue)
+                        return (v - Math.Abs(defaultTolerance.Value), v + Math.Abs(defaultTolerance.Value), v);
+                    return (v, v, v);
+                }
+            }
+
             var matches = System.Text.RegularExpressions.Regex.Matches(normalized, @"-?\d+(?:\.\d+)?");
 
+            // 2. Range format (e.g. "1.6 - 2.0")
             if (matches.Count >= 2)
             {
                 if (decimal.TryParse(matches[0].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v1) &&
@@ -2203,17 +2273,44 @@ namespace VelastoProductionSystem.Controllers
                 }
             }
 
+            // 3. Single Target format (e.g. "1.8")
             if (matches.Count == 1)
             {
                 if (decimal.TryParse(matches[0].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v))
                 {
                     if (defaultTolerance.HasValue)
-                        return (v - defaultTolerance.Value, v + defaultTolerance.Value, v);
+                        return (v - Math.Abs(defaultTolerance.Value), v + Math.Abs(defaultTolerance.Value), v);
                     return (v, v, v);
                 }
             }
 
             return (null, null, null);
+        }
+
+        private static decimal? ExtractTolerance(string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            var normalized = raw.Replace(',', '.');
+            
+            // Check if it explicitly contains ±
+            if (normalized.Contains('±'))
+            {
+                var mPlusMinus = System.Text.RegularExpressions.Regex.Match(normalized, @"±\s*(-?\d+(?:\.\d+)?)");
+                if (mPlusMinus.Success && decimal.TryParse(mPlusMinus.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var tol))
+                {
+                    return Math.Abs(tol);
+                }
+            }
+            
+            // Otherwise try to grab the last number, assuming it's a pure tolerance field like "0.2" or "+-0.2"
+            var matches = System.Text.RegularExpressions.Regex.Matches(normalized, @"-?\d+(?:\.\d+)?");
+            if (matches.Count > 0 && decimal.TryParse(matches[^1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var lastNum))
+            {
+                var absVal = Math.Abs(lastNum);
+                // Sanity check: tolerances are usually small. If > 5.0, it might be a target value.
+                if (absVal <= 5.0m) return absVal;
+            }
+            return null;
         }
 
         private static bool IsPlaceholderItemCode(string? value)
@@ -2309,7 +2406,7 @@ namespace VelastoProductionSystem.Controllers
             {
                 var search = itemCode.Trim().ToUpper();
 
-                // Layer 1: Exact match by ItemCode or VinCode
+                // Exact match by ItemCode or VinCode
                 var byCode = await query
                     .Where(r =>
                         (r.ItemCode != null && r.ItemCode.ToUpper().Contains(search)) ||
@@ -2325,83 +2422,13 @@ namespace VelastoProductionSystem.Controllers
                     })
                     .ToListAsync();
 
-                if (byCode.Any()) return Json(byCode);
-
-                // Layer 2: Lookup SPS info (HoseType + DocumentNumber) for that ItemCode
-                var spsInfo = await _context.MasterlistSpsDoubleLayers
-                    .Where(s => s.ItemList != null && s.ItemList.ToUpper().Contains(search))
-                    .Select(s => new { s.HoseType, s.DocumentNumber })
-                    .FirstOrDefaultAsync();
-
-                if (spsInfo == null)
-                {
-                    var masterInfo = await _context.MasterlistSpsDoubleLayers
-                        .Where(m => m.ItemList != null && m.ItemList.ToUpper().Contains(search))
-                        .Select(m => new { m.HoseType, m.DocumentNumber })
-                        .FirstOrDefaultAsync();
-                    if (masterInfo != null)
-                        spsInfo = new { HoseType = masterInfo.HoseType, DocumentNumber = masterInfo.DocumentNumber };
-                }
-
-                if (spsInfo != null)
-                {
-                    // Layer 2a: Match by HoseType — try keyword-by-keyword (handles format differences)
-                    if (!string.IsNullOrEmpty(spsInfo.HoseType))
-                    {
-                        // Extract meaningful keywords (skip short words like "HOSE", "TUBE")
-                        var keywords = spsInfo.HoseType.ToUpper()
-                            .Split(new[] { ' ', ',', '-', '/' }, StringSplitOptions.RemoveEmptyEntries)
-                            .Where(k => k.Length > 3 && k != "HOSE" && k != "TUBE")
-                            .ToList();
-
-                        if (keywords.Any())
-                        {
-                            // Get all production reports with hoseType, then filter in-memory by keyword
-                            var allHoseTypes = await query
-                                .Where(r => r.HoseType != null)
-                                .Select(r => new {
-                                    r.DocumentNumber, r.HoseType, r.VinCode, r.ItemCode,
-                                    r.MachineName, r.Shift,
-                                    date = r.ProductionDate.ToString("dd MMM yyyy"),
-                                    readingsCount = r.ProductionReadings.Count
-                                })
-                                .OrderByDescending(r => r.readingsCount)
-                                .Take(200)
-                                .ToListAsync();
-
-                            var byKeyword = allHoseTypes
-                                .Where(r => keywords.Any(k => r.HoseType!.ToUpper().Contains(k)))
-                                .Take(50).ToList();
-
-                            if (byKeyword.Any()) return Json(byKeyword);
-                        }
-                    }
-
-                    // Layer 2b: Match by SPS DocumentNumber field against ProductionReport.DocumentNumber
-                    if (!string.IsNullOrEmpty(spsInfo.DocumentNumber))
-                    {
-                        var docSearch = spsInfo.DocumentNumber.Trim().ToUpper();
-                        var byDocNum = await query
-                            .Where(r => r.DocumentNumber != null && r.DocumentNumber.ToUpper().Contains(docSearch))
-                            .OrderByDescending(r => r.ProductionReadings.Count)
-                            .ThenByDescending(r => r.CreatedDate)
-                            .Take(50)
-                            .Select(r => new {
-                                r.DocumentNumber, r.HoseType, r.VinCode, r.ItemCode,
-                                r.MachineName, r.Shift,
-                                date = r.ProductionDate.ToString("dd MMM yyyy"),
-                                readingsCount = r.ProductionReadings.Count
-                            })
-                            .ToListAsync();
-
-                        if (byDocNum.Any()) return Json(byDocNum);
-                    }
-                }
-
-                // Layer 3: Fallback — return all docs (dropdown tidak pernah kosong)
+                // If a specific itemCode is requested, we strictly only return matches for that code.
+                // We no longer fallback to matching by HoseType or returning random documents,
+                // as that causes confusion (e.g., showing TA1440 data when searching for NA1450).
+                return Json(byCode);
             }
 
-            // No itemCode filter OR all layers failed — return latest 50 docs
+            // No itemCode filter provided — return latest 50 docs
             var allDocs = await query
                 .OrderByDescending(r => r.ProductionReadings.Count)
                 .ThenByDescending(r => r.CreatedDate)

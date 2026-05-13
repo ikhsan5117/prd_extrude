@@ -139,7 +139,7 @@ namespace VelastoProductionSystem.Controllers
                     data = new {
                         hoseType = standard.HoseType,
                         dimensi = standard.Dimensi,
-                        cuttingLength = standard.CuttingSpeed, // Map CuttingSpeed to length if applicable
+                        cuttingLength = standard.CuttingSpeed, 
                         innerTube = standard.InnerTube,
                         outerCover = standard.OuterCover,
                         toleranceInner = standard.ToleranceInner,
@@ -156,6 +156,9 @@ namespace VelastoProductionSystem.Controllers
                         toleranceSpiralPitch = standard.ToleranceSpiralPitch,
                         spiralPitchSetting = standard.SpiralPitchSetting,
                         spiralPitchDisplay = standard.SpiralPitchDisplay,
+                        innerTol = standard.InnerTol,
+                        thickTol = standard.ThickTol,
+                        totalTol = standard.TotalTol,
                         bypass = "2.0 mm" 
                     }
                 });
@@ -190,6 +193,9 @@ namespace VelastoProductionSystem.Controllers
                         toleranceSpiralPitch = sps.ToleranceSpiralPitch,
                         spiralPitchSetting = sps.SpiralPitchSetting,
                         spiralPitchDisplay = sps.SpiralPitchDisplay,
+                        innerTol = sps.InnerTol,
+                        thickTol = sps.ThickTol,
+                        totalTol = sps.TotalTol,
                         bypass = "2.0 mm" 
                     }
                 });
