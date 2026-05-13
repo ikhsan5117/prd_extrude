@@ -1108,6 +1108,46 @@
         let productionRecords = []; // Store multiple production data records
         let userHasSelectedData = false; // Flag to prevent auto-fetch override
 
+        // Inject standards from server if available (Fix for historical consistency)
+        @if (ViewBag.Sps != null || ViewBag.Master != null)
+        {
+            var s = ViewBag.Sps ?? ViewBag.Master;
+            var stdObj = new {
+                innerdiameter = new { id = "innerdiameter", val = s.Dimensi, tol = ViewBag.Sps != null ? (ViewBag.Sps.InnerTol ?? "0.1") : (ViewBag.Master.ToleranceInner ?? "0.1") },
+                innerthicknessx = new { id = "innerthicknessx", val = s.TebalInner, tol = s.ThickTol ?? s.ToleranceOuter ?? "0.2" },
+                innerthicknessy = new { id = "innerthicknessy", val = s.TebalInner, tol = s.ThickTol ?? s.ToleranceOuter ?? "0.2" },
+                totalthicknessx = new { id = "totalthicknessx", val = s.TebalTotal, tol = s.TotalTol ?? s.ToleranceOuter ?? "0.2" },
+                totalthicknessy = new { id = "totalthicknessy", val = s.TebalTotal, tol = s.TotalTol ?? s.ToleranceOuter ?? "0.2" },
+                spiralpitch = new { id = "spiralpitch", val = s.SpiralPitchSetting, tol = s.ToleranceSpiralPitch ?? "5" }
+            };
+            <text>
+            const serverStds = @Html.Raw(Json.Serialize(stdObj));
+            
+            // Parse strings to float and replace comma with dot
+            const parseV = (v) => {
+                if(!v) return 0;
+                let s = v.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                return s ? parseFloat(s[0]) : 0;
+            };
+            const parseT = (v, def) => {
+                if(!v) return def;
+                let s = v.toString().replace(/,/g, '.').match(/\d+(\.\d+)?/g);
+                if(!s) return def;
+                return parseFloat(s[s.length - 1]);
+            };
+
+            activeStandards = {
+                'innerdiameter': { id: 'innerdiameter', val: parseV(serverStds.innerdiameter.val), tol: parseT(serverStds.innerdiameter.tol, 0.1) },
+                'innerthicknessx': { id: 'innerthicknessx', val: parseV(serverStds.innerthicknessx.val), tol: parseT(serverStds.innerthicknessx.tol, 0.2) },
+                'innerthicknessy': { id: 'innerthicknessy', val: parseV(serverStds.innerthicknessy.val), tol: parseT(serverStds.innerthicknessy.tol, 0.2) },
+                'totalthicknessx': { id: 'totalthicknessx', val: parseV(serverStds.totalthicknessx.val), tol: parseT(serverStds.totalthicknessx.tol, 0.2) },
+                'totalthicknessy': { id: 'totalthicknessy', val: parseV(serverStds.totalthicknessy.val), tol: parseT(serverStds.totalthicknessy.tol, 0.2) },
+                'spiralpitch': { id: 'spiralpitch', val: parseV(serverStds.spiralpitch.val), tol: parseT(serverStds.spiralpitch.tol, 5) }
+            };
+            userHasSelectedData = true;
+            </text>
+        }
+
         // Load existing summaries from server
         @if (Model?.Summaries != null && Model.Summaries.Any())
         {
@@ -1705,6 +1745,7 @@
             r3 = m.R3,
             r4 = m.R4,
             r5 = m.R5,
+            r6 = m.R6,
             timeSection = m.TimeSection,
             status = m.Status
         })));
@@ -1714,7 +1755,7 @@
         const timeHeader = "@((Model?.Measurements?.FirstOrDefault())?.TimeSection ?? "")";
         const timeParts = timeHeader.split(',').map(s => s.trim());
 
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 6; i++) {
             const hasData = rawMeasurements.some(m => {
                 const v = m[`r${i}`] !== undefined ? m[`r${i}`] : m[`R${i}`];
                 return v !== null && v !== "" && v !== undefined;
@@ -2006,7 +2047,36 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderTimeline();
             loadDataToUI();
-            loadMaster("@(Model?.HoseType ?? "")", true); // Load standards only to avoid overwriting header info on load
+            
+            // Fix: Only loadMaster if we don't have standards from server already
+            if (Object.keys(activeStandards).length === 0) {
+                loadMaster(true); 
+            } else {
+                console.log("✅ Using server-provided standards. Skipping auto-fetch.");
+                // Update UI display for standards
+                Object.keys(activeStandards).forEach(key => {
+                    const std = activeStandards[key];
+                    const elId = key.replace('innerdiameter', 'inner-dia')
+                                    .replace('innerthicknessx', 'inner-tx')
+                                    .replace('innerthicknessy', 'inner-ty')
+                                    .replace('totalthicknessx', 'total-tx')
+                                    .replace('totalthicknessy', 'total-ty')
+                                    .replace('spiralpitch', 'spiral');
+                    
+                    const stdEl = document.getElementById(`std-${elId}`);
+                    if (stdEl) {
+                        stdEl.innerText = std.val === 0 ? "NO DATA" : `${std.val.toFixed(2)} ± ${std.tol.toFixed(2)}`;
+                    }
+                    
+                    const minEl = document.getElementById(`limit-${elId}-min`);
+                    const maxEl = document.getElementById(`limit-${elId}-max`);
+                    if (minEl) minEl.innerText = std.val === 0 ? "---" : (std.val - std.tol).toFixed(2);
+                    if (maxEl) maxEl.innerText = std.val === 0 ? "---" : (std.val + std.tol).toFixed(2);
+                });
+                // Re-validate cards to show correct colors
+                ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => validateCard(id));
+            }
+
             refreshPlanningItems();
             initSmartNext();
             renderSummaryList(); // Initialize production data summary table
@@ -2567,11 +2637,11 @@
                         Frequency: '30m Sekali',
                         StandardDimension: stdText,
                         Initial: '',
-                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '',
+                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '', Reading6: '',
                         Status: 'OK'
                     };
 
-                    for (let idx = 0; idx < Math.min(measurements.length, 5); idx++) {
+                    for (let idx = 0; idx < Math.min(measurements.length, 6); idx++) {
                         const val = measurements[idx].data[point.key];
                         row[`Reading${idx + 1}`] = (val !== null && val !== undefined && val !== '') ? val : '';
                         if (std && std.val > 0 && val !== '' && val !== null && val !== undefined) {
@@ -2600,10 +2670,10 @@
                         Frequency: '30m Sekali',
                         StandardDimension: 'NORMAL',
                         Initial: 'OK',
-                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '',
+                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '', Reading6: '',
                         Status: 'OK'
                     };
-                    for (let idx = 0; idx < Math.min(measurements.length, 5); idx++) {
+                    for (let idx = 0; idx < Math.min(measurements.length, 6); idx++) {
                         const state = measurements[idx].data.visual?.[vIt.key];
                         vRow[`Reading${idx + 1}`] = state === 'ok' ? '1' : (state === 'ng' ? '0' : '');
                         if (state === 'ng') vRow.Status = 'NG';
@@ -2670,6 +2740,7 @@
                         reading3: String(r.Reading3 ?? ''),
                         reading4: String(r.Reading4 ?? ''),
                         reading5: String(r.Reading5 ?? ''),
+                        reading6: String(r.Reading6 ?? ''),
                         status: String(r.Status || 'OK')
                     }))
                 };

@@ -112,6 +112,15 @@ body.monitoring-mode .tab-btn { font-size: 1rem; padding: 15px 30px; border-radi
 .tab-pane{display:none}.tab-pane.active{display:block}
 .chart-card{background:rgba(21,27,38,.4);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;position:relative}
 .chart-card h3{font-size:.7rem;font-weight:900;color:#8b949e;letter-spacing:2px;text-transform:uppercase;margin-bottom:15px;display:inline-block}
+.chart-stats-overlay{position:absolute;top:18px;right:145px;display:flex;gap:8px;z-index:5}
+.stat-badge{background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.1);padding:4px 10px;border-radius:6px;display:flex;flex-direction:column;align-items:center;min-width:55px;backdrop-filter:blur(10px);cursor:help;transition:0.2s}
+.stat-badge:hover{background:var(--accent);border-color:#fff;transform:translateY(-2px)}
+.stat-lbl{font-size:0.5rem;font-weight:900;color:#64748b;letter-spacing:1.5px;margin-bottom:1px;pointer-events:none}
+.stat-badge:hover .stat-lbl{color:rgba(255,255,255,0.8)}
+.stat-val{font-size:0.85rem;font-weight:900;color:#fff;font-family:monospace;pointer-events:none}
+.stat-val.good{color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3)}
+.stat-val.warn{color:#fbbf24}
+.stat-val.bad{color:#ff4d4d;text-shadow:0 0 10px rgba(255,77,77,0.3)}
 .chart-wrap{position:relative;height:300px}
 .btn-reset-zoom{position:absolute;top:18px;right:20px;background:rgba(0,102,255,.1);border:1px solid rgba(0,102,255,.3);color:#38bdf8;font-size:.6rem;font-weight:900;padding:6px 12px;border-radius:6px;cursor:pointer;transition:.2s;letter-spacing:.5px;z-index:10}
 .btn-reset-zoom:hover{background:#0066ff;color:#fff;transform:translateY(-1px)}
@@ -283,8 +292,24 @@ body.monitoring-mode .tab-btn { font-size: 1rem; padding: 15px 30px; border-radi
 </div>
 
 <div id="pane-dim" class="tab-pane active">
-<div class="chart-card"><h3>Inner Diameter — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartDimInner')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartDimInner"></canvas></div></div>
-<div class="chart-card"><h3>Total Thickness — SPC Chart</h3><button class="btn-reset-zoom" onclick="resetZoom('chartDimTotal')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button><div class="chart-wrap"><canvas id="chartDimTotal"></canvas></div></div>
+<div class="chart-card">
+    <h3>Inner Diameter — SPC Chart</h3>
+    <div class="chart-stats-overlay" id="statsInner">
+        <div class="stat-badge" onclick="showCpkDetail('Inner')"><span class="stat-lbl">Cp</span><span class="stat-val" id="cpInner">—</span></div>
+        <div class="stat-badge" onclick="showCpkDetail('Inner')"><span class="stat-lbl">Cpk</span><span class="stat-val" id="cpkInner">—</span></div>
+    </div>
+    <button class="btn-reset-zoom" onclick="resetZoom('chartDimInner')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button>
+    <div class="chart-wrap"><canvas id="chartDimInner"></canvas></div>
+</div>
+<div class="chart-card">
+    <h3>Total Thickness — SPC Chart</h3>
+    <div class="chart-stats-overlay" id="statsTotal">
+        <div class="stat-badge" onclick="showCpkDetail('Total')"><span class="stat-lbl">Cp</span><span class="stat-val" id="cpTotal">—</span></div>
+        <div class="stat-badge" onclick="showCpkDetail('Total')"><span class="stat-lbl">Cpk</span><span class="stat-val" id="cpkTotal">—</span></div>
+    </div>
+    <button class="btn-reset-zoom" onclick="resetZoom('chartDimTotal')"><i class="bi bi-arrow-counterclockwise"></i>RESET ZOOM</button>
+    <div class="chart-wrap"><canvas id="chartDimTotal"></canvas></div>
+</div>
 </div>
 
 <div id="pane-table" class="tab-pane">
@@ -301,6 +326,116 @@ body.monitoring-mode .tab-btn { font-size: 1rem; padding: 15px 30px; border-radi
 let DATA=null, CHARTS={};
 const P=v=>{if(!v)return null;let s=String(v);if(s.includes('~')){let p=s.split('~').map(Number);return(p[0]+p[1])/2}return parseFloat(s)||null};
 const RANGE=v=>{if(!v)return null;let s=String(v);if(s.includes('~'))return s.split('~').map(Number);return null};
+
+// ── Cp / Cpk Calculation ──
+let CPK_CACHE = {}; 
+
+function calculateCPK(dataArr, usl, lsl) {
+    const validData = (dataArr || []).map(v => parseFloat(v)).filter(v => !isNaN(v) && v !== null);
+    
+    if (usl === undefined || lsl === undefined || usl === null || lsl === null || isNaN(parseFloat(usl)) || isNaN(parseFloat(lsl))) {
+        return { cp: null, cpk: null, error: 'Batas Toleransi (SPS) Max/Min tidak ditemukan untuk item ini.' };
+    }
+    
+    if (validData.length < 3) {
+        return { cp: null, cpk: null, error: `Data valid baru ditemukan ${validData.length} titik. Minimal butuh 3 titik untuk menghitung Cp/Cpk.` };
+    }
+
+    const n = validData.length;
+    const mean = validData.reduce((a, b) => a + b, 0) / n;
+    
+    const variance = validData.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n - 1);
+    const sigma = Math.sqrt(variance);
+    
+    const uLimit = parseFloat(usl);
+    const lLimit = parseFloat(lsl);
+
+    if (sigma === 0) return { cp: 0, cpk: 0, mean, sigma, usl: uLimit, lsl: lLimit, count: n };
+
+    const cp = (uLimit - lLimit) / (6 * sigma);
+    const cpu = (uLimit - mean) / (3 * sigma);
+    const cpl = (mean - lLimit) / (3 * sigma);
+    const cpk = Math.min(cpu, cpl);
+
+    return { 
+        cp: cp.toFixed(2), 
+        cpk: cpk.toFixed(2),
+        mean: mean.toFixed(3),
+        sigma: sigma.toFixed(3),
+        usl: uLimit, lsl: lLimit, count: n
+    };
+}
+
+function updateStatBadge(idPrefix, stats) {
+    CPK_CACHE[idPrefix] = stats;
+    const cpEl = document.getElementById('cp' + idPrefix);
+    const cpkEl = document.getElementById('cpk' + idPrefix);
+    
+    if (!stats || stats.cp === null) {
+        cpEl.innerText = '—';
+        cpkEl.innerText = '—';
+        cpkEl.className = 'stat-val';
+        return;
+    }
+
+    cpEl.innerText = stats.cp;
+    cpkEl.innerText = stats.cpk;
+
+    const val = parseFloat(stats.cpk);
+    if (val >= 1.33) cpkEl.className = 'stat-val good';
+    else if (val >= 1.0) cpkEl.className = 'stat-val warn';
+    else cpkEl.className = 'stat-val bad';
+}
+
+function showCpkDetail(type) {
+    const s = CPK_CACHE[type];
+    
+    if (!s || s.cp === null) {
+        Swal.fire({
+            title: 'DATA TIDAK CUKUP',
+            text: s?.error || 'Sistem membutuhkan minimal 3 data produksi dan batas toleransi (SPS) yang valid untuk menghitung Cp/Cpk.',
+            icon: 'warning',
+            background: '#0d1117',
+            color: '#fff'
+        });
+        return;
+    }
+
+    let statusHtml = '';
+    const val = parseFloat(s.cpk);
+    if (val >= 1.33) statusHtml = '<b style="color:#00ff88">PROSES STABIL & MAMPU (GOOD)</b>';
+    else if (val >= 1.0) statusHtml = '<b style="color:#fbbf24">MARGINAL (WASPADAI VARIASI)</b>';
+    else statusHtml = '<b style="color:#ff4d4d">TIDAK MAMPU (BANYAK NG/OUT OF SPEC)</b>';
+
+    Swal.fire({
+        title: `STATISTIK ${type.toUpperCase()}`,
+        html: `
+            <div style="text-align:left; font-size:0.9rem; line-height:1.6">
+                <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:15px">
+                    ${statusHtml}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                    <div><b>Jumlah Data:</b> ${s.count}</div>
+                    <div><b>Rata-rata:</b> ${s.mean}</div>
+                    <div><b>Sigma (σ):</b> ${s.sigma}</div>
+                    <div><b>Target:</b> ${((s.usl + s.lsl)/2).toFixed(2)}</div>
+                    <div><b>Batas Atas:</b> ${s.usl}</div>
+                    <div><b>Batas Bawah:</b> ${s.lsl}</div>
+                </div>
+                <hr style="border-color:rgba(255,255,255,0.1)">
+                <div style="font-size:0.75rem; color:#8b949e">
+                    <b>Cp (${s.cp}):</b> Mengukur seberapa sempit variasi mesin.<br>
+                    <b>Cpk (${s.cpk}):</b> Mengukur seberapa pas posisi rata-rata di tengah batas spek.
+                </div>
+            </div>
+        `,
+        icon: 'info',
+        background: '#0d1117',
+        color: '#fff',
+        confirmButtonColor: '#0066ff'
+    });
+}
+
 const toYMD=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
 
 // ── Autocomplete State (SPS Item List → Production Report) ──
@@ -981,17 +1116,18 @@ function renderCharts(){
   // DIM INNER
   const dimInnerLabels=(dim&&dim.innerDiameter&&dim.innerDiameter.length>0)?dim.innerDiameter.map(r=>r.label):labels;
   const dimInnerValues=(dim&&dim.innerDiameter&&dim.innerDiameter.length>0)?dim.innerDiameter.map(r=>r.value):rd.map(r=>r.innerDiameter);
+  
+  // Calculate CPK for Inner Diameter
+  if (dimStd && dimStd.innerDiameter) {
+      const stats = calculateCPK(dimInnerValues, dimStd.innerDiameter.max, dimStd.innerDiameter.min);
+      updateStatBadge('Inner', stats);
+  } else {
+      updateStatBadge('Inner', { cp: null, cpk: null, error: 'Standard Inner Diameter (Target/Max/Min) tidak ditemukan di database.' });
+  }
+
   let dsDI=[{label:'Inner Diameter',data:dimInnerValues,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3}];
   if(dimStd&&dimStd.innerDiameter){
     const s=dimStd.innerDiameter; const iLen=Math.max(dimInnerLabels.length,1);
-    console.log('[ChartAnalysis] Rendering Inner Diameter lines:', {
-      target: s.target, 
-      min: s.min, 
-      max: s.max, 
-      ucl: s.ucl, 
-      lcl: s.lcl,
-      dataLength: iLen
-    });
     if(s.target!=null)dsDI.push(stdLine('Target',s.target,iLen,'#22d3ee',[2,4]));
     if(s.max!=null)dsDI.push(stdLine('Max',s.max,iLen,'#ff4d4d',[5,5]));
     if(s.min!=null)dsDI.push(stdLine('Min',s.min,iLen,'#fbbf24',[5,5]));
@@ -1008,16 +1144,19 @@ function renderCharts(){
     : labels;
   const dimTotalX=(dim&&dim.totalThicknessX&&dim.totalThicknessX.length>0)?dim.totalThicknessX.map(r=>r.value):rd.map(r=>r.totalThicknessX);
   const dimTotalY=(dim&&dim.totalThicknessY&&dim.totalThicknessY.length>0)?dim.totalThicknessY.map(r=>r.value):rd.map(r=>r.totalThicknessY);
+  
+  // Calculate CPK for Total Thickness (X and Y average or X)
+  if (dimStd && dimStd.totalThickness) {
+      const stats = calculateCPK(dimTotalX, dimStd.totalThickness.max, dimStd.totalThickness.min);
+      updateStatBadge('Total', stats);
+  } else {
+      updateStatBadge('Total', { cp: null, cpk: null, error: 'Standard Total Thickness (Target/Max/Min) tidak ditemukan di database.' });
+  }
+
   let dsDT=[{label:'Total Thick X',data:dimTotalX,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3},
   {label:'Total Thick Y',data:dimTotalY,borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
   if(dimStd&&dimStd.totalThickness){
     const s=dimStd.totalThickness; const tLen=Math.max(dimTotalLabels.length,1);
-    console.log('[ChartAnalysis] Rendering Total Thickness lines:', {
-      target: s.target, 
-      min: s.min, 
-      max: s.max,
-      dataLength: tLen
-    });
     if(s.target!=null)dsDT.push(stdLine('Target',s.target,tLen,'#a78bfa',[2,4]));
     if(s.max!=null)dsDT.push(stdLine('Max',s.max,tLen,'#ff4d4d',[5,5]));
     if(s.min!=null)dsDT.push(stdLine('Min',s.min,tLen,'#fbbf24',[5,5]));

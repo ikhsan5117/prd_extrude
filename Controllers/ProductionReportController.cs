@@ -1169,12 +1169,24 @@ namespace VelastoProductionSystem.Controllers
 
             if (report == null) return NotFound();
 
-            // Fetch Masterlist data as fallback standards
+            // Fetch Masterlist data as fallback standards - Match by ItemCode for better accuracy
             ViewBag.Masterlist = await _context.MasterlistSpsDoubleLayers
-                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType);
+                .OrderByDescending(m => m.Id)
+                .FirstOrDefaultAsync(m => (m.ItemList != null && m.ItemList.Contains(report.ItemCode ?? "")) || m.DocumentNumber == report.DocumentNumber);
 
-            ViewBag.Sps = await _context.SpsMasters
-                .FirstOrDefaultAsync(s => s.Id == report.SpsId || s.ItemList == report.ItemCode);
+            // Fetch specific SPS record. Prioritize SpsId saved in the report.
+            if (report.SpsId > 0)
+            {
+                ViewBag.Sps = await _context.SpsMasters.FirstOrDefaultAsync(s => s.Id == report.SpsId);
+            }
+            
+            // If SpsId lookup failed or is 0, fallback to specific ItemCode + DocNumber
+            if (ViewBag.Sps == null)
+            {
+                ViewBag.Sps = await _context.SpsMasters
+                    .OrderByDescending(s => s.Id)
+                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode && (report.DocumentNumber == null || s.DocumentNumber == report.DocumentNumber));
+            }
 
             return View(report);
         }
@@ -1290,8 +1302,18 @@ namespace VelastoProductionSystem.Controllers
                 "Id", "Display", report.SpsId
             );
 
-            ViewBag.Sps = await _context.SpsMasters
-                .FirstOrDefaultAsync(s => s.Id == report.SpsId || s.ItemList == report.ItemCode);
+            // Fetch specific SPS record. Prioritize SpsId saved in the report.
+            if (report.SpsId > 0)
+            {
+                ViewBag.Sps = await _context.SpsMasters.FirstOrDefaultAsync(s => s.Id == report.SpsId);
+            }
+
+            if (ViewBag.Sps == null)
+            {
+                ViewBag.Sps = await _context.SpsMasters
+                    .OrderByDescending(s => s.Id)
+                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode && (report.DocumentNumber == null || s.DocumentNumber == report.DocumentNumber));
+            }
 
             return View(report);
         }

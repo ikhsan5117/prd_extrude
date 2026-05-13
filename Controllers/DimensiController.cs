@@ -376,10 +376,24 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
 
-            ViewBag.Sps = await _context.SpsMasters
-                .FirstOrDefaultAsync(s => s.HoseType == report.HoseType || s.ItemList == report.HoseType);
+            // Fetch specific SPS record. Prioritize SpsId saved in the report.
+            if (report.SpsId > 0)
+            {
+                ViewBag.Sps = await _context.SpsMasters.FirstOrDefaultAsync(s => s.Id == report.SpsId);
+            }
+
+            // Fallback: If SpsId lookup failed or is 0, match by ItemCode + DocNumber for accuracy
+            if (ViewBag.Sps == null)
+            {
+                ViewBag.Sps = await _context.SpsMasters
+                    .OrderByDescending(s => s.Id)
+                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode && (report.DocumentNumber == null || s.DocumentNumber == report.DocumentNumber));
+            }
+
+            // Fetch Masterlist data as fallback - Match by ItemCode/DocNumber for better accuracy than just HoseType
             ViewBag.Master = await _context.MasterlistSpsDoubleLayers
-                .FirstOrDefaultAsync(m => m.HoseType == report.HoseType || m.ItemList == report.HoseType);
+                .OrderByDescending(m => m.Id)
+                .FirstOrDefaultAsync(m => (m.ItemList != null && m.ItemList.Contains(report.ItemCode ?? "")) || m.DocumentNumber == report.DocumentNumber);
 
             return View(report);
         }
@@ -394,6 +408,25 @@ namespace VelastoProductionSystem.Controllers
                 .Include(r => r.Measurements)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
+
+            // Fetch specific SPS record. Prioritize SpsId saved in the report.
+            if (report.SpsId > 0)
+            {
+                ViewBag.Sps = await _context.SpsMasters.FirstOrDefaultAsync(s => s.Id == report.SpsId);
+            }
+
+            if (ViewBag.Sps == null)
+            {
+                ViewBag.Sps = await _context.SpsMasters
+                    .OrderByDescending(s => s.Id)
+                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode && (report.DocumentNumber == null || s.DocumentNumber == report.DocumentNumber));
+            }
+
+            // Fetch Masterlist data as fallback
+            ViewBag.Master = await _context.MasterlistSpsDoubleLayers
+                .OrderByDescending(m => m.Id)
+                .FirstOrDefaultAsync(m => (m.ItemList != null && m.ItemList.Contains(report.ItemCode ?? "")) || m.DocumentNumber == report.DocumentNumber);
+
             return View("Edit", report);
         }
 
@@ -599,6 +632,7 @@ namespace VelastoProductionSystem.Controllers
                             R3 = decimal.TryParse(mData.Reading3, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r3) ? r3 : null,
                             R4 = decimal.TryParse(mData.Reading4, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r4) ? r4 : null,
                             R5 = decimal.TryParse(mData.Reading5, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r5) ? r5 : null,
+                            R6 = decimal.TryParse(mData.Reading6, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var r6) ? r6 : null,
                             Status = string.IsNullOrWhiteSpace(mData.Status) ? "OK" : mData.Status,
                             RecordedTime = DateTime.Now
                         };

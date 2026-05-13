@@ -64,6 +64,7 @@ namespace VelastoProductionSystem.Models
         public string? Reading3 { get; set; }
         public string? Reading4 { get; set; }
         public string? Reading5 { get; set; }
+        public string? Reading6 { get; set; }
         public string? Status { get; set; }
         public decimal? ScaleValue { get; set; }
     }

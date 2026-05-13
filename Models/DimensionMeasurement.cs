@@ -46,6 +46,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "5")]
         public decimal? R5 { get; set; }
 
+        [Display(Name = "6")]
+        public decimal? R6 { get; set; }
+
         [Display(Name = "STATUS")]
         public string? Status { get; set; } // OK, NG
 
