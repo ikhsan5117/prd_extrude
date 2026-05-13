@@ -350,19 +350,39 @@ function calculateCPK(dataArr, usl, lsl) {
     const uLimit = parseFloat(usl);
     const lLimit = parseFloat(lsl);
 
-    if (sigma === 0) return { cp: 0, cpk: 0, mean, sigma, usl: uLimit, lsl: lLimit, count: n };
+    // If sigma is 0, it means the process is perfectly stable. 
+    // Mathematically Cp/Cpk is infinite, but we'll show a high value like 9.99 to indicate "Excellent"
+    if (sigma === 0) {
+        const isWithinSpec = mean >= lLimit && mean <= uLimit;
+        return { 
+            cp: isWithinSpec ? 9.99 : 0, 
+            cpk: isWithinSpec ? 9.99 : 0, 
+            mean: mean.toFixed(3), 
+            sigma: 0, 
+            usl: uLimit, lsl: lLimit, 
+            ucl: mean, lcl: mean,
+            count: n 
+        };
+    }
 
     const cp = (uLimit - lLimit) / (6 * sigma);
     const cpu = (uLimit - mean) / (3 * sigma);
     const cpl = (mean - lLimit) / (3 * sigma);
     const cpk = Math.min(cpu, cpl);
 
+    // Calculate Control Limits (UCL/LCL) - 3 Sigma
+    const ucl = mean + (3 * sigma);
+    const lcl = mean - (3 * sigma);
+
     return { 
         cp: cp.toFixed(2), 
         cpk: cpk.toFixed(2),
         mean: mean.toFixed(3),
         sigma: sigma.toFixed(3),
-        usl: uLimit, lsl: lLimit, count: n
+        usl: uLimit, lsl: lLimit,
+        ucl: ucl.toFixed(3),
+        lcl: lcl.toFixed(3),
+        count: n
     };
 }
 
@@ -378,8 +398,8 @@ function updateStatBadge(idPrefix, stats) {
         return;
     }
 
-    cpEl.innerText = stats.cp;
-    cpkEl.innerText = stats.cpk;
+    cpEl.innerText = stats.cp == 9.99 ? "∞" : stats.cp;
+    cpkEl.innerText = stats.cpk == 9.99 ? "∞" : stats.cpk;
 
     const val = parseFloat(stats.cpk);
     if (val >= 1.33) cpkEl.className = 'stat-val good';
@@ -1117,22 +1137,26 @@ function renderCharts(){
   const dimInnerLabels=(dim&&dim.innerDiameter&&dim.innerDiameter.length>0)?dim.innerDiameter.map(r=>r.label):labels;
   const dimInnerValues=(dim&&dim.innerDiameter&&dim.innerDiameter.length>0)?dim.innerDiameter.map(r=>r.value):rd.map(r=>r.innerDiameter);
   
+  let dsDI=[{label:'Inner Diameter',data:dimInnerValues,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3}];
+  const iLen=Math.max(dimInnerLabels.length,1);
+
   // Calculate CPK for Inner Diameter
   if (dimStd && dimStd.innerDiameter) {
       const stats = calculateCPK(dimInnerValues, dimStd.innerDiameter.max, dimStd.innerDiameter.min);
       updateStatBadge('Inner', stats);
+      
+      // Add Calculated Control Limits
+      if(stats.ucl!=null) dsDI.push(stdLine('UCL (Control)', stats.ucl, iLen, 'rgba(255,77,77,0.5)', [3,3]));
+      if(stats.lcl!=null) dsDI.push(stdLine('LCL (Control)', stats.lcl, iLen, 'rgba(251,191,36,0.5)', [3,3]));
   } else {
       updateStatBadge('Inner', { cp: null, cpk: null, error: 'Standard Inner Diameter (Target/Max/Min) tidak ditemukan di database.' });
   }
 
-  let dsDI=[{label:'Inner Diameter',data:dimInnerValues,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3}];
   if(dimStd&&dimStd.innerDiameter){
-    const s=dimStd.innerDiameter; const iLen=Math.max(dimInnerLabels.length,1);
+    const s=dimStd.innerDiameter; 
     if(s.target!=null)dsDI.push(stdLine('Target',s.target,iLen,'#22d3ee',[2,4]));
-    if(s.max!=null)dsDI.push(stdLine('Max',s.max,iLen,'#ff4d4d',[5,5]));
-    if(s.min!=null)dsDI.push(stdLine('Min',s.min,iLen,'#fbbf24',[5,5]));
-    if(s.ucl!=null)dsDI.push(stdLine('UCL',s.ucl,iLen,'rgba(255,77,77,.4)',[3,3]));
-    if(s.lcl!=null)dsDI.push(stdLine('LCL',s.lcl,iLen,'rgba(251,191,36,.4)',[3,3]));
+    if(s.max!=null)dsDI.push(stdLine('USL (Spec Max)',s.max,iLen,'#ff4d4d',[5,5]));
+    if(s.min!=null)dsDI.push(stdLine('LSL (Spec Min)',s.min,iLen,'#fbbf24',[]));
   }
   dsDI=dsDI.filter(Boolean);makeChart('chartDimInner',dimInnerLabels,dsDI,'mm');
 
@@ -1145,21 +1169,27 @@ function renderCharts(){
   const dimTotalX=(dim&&dim.totalThicknessX&&dim.totalThicknessX.length>0)?dim.totalThicknessX.map(r=>r.value):rd.map(r=>r.totalThicknessX);
   const dimTotalY=(dim&&dim.totalThicknessY&&dim.totalThicknessY.length>0)?dim.totalThicknessY.map(r=>r.value):rd.map(r=>r.totalThicknessY);
   
+  let dsDT=[{label:'Total Thick X',data:dimTotalX,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3},
+  {label:'Total Thick Y',data:dimTotalY,borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
+  const tLen=Math.max(dimTotalLabels.length,1);
+
   // Calculate CPK for Total Thickness (X and Y average or X)
   if (dimStd && dimStd.totalThickness) {
       const stats = calculateCPK(dimTotalX, dimStd.totalThickness.max, dimStd.totalThickness.min);
       updateStatBadge('Total', stats);
+
+      // Add Calculated Control Limits
+      if(stats.ucl!=null) dsDT.push(stdLine('UCL (Control)', stats.ucl, tLen, 'rgba(255,77,77,0.5)', [3,3]));
+      if(stats.lcl!=null) dsDT.push(stdLine('LCL (Control)', stats.lcl, tLen, 'rgba(251,191,36,0.5)', [3,3]));
   } else {
       updateStatBadge('Total', { cp: null, cpk: null, error: 'Standard Total Thickness (Target/Max/Min) tidak ditemukan di database.' });
   }
 
-  let dsDT=[{label:'Total Thick X',data:dimTotalX,borderColor:'#0088ff',borderWidth:2.5,pointRadius:4,tension:.3},
-  {label:'Total Thick Y',data:dimTotalY,borderColor:'#22d3ee',borderWidth:2,pointRadius:3,tension:.3}];
   if(dimStd&&dimStd.totalThickness){
-    const s=dimStd.totalThickness; const tLen=Math.max(dimTotalLabels.length,1);
+    const s=dimStd.totalThickness; 
     if(s.target!=null)dsDT.push(stdLine('Target',s.target,tLen,'#a78bfa',[2,4]));
-    if(s.max!=null)dsDT.push(stdLine('Max',s.max,tLen,'#ff4d4d',[5,5]));
-    if(s.min!=null)dsDT.push(stdLine('Min',s.min,tLen,'#fbbf24',[5,5]));
+    if(s.max!=null)dsDT.push(stdLine('USL (Spec Max)',s.max,tLen,'#ff4d4d',[5,5]));
+    if(s.min!=null)dsDT.push(stdLine('LSL (Spec Min)',s.min,tLen,'#fbbf24',[]));
   }
   dsDT=dsDT.filter(Boolean);makeChart('chartDimTotal',dimTotalLabels,dsDT,'mm');
 }
