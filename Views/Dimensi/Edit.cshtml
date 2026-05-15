@@ -1111,14 +1111,26 @@
         // Inject standards from server if available (Fix for historical consistency)
         @if (ViewBag.Sps != null || ViewBag.Master != null)
         {
-            var s = ViewBag.Sps ?? ViewBag.Master;
+            var s = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
+            var m = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+
+            // Robust Target Selection
+            var targetInner = s?.ToleranceInner_Asli?.ToString("F2") ?? s?.InnerTarget ?? s?.Dimensi ?? m?.Dimensi;
+            var targetThick = s?.TebalInner_Asli?.ToString("F2") ?? s?.ThickTarget ?? s?.TebalInner ?? m?.TebalInner;
+            var targetTotal = s?.TebalTotal_Asli?.ToString("F2") ?? s?.TotalTarget ?? s?.TebalTotal ?? m?.TebalTotal;
+            
+            // Robust Tolerance Selection
+            var tolInner = s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1";
+            var tolThick = s?.ThickTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.2";
+            var tolTotal = s?.TotalTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.3";
+
             var stdObj = new {
-                innerdiameter = new { id = "innerdiameter", val = s.Dimensi, tol = ViewBag.Sps != null ? (ViewBag.Sps.InnerTol ?? "0.1") : (ViewBag.Master.ToleranceInner ?? "0.1") },
-                innerthicknessx = new { id = "innerthicknessx", val = s.TebalInner, tol = s.ThickTol ?? s.ToleranceOuter ?? "0.2" },
-                innerthicknessy = new { id = "innerthicknessy", val = s.TebalInner, tol = s.ThickTol ?? s.ToleranceOuter ?? "0.2" },
-                totalthicknessx = new { id = "totalthicknessx", val = s.TebalTotal, tol = s.TotalTol ?? s.ToleranceOuter ?? "0.2" },
-                totalthicknessy = new { id = "totalthicknessy", val = s.TebalTotal, tol = s.TotalTol ?? s.ToleranceOuter ?? "0.2" },
-                spiralpitch = new { id = "spiralpitch", val = s.SpiralPitchSetting, tol = s.ToleranceSpiralPitch ?? "5" }
+                innerdiameter = new { id = "innerdiameter", val = targetInner, tol = tolInner },
+                innerthicknessx = new { id = "innerthicknessx", val = targetThick, tol = tolThick },
+                innerthicknessy = new { id = "innerthicknessy", val = targetThick, tol = tolThick },
+                totalthicknessx = new { id = "totalthicknessx", val = targetTotal, tol = tolTotal },
+                totalthicknessy = new { id = "totalthicknessy", val = targetTotal, tol = tolTotal },
+                spiralpitch = new { id = "spiralpitch", val = s?.SpiralPitchSetting ?? m?.SpiralPitchSetting, tol = s?.ToleranceSpiralPitch ?? m?.ToleranceSpiralPitch ?? "5" }
             };
             <text>
             const serverStds = @Html.Raw(Json.Serialize(stdObj));
@@ -2487,12 +2499,14 @@
                     };
 
                     const configs = [
-                        { id: 'innerdiameter', v: m.dimensi, t: m.toleranceInner, el: 'inner-dia', dt: 0.1 },
-                        { id: 'innerthicknessx', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                        { id: 'innerthicknessy', v: m.tebalInner, t: m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
-                        { id: 'totalthicknessx', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                        { id: 'totalthicknessy', v: m.tebalTotal, t: m.toleranceOuter, el: 'total-ty', dt: 0.2 },
-                        { id: 'spiralpitch', v: m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
+                        // Inner Diameter: use quality matrix InnerTarget (e.g. 11.30), fallback to dimensi
+                        { id: 'innerdiameter', v: m.innerTarget || m.dimensi, t: m.innerTol || m.toleranceInner, el: 'inner-dia', dt: 0.1 },
+                        // Inner Thickness: tebalInner now correctly mapped to ThickTarget from backend
+                        { id: 'innerthicknessx', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                        { id: 'innerthicknessy', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                        { id: 'totalthicknessx', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                        { id: 'totalthicknessy', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                        { id: 'spiralpitch', v: m.spiralPitchSetting || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                     ];
 
                     configs.forEach(p => {

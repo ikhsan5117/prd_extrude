@@ -2298,14 +2298,16 @@
 
                     try {
                         const configs = [
-                            { id: 'innerdia', v: (m.toleranceInner && m.toleranceInner.toString().includes('±') ? m.toleranceInner : m.dimensi) || m.innerDie || m.diameter, t: m.toleranceInner || m.innerTol || m.toleranceDie, el: 'inner-dia', dt: 0.1 },
-                            { id: 'innertx', v: m.tebalInner || m.tubeDie, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                            { id: 'innerty', v: m.tebalInner || m.tubeDie, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                            // Inner Diameter: prioritize quality matrix target (InnerTarget), fallback to Dimensi
+                            { id: 'innerdia', v: m.innerTarget || m.dimensi, t: m.innerTol || m.toleranceInner, el: 'inner-dia', dt: 0.1 },
+                            // Inner Thickness: now correctly uses ThickTarget from backend
+                            { id: 'innertx', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                            { id: 'innerty', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
                             { id: 'innermidtx', v: m.tebalInnerMiddle, t: m.thickTol || m.toleranceOuter, el: 'innermid-tx', dt: 0.2 },
                             { id: 'innermidty', v: m.tebalInnerMiddle, t: m.thickTol || m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
-                            { id: 'totaltx', v: m.tebalTotal || m.coverDie, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                            { id: 'totalty', v: m.tebalTotal || m.coverDie, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
-                            { id: 'spiral', v: m.spiralPitchSetting || m.toleranceSpiralPitch || m.spiralPitch, t: m.spiralPitchDisplay || m.toleranceSpiralPitch || m.spiralPitch, el: 'spiral', dt: 5 }
+                            { id: 'totaltx', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                            { id: 'totalty', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                            { id: 'spiral', v: m.spiralPitchSetting || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                         ];
 
                         configs.forEach(p => {
@@ -2337,11 +2339,10 @@
                                 if (target === 0) {
                                     cardEl.style.display = (p.id.startsWith('innermid') || p.id === 'spiral') ? 'none' : 'block';
                                     if (inputEl) {
-                                        inputEl.disabled = true;
-                                        inputEl.placeholder = "N/A";
-                                        inputEl.value = "";
+                                        inputEl.placeholder = "NO STD";
+                                        // Removed inputEl.disabled = true to allow manual input even if std is missing
                                     }
-                                    cardEl.style.opacity = (p.id.startsWith('innermid')) ? "1" : "0.4";
+                                    cardEl.style.opacity = (p.id.startsWith('innermid')) ? "1" : "0.7";
                                 } else {
                                     cardEl.style.display = 'block';
                                     if (inputEl) {

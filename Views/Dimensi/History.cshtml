@@ -2,6 +2,7 @@
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Dimension Inspection History";
+    var spsMap = ViewBag.SpsMap as Dictionary<int, VelastoProductionSystem.Models.SpsMaster>;
 }
 
 <style>
@@ -844,16 +845,17 @@
                 <tbody id="tableBody">
                     @foreach (var item in Model.OrderByDescending(x => x.CreatedDate))
                     {
+                        var sps = (item.SpsId.HasValue && spsMap != null && spsMap.TryGetValue(item.SpsId.Value, out var s)) ? s : null;
                         var rawPlanning = (item.ItemCode ?? string.Empty).Trim();
-                        var spsItem = ""; // Legacy fallback removed
-                        var planningDisplay = rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem)
+                        var spsItem = sps?.ItemList ?? "";
+                        var planningDisplay = (rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem))
                             ? spsItem
                             : rawPlanning;
+                            
                         var rawHose = (item.HoseType ?? string.Empty).Trim();
-                        var spsHose = ""; // Legacy fallback removed
+                        var spsHose = sps?.HoseType ?? "";
                         var productInfoDisplay = (!string.IsNullOrWhiteSpace(spsHose) &&
-                            !string.IsNullOrWhiteSpace(rawPlanning) &&
-                            rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase))
+                            (rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase) || rawHose.All(char.IsDigit)))
                             ? spsHose
                             : rawHose;
 

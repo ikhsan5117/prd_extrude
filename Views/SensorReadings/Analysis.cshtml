@@ -371,20 +371,20 @@ if (window.Chart) {
     }
 }
 
-// Mapping metricType -> field MasterlistSpsDoubleLayer (camelCase)
+// Mapping metricType -> field SpsMasters (camelCase for JSON)
 const METRIC_MAP = {
-    outer_diameter:    { field:'odSensor',          altField:'controlValue',    tol:'toleranceOuter',       label:'Outer Diameter',    unit:'mm'    },
-    inner_diameter:    { field:'innerTarget',       tol:'innerTol',             label:'Inner Diameter',    unit:'mm'    },
-    hose_speed:        { field:'hoseSpeed',         tol:null,                   label:'Hose Speed',        unit:'m/min' },
-    head_temp_inner:   { field:'headTemp1',         tol:null,                   label:'Head Temp Inner',   unit:'°C'    },
-    head_temp_outer:   { field:'headTemp2',         tol:null,                   label:'Head Temp Outer',   unit:'°C'    },
-    chiller_water_temp:{ field:'chillerWaterTemp',  tol:null,                   label:'Chiller Water Temp',unit:'°C'    },
-    screw_speed_inner: { field:'screwSpeed1',       tol:null,                   label:'Screw Speed Inner', unit:'rpm'   },
-    screw_speed_outer: { field:'screwSpeed2',       tol:null,                   label:'Screw Speed Outer', unit:'rpm'   },
-    pressure_inner:    { field:'pressure1',         tol:null,                   label:'Pressure Inner',    unit:'MPa'   },
-    pressure_outer:    { field:'pressure2',         tol:null,                   label:'Pressure Outer',    unit:'MPa'   },
-    spiral_pitch:      { field:'spiralPitchSetting',tol:'toleranceSpiralPitch', label:'Spiral Pitch',      unit:'mm'    },
-    caterpillar_gap:   { field:'caterpillarGap',    tol:null,                   label:'Caterpillar Gap',   unit:'mm'    }
+    outer_diameter:    { field:'odSensor_Asli',          altField:'controlValue_Asli',    minField:'odSensor_Min', maxField:'odSensor_Max', tolFields:['toleranceOuter_Asli', 'toleranceOuter'], label:'Outer Diameter',    unit:'mm'    },
+    inner_diameter:    { field:'innerTarget',       minField:'innerMin', maxField:'innerMax', tolFields:['toleranceInner_Asli', 'toleranceInner'], label:'Inner Diameter',    unit:'mm'    },
+    hose_speed:        { field:'hoseSpeed_Asli',         minField:'hoseSpeed_Min', maxField:'hoseSpeed_Max', label:'Hose Speed',        unit:'m/min' },
+    head_temp_inner:   { field:'headTemp1_Asli',         minField:'headTemp1_Min', maxField:'headTemp1_Max', label:'Head Temp Inner',   unit:'°C'    },
+    head_temp_outer:   { field:'headTemp2_Asli',         minField:'headTemp2_Min', maxField:'headTemp2_Max', label:'Head Temp Outer',   unit:'°C'    },
+    chiller_water_temp:{ field:'chillerWaterTemp_Asli',  minField:'chillerWaterTemp_Min', maxField:'chillerWaterTemp_Max', label:'Chiller Water Temp',unit:'°C'    },
+    screw_speed_inner: { field:'screwSpeed1_Asli',       minField:'screwSpeed1_Min', maxField:'screwSpeed1_Max', label:'Screw Speed Inner', unit:'rpm'   },
+    screw_speed_outer: { field:'screwSpeed2_Asli',       minField:'screwSpeed2_Min', maxField:'screwSpeed2_Max', label:'Screw Speed Outer', unit:'rpm'   },
+    pressure_inner:    { field:'pressure1_Asli',         minField:'pressure1_Min', maxField:'pressure1_Max', label:'Pressure Inner',    unit:'MPa'   },
+    pressure_outer:    { field:'pressure2_Asli',         minField:'pressure2_Min', maxField:'pressure2_Max', label:'Pressure Outer',    unit:'MPa'   },
+    spiral_pitch:      { field:'spiralPitchSetting_Asli',minField:'spiralPitchSetting_Min', maxField:'spiralPitchSetting_Max', tolFields:['toleranceSpiralPitch'], label:'Spiral Pitch',      unit:'mm'    },
+    caterpillar_gap:   { field:'caterpillarGap_Asli',    minField:'caterpillarGap_Min', maxField:'caterpillarGap_Max', label:'Caterpillar Gap',   unit:'mm'    }
 };
 
 // =================================================================
@@ -423,8 +423,8 @@ function renderSpsGrid(list) {
                 <div class="fw-bold small text-white mb-1">${s.itemList || '-'}</div>
                 <div class="text-muted" style="font-size:.72rem;">${s.customer || ''}</div>
                 <div class="d-flex flex-wrap gap-1 mt-2">
-                    ${s.odSensor ? `<span class="param-pill"><span class="pp-label">OD Sensor</span><span class="pp-val text-warning">${s.odSensor}</span></span>` : ''}
-                    ${s.toleranceOuter ? `<span class="param-pill"><span class="pp-label">Tol. Outer</span><span class="pp-val">±${s.toleranceOuter}</span></span>` : ''}
+                    ${s.odSensor_Asli ? `<span class="param-pill"><span class="pp-label">OD Sensor</span><span class="pp-val text-warning">${s.odSensor_Asli}</span></span>` : ''}
+                    ${s.innerTarget ? `<span class="param-pill"><span class="pp-label">Inner Target</span><span class="pp-val">${s.innerTarget}</span></span>` : ''}
                 </div>
             </div>
         </div>
@@ -502,14 +502,11 @@ function updateMetricStdDisplay() {
     };
 
     const valStr = getVal(cfg.field) || getVal(cfg.altField) || '';
-    const tolStr = (cfg.tol) ? getVal(cfg.tol) : valStr;
+    const minVal = getVal(cfg.minField);
+    const maxVal = getVal(cfg.maxField);
 
-    // Parsing Target & Toleransi
+    // Parsing Target
     let target = parseFirst(valStr);
-    let tol    = parseTolerance(tolStr);
-
-    // Penanganan khusus untuk "Max. XX"
-    let isMaxOnly = String(valStr).toLowerCase().includes('max');
     const unit = cfg.unit || '';
 
     if (target == null) {
@@ -520,39 +517,55 @@ function updateMetricStdDisplay() {
         return;
     }
 
-    // Hitung UCL/LCL
-    let ucl = null, lcl = null;
+    // Hitung UCL/LCL dari min/max fields
+    let ucl = maxVal != null ? parseFirst(maxVal) : null;
+    let lcl = minVal != null ? parseFirst(minVal) : null;
     
-    if (isMaxOnly) {
-        ucl = target;
-        document.getElementById('dispTol').textContent = 'Batas Maksimum: ' + target + ' ' + unit;
-    } else {
-        ucl = tol != null ? target + tol : null;
-        lcl = tol != null ? target - tol : null;
-        document.getElementById('dispTol').textContent = tol != null ? 'Toleransi: +/- ' + tol + ' ' + unit : 'Toleransi tidak terdefinisi';
+    // Fallback: hitung dari target + tolFields jika ada
+    let fallbackTol = null;
+    if (cfg.tolFields) {
+        for (const tf of cfg.tolFields) {
+            const tv = getVal(tf);
+            if (tv != null) {
+                fallbackTol = parseFirst(tv);
+                if (fallbackTol != null) break;
+            }
+        }
+    }
+    
+    if (ucl == null && target != null && fallbackTol != null) {
+        ucl = target + fallbackTol;
+        lcl = target - fallbackTol;
     }
 
     document.getElementById('dispTarget').textContent  = target.toFixed(3) + ' ' + unit;
+    
+    if (ucl != null || lcl != null) {
+        document.getElementById('dispTol').textContent = 'Batas ditangkap dari SPS';
+    } else {
+        document.getElementById('dispTol').textContent = 'Tidak ada batas min/max di SPS';
+    }
+
     document.getElementById('dispUcl').textContent     = ucl != null ? ucl.toFixed(3) + ' ' + unit : 'N/A';
     document.getElementById('dispLcl').textContent     = lcl != null ? lcl.toFixed(3) + ' ' + unit : 'N/A';
-    document.getElementById('dispUclNote').textContent = (ucl != null && !isMaxOnly) ? '= ' + target.toFixed(3) + ' + ' + tol : (isMaxOnly ? '(Max Limit)' : '');
-    document.getElementById('dispLclNote').textContent = (lcl != null && !isMaxOnly) ? '= ' + target.toFixed(3) + ' - ' + tol : '';
+    document.getElementById('dispUclNote').textContent = ucl != null ? '(Max Limit)' : '';
+    document.getElementById('dispLclNote').textContent = lcl != null ? '(Min Limit)' : '';
 }
 
 function buildAllParamPills(s) {
     const params = [
-        { l:'OD Target',       v:s.odSensor || s.controlValue, u:'mm',     m:'outer_diameter' },
-        { l:'Inner Die',       v:s.innerDie,         u:'mm',     m:'inner_diameter' },
-        { l:'Head Temp 1',     v:s.headTemp1,        u:'C',      m:'head_temp_inner' },
-        { l:'Head Temp 2',     v:s.headTemp2,        u:'C',      m:'head_temp_outer' },
-        { l:'Screw Spd 1',     v:s.screwSpeed1,      u:'rpm',    m:'screw_speed_inner' },
-        { l:'Screw Spd 2',     v:s.screwSpeed2,      u:'rpm',    m:'screw_speed_outer' },
-        { l:'Pressure 1',      v:s.pressure1,        u:'MPa',    m:'pressure_inner' },
-        { l:'Pressure 2',      v:s.pressure2,        u:'MPa',    m:'pressure_outer' },
-        { l:'Spiral Pitch',    v:s.spiralPitch,      u:'mm',     m:'spiral_pitch' },
-        { l:'Caterpillar Gap', v:s.caterpillarGap,   u:'mm',     m:'caterpillar_gap' },
-        { l:'Hose Speed',      v:s.hoseSpeed,        u:'m/min',  m:'hose_speed' },
-        { l:'Chiller Temp',    v:s.chillerWaterTemp, u:'C',      m:'chiller_water_temp' },
+        { l:'OD Target',       v:s.odSensor_Asli || s.controlValue_Asli, u:'mm',     m:'outer_diameter' },
+        { l:'Inner Target',    v:s.innerTarget,      u:'mm',     m:'inner_diameter' },
+        { l:'Head Temp 1',     v:s.headTemp1_Asli,   u:'C',      m:'head_temp_inner' },
+        { l:'Head Temp 2',     v:s.headTemp2_Asli,   u:'C',      m:'head_temp_outer' },
+        { l:'Screw Spd 1',     v:s.screwSpeed1_Asli, u:'rpm',    m:'screw_speed_inner' },
+        { l:'Screw Spd 2',     v:s.screwSpeed2_Asli, u:'rpm',    m:'screw_speed_outer' },
+        { l:'Pressure 1',      v:s.pressure1_Asli,   u:'MPa',    m:'pressure_inner' },
+        { l:'Pressure 2',      v:s.pressure2_Asli,   u:'MPa',    m:'pressure_outer' },
+        { l:'Spiral Pitch',    v:s.spiralPitchSetting_Asli, u:'mm', m:'spiral_pitch' },
+        { l:'Caterpillar Gap', v:s.caterpillarGap_Asli, u:'mm',  m:'caterpillar_gap' },
+        { l:'Hose Speed',      v:s.hoseSpeed_Asli,   u:'m/min',  m:'hose_speed' },
+        { l:'Chiller Temp',    v:s.chillerWaterTemp_Asli, u:'C', m:'chiller_water_temp' },
     ];
     
     const html = params

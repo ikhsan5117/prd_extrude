@@ -227,23 +227,24 @@
                             decimal target = 0, tol = 0;
                             decimal defaultTol = point.Contains("Thick") ? 0.2m : 0.1m;
 
-                            // 1. PRIORITIZE SPS (SpsMaster) for Clean Numerics
                             if (sps != null) {
                                 if (point.Contains("Diameter")) { 
-                                    target = ParseNum(sps.InnerTarget); 
+                                    target = sps.ToleranceInner_Asli ?? ParseNum(sps.InnerTarget);
+                                    if (target <= 0) target = ParseNum(sps.Dimensi);
                                     tol = ParseTol(sps.InnerTol, 0.1m); 
                                 }
                                 else if (point.Contains("Inner Thick")) { 
-                                    target = ParseNum(sps.ThickTarget); 
+                                    target = sps.TebalInner_Asli ?? ParseNum(sps.ThickTarget); 
+                                    if (target <= 0) target = ParseNum(sps.TebalInner);
                                     tol = ParseTol(sps.ThickTol, 0.2m); 
                                 }
                                 else if (point.Contains("Total Thick")) { 
-                                    target = ParseNum(sps.TotalTarget); 
+                                    target = sps.TebalTotal_Asli ?? ParseNum(sps.TotalTarget); 
+                                    if (target <= 0) target = ParseNum(sps.TebalTotal);
                                     tol = ParseTol(sps.TotalTol, 0.3m); 
                                 }
                             }
 
-                            // 2. USE MASTERLIST for TARGET (Dimensi) if SPS is missing
                             if (target <= 0 && master != null) {
                                 if (point.Contains("Diameter")) target = ParseNum(master.Dimensi);
                                 else if (point.Contains("Inner Thick")) target = ParseNum(master.TebalInner);
@@ -354,7 +355,7 @@
                     var visualRow = measurements.ContainsKey("Visual Check") ? measurements["Visual Check"] : null;
                     var spiralStd = (sps != null && ParseNum(sps.SpiralPitchSetting) > 0) 
                         ? $"{ParseNum(sps.SpiralPitchSetting).ToString("0")} ± {ParseTol(sps.ToleranceSpiralPitch, 5.0m).ToString("0")}" 
-                        : (spiralRow?.StandardDimension ?? "38 ± 5");
+                        : (sps != null && !string.IsNullOrEmpty(sps.SpiralPitchDisplay) ? sps.SpiralPitchDisplay : (spiralRow?.StandardDimension ?? "38 ± 5"));
                 }
                 <tr>
                     <td class="row-point">Spiral Pitch</td>

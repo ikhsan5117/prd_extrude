@@ -105,17 +105,31 @@ namespace VelastoProductionSystem.Controllers
 
             if (sps != null)
             {
+                // Robust fallback for Inner Diameter
+                var finalInner = sps.ToleranceInner_Asli?.ToString("F2") ?? sps.InnerTarget;
+                if (string.IsNullOrEmpty(finalInner) || finalInner == "0") finalInner = sps.Dimensi;
+
+                // Robust fallback for Inner Thickness
+                var finalThick = sps.TebalInner_Asli?.ToString("F2") ?? sps.ThickTarget;
+                if (string.IsNullOrEmpty(finalThick) || finalThick == "0") finalThick = sps.TebalInner;
+
+                // Robust fallback for Total Thickness
+                var finalTotal = sps.TebalTotal_Asli?.ToString("F2") ?? sps.TotalTarget;
+                if (string.IsNullOrEmpty(finalTotal) || finalTotal == "0") finalTotal = sps.TebalTotal;
+
                 return Json(new { 
-                    success = true, 
+                    success = true,
+                    id = sps.Id,
                     data = new {
                         hoseType = sps.HoseType,
-                        dimensi = sps.Dimensi,
+                        dimensi = finalInner,                // Unified Inner Diameter target
+                        innerTarget = finalInner,            // For quality matrix cards
                         innerTube = sps.InnerTube,
                         outerCover = sps.OuterCover,
                         toleranceInner = sps.ToleranceInner,
                         toleranceOuter = sps.ToleranceOuter,
-                        tebalInner = sps.InnerTarget,
-                        tebalTotal = sps.TotalTarget,
+                        tebalInner = finalThick,             // Unified Inner Thickness target
+                        tebalTotal = finalTotal,             // Unified Total Thickness target
                         yarn = sps.Yarn ?? "GENERAL",
                         customer = sps.Customer,
                         docNo = sps.DocumentNumber,
@@ -220,6 +234,15 @@ namespace VelastoProductionSystem.Controllers
             var reports = await _context.DimensionReports
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
+
+            // Fetch SPS Map for display consistency (fixes incomplete planning/hose names)
+            var spsIds = reports.Where(r => r.SpsId.HasValue).Select(r => r.SpsId!.Value).Distinct().ToList();
+            var spsMap = await _context.SpsMasters
+                .Where(s => spsIds.Contains(s.Id))
+                .ToDictionaryAsync(s => s.Id, s => s);
+            
+            ViewBag.SpsMap = spsMap;
+
             return View(reports);
         }
 
@@ -316,13 +339,25 @@ namespace VelastoProductionSystem.Controllers
                 cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
             }
 
+            // Fetch SPS Map for Excel
+            var spsIds = rows.Where(r => r.SpsId.HasValue).Select(r => r.SpsId!.Value).Distinct().ToList();
+            var spsMap = await _context.SpsMasters
+                .Where(s => spsIds.Contains(s.Id))
+                .ToDictionaryAsync(s => s.Id, s => s);
+
             int row = 5;
             foreach (var item in rows)
             {
+                var sps = (item.SpsId.HasValue && spsMap.TryGetValue(item.SpsId.Value, out var s)) ? s : null;
+                var rawPlanning = (item.ItemCode ?? string.Empty).Trim();
+                var rawHose = (item.HoseType ?? string.Empty).Trim();
+
+                // Robust Display Selection
+                var planningDisplay = (rawPlanning.All(char.IsDigit) && sps != null) ? sps.ItemList : rawPlanning;
+                var productInfoDisplay = (rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase) && sps != null) ? sps.HoseType : rawHose;
+
                 ws.Cells[row, 1].Value = (item.DocumentNumber ?? "").Replace("#", "");
                 ws.Cells[row, 2].Value = item.CreatedDate.ToString("dd MMM yyyy HH:mm");
-                var planningDisplay = (item.ItemCode ?? string.Empty).Trim();
-                var productInfoDisplay = (item.HoseType ?? string.Empty).Trim();
                 ws.Cells[row, 3].Value = string.IsNullOrWhiteSpace(planningDisplay) ? "-" : planningDisplay;
                 ws.Cells[row, 4].Value = item.CreatedBy ?? "SYSTEM";
                 ws.Cells[row, 5].Value = item.MachineName ?? "-";
@@ -385,7 +420,7 @@ namespace VelastoProductionSystem.Controllers
             {
                 ViewBag.Sps = await _context.SpsMasters
                     .OrderByDescending(s => s.Id)
-                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode && (report.DocumentNumber == null || s.DocumentNumber == report.DocumentNumber));
+                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode);
             }
 
             // Fetch Masterlist data as fallback - Match by ItemCode/DocNumber for better accuracy than just HoseType
@@ -417,7 +452,7 @@ namespace VelastoProductionSystem.Controllers
             {
                 ViewBag.Sps = await _context.SpsMasters
                     .OrderByDescending(s => s.Id)
-                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode && (report.DocumentNumber == null || s.DocumentNumber == report.DocumentNumber));
+                    .FirstOrDefaultAsync(s => s.ItemList == report.ItemCode);
             }
 
             // Fetch Masterlist data as fallback

@@ -588,20 +588,21 @@ namespace VelastoProductionSystem.Controllers
                     s.ItemList,
                     s.MachineCode,
                     s.Customer,
-                    s.OdSensor_Asli,
-                    s.ControlValue_Asli,
-                    s.ToleranceOuter_Asli,
-                    s.ToleranceInner_Asli,
-                    s.HoseSpeed_Asli,
-                    s.HeadTemp1_Asli,
-                    s.HeadTemp2_Asli,
-                    s.ScrewSpeed1_Asli,
-                    s.ScrewSpeed2_Asli,
-                    s.Pressure1_Asli,
-                    s.Pressure2_Asli,
-                    s.SpiralPitchSetting_Asli,
-                    s.CaterpillarGap_Asli,
-                    s.ChillerWaterTemp_Asli,
+                    s.OdSensor_Asli, s.OdSensor_Max, s.OdSensor_Min,
+                    s.ControlValue_Asli, s.ControlValue_Max, s.ControlValue_Min,
+                    s.ToleranceOuter_Asli, s.ToleranceOuter,
+                    s.ToleranceInner_Asli, s.ToleranceInner,
+                    s.HoseSpeed_Asli, s.HoseSpeed_Max, s.HoseSpeed_Min,
+                    s.HeadTemp1_Asli, s.HeadTemp1_Max, s.HeadTemp1_Min,
+                    s.HeadTemp2_Asli, s.HeadTemp2_Max, s.HeadTemp2_Min,
+                    s.ScrewSpeed1_Asli, s.ScrewSpeed1_Max, s.ScrewSpeed1_Min,
+                    s.ScrewSpeed2_Asli, s.ScrewSpeed2_Max, s.ScrewSpeed2_Min,
+                    s.Pressure1_Asli, s.Pressure1_Max, s.Pressure1_Min,
+                    s.Pressure2_Asli, s.Pressure2_Max, s.Pressure2_Min,
+                    s.SpiralPitchSetting_Asli, s.SpiralPitchSetting_Max, s.SpiralPitchSetting_Min,
+                    s.ToleranceSpiralPitch,
+                    s.CaterpillarGap_Asli, s.CaterpillarGap_Max, s.CaterpillarGap_Min,
+                    s.ChillerWaterTemp_Asli, s.ChillerWaterTemp_Max, s.ChillerWaterTemp_Min,
                     s.InnerTarget,
                     s.InnerMin,
                     s.InnerMax
@@ -768,11 +769,26 @@ namespace VelastoProductionSystem.Controllers
                     target = sps.OdSensor_Asli ?? sps.ControlValue_Asli;
                     ucl    = sps.OdSensor_Max  ?? sps.ControlValue_Max;
                     lcl    = sps.OdSensor_Min  ?? sps.ControlValue_Min;
+                    
+                    // Fallback to Tolerance if Min/Max are empty
+                    if (ucl == null && target != null)
+                    {
+                        var tol = sps.ToleranceOuter_Asli ?? TryParseTolerance(sps.ToleranceOuter);
+                        if (tol != null) { ucl = target + tol; lcl = target - tol; }
+                    }
+                    
                     label = "Outer Diameter"; unit = "mm"; break;
                 case "inner_diameter":
                     target = TryParseFirst(sps.InnerTarget);
                     ucl    = TryParseFirst(sps.InnerMax) ?? TryParseFirst(sps.InnerUCL);
                     lcl    = TryParseFirst(sps.InnerMin) ?? TryParseFirst(sps.InnerLCL);
+
+                    // Fallback to ToleranceInner_Asli if Min/Max are empty
+                    if (ucl == null && target != null && sps.ToleranceInner_Asli != null)
+                    {
+                        ucl = target + sps.ToleranceInner_Asli;
+                        lcl = target - sps.ToleranceInner_Asli;
+                    }
                     label = "Inner Diameter"; unit = "mm"; break;
                 case "hose_speed":
                     target = sps.HoseSpeed_Asli; ucl = sps.HoseSpeed_Max; lcl = sps.HoseSpeed_Min;
@@ -797,6 +813,13 @@ namespace VelastoProductionSystem.Controllers
                     label = "Pressure Outer"; unit = "MPa"; break;
                 case "spiral_pitch":
                     target = sps.SpiralPitchSetting_Asli; ucl = sps.SpiralPitchSetting_Max; lcl = sps.SpiralPitchSetting_Min;
+                    
+                    // Fallback to ToleranceSpiralPitch (string parsing)
+                    if (ucl == null && target != null && !string.IsNullOrEmpty(sps.ToleranceSpiralPitch))
+                    {
+                        var tol = TryParseTolerance(sps.ToleranceSpiralPitch);
+                        if (tol != null) { ucl = target + tol; lcl = target - tol; }
+                    }
                     label = "Spiral Pitch"; unit = "mm"; break;
                 case "caterpillar_gap":
                     target = sps.CaterpillarGap_Asli; ucl = sps.CaterpillarGap_Max; lcl = sps.CaterpillarGap_Min;
