@@ -1199,7 +1199,7 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var hoseTypes = await _context.MasterlistSpsDoubleLayers
+            var hoseTypes = await _context.SpsMasters
                 .Where(m => !string.IsNullOrEmpty(m.HoseType))
                 .Select(m => m.HoseType)
                 .Distinct()
@@ -1780,84 +1780,84 @@ namespace VelastoProductionSystem.Controllers
             var effectiveVinCode = (report.VinCode ?? "").Trim().ToUpper();
 
             // 2. Match SPS by VinCode/ItemCode FIRST (more accurate than linked SpsId)
-            MasterlistSpsDoubleLayer? spsFallback = null;
+            // PRIORITIZE: Master SPS (Edit) / SpsMasters
+            SpsMaster? spsNew = null;
+            MasterlistSpsDoubleLayer? spsOld = null;
             var hasSps = false;
             string spsMatchMethod = "NONE";
 
-            // Priority 1: Try matching by VinCode
+            // Priority 1: Try matching by VinCode in SpsMasters
             if (!string.IsNullOrEmpty(effectiveVinCode))
             {
-                spsFallback = await _context.MasterlistSpsDoubleLayers
+                spsNew = await _context.SpsMasters
                     .Where(m => m.ItemList != null && m.ItemList.ToUpper() == effectiveVinCode)
                     .OrderByDescending(m => m.Id)
                     .FirstOrDefaultAsync();
                 
-                if (spsFallback != null)
+                if (spsNew != null)
                 {
-                    spsMatchMethod = $"MasterlistSpsDoubleLayers by VinCode '{effectiveVinCode}'";
+                    spsMatchMethod = $"SpsMasters by VinCode '{effectiveVinCode}'";
                     hasSps = true;
-                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
-                    Console.WriteLine($"[GetChartData] SPS ItemList: {spsFallback.ItemList}");
                 }
             }
 
-            // Priority 2: Try matching by ItemCode
+            // Priority 2: Try matching by ItemCode in SpsMasters
             if (!hasSps && !string.IsNullOrEmpty(effectiveItemCode))
             {
-                spsFallback = await _context.MasterlistSpsDoubleLayers
+                spsNew = await _context.SpsMasters
                     .Where(m => m.ItemList != null && m.ItemList.ToUpper() == effectiveItemCode)
                     .OrderByDescending(m => m.Id)
                     .FirstOrDefaultAsync();
                 
-                if (spsFallback != null)
+                if (spsNew != null)
                 {
-                    spsMatchMethod = $"MasterlistSpsDoubleLayers by ItemCode '{effectiveItemCode}'";
+                    spsMatchMethod = $"SpsMasters by ItemCode '{effectiveItemCode}'";
                     hasSps = true;
-                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
-                    Console.WriteLine($"[GetChartData] SPS ItemList: {spsFallback.ItemList}");
                 }
             }
 
-
-            // Priority 4: Try DocumentNumber match in MasterlistSpsDoubleLayers
-            if (!hasSps)
+            // Priority 3: Fallback to MasterlistSpsDoubleLayers if not found in SpsMasters
+            if (!hasSps && !string.IsNullOrEmpty(effectiveVinCode))
             {
-                spsFallback = await _context.MasterlistSpsDoubleLayers
-                    .FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
-                
-                if (spsFallback != null)
-                {
-                    spsMatchMethod = $"MasterlistSpsDoubleLayers by DocumentNumber";
-                    hasSps = true;
-                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
-                }
-            }
-
-            // Priority 5: Try HoseType + Dimensi match
-            if (!hasSps && !string.IsNullOrEmpty(report.HoseType))
-            {
-                spsFallback = await _context.MasterlistSpsDoubleLayers
-                    .Where(m => m.HoseType == report.HoseType &&
-                                (report.Dimension == null || m.Dimensi == report.Dimension))
+                spsOld = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == effectiveVinCode)
                     .OrderByDescending(m => m.Id)
                     .FirstOrDefaultAsync();
                 
-                if (spsFallback != null)
+                if (spsOld != null)
                 {
-                    spsMatchMethod = $"MasterlistSpsDoubleLayers by HoseType+Dimension";
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by VinCode '{effectiveVinCode}'";
                     hasSps = true;
-                    Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
                 }
             }
 
+            if (!hasSps && !string.IsNullOrEmpty(effectiveItemCode))
+            {
+                spsOld = await _context.MasterlistSpsDoubleLayers
+                    .Where(m => m.ItemList != null && m.ItemList.ToUpper() == effectiveItemCode)
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+                
+                if (spsOld != null)
+                {
+                    spsMatchMethod = $"MasterlistSpsDoubleLayers by ItemCode '{effectiveItemCode}'";
+                    hasSps = true;
+                }
+            }
+
+            // Priority 4: Try DocumentNumber match
             if (!hasSps)
             {
-                Console.WriteLine($"[GetChartData] ❌ NO SPS FOUND!");
+                spsNew = await _context.SpsMasters.FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
+                if (spsNew != null) { spsMatchMethod = "SpsMasters by DocumentNumber"; hasSps = true; }
+                else {
+                    spsOld = await _context.MasterlistSpsDoubleLayers.FirstOrDefaultAsync(m => m.DocumentNumber == report.DocumentNumber);
+                    if (spsOld != null) { spsMatchMethod = "MasterlistSpsDoubleLayers by DocumentNumber"; hasSps = true; }
+                }
             }
-            else
-            {
-                Console.WriteLine($"[GetChartData] Final SPS Match Method: {spsMatchMethod}");
-            }
+
+            if (!hasSps) Console.WriteLine($"[GetChartData] ❌ NO SPS FOUND!");
+            else Console.WriteLine($"[GetChartData] ✅ SPS Found: {spsMatchMethod}");
 
             // 3. Load sensor data linked to this report
             var sensorData = await _context.SensorIngestLogs
@@ -2019,70 +2019,155 @@ namespace VelastoProductionSystem.Controllers
                 };
             }
 
+            // Prioritize spsNew (Master SPS Edit) over spsOld (Masterlist)
             object? dimensionStandard = null;
-            
-            // Prioritize spsFallback (exact match by VinCode) over linked StandardParameterSetting
-            if (spsFallback != null)
+            object? spsPayload = null;
+
+            if (spsNew != null)
             {
-                Console.WriteLine($"[GetChartData] Using MasterlistSpsDoubleLayers for dimension standards");
-                Console.WriteLine($"[GetChartData] SPS Raw Values - Dimensi:{spsFallback.Dimensi}, InnerMin:{spsFallback.InnerMin}, InnerMax:{spsFallback.InnerMax}");
-                Console.WriteLine($"[GetChartData] SPS Raw Values - ThickTarget:{spsFallback.ThickTarget}, ThickMin:{spsFallback.ThickMin}, ThickMax:{spsFallback.ThickMax}");
-                Console.WriteLine($"[GetChartData] SPS Raw Values - TotalTarget:{spsFallback.TotalTarget}, TotalMin:{spsFallback.TotalMin}, TotalMax:{spsFallback.TotalMax}");
-                
-                // Standardize with Dimensi Controller Logic
-                // 1. Inner Diameter: Primary=Dimensi, Tol=ToleranceInner or InnerTol
-                var innerTolValue = ExtractTolerance(spsFallback.ToleranceInner) ?? ExtractTolerance(spsFallback.InnerTol);
-                var innerDimSource = spsFallback.ToleranceInner?.Contains("±") == true ? spsFallback.ToleranceInner : spsFallback.Dimensi;
-                var (innerMin, innerMax, innerTarget) = ParseRange(innerDimSource, innerTolValue);
+                Console.WriteLine($"[GetChartData] Using SpsMasters (EDIT) for dimension standards");
 
-                var innerLcl = ParseStandardValue(spsFallback.InnerLCL);
-                var innerUcl = ParseStandardValue(spsFallback.InnerUCL);
+                // === INNER DIAMETER — 3-level fallback (mirrors legacy Masterlist logic) ===
+                decimal? InnerMin_v, InnerMax_v, InnerTarget_v;
 
-                // 2. Inner Thickness: Primary=TebalInner, Tol=ThickTol
-                var thickTolValue = ExtractTolerance(spsFallback.ThickTol);
-                var (innerThickMin, innerThickMax, innerThickTarget) = ParseRange(spsFallback.TebalInner, thickTolValue);
-                
-                // 3. Total Thickness: Primary=TebalTotal, Tol=TotalTol
-                var totalTolValue = ExtractTolerance(spsFallback.TotalTol);
-                var (totalMin, totalMax, totalTarget) = ParseRange(spsFallback.TebalTotal, totalTolValue);
+                // Level 1: Quality Matrix explicit strings (InnerMin / InnerMax / InnerTarget)
+                (InnerMin_v, InnerMax_v, InnerTarget_v) = ParseRange(spsNew.InnerMin ?? spsNew.InnerTarget);
+                if (InnerMin_v == null && !string.IsNullOrEmpty(spsNew.InnerMax))
+                    (_, InnerMax_v, _) = ParseRange(spsNew.InnerMax);
 
-                Console.WriteLine($"[GetChartData] Corrected Parsed Inner Diameter: Target={innerTarget}, Min={innerMin}, Max={innerMax}");
-                Console.WriteLine($"[GetChartData] Corrected Parsed Inner Thickness: Target={innerThickTarget}, Min={innerThickMin}, Max={innerThickMax}");
-                Console.WriteLine($"[GetChartData] Corrected Parsed Total Thickness: Target={totalTarget}, Min={totalMin}, Max={totalMax}");
+                // Level 2: InnerTarget string + tolerance extracted from ToleranceInner / InnerTol
+                if (InnerMax_v == null)
+                {
+                    var innerTol = ExtractTolerance(spsNew.ToleranceInner) ?? ExtractTolerance(spsNew.InnerTol);
+                    // Try ToleranceInner itself first (may contain full "8.0±0.2")
+                    var innerSrc = spsNew.ToleranceInner?.Contains("±") == true
+                        ? spsNew.ToleranceInner
+                        : spsNew.InnerTarget;
+                    (InnerMin_v, InnerMax_v, InnerTarget_v) = ParseRange(innerSrc, innerTol);
+                }
+
+                // Level 3 (final fallback): use Dimensi field — same as legacy Masterlist
+                if (InnerMax_v == null)
+                {
+                    var innerTolFallback = ExtractTolerance(spsNew.ToleranceInner) ?? ExtractTolerance(spsNew.InnerTol);
+                    (InnerMin_v, InnerMax_v, InnerTarget_v) = ParseRange(spsNew.Dimensi, innerTolFallback);
+                    if (InnerMax_v != null)
+                        Console.WriteLine($"[GetChartData][NEW] Inner resolved from Dimensi field: {spsNew.Dimensi}");
+                }
+
+                var InnerLCL_v = ParseStandardValue(spsNew.InnerLCL);
+                var InnerUCL_v = ParseStandardValue(spsNew.InnerUCL);
+
+                decimal? ThickMin_v, ThickMax_v, ThickTarget_v;
+                (ThickMin_v, ThickMax_v, ThickTarget_v) = ParseRange(spsNew.ThickMin ?? spsNew.ThickTarget);
+                if (ThickMin_v == null)
+                {
+                    var tol = ExtractTolerance(spsNew.ThickTol);
+                    (ThickMin_v, ThickMax_v, ThickTarget_v) = ParseRange(spsNew.ThickTarget ?? spsNew.TebalInner, tol);
+                }
+
+                decimal? TotalMin_v, TotalMax_v, TotalTarget_v;
+                (TotalMin_v, TotalMax_v, TotalTarget_v) = ParseRange(spsNew.TotalMin ?? spsNew.TotalTarget);
+                if (TotalMin_v == null)
+                {
+                    var tol = ExtractTolerance(spsNew.TotalTol);
+                    (TotalMin_v, TotalMax_v, TotalTarget_v) = ParseRange(spsNew.TotalTarget ?? spsNew.TebalTotal, tol);
+                }
+
+                Console.WriteLine($"[GetChartData][NEW] Inner: target={InnerTarget_v}, min={InnerMin_v}, max={InnerMax_v}");
+                Console.WriteLine($"[GetChartData][NEW] Thick: target={ThickTarget_v}, min={ThickMin_v}, max={ThickMax_v}");
+                Console.WriteLine($"[GetChartData][NEW] Total: target={TotalTarget_v}, min={TotalMin_v}, max={TotalMax_v}");
 
                 dimensionStandard = new
                 {
-                    innerDiameter = new
-                    {
-                        target = innerTarget,
-                        min = innerMin,
-                        max = innerMax,
-                        lcl = innerLcl,
-                        ucl = innerUcl
+                    innerDiameter = new {
+                        target = InnerTarget_v,
+                        min = InnerMin_v,
+                        max = InnerMax_v,
+                        lcl = InnerLCL_v,
+                        ucl = InnerUCL_v
                     },
-                    innerThickness = new
-                    {
-                        target = innerThickTarget,
-                        min = innerThickMin,
-                        max = innerThickMax
+                    innerThickness = new {
+                        target = ThickTarget_v,
+                        min = ThickMin_v,
+                        max = ThickMax_v
                     },
-                    totalThickness = new
-                    {
-                        target = totalTarget,
-                        min = totalMin,
-                        max = totalMax
+                    totalThickness = new {
+                        target = TotalTarget_v,
+                        min = TotalMin_v,
+                        max = TotalMax_v
                     }
                 };
-            }
 
-            // 5. Build result
-            object? spsPayload = null;
-            
-            // Prioritize spsFallback (exact match) for spsPayload too
-            if (spsFallback != null)
+                spsPayload = new {
+                    HeadTemp1 = new { target = spsNew.HeadTemp1_Asli, min = spsNew.HeadTemp1_Min, max = spsNew.HeadTemp1_Max },
+                    HeadTemp2 = new { target = spsNew.HeadTemp2_Asli, min = spsNew.HeadTemp2_Min, max = spsNew.HeadTemp2_Max },
+                    HeadTemp3 = new { target = spsNew.HeadTemp3_Asli, min = spsNew.HeadTemp3_Min, max = spsNew.HeadTemp3_Max },
+                    Cylinder1_1 = new { target = spsNew.Cylinder1_1_Asli, min = spsNew.Cylinder1_1_Min, max = spsNew.Cylinder1_1_Max },
+                    Cylinder1_2 = new { target = spsNew.Cylinder1_2_Asli, min = spsNew.Cylinder1_2_Min, max = spsNew.Cylinder1_2_Max },
+                    Cylinder1_3 = new { target = spsNew.Cylinder1_3_Asli, min = spsNew.Cylinder1_3_Min, max = spsNew.Cylinder1_3_Max },
+                    Cylinder2_1 = new { target = spsNew.Cylinder2_1_Asli, min = spsNew.Cylinder2_1_Min, max = spsNew.Cylinder2_1_Max },
+                    Cylinder2_2 = new { target = spsNew.Cylinder2_2_Asli, min = spsNew.Cylinder2_2_Min, max = spsNew.Cylinder2_2_Max },
+                    Cylinder2_3 = new { target = spsNew.Cylinder2_3_Asli, min = spsNew.Cylinder2_3_Min, max = spsNew.Cylinder2_3_Max },
+                    Cylinder3_1 = new { target = spsNew.Cylinder3_1_Asli, min = spsNew.Cylinder3_1_Min, max = spsNew.Cylinder3_1_Max },
+                    Cylinder3_2 = new { target = spsNew.Cylinder3_2_Asli, min = spsNew.Cylinder3_2_Min, max = spsNew.Cylinder3_2_Max },
+                    Cylinder3_3 = new { target = spsNew.Cylinder3_3_Asli, min = spsNew.Cylinder3_3_Min, max = spsNew.Cylinder3_3_Max },
+                    ScrewTemp1 = new { target = spsNew.ScrewTemp1_Asli, min = spsNew.ScrewTemp1_Min, max = spsNew.ScrewTemp1_Max },
+                    ScrewTemp2 = new { target = spsNew.ScrewTemp2_Asli, min = spsNew.ScrewTemp2_Min, max = spsNew.ScrewTemp2_Max },
+                    ScrewTemp3 = new { target = spsNew.ScrewTemp3_Asli, min = spsNew.ScrewTemp3_Min, max = spsNew.ScrewTemp3_Max },
+                    ScrewSpeed1 = new { target = spsNew.ScrewSpeed1_Asli, min = spsNew.ScrewSpeed1_Min, max = spsNew.ScrewSpeed1_Max },
+                    ScrewSpeed2 = new { target = spsNew.ScrewSpeed2_Asli, min = spsNew.ScrewSpeed2_Min, max = spsNew.ScrewSpeed2_Max },
+                    ScrewSpeed3 = new { target = spsNew.ScrewSpeed3_Asli, min = spsNew.ScrewSpeed3_Min, max = spsNew.ScrewSpeed3_Max },
+                    Pressure1 = new { target = spsNew.Pressure1_Asli, min = spsNew.Pressure1_Min, max = spsNew.Pressure1_Max },
+                    Pressure2 = new { target = spsNew.Pressure2_Asli, min = spsNew.Pressure2_Min, max = spsNew.Pressure2_Max },
+                    Pressure3 = new { target = spsNew.Pressure3_Asli, min = spsNew.Pressure3_Min, max = spsNew.Pressure3_Max },
+                    FeedRollRatio1 = new { target = spsNew.FeedRollRatio1_Asli, min = spsNew.FeedRollRatio1_Min, max = spsNew.FeedRollRatio1_Max },
+                    FeedRollRatio2 = new { target = spsNew.FeedRollRatio2_Asli, min = spsNew.FeedRollRatio2_Min, max = spsNew.FeedRollRatio2_Max },
+                    FeedRollRatio3 = new { target = spsNew.FeedRollRatio3_Asli, min = spsNew.FeedRollRatio3_Min, max = spsNew.FeedRollRatio3_Max },
+                    Feed1 = new { target = spsNew.Feed1_Asli, min = spsNew.Feed1_Min, max = spsNew.Feed1_Max },
+                    Feed2 = new { target = spsNew.Feed2_Asli, min = spsNew.Feed2_Min, max = spsNew.Feed2_Max },
+                    Feed3 = new { target = spsNew.Feed3_Asli, min = spsNew.Feed3_Min, max = spsNew.Feed3_Max },
+                    HoseSpeed = new { target = spsNew.HoseSpeed_Asli, min = spsNew.HoseSpeed_Min, max = spsNew.HoseSpeed_Max },
+                    SpiralSpeed = new { target = spsNew.SpiralSpeed_Asli, min = spsNew.SpiralSpeed_Min, max = spsNew.SpiralSpeed_Max },
+                    SpiralPitchSetting = new { target = spsNew.SpiralPitchSetting_Asli, min = spsNew.SpiralPitchSetting_Min, max = spsNew.SpiralPitchSetting_Max },
+                    SpiralPitchDisplay = new { target = spsNew.SpiralPitchDisplay_Asli, min = spsNew.SpiralPitchDisplay_Min, max = spsNew.SpiralPitchDisplay_Max },
+                    PresetValue = new { target = spsNew.PresetValue_Asli, min = spsNew.PresetValue_Min, max = spsNew.PresetValue_Max },
+                    ControlValue = new { target = spsNew.ControlValue_Asli, min = spsNew.ControlValue_Min, max = spsNew.ControlValue_Max },
+                    ChillerWaterTemp = new { target = spsNew.ChillerWaterTemp_Asli, min = spsNew.ChillerWaterTemp_Min, max = spsNew.ChillerWaterTemp_Max },
+                    CaterpillarGap = new { target = spsNew.CaterpillarGap_Asli, min = spsNew.CaterpillarGap_Min, max = spsNew.CaterpillarGap_Max },
+                    TakeupConveyorSpeed = new { target = spsNew.TakeUpConveyorSpeed_Asli, min = spsNew.TakeUpConveyorSpeed_Min, max = spsNew.TakeUpConveyorSpeed_Max },
+                    CoolConveyorSpeed = new { target = spsNew.CoolConveyorSpeed_Asli, min = spsNew.CoolConveyorSpeed_Min, max = spsNew.CoolConveyorSpeed_Max },
+                    ConveyorRatio = new { target = spsNew.ConveyorRatio_Asli, min = spsNew.ConveyorRatio_Min, max = spsNew.ConveyorRatio_Max },
+                    UnsmoothSurface = spsNew.UnsmoothSurface,
+                    ItemList = spsNew.ItemList
+                };
+            }
+            else if (spsOld != null)
             {
-                Console.WriteLine($"[GetChartData] Using MasterlistSpsDoubleLayers for SPS payload");
-                var s = spsFallback;
+                Console.WriteLine($"[GetChartData] Using MasterlistSpsDoubleLayers (LEGACY) for standards");
+                
+                // Standardize with Legacy Logic
+                var innerTolValue = ExtractTolerance(spsOld.ToleranceInner) ?? ExtractTolerance(spsOld.InnerTol);
+                var innerDimSource = spsOld.ToleranceInner?.Contains("±") == true ? spsOld.ToleranceInner : spsOld.Dimensi;
+                var (innerMin, innerMax, innerTarget) = ParseRange(innerDimSource, innerTolValue);
+
+                var innerLcl = ParseStandardValue(spsOld.InnerLCL);
+                var innerUcl = ParseStandardValue(spsOld.InnerUCL);
+
+                var thickTolValue = ExtractTolerance(spsOld.ThickTol);
+                var (innerThickMin, innerThickMax, innerThickTarget) = ParseRange(spsOld.TebalInner, thickTolValue);
+                
+                var totalTolValue = ExtractTolerance(spsOld.TotalTol);
+                var (totalMin, totalMax, totalTarget) = ParseRange(spsOld.TebalTotal, totalTolValue);
+
+                dimensionStandard = new
+                {
+                    innerDiameter = new { target = innerTarget, min = innerMin, max = innerMax, lcl = innerLcl, ucl = innerUcl },
+                    innerThickness = new { target = innerThickTarget, min = innerThickMin, max = innerThickMax },
+                    totalThickness = new { target = totalTarget, min = totalMin, max = totalMax }
+                };
+
+                var s = spsOld;
                 spsPayload = new {
                     HeadTemp1 = ParseRange(s.HeadTemp1, 5),
                     HeadTemp2 = ParseRange(s.HeadTemp2, 5),
@@ -2123,11 +2208,7 @@ namespace VelastoProductionSystem.Controllers
                     CoolConveyorSpeed = ParseRange(s.CoolConveyorSpeed),
                     ConveyorRatio = ParseRange(s.ConveyorRatio),
                     UnsmoothSurface = ParseRange(s.UnsmoothSurface),
-                    InnerMin = ParseStandardValue(s.InnerMin),
-                    InnerMax = ParseStandardValue(s.InnerMax),
-                    TotalMin = ParseStandardValue(s.TotalMin),
-                    TotalMax = ParseStandardValue(s.TotalMax),
-                    ItemList = s.ItemList // Added to payload
+                    ItemList = s.ItemList
                 };
             }
 
@@ -2143,9 +2224,10 @@ namespace VelastoProductionSystem.Controllers
                 displayItem = effectiveItemCode;
             }
 
-            if (string.IsNullOrEmpty(displayVin) && string.IsNullOrEmpty(displayItem) && hasSps && spsFallback != null)
+            if (string.IsNullOrEmpty(displayVin) && string.IsNullOrEmpty(displayItem) && hasSps)
             {
-                // displayVin = spsFallback.ItemList ?? ""; // REMOVED: This causes fake labels based on HoseType
+                if (spsNew != null) displayItem = spsNew.ItemList ?? "";
+                else if (spsOld != null) displayItem = spsOld.ItemList ?? "";
             }
 
             Console.WriteLine($"[GetChartData] VinCode: {displayVin}");

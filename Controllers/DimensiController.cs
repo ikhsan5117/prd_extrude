@@ -95,12 +95,48 @@ namespace VelastoProductionSystem.Controllers
             var sanitized = hoseType.Trim().ToUpper();
             var sanitizedMachine = string.IsNullOrEmpty(machineCode) ? null : machineCode.Trim().ToUpper();
 
-            // 1. Try MasterlistSpsDoubleLayers FIRST - this contains the full names like VHFUNC-...
+            // 1. Try SpsMasters (Master SPS Edit) FIRST - prioritized as per mentor direction
+            var sps = await _context.SpsMasters
+                .FirstOrDefaultAsync(s => 
+                    (s.ItemList != null && s.ItemList.Trim().ToUpper() == sanitized) || 
+                    (s.HoseType != null && s.HoseType.Trim().ToUpper() == sanitized) ||
+                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitized)) ||
+                    (s.HoseType != null && s.HoseType.ToUpper().Contains(sanitized)));
+
+            if (sps != null)
+            {
+                return Json(new { 
+                    success = true, 
+                    data = new {
+                        hoseType = sps.HoseType,
+                        dimensi = sps.Dimensi,
+                        innerTube = sps.InnerTube,
+                        outerCover = sps.OuterCover,
+                        toleranceInner = sps.ToleranceInner,
+                        toleranceOuter = sps.ToleranceOuter,
+                        tebalInner = sps.InnerTarget,
+                        tebalTotal = sps.TotalTarget,
+                        yarn = sps.Yarn ?? "GENERAL",
+                        customer = sps.Customer,
+                        docNo = sps.DocumentNumber,
+                        revNo = sps.RevisionNumber,
+                        itemList = sps.ItemList,
+                        toleranceSpiralPitch = sps.ToleranceSpiralPitch,
+                        spiralPitchSetting = sps.SpiralPitchSetting,
+                        spiralPitchDisplay = sps.SpiralPitchDisplay,
+                        innerTol = sps.InnerTol,
+                        thickTol = sps.ThickTol,
+                        totalTol = sps.TotalTol,
+                        bypass = "2.0 mm" 
+                    }
+                });
+            }
+
+            // 2. Fallback to MasterlistSpsDoubleLayers (LEGACY)
             var query = _context.MasterlistSpsDoubleLayers.AsQueryable();
             
             if (!string.IsNullOrEmpty(sanitizedMachine))
             {
-                // filter by machine if provided
                 query = query.Where(m => m.MachineCode != null && m.MachineCode.ToUpper() == sanitizedMachine);
             }
 
@@ -126,7 +162,6 @@ namespace VelastoProductionSystem.Controllers
 
             var standard = await ApplyMasterlistMatch(query).FirstOrDefaultAsync();
             
-            // Fallback: If no machine-specific SPS found, search without machine filter
             if (standard == null && !string.IsNullOrEmpty(sanitizedMachine))
             {
                 standard = await ApplyMasterlistMatch(_context.MasterlistSpsDoubleLayers).FirstOrDefaultAsync();
@@ -159,43 +194,6 @@ namespace VelastoProductionSystem.Controllers
                         innerTol = standard.InnerTol,
                         thickTol = standard.ThickTol,
                         totalTol = standard.TotalTol,
-                        bypass = "2.0 mm" 
-                    }
-                });
-            }
-
-            // 2. Fallback to SpsMasters (SPS Parameter)
-            var sps = await _context.SpsMasters
-                .FirstOrDefaultAsync(s => 
-                    (s.ItemList != null && s.ItemList.Trim().ToUpper() == sanitized) || 
-                    (s.HoseType != null && s.HoseType.Trim().ToUpper() == sanitized) ||
-                    (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitized)) ||
-                    (s.HoseType != null && s.HoseType.ToUpper().Contains(sanitized)));
-
-            if (sps != null)
-            {
-                return Json(new { 
-                    success = true, 
-                    data = new {
-                        hoseType = sps.HoseType,
-                        dimensi = sps.Dimensi,
-                        innerTube = sps.InnerTube,
-                        outerCover = sps.OuterCover,
-                        toleranceInner = sps.InnerTol,
-                        toleranceOuter = sps.TotalTol,
-                        tebalInner = sps.InnerTarget,
-                        tebalTotal = sps.TotalTarget,
-                        yarn = sps.Yarn ?? "GENERAL",
-                        customer = sps.Customer,
-                        docNo = sps.DocumentNumber,
-                        revNo = sps.RevisionNumber,
-                        itemList = sps.ItemList,
-                        toleranceSpiralPitch = sps.ToleranceSpiralPitch,
-                        spiralPitchSetting = sps.SpiralPitchSetting,
-                        spiralPitchDisplay = sps.SpiralPitchDisplay,
-                        innerTol = sps.InnerTol,
-                        thickTol = sps.ThickTol,
-                        totalTol = sps.TotalTol,
                         bypass = "2.0 mm" 
                     }
                 });

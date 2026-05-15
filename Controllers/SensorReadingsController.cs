@@ -104,8 +104,8 @@ namespace VelastoProductionSystem.Controllers
             ViewBag.ApiKey    = configuredKey;
             ViewBag.IngestUrl = $"{Request.Scheme}://{Request.Host}/api/sensor-readings/ingest";
 
-            // Ambil semua SPS untuk ditampilkan di simulator
-            var spsList = await _context.MasterlistSpsDoubleLayers
+            // Ambil semua SPS untuk ditampilkan di simulator (Prioritaskan SpsMasters/Edit)
+            var spsList = await _context.SpsMasters
                 .OrderBy(s => s.ItemList)
                 .Select(s => new {
                     s.Id,
@@ -578,8 +578,8 @@ namespace VelastoProductionSystem.Controllers
                 .OrderBy(m => m)
                 .ToListAsync();
 
-            // Ambil semua SPS dari MasterlistSpsDoubleLayers
-            var spsList = await _context.MasterlistSpsDoubleLayers
+            // Ambil semua SPS dari SpsMasters (Master SPS Edit)
+            var spsList = await _context.SpsMasters
                 .OrderBy(s => s.ItemList)
                 .Select(s => new {
                     s.Id,
@@ -588,25 +588,23 @@ namespace VelastoProductionSystem.Controllers
                     s.ItemList,
                     s.MachineCode,
                     s.Customer,
-                    s.OdSensor,
-                    s.ControlValue,
-                    s.ToleranceOuter,
-                    s.ToleranceInner,
-                    s.HoseSpeed,
-                    s.HeadTemp1,
-                    s.HeadTemp2,
-                    s.ScrewSpeed1,
-                    s.ScrewSpeed2,
-                    s.Pressure1,
-                    s.Pressure2,
-                    s.SpiralPitchSetting,
-                    s.ToleranceSpiralPitch,
-                    s.CaterpillarGap,
-                    s.ChillerWaterTemp,
+                    s.OdSensor_Asli,
+                    s.ControlValue_Asli,
+                    s.ToleranceOuter_Asli,
+                    s.ToleranceInner_Asli,
+                    s.HoseSpeed_Asli,
+                    s.HeadTemp1_Asli,
+                    s.HeadTemp2_Asli,
+                    s.ScrewSpeed1_Asli,
+                    s.ScrewSpeed2_Asli,
+                    s.Pressure1_Asli,
+                    s.Pressure2_Asli,
+                    s.SpiralPitchSetting_Asli,
+                    s.CaterpillarGap_Asli,
+                    s.ChillerWaterTemp_Asli,
                     s.InnerTarget,
-                    s.InnerTol,
-                    s.InnerUCL,
-                    s.InnerLCL,
+                    s.InnerMin,
+                    s.InnerMax
                 })
                 .ToListAsync();
 
@@ -694,24 +692,32 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             // ── 2. Ambil standar — prioritas: spsId, lalu machineCode ─
-            MasterlistSpsDoubleLayer? sps = null;
+            SpsMaster? spsNew = null;
+            MasterlistSpsDoubleLayer? spsOld = null;
+
             if (spsId.HasValue)
             {
-                sps = await _context.MasterlistSpsDoubleLayers
-                    .FirstOrDefaultAsync(s => s.Id == spsId.Value);
+                spsNew = await _context.SpsMasters.FirstOrDefaultAsync(s => s.Id == spsId.Value);
+                if (spsNew == null)
+                    spsOld = await _context.MasterlistSpsDoubleLayers.FirstOrDefaultAsync(s => s.Id == spsId.Value);
             }
             else if (!string.IsNullOrEmpty(machineCode))
             {
-                sps = await _context.MasterlistSpsDoubleLayers
+                spsNew = await _context.SpsMasters
                     .Where(s => s.MachineCode == machineCode)
+                    .OrderByDescending(s => s.Id)
                     .FirstOrDefaultAsync();
+                
+                if (spsNew == null)
+                    spsOld = await _context.MasterlistSpsDoubleLayers
+                        .Where(s => s.MachineCode == machineCode)
+                        .OrderByDescending(s => s.Id)
+                        .FirstOrDefaultAsync();
             }
 
             object? standard = null;
-            if (sps != null)
-            {
-                standard = BuildStandard(metricKey, sps);
-            }
+            if (spsNew != null)      standard = BuildStandardFromNew(metricKey, spsNew);
+            else if (spsOld != null) standard = BuildStandardFromOld(metricKey, spsOld);
 
             // ── 3. Hitung statistik ──────────────────────────────────
             object? stats = null;
@@ -747,8 +753,71 @@ namespace VelastoProductionSystem.Controllers
             });
         }
 
-        /// <summary>Petakan metricType ke field standar di MasterlistSpsDoubleLayer</summary>
-        private static object? BuildStandard(string metricKey, MasterlistSpsDoubleLayer sps)
+        /// <summary>Petakan metricType ke field standar di SpsMaster (BARU - Min/Asli/Max)</summary>
+        private static object? BuildStandardFromNew(string metricKey, SpsMaster sps)
+        {
+            decimal? target = null;
+            decimal? ucl    = null;
+            decimal? lcl    = null;
+            string   label  = metricKey;
+            string   unit   = "";
+
+            switch (metricKey)
+            {
+                case "outer_diameter":
+                    target = sps.OdSensor_Asli ?? sps.ControlValue_Asli;
+                    ucl    = sps.OdSensor_Max  ?? sps.ControlValue_Max;
+                    lcl    = sps.OdSensor_Min  ?? sps.ControlValue_Min;
+                    label = "Outer Diameter"; unit = "mm"; break;
+                case "inner_diameter":
+                    target = TryParseFirst(sps.InnerTarget);
+                    ucl    = TryParseFirst(sps.InnerMax) ?? TryParseFirst(sps.InnerUCL);
+                    lcl    = TryParseFirst(sps.InnerMin) ?? TryParseFirst(sps.InnerLCL);
+                    label = "Inner Diameter"; unit = "mm"; break;
+                case "hose_speed":
+                    target = sps.HoseSpeed_Asli; ucl = sps.HoseSpeed_Max; lcl = sps.HoseSpeed_Min;
+                    label = "Hose Speed"; unit = "m/min"; break;
+                case "head_temp_inner":
+                    target = sps.HeadTemp1_Asli; ucl = sps.HeadTemp1_Max; lcl = sps.HeadTemp1_Min;
+                    label = "Head Temp Inner"; unit = "\u00b0C"; break;
+                case "head_temp_outer":
+                    target = sps.HeadTemp2_Asli; ucl = sps.HeadTemp2_Max; lcl = sps.HeadTemp2_Min;
+                    label = "Head Temp Outer"; unit = "\u00b0C"; break;
+                case "screw_speed_inner":
+                    target = sps.ScrewSpeed1_Asli; ucl = sps.ScrewSpeed1_Max; lcl = sps.ScrewSpeed1_Min;
+                    label = "Screw Speed Inner"; unit = "rpm"; break;
+                case "screw_speed_outer":
+                    target = sps.ScrewSpeed2_Asli; ucl = sps.ScrewSpeed2_Max; lcl = sps.ScrewSpeed2_Min;
+                    label = "Screw Speed Outer"; unit = "rpm"; break;
+                case "pressure_inner":
+                    target = sps.Pressure1_Asli; ucl = sps.Pressure1_Max; lcl = sps.Pressure1_Min;
+                    label = "Pressure Inner"; unit = "MPa"; break;
+                case "pressure_outer":
+                    target = sps.Pressure2_Asli; ucl = sps.Pressure2_Max; lcl = sps.Pressure2_Min;
+                    label = "Pressure Outer"; unit = "MPa"; break;
+                case "spiral_pitch":
+                    target = sps.SpiralPitchSetting_Asli; ucl = sps.SpiralPitchSetting_Max; lcl = sps.SpiralPitchSetting_Min;
+                    label = "Spiral Pitch"; unit = "mm"; break;
+                case "caterpillar_gap":
+                    target = sps.CaterpillarGap_Asli; ucl = sps.CaterpillarGap_Max; lcl = sps.CaterpillarGap_Min;
+                    label = "Caterpillar Gap"; unit = "mm"; break;
+                case "chiller_water_temp":
+                    target = sps.ChillerWaterTemp_Asli; ucl = sps.ChillerWaterTemp_Max; lcl = sps.ChillerWaterTemp_Min;
+                    label = "Chiller Water Temp"; unit = "\u00b0C"; break;
+            }
+
+            if (target == null) return null;
+
+            return new {
+                target, ucl, lcl, label, unit,
+                documentNumber = sps.DocumentNumber,
+                itemList       = sps.ItemList,
+                machineCode    = sps.MachineCode,
+            };
+        }
+
+        /// <summary>Petakan metricType ke field standar di MasterlistSpsDoubleLayer (LAMA - legacy fallback)</summary>
+        private static object? BuildStandardFromOld(string metricKey, MasterlistSpsDoubleLayer sps)
         {
             decimal? target    = null;
             decimal? ucl       = null;
