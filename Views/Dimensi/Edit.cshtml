@@ -981,9 +981,14 @@
     <!-- PRODUCTION DATA SECTION -->
     <div class="section-title">
         <i class="bi bi-clipboard2-data-fill"></i> PRODUCTION DATA Summary
-        <button type="button" class="btn-add-summary ms-auto" onclick="addProductionRecord()">
-            <i class="bi bi-plus-lg"></i> ADD TO LIST
-        </button>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button type="button" id="btn-cancel-edit-summary" class="btn btn-outline-secondary btn-sm d-none" onclick="cancelEditSummary()" style="font-size: 11px; padding: 7px 12px; border-radius: 8px; font-weight: 800; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); transition: all 0.2s;">
+                CANCEL
+            </button>
+            <button type="button" id="btn-add-summary-action" class="btn-add-summary" onclick="addProductionRecord()">
+                <i class="bi bi-plus-lg"></i> ADD TO LIST
+            </button>
+        </div>
     </div>
     <div class="prod-data-container">
         <div class="prod-grid">
@@ -1161,10 +1166,11 @@
         }
 
         // Load existing summaries from server
+        let serverSummaries = [];
         @if (Model?.Summaries != null && Model.Summaries.Any())
         {
             <text>
-        productionRecords = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        serverSummaries = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
             Model.Summaries.Select(s => new {
                 vin = s.VinCode ?? "",
                 act = s.ActualLength ?? "",
@@ -1810,6 +1816,21 @@
                     return (val == 1) ? "ok" : (val == 0 && val !== null ? "ng" : null);
                 };
 
+                // Distribute summaries sequentially to slots
+                const slotSummaries = [];
+                if (serverSummaries && serverSummaries[i - 1]) {
+                    slotSummaries.push(serverSummaries[i - 1]);
+                }
+
+                // Get loose values for this slot if we have a summary for it
+                const firstSum = slotSummaries[0];
+                const sVin = firstSum ? firstSum.vin : "@(Model?.VinCode ?? "")";
+                const sAct = firstSum ? firstSum.act : "@(Model?.ActualLength ?? "")";
+                const sOk = firstSum ? firstSum.ok : "@(Model?.QtyOk ?? 0)";
+                const sNgD = firstSum ? firstSum.ngD : "@(Model?.NgDimension ?? 0)";
+                const sNgV = firstSum ? firstSum.ngV : "@(Model?.NgVisual ?? 0)";
+                const sRemark = firstSum ? "" : `@Html.Raw(Model?.Remark ?? "")`;
+
                 measurements.push({
                     time: timeParts[i-1] || "",
                     data: {
@@ -1824,7 +1845,16 @@
                             line: getVState("Line"), 
                             bubble: getVState("Bubble"), 
                             scratch: getVState("Scratch") 
-                        }
+                        },
+                        // Slot-specific production summary data
+                        vin: sVin,
+                        actPnjg: sAct,
+                        qtyOk: sOk,
+                        ngDim: sNgD,
+                        ngVis: sNgV,
+                        remark: sRemark,
+                        qtySt: (parseInt(sNgD) > 0 || parseInt(sNgV) > 0) ? "ng" : "ok",
+                        summaries: slotSummaries
                     }
                 });
             }
@@ -2331,7 +2361,16 @@
                 totalTx: document.getElementById('val-total-tx').value,
                 totalTy: document.getElementById('val-total-ty').value,
                 spiral: document.getElementById('val-spiral').value,
-                visual: vStates
+                visual: vStates,
+                // Save slot-specific production summary data
+                vin: document.getElementById('val-vin-kode').value,
+                actPnjg: document.getElementById('val-act-pnjg').value,
+                qtyOk: document.getElementById('val-qty-ok').value,
+                ngDim: document.getElementById('val-ng-dimensi').value,
+                ngVis: document.getElementById('val-ng-visual').value,
+                remark: document.getElementById('val-remark').value,
+                qtySt: document.getElementById('qty-ok')?.classList.contains('active-ok') ? 'ok' : (document.getElementById('qty-ng')?.classList.contains('active-ng') ? 'ng' : ''),
+                summaries: current.data?.summaries || []
             };
 
             const hasVal = Object.values(current.data).some(v => v !== "" && v !== "0" && v !== null && typeof v !== 'object') || 
@@ -2367,24 +2406,31 @@
             });
             renderVisualStatus();
 
-            // 3. GLOBAL PRODUCTION DATA
-            document.getElementById('val-vin-kode').value = "@(Model?.VinCode ?? "")";
-            document.getElementById('val-act-pnjg').value = "@(Model?.ActualLength ?? "")";
-            document.getElementById('val-qty-ok').value = "@(Model?.QtyOk ?? 0)";
-            document.getElementById('val-ng-dimensi').value = "@(Model?.NgDimension ?? 0)";
-            document.getElementById('val-ng-visual').value = "@(Model?.NgVisual ?? 0)";
-            document.getElementById('val-remark').value = `@Html.Raw(Model?.Remark ?? "")`;
+            // 3. PER-SLOT PRODUCTION SUMMARY
+            document.getElementById('val-vin-kode').value  = data.vin     || '';
+            document.getElementById('val-act-pnjg').value   = data.actPnjg || '';
+            document.getElementById('val-qty-ok').value     = data.qtyOk   || '0';
+            document.getElementById('val-ng-dimensi').value = data.ngDim   || '0';
+            document.getElementById('val-ng-visual').value  = data.ngVis   || '0';
+            document.getElementById('val-remark').value     = data.remark  || '';
             
-            // Auto Set Qty Status Panel
-            const hasNG = parseInt("@(Model?.NgDimension ?? 0)") > 0 || parseInt("@(Model?.NgVisual ?? 0)") > 0;
-            setQtyStatus(hasNG ? 'ng' : 'ok');
+            // Auto Set Qty Status Panel based on slot values
+            if (data.qtySt) {
+                setQtyStatus(data.qtySt);
+            } else {
+                const hasNG = parseInt(data.ngDim || '0') > 0 || parseInt(data.ngVis || '0') > 0;
+                setQtyStatus(hasNG ? 'ng' : 'ok');
+            }
             
             // 4. Header / Fixed Inputs
             const stdPnjgInput = document.getElementById('disp-std-pnjg');
-            if (stdPnjgInput) stdPnjgInput.value = "@(Model?.StandardLength ?? "-")";
+            if (stdPnjgInput) stdPnjgInput.value = `@Html.Raw(Model?.StandardLength ?? "-")`;
             
             const targetInput = document.getElementById('disp-qty-target');
             if (targetInput) targetInput.value = "@(Model?.QtyTarget ?? 0)";
+
+            // Render Production Summaries for the selected slot
+            renderSummaryList();
 
             // Run validation for all cards
             ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty', 'spiral'].forEach(id => {
@@ -2534,6 +2580,8 @@
         }
 
         // === PRODUCTION DATA FUNCTIONS ===
+        let editingRecordIndex = -1;
+
         function addProductionRecord() {
             const vin = document.getElementById('val-vin-kode')?.value.trim() || '';
             const act = document.getElementById('val-act-pnjg')?.value.trim() || '';
@@ -2547,36 +2595,135 @@
             }
 
             const record = { vin, act, ok, ngD, ngV };
-            productionRecords.push(record);
 
-            // Clear inputs for next record
+            if (!measurements[currentIndex].data.summaries) {
+                measurements[currentIndex].data.summaries = [];
+            }
+            const activeSummaries = measurements[currentIndex].data.summaries;
+
+            if (editingRecordIndex > -1) {
+                // UPDATE MODE
+                activeSummaries[editingRecordIndex] = record;
+                editingRecordIndex = -1;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'RECORD UPDATED',
+                    text: 'Production data updated successfully.',
+                    timer: 1000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                // ADD MODE
+                activeSummaries.push(record);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'RECORD ADDED',
+                    text: `Production data #${activeSummaries.length} added to list.`,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+
+            // Clear inputs and reset button
+            resetProductionSummaryInputs();
+            renderSummaryList();
+        }
+
+        function editProductionRecord(idx) {
+            editingRecordIndex = idx;
+            const activeSummaries = measurements[currentIndex].data.summaries || [];
+            const record = activeSummaries[idx];
+            if (!record) return;
+
+            document.getElementById('val-vin-kode').value = record.vin;
+            document.getElementById('val-act-pnjg').value = record.act;
+            document.getElementById('val-qty-ok').value = record.ok;
+            document.getElementById('val-ng-dimensi').value = record.ngD;
+            document.getElementById('val-ng-visual').value = record.ngV;
+
+            // Handle Qty Status Panel toggle
+            const hasNG = parseInt(record.ngD) > 0 || parseInt(record.ngV) > 0;
+            setQtyStatus(hasNG ? 'ng' : 'ok');
+
+            // Change "+ ADD TO LIST" button to orange "SAVE RECORD"
+            const btn = document.getElementById('btn-add-summary-action');
+            if (btn) {
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> SAVE RECORD';
+                btn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)'; // Orange
+                btn.style.boxShadow = '0 5px 15px rgba(245, 158, 11, 0.3)';
+            }
+
+            // Show "CANCEL" edit button
+            const cancelBtn = document.getElementById('btn-cancel-edit-summary');
+            if (cancelBtn) {
+                cancelBtn.classList.remove('d-none');
+            }
+
+            // Highlight target row in the table
+            const rows = document.querySelectorAll('.summary-row-new');
+            rows.forEach((row, i) => {
+                if (i === idx) {
+                    row.style.background = 'rgba(245, 158, 11, 0.1)';
+                    row.style.borderLeft = '3px solid #f59e0b';
+                } else {
+                    row.style.background = '';
+                    row.style.borderLeft = '';
+                }
+            });
+
+            // Focus on input
+            document.getElementById('val-vin-kode')?.focus();
+        }
+
+        function cancelEditSummary() {
+            editingRecordIndex = -1;
+            resetProductionSummaryInputs();
+            renderSummaryList();
+        }
+
+        function resetProductionSummaryInputs() {
             document.getElementById('val-vin-kode').value = '';
             document.getElementById('val-act-pnjg').value = '';
             document.getElementById('val-qty-ok').value = '0';
             document.getElementById('val-ng-dimensi').value = '0';
             document.getElementById('val-ng-visual').value = '0';
-            
+
             // Reset qty status buttons
-            document.getElementById('qty-ok')?.classList.remove('active');
-            document.getElementById('qty-ng')?.classList.remove('active');
+            document.getElementById('qty-ok')?.classList.remove('active-ok');
+            document.getElementById('qty-ng')?.classList.remove('active-ng');
             document.getElementById('okPanel').style.display = 'none';
             document.getElementById('ngPanel').style.display = 'none';
-            
-            renderSummaryList();
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'RECORD ADDED',
-                text: `Production data #${productionRecords.length} added to list.`,
-                timer: 1000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
+
+            // Reset action button back to Add mode
+            const btn = document.getElementById('btn-add-summary-action');
+            if (btn) {
+                btn.innerHTML = '<i class="bi bi-plus-lg"></i> ADD TO LIST';
+                btn.style.background = ''; // Default css
+                btn.style.boxShadow = '';
+            }
+
+            // Hide cancel button
+            const cancelBtn = document.getElementById('btn-cancel-edit-summary');
+            if (cancelBtn) {
+                cancelBtn.classList.add('d-none');
+            }
         }
 
         function removeProductionRecord(idx) {
-            productionRecords.splice(idx, 1);
+            const activeSummaries = measurements[currentIndex].data.summaries || [];
+            activeSummaries.splice(idx, 1);
+            if (editingRecordIndex === idx) {
+                editingRecordIndex = -1;
+                resetProductionSummaryInputs();
+            } else if (editingRecordIndex > idx) {
+                editingRecordIndex--; // Adjust index if row before it was deleted
+            }
             renderSummaryList();
             Swal.fire({
                 icon: 'info',
@@ -2591,19 +2738,33 @@
         function renderSummaryList() {
             const body = document.getElementById('summary-list-body');
             const empty = document.getElementById('summary-empty');
-            
+
             if (!body || !empty) return;
 
             body.innerHTML = '';
-            if (productionRecords.length === 0) {
+            const activeSummaries = (measurements[currentIndex] && measurements[currentIndex].data) ? (measurements[currentIndex].data.summaries || []) : [];
+
+            if (activeSummaries.length === 0) {
                 empty.style.display = 'block';
                 return;
             }
 
             empty.style.display = 'none';
-            productionRecords.forEach((item, idx) => {
+            activeSummaries.forEach((item, idx) => {
                 const tr = document.createElement('tr');
                 tr.className = 'summary-row-new';
+                tr.style.cursor = 'pointer';
+                tr.onclick = (e) => {
+                    if (e.target.closest('.btn-del-summary')) return;
+                    editProductionRecord(idx);
+                };
+                
+                // Keep background highlighted if currently editing this row
+                if (editingRecordIndex === idx) {
+                    tr.style.background = 'rgba(245, 158, 11, 0.1)';
+                    tr.style.borderLeft = '3px solid #f59e0b';
+                }
+
                 tr.innerHTML = `
                     <td><span class="text-primary">${item.vin}</span></td>
                     <td>${item.act || '-'}</td>
@@ -2644,55 +2805,52 @@
                         ? (std.val.toFixed(2) + ' \u00b1 ' + std.tol.toFixed(2))
                         : '-';
 
-                    const allTimes = measurements.map(m => m.time || '').join(',');
-                    const row = {
+                    const sRow = {
                         PointName: point.name,
-                        TimeSection: allTimes,
-                        Frequency: '30m Sekali',
+                        TimeSection: measurements.map(m => m.time || '').join(', '),
+                        Frequency: 'Every 1 minute',
                         StandardDimension: stdText,
-                        Initial: '',
-                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '', Reading6: '',
+                        Initial: String(measurements[0]?.data[point.key] || ''),
+                        Reading1: measurements[0] ? String(measurements[0].data[point.key] || '') : '',
+                        Reading2: measurements[1] ? String(measurements[1].data[point.key] || '') : '',
+                        Reading3: measurements[2] ? String(measurements[2].data[point.key] || '') : '',
+                        Reading4: measurements[3] ? String(measurements[3].data[point.key] || '') : '',
+                        Reading5: measurements[4] ? String(measurements[4].data[point.key] || '') : '',
+                        Reading6: measurements[5] ? String(measurements[5].data[point.key] || '') : '',
                         Status: 'OK'
                     };
-
-                    for (let idx = 0; idx < Math.min(measurements.length, 6); idx++) {
-                        const val = measurements[idx].data[point.key];
-                        row[`Reading${idx + 1}`] = (val !== null && val !== undefined && val !== '') ? val : '';
-                        if (std && std.val > 0 && val !== '' && val !== null && val !== undefined) {
-                            const v = parseFloat(val);
-                            if (!isNaN(v) && (v < (std.val - std.tol - 0.001) || v > (std.val + std.tol + 0.001))) {
-                                row.Status = 'NG';
-                            }
-                        }
-                    }
-                    aggregateReadings.push(row);
+                    aggregateReadings.push(sRow);
                 }
 
-                // === VISUAL CHECK POINTS (per item) ===
-                const visualItems = [
-                    { name: 'Visual Check - Burry',   key: 'burry'   },
-                    { name: 'Visual Check - Line',    key: 'line'    },
-                    { name: 'Visual Check - Bubble',  key: 'bubble'  },
-                    { name: 'Visual Check - Scratch', key: 'scratch' }
+                // === VISUAL INSPECTIONS ===
+                const visualTypes = [
+                    { name: 'Burry',   key: 'burry'   },
+                    { name: 'Line',    key: 'line'    },
+                    { name: 'Bubble',  key: 'bubble'  },
+                    { name: 'Scratch', key: 'scratch' }
                 ];
 
-                for (const vIt of visualItems) {
-                    const allTimes = measurements.map(m => m.time || '').join(',');
-                    const vRow = {
-                        PointName: vIt.name,
-                        TimeSection: allTimes,
-                        Frequency: '30m Sekali',
-                        StandardDimension: 'NORMAL',
-                        Initial: 'OK',
-                        Reading1: '', Reading2: '', Reading3: '', Reading4: '', Reading5: '', Reading6: '',
+                for (const vis of visualTypes) {
+                    const vToNum = (slot) => {
+                        const state = measurements[slot]?.data.visual?.[vis.key];
+                        return state === 'ok' ? '1' : (state === 'ng' ? '0' : '');
+                    };
+
+                    const sRow = {
+                        PointName: 'Visual Check - ' + vis.name,
+                        TimeSection: measurements.map(m => m.time || '').join(', '),
+                        Frequency: 'Every 1 minute',
+                        StandardDimension: 'OK',
+                        Initial: String(vToNum(0)),
+                        Reading1: String(vToNum(0)),
+                        Reading2: String(vToNum(1)),
+                        Reading3: String(vToNum(2)),
+                        Reading4: String(vToNum(3)),
+                        Reading5: String(vToNum(4)),
+                        Reading6: String(vToNum(5)),
                         Status: 'OK'
                     };
-                    for (let idx = 0; idx < Math.min(measurements.length, 6); idx++) {
-                        const state = measurements[idx].data.visual?.[vIt.key];
-                        vRow[`Reading${idx + 1}`] = state === 'ok' ? '1' : (state === 'ng' ? '0' : '');
-                        if (state === 'ng') vRow.Status = 'NG';
-                    }
-                    aggregateReadings.push(vRow);
+                    aggregateReadings.push(sRow);
                 }
 
                 // === PAYLOAD ===
@@ -2714,6 +2872,65 @@
                 console.log('  - Type:', typeof spsIdInt);
                 console.log('═══════════════════════════════════════');
 
+                // === AGGREGATE SUMMARIES & TOTALS FROM ALL SLOTS ===
+                const allSummaries = [];
+                measurements.forEach(m => {
+                    if (m.data.summaries && m.data.summaries.length > 0) {
+                        m.data.summaries.forEach(s => {
+                            allSummaries.push({
+                                partNumber: document.getElementById('disp-part-no')?.innerText || '',
+                                vinCode: s.vin,
+                                standardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                actualLength: s.act,
+                                qtyTarget: safeInt('disp-qty-target'),
+                                qtyOk: parseInt(s.ok) || 0,
+                                ngDimension: parseInt(s.ngD) || 0,
+                                ngVisual: parseInt(s.ngV) || 0
+                            });
+                        });
+                    } else {
+                        // Auto-capture loose inputs if user forgot to click "Add to List" for this slot
+                        const looseVin = (m.data.vin || '').trim();
+                        const looseAct = (m.data.actPnjg || '').trim();
+                        const looseOk = parseInt(m.data.qtyOk) || 0;
+                        const looseNgD = parseInt(m.data.ngDim) || 0;
+                        const looseNgV = parseInt(m.data.ngVis) || 0;
+
+                        if (looseVin !== '' || looseAct !== '' || looseOk > 0 || looseNgD > 0 || looseNgV > 0) {
+                            allSummaries.push({
+                                partNumber: document.getElementById('disp-part-no')?.innerText || '',
+                                vinCode: looseVin || '-',
+                                standardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                actualLength: looseAct,
+                                qtyTarget: safeInt('disp-qty-target'),
+                                qtyOk: looseOk,
+                                ngDimension: looseNgD,
+                                ngVisual: looseNgV
+                            });
+                        }
+                    }
+                });
+
+                // Aggregate overall totals
+                const totalQtyOk = measurements.reduce((s, m) => {
+                    const slotTotal = (m.data.summaries || []).reduce((ss, item) => ss + (parseInt(item.ok) || 0), 0);
+                    return s + (parseInt(m.data.qtyOk) || 0) + slotTotal;
+                }, 0);
+                
+                const totalNgDim = measurements.reduce((s, m) => {
+                    const slotTotal = (m.data.summaries || []).reduce((ss, item) => ss + (parseInt(item.ngD) || 0), 0);
+                    return s + (parseInt(m.data.ngDim) || 0) + slotTotal;
+                }, 0);
+
+                const totalNgVis = measurements.reduce((s, m) => {
+                    const slotTotal = (m.data.summaries || []).reduce((ss, item) => ss + (parseInt(item.ngV) || 0), 0);
+                    return s + (parseInt(m.data.ngVis) || 0) + slotTotal;
+                }, 0);
+
+                const lastVin = [...measurements].reverse().find(m => (m.data.summaries && m.data.summaries.length > 0) || m.data.vin)?.data.summaries?.map(s => s.vin).join(', ') || document.getElementById('val-vin-kode')?.value || '';
+                const lastActPnjg = [...measurements].reverse().find(m => m.data.actPnjg)?.data.actPnjg || document.getElementById('val-act-pnjg')?.value || '';
+                const lastRemark = [...measurements].reverse().find(m => m.data.remark)?.data.remark || document.getElementById('val-remark')?.value || '';
+
                 const payload = {
                     reportId: parseInt("@(Model?.Id ?? 0)") || 0,
                     documentNumber: document.getElementById('h-doc')?.innerText || '---',
@@ -2723,26 +2940,17 @@
                     hoseType: document.getElementById('h-hose')?.innerText || '',
                     customerName: "@(Model?.CustomerName ?? "")",
                     dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
-                    vinCode: document.getElementById('val-vin-kode')?.value || '',
+                    vinCode: lastVin,
                     standardLength: document.getElementById('disp-std-pnjg')?.value || '',
-                    actualLength: document.getElementById('val-act-pnjg')?.value || '',
+                    actualLength: lastActPnjg,
                     qtyTarget: safeInt('disp-qty-target'),
-                    qtyOk: safeInt('val-qty-ok'),
-                    ngDimension: safeInt('val-ng-dimensi'),
-                    ngVisual: safeInt('val-ng-visual'),
-                    remark: document.getElementById('val-remark')?.value || '',
+                    qtyOk: totalQtyOk,
+                    ngDimension: totalNgDim,
+                    ngVisual: totalNgVis,
+                    remark: lastRemark,
                     byPass: '',
                     shift: document.getElementById('h-shift')?.innerText || '',
-                    productionDataSummaries: productionRecords.map(r => ({
-                        partNumber: document.getElementById('disp-part-no')?.innerText || '',
-                        vinCode: r.vin,
-                        standardLength: document.getElementById('disp-std-pnjg')?.value || '',
-                        actualLength: r.act,
-                        qtyTarget: safeInt('disp-qty-target'),
-                        qtyOk: parseInt(r.ok) || 0,
-                        ngDimension: parseInt(r.ngD) || 0,
-                        ngVisual: parseInt(r.ngV) || 0
-                    })),
+                    productionDataSummaries: allSummaries,
                     dimensionReadings: aggregateReadings.map(r => ({
                         pointName: String(r.PointName || ''),
                         timeSection: String(r.TimeSection || ''),

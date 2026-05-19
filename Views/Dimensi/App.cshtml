@@ -2076,7 +2076,7 @@
             // 4. Header / Fixed Inputs (not cleared on slot switch)
             const stdPnjgInput = document.getElementById('disp-std-pnjg');
             if (stdPnjgInput && (stdPnjgInput.value === '-' || stdPnjgInput.value === '')) {
-                stdPnjgInput.value = '@Model.StandardLength' || '-';
+                stdPnjgInput.value = `@Html.Raw(Model?.StandardLength ?? "-")`;
             }
             const targetInput = document.getElementById('disp-qty-target');
             if (targetInput && (targetInput.value === '0' || targetInput.value === '')) {

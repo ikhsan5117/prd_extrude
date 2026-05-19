@@ -157,7 +157,14 @@
                 <tr><td>Revisi</td><td>: @Model.RevisionNumber</td></tr>
                 <tr><td>Date</td><td>: @Model.ProductionDate.ToString("dd MMM yyyy")</td></tr>
                 <tr><td>Shift</td><td>: @(Model.Shift ?? "-")</td></tr>
-                <tr><td>Customer</td><td>: @(Model.CustomerName ?? "-")</td></tr>
+                @{
+                    var spsForCustomer = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
+                    var masterForCustomer = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                    var displayCustomer = !string.IsNullOrWhiteSpace(Model.CustomerName) && Model.CustomerName != "-"
+                        ? Model.CustomerName
+                        : (spsForCustomer?.Customer ?? masterForCustomer?.Customer ?? "-");
+                }
+                <tr><td>Customer</td><td>: @displayCustomer</td></tr>
             </table>
         </div>
         <div class="header-center">

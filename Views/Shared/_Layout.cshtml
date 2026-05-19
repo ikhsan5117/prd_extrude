@@ -104,13 +104,10 @@
                     </a>
                     @if (Context.Session.GetString("UserRole") != "ADMIN_PROD")
                     {
-                        <a asp-controller="MasterlistSpsDoubleLayers" asp-action="Index" class="nav-item sub">
-                            <i class="bi bi-layers"></i>
-                            <span>SPS Master (Production)</span>
-                        </a>
+                        @* SPS Master (Production) - hidden per request *@
                         <a asp-controller="SpsMaster" asp-action="Index" class="nav-item sub">
                             <i class="bi bi-gear-fill"></i>
-                            <span>Master SPS (Edit)</span>
+                            <span>SPS Master</span>
                         </a>
                     }
                     <a asp-controller="ExtrudeUser" asp-action="Index" class="nav-item sub">

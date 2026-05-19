@@ -439,6 +439,7 @@ namespace VelastoProductionSystem.Controllers
             }
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
+                .Include(r => r.Summaries)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
 
