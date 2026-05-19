@@ -2239,6 +2239,9 @@
                     const searchInput = document.getElementById('main-item-search');
                     if(searchInput) searchInput.value = m.itemList || m.hoseType || code;
 
+                    // Capture specific SpsId to bind the report exactly to this specification row
+                    window._dimSpsId = data.id || m.id || m.spsId || null;
+
                     // FALLBACK: If no planning was selected, treat the scanned SPS as the ItemCode
                     if (!window._dimSelectedItemCode || window._dimSelectedItemCode === "") {
                         window._dimSelectedItemCode = code;
@@ -2582,11 +2585,11 @@
                 const lastRemark  = [...measurements].reverse().find(m => m.data.remark)?.data.remark   || document.getElementById('val-remark')?.value   || '';
 
                 const allSummaries = [];
-                measurements.forEach(m => {
+                measurements.forEach((m, slotIdx) => {
                     if (m.data.summaries && m.data.summaries.length > 0) {
                         m.data.summaries.forEach(s => {
                             allSummaries.push({
-                                PartNumber: document.getElementById('disp-part-no')?.innerText || '',
+                                PartNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 VinCode: s.vin,
                                 StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
                                 ActualLength: s.act,
@@ -2596,31 +2599,32 @@
                                 NgVisual: parseInt(s.ngV) || 0
                             });
                         });
-                    }
-                    
-                    // Auto-capture loose inputs if user forgot to click "Add to List"
-                    const looseVin = (m.data.vin || '').trim();
-                    const looseAct = (m.data.actPnjg || '').trim();
-                    const looseOk = parseInt(m.data.qtyOk) || 0;
-                    const looseNgD = parseInt(m.data.ngDim) || 0;
-                    const looseNgV = parseInt(m.data.ngVis) || 0;
+                    } else {
+                        // Auto-capture loose inputs if user forgot to click "Add to List"
+                        const looseVin = (m.data.vin || '').trim();
+                        const looseAct = (m.data.actPnjg || '').trim();
+                        const looseOk = parseInt(m.data.qtyOk) || 0;
+                        const looseNgD = parseInt(m.data.ngDim) || 0;
+                        const looseNgV = parseInt(m.data.ngVis) || 0;
 
-                    if (looseVin !== '' || looseAct !== '' || looseOk > 0 || looseNgD > 0 || looseNgV > 0) {
-                        allSummaries.push({
-                            PartNumber: document.getElementById('disp-part-no')?.innerText || '',
-                            VinCode: looseVin || '-',
-                            StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
-                            ActualLength: looseAct,
-                            QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
-                            QtyOk: looseOk,
-                            NgDimension: looseNgD,
-                            NgVisual: looseNgV
-                        });
+                        if (looseVin !== '' || looseAct !== '' || looseOk > 0 || looseNgD > 0 || looseNgV > 0) {
+                            allSummaries.push({
+                                PartNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
+                                VinCode: looseVin || '-',
+                                StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                ActualLength: looseAct,
+                                QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
+                                QtyOk: looseOk,
+                                NgDimension: looseNgD,
+                                NgVisual: looseNgV
+                            });
+                        }
                     }
                 });
 
                 const payload = {
                     ReportId: @Model.Id,
+                    SpsId: window._dimSpsId || null,
                     DocumentNumber: document.getElementById('h-doc')?.innerText || '---',
                     ItemCode: document.getElementById('itemCode')?.value || window._dimSelectedItemCode || '',
                     HoseType: document.getElementById('h-hose')?.innerText || '',

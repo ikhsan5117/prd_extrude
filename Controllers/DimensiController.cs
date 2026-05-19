@@ -122,7 +122,7 @@ namespace VelastoProductionSystem.Controllers
                     id = sps.Id,
                     data = new {
                         hoseType = sps.HoseType,
-                        dimensi = finalInner,                // Unified Inner Diameter target
+                        dimensi = sps.Dimensi ?? finalInner, // Send the full dimension text!
                         innerTarget = finalInner,            // For quality matrix cards
                         innerTube = sps.InnerTube,
                         outerCover = sps.OuterCover,
@@ -512,6 +512,7 @@ namespace VelastoProductionSystem.Controllers
             
             // Use SpsMasters for detailed lookup
             var sps = await _context.SpsMasters
+                .OrderByDescending(s => s.Id)
                 .FirstOrDefaultAsync(s => 
                     (s.ItemList != null && s.ItemList.ToUpper().Contains(sanitizedCode)));
             

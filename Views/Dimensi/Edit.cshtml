@@ -1119,10 +1119,32 @@
             var s = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
             var m = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
 
-            // Robust Target Selection
-            var targetInner = s?.ToleranceInner_Asli?.ToString("F2") ?? s?.InnerTarget ?? s?.Dimensi ?? m?.Dimensi;
-            var targetThick = s?.TebalInner_Asli?.ToString("F2") ?? s?.ThickTarget ?? s?.TebalInner ?? m?.TebalInner;
-            var targetTotal = s?.TebalTotal_Asli?.ToString("F2") ?? s?.TotalTarget ?? s?.TebalTotal ?? m?.TebalTotal;
+            string targetInner = null;
+            string targetThick = null;
+            string targetTotal = null;
+
+            if (s != null)
+            {
+                targetInner = s.ToleranceInner_Asli?.ToString("F2") ?? s.InnerTarget;
+                if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = s.Dimensi;
+
+                targetThick = s.TebalInner_Asli?.ToString("F2") ?? s.ThickTarget;
+                if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = s.TebalInner;
+
+                targetTotal = s.TebalTotal_Asli?.ToString("F2") ?? s.TotalTarget;
+                if (string.IsNullOrEmpty(targetTotal) || targetTotal == "0") targetTotal = s.TebalTotal;
+            }
+            else if (m != null)
+            {
+                targetInner = m.InnerTarget;
+                if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = m.Dimensi;
+
+                targetThick = m.ThickTarget;
+                if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = m.TebalInner;
+
+                targetTotal = m.TotalTarget;
+                if (string.IsNullOrEmpty(targetTotal) || targetTotal == "0") targetTotal = m.TebalTotal;
+            }
             
             // Robust Tolerance Selection
             var tolInner = s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1";
@@ -1172,6 +1194,7 @@
             <text>
         serverSummaries = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
             Model.Summaries.Select(s => new {
+                partNumber = s.PartNumber ?? "",
                 vin = s.VinCode ?? "",
                 act = s.ActualLength ?? "",
                 ok = s.QtyOk.ToString(),
@@ -1816,9 +1839,27 @@
                     return (val == 1) ? "ok" : (val == 0 && val !== null ? "ng" : null);
                 };
 
-                // Distribute summaries sequentially to slots
+                // Distribute summaries to slots
                 const slotSummaries = [];
-                if (serverSummaries && serverSummaries[i - 1]) {
+                if (serverSummaries && serverSummaries.length > 0) {
+                    serverSummaries.forEach(s => {
+                        let slotOfSummary = -1;
+                        if (s.partNumber && s.partNumber.includes('#')) {
+                            const parts = s.partNumber.split('#');
+                            slotOfSummary = parseInt(parts[parts.length - 1]);
+                        }
+                        
+                        if (slotOfSummary === i - 1) {
+                            // Strip suffix before assigning to UI state
+                            const cleanPart = s.partNumber.split('#')[0];
+                            slotSummaries.push({ ...s, partNumber: cleanPart });
+                        }
+                    });
+                }
+
+                // BACKWARD COMPATIBILITY: If no summaries have slot suffixes, fallback to 1-to-1 sequential distribution
+                const hasSlotSuffixes = serverSummaries.some(s => s.partNumber && s.partNumber.includes('#'));
+                if (!hasSlotSuffixes && serverSummaries && serverSummaries[i - 1]) {
                     slotSummaries.push(serverSummaries[i - 1]);
                 }
 
@@ -2874,11 +2915,11 @@
 
                 // === AGGREGATE SUMMARIES & TOTALS FROM ALL SLOTS ===
                 const allSummaries = [];
-                measurements.forEach(m => {
+                measurements.forEach((m, slotIdx) => {
                     if (m.data.summaries && m.data.summaries.length > 0) {
                         m.data.summaries.forEach(s => {
                             allSummaries.push({
-                                partNumber: document.getElementById('disp-part-no')?.innerText || '',
+                                partNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 vinCode: s.vin,
                                 standardLength: document.getElementById('disp-std-pnjg')?.value || '',
                                 actualLength: s.act,
@@ -2898,7 +2939,7 @@
 
                         if (looseVin !== '' || looseAct !== '' || looseOk > 0 || looseNgD > 0 || looseNgV > 0) {
                             allSummaries.push({
-                                partNumber: document.getElementById('disp-part-no')?.innerText || '',
+                                partNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 vinCode: looseVin || '-',
                                 standardLength: document.getElementById('disp-std-pnjg')?.value || '',
                                 actualLength: looseAct,

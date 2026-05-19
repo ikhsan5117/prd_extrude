@@ -251,11 +251,19 @@
                                     tol = ParseTol(sps.TotalTol, 0.3m); 
                                 }
                             }
-
-                            if (target <= 0 && master != null) {
-                                if (point.Contains("Diameter")) target = ParseNum(master.Dimensi);
-                                else if (point.Contains("Inner Thick")) target = ParseNum(master.TebalInner);
-                                else if (point.Contains("Total Thick")) target = ParseNum(master.TebalTotal);
+                            else if (master != null) {
+                                if (point.Contains("Diameter")) {
+                                    target = ParseNum(master.InnerTarget);
+                                    if (target <= 0) target = ParseNum(master.Dimensi);
+                                }
+                                else if (point.Contains("Inner Thick")) {
+                                    target = ParseNum(master.ThickTarget);
+                                    if (target <= 0) target = ParseNum(master.TebalInner);
+                                }
+                                else if (point.Contains("Total Thick")) {
+                                    target = ParseNum(master.TotalTarget);
+                                    if (target <= 0) target = ParseNum(master.TebalTotal);
+                                }
                             }
 
                             // 3. TOLERANCE REFINEMENT (Masterlist fallback)
@@ -435,7 +443,13 @@
                         totalNgDim += s.NgDimension;
                         totalNgVis += s.NgVisual;
                         <tr>
-                            <td>@(s.PartNumber ?? partNum)</td>
+                            @{
+                                var displayPart = s.PartNumber;
+                                if (displayPart != null && displayPart.Contains("#")) {
+                                    displayPart = displayPart.Split('#')[0];
+                                }
+                            }
+                            <td>@(displayPart ?? partNum)</td>
                             <td>@(s.VinCode ?? "-")</td>
                             <td>@(s.StandardLength ?? stdPnjg)</td>
                             <td>@(s.ActualLength ?? "-")</td>
