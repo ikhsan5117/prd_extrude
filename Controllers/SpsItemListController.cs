@@ -10,16 +10,30 @@ using VelastoProductionSystem.Models;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using OfficeOpenXml;
+using VelastoProductionSystem.Services;
 
 namespace VelastoProductionSystem.Controllers
 {
     public class SpsItemListController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IApprovalService _approvalService;
 
-        public SpsItemListController(ApplicationDbContext context)
+        public SpsItemListController(ApplicationDbContext context, IApprovalService approvalService)
         {
             _context = context;
+            _approvalService = approvalService;
+        }
+
+        private IActionResult RedirectToApprovalRequest(ApprovalActionType actionType, string targetKey, string returnUrl)
+        {
+            TempData["ErrorMessage"] = "Aksi ini membutuhkan approval admin. Kirim request approval terlebih dahulu.";
+            return RedirectToAction("Request", "Approval", new
+            {
+                actionType,
+                targetKey,
+                returnUrl
+            });
         }
 
         // GET: SpsItemList
@@ -151,8 +165,23 @@ namespace VelastoProductionSystem.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (_approvalService.IsRequesterRole())
+                {
+                    var targetKey = $"{spsItemList.DocumentNumber}|{spsItemList.ItemList}";
+                    var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemCreate, targetKey);
+                    if (!allowed)
+                    {
+                        return RedirectToApprovalRequest(
+                            ApprovalActionType.SpsItemCreate,
+                            targetKey,
+                            Url.Action(nameof(Create), "SpsItemList") ?? "/SpsItemList/Create");
+                    }
+                }
+
                 _context.Add(spsItemList);
                 await _context.SaveChangesAsync();
+
+                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsItemCreate, $"{spsItemList.DocumentNumber}|{spsItemList.ItemList}");
                 return RedirectToAction(nameof(Index));
             }
             ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs, "DocumentNumber", "DocumentNumber", spsItemList.DocumentNumber);
@@ -190,8 +219,23 @@ namespace VelastoProductionSystem.Controllers
             {
                 try
                 {
+                    if (_approvalService.IsRequesterRole())
+                    {
+                        var targetKey = spsItemList.Id.ToString();
+                        var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemEdit, targetKey);
+                        if (!allowed)
+                        {
+                            return RedirectToApprovalRequest(
+                                ApprovalActionType.SpsItemEdit,
+                                targetKey,
+                                Url.Action(nameof(Edit), "SpsItemList", new { id = spsItemList.Id }) ?? $"/SpsItemList/Edit/{spsItemList.Id}");
+                        }
+                    }
+
                     _context.Update(spsItemList);
                     await _context.SaveChangesAsync();
+
+                    await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsItemEdit, spsItemList.Id.ToString());
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -332,8 +376,28 @@ namespace VelastoProductionSystem.Controllers
         {
             if (file == null || file.Length == 0)
             {
-                TempData["ErrorMessage"] = "File tidak valid";
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = "File tidak valid" });
+            }
+
+            if (_approvalService.IsRequesterRole())
+            {
+                var targetKey = file.FileName;
+                var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemImportTemplate, targetKey);
+                if (!allowed)
+                {
+                    var requestUrl = Url.Action("Request", "Approval", new
+                    {
+                        actionType = ApprovalActionType.SpsItemImportTemplate,
+                        targetKey,
+                        returnUrl = Url.Action(nameof(Index), "SpsItemList")
+                    }) ?? "/Approval/Request";
+
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Import template Item List membutuhkan approval admin. <a href='{requestUrl}'>Klik di sini untuk kirim request approval</a>."
+                    });
+                }
             }
 
             try
@@ -346,8 +410,7 @@ namespace VelastoProductionSystem.Controllers
                 
                 if (worksheet == null)
                 {
-                    TempData["ErrorMessage"] = "Worksheet tidak ditemukan";
-                    return RedirectToAction(nameof(Index));
+                    return Json(new { success = false, message = "Worksheet tidak ditemukan" });
                 }
 
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
@@ -407,21 +470,31 @@ namespace VelastoProductionSystem.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsItemImportTemplate, file.FileName);
+
                 if (errorCount > 0)
                 {
-                    TempData["ErrorMessage"] = $"Berhasil import {importedCount} data, namun ada {errorCount} error: " + string.Join(", ", errors.Take(3));
+                    return Json(new
+                    {
+                        success = true,
+                        message = $"Berhasil import {importedCount} data, namun ada {errorCount} error.",
+                        imported = importedCount,
+                        errors = errorCount,
+                        errorDetails = errors.Take(10).ToList()
+                    });
                 }
-                else
+
+                return Json(new
                 {
-                    TempData["SuccessMessage"] = $"Berhasil import {importedCount} Item List baru!";
-                }
-                
-                return RedirectToAction(nameof(Index));
+                    success = true,
+                    message = $"Berhasil import {importedCount} Item List baru!",
+                    imported = importedCount,
+                    errors = 0
+                });
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"Error: {ex.Message}";
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
             }
         }
 

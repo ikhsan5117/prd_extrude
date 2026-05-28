@@ -7,6 +7,7 @@ using OfficeOpenXml;
 using System.Text;
 using System.Reflection;
 using System.ComponentModel.DataAnnotations;
+using VelastoProductionSystem.Services;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -14,13 +15,26 @@ namespace VelastoProductionSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<SpsMasterController> _logger;
+        private readonly IApprovalService _approvalService;
 
-        public SpsMasterController(ApplicationDbContext context, ILogger<SpsMasterController> logger)
+        public SpsMasterController(ApplicationDbContext context, ILogger<SpsMasterController> logger, IApprovalService approvalService)
         {
             _context = context;
             _logger = logger;
+            _approvalService = approvalService;
             
             // EPPlus license sudah di-set secara global di Program.cs
+        }
+
+        private IActionResult RedirectToApprovalRequest(ApprovalActionType actionType, string targetKey, string returnUrl)
+        {
+            TempData["ErrorMessage"] = "Aksi ini membutuhkan approval admin. Kirim request approval terlebih dahulu.";
+            return RedirectToAction("Request", "Approval", new
+            {
+                actionType,
+                targetKey,
+                returnUrl
+            });
         }
 
         // ==================== HELPER METHOD: PARSE ± FORMAT ====================
@@ -279,6 +293,19 @@ namespace VelastoProductionSystem.Controllers
                     return View(model);
                 }
 
+                if (_approvalService.IsRequesterRole())
+                {
+                    var targetKey = model.DocumentNumber;
+                    var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsDocumentCreate, targetKey);
+                    if (!allowed)
+                    {
+                        return RedirectToApprovalRequest(
+                            ApprovalActionType.SpsDocumentCreate,
+                            targetKey,
+                            Url.Action(nameof(Create), "SpsMaster") ?? "/SpsMaster/Create");
+                    }
+                }
+
                 // Check if DocumentNumber already exists
                 if (await _context.SpsNoDocs.AnyAsync(s => s.DocumentNumber == model.DocumentNumber))
                 {
@@ -290,6 +317,8 @@ namespace VelastoProductionSystem.Controllers
                 var spsNoDoc = SpsMapper.ToSpsNoDoc(model);
                 _context.SpsNoDocs.Add(spsNoDoc);
                 await _context.SaveChangesAsync();
+
+                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsDocumentCreate, model.DocumentNumber);
 
                 TempData["SuccessMessage"] = $"✅ Berhasil menambahkan Dokumen SPS '{model.DocumentNumber}'!";
                 _logger.LogInformation($"Create Success: DocumentNumber '{model.DocumentNumber}' created");
@@ -331,6 +360,18 @@ namespace VelastoProductionSystem.Controllers
 
             try
             {
+                if (_approvalService.IsRequesterRole())
+                {
+                    var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsDocumentEdit, documentNumber);
+                    if (!allowed)
+                    {
+                        return RedirectToApprovalRequest(
+                            ApprovalActionType.SpsDocumentEdit,
+                            documentNumber,
+                            Url.Action(nameof(Edit), "SpsMaster", new { documentNumber }) ?? $"/SpsMaster/Edit/{documentNumber}");
+                    }
+                }
+
                 var spsNoDoc = await _context.SpsNoDocs
                     .Include(s => s.ItemLists)
                     .FirstOrDefaultAsync(s => s.DocumentNumber == documentNumber);
@@ -340,6 +381,8 @@ namespace VelastoProductionSystem.Controllers
                 // Update SpsNoDoc properties
                 SpsMapper.UpdateSpsNoDoc(spsNoDoc, model);
                 await _context.SaveChangesAsync();
+
+                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsDocumentEdit, documentNumber);
 
                 TempData["SuccessMessage"] = $"✅ Update Berhasil: Dokumen '{documentNumber}' telah diperbarui.";
                 _logger.LogInformation($"Edit SUCCESS: DocumentNumber '{documentNumber}' updated");
@@ -845,6 +888,27 @@ namespace VelastoProductionSystem.Controllers
             if (file == null || file.Length == 0)
             {
                 return Json(new { success = false, message = "File tidak valid" });
+            }
+
+            if (_approvalService.IsRequesterRole())
+            {
+                var targetKey = file.FileName;
+                var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsImportTemplate, targetKey);
+                if (!allowed)
+                {
+                    var requestUrl = Url.Action("Request", "Approval", new
+                    {
+                        actionType = ApprovalActionType.SpsImportTemplate,
+                        targetKey,
+                        returnUrl = Url.Action(nameof(Index), "SpsMaster")
+                    }) ?? "/Approval/Request";
+
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Import template SPS membutuhkan approval admin. <a href='{requestUrl}'>Klik di sini untuk kirim request approval</a>."
+                    });
+                }
             }
 
             try
@@ -2373,6 +2437,8 @@ namespace VelastoProductionSystem.Controllers
                 {
                     TempData["WarningMessage"] = $"⚠ {errorCount} error: {string.Join(", ", errors.Take(3))}";
                 }
+
+                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsImportTemplate, file.FileName);
                 
                 return Json(new
                 {
@@ -2384,6 +2450,7 @@ namespace VelastoProductionSystem.Controllers
                     errorDetails = errors.Take(10).ToList(),
                     redirect = true
                 });
+
             }
             catch (Exception ex)
             {

@@ -64,6 +64,15 @@
                     </div>
                 </div>
                 <div class="card-body p-4">
+                    @if (Context.Session.GetString("IsAdmin") != "true" || Context.Session.GetString("UserRole") == "ADMIN_ENG")
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-shield-lock-fill me-2"></i>
+                            <strong>Approval Diperlukan:</strong> User engineering/operator harus request approval admin sebelum bisa menyimpan Create/Edit/Import SPS.
+                            <a asp-controller="Approval" asp-action="MyRequests" class="alert-link ms-1">Lihat status request Anda</a>.
+                        </div>
+                    }
+
                     <div class="alert alert-info" role="alert">
                         <i class="bi bi-info-circle-fill me-2"></i>
                         <strong>Petunjuk:</strong> Isi field <span class="badge bg-success">MIN</span>, 

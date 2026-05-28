@@ -1,0 +1,135 @@
+@model VelastoProductionSystem.Models.ApprovalRequest
+@using VelastoProductionSystem.Models
+@{
+    ViewData["Title"] = "Approval Details";
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var canReview = role == "ADMIN_ENG" || role == "SUPERADMIN";
+    var isOwner = string.Equals(Context.Session.GetString("UserName"), Model.RequesterUserName, StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="container-fluid py-3">
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Detail Request @Model.RequestCode</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8"><span class="badge bg-dark">@Model.Status</span></dd>
+
+                        <dt class="col-sm-4">Requester</dt>
+                        <dd class="col-sm-8">@Model.RequesterUserName (@Model.RequesterRole)</dd>
+
+                        <dt class="col-sm-4">Action Type</dt>
+                        <dd class="col-sm-8">@Model.ActionType</dd>
+
+                        <dt class="col-sm-4">Target</dt>
+                        <dd class="col-sm-8">@Model.TargetKey</dd>
+
+                        <dt class="col-sm-4">Pesan Request</dt>
+                        <dd class="col-sm-8">@Model.RequestComment</dd>
+
+                        <dt class="col-sm-4">Komentar Admin</dt>
+                        <dd class="col-sm-8">@Model.ApproverComment</dd>
+
+                        <dt class="col-sm-4">Created</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+            {
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-header bg-success text-white">Approve</div>
+                    <div class="card-body">
+                        <form asp-action="Approve" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label">Komentar (opsional)</label>
+                                <textarea name="approverComment" class="form-control" rows="3" maxlength="1024"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success">Approve Request</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-danger text-white">Reject</div>
+                    <div class="card-body">
+                        <form asp-action="Reject" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label">Alasan Reject (wajib)</label>
+                                <textarea name="approverComment" class="form-control" rows="3" maxlength="1024" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger">Reject Request</button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            @if (isOwner && Model.Status == ApprovalRequestStatus.Rejected)
+            {
+                <div class="card shadow-sm border-0 mt-3">
+                    <div class="card-header bg-warning text-dark">Submit Ulang Setelah Perbaikan</div>
+                    <div class="card-body">
+                        <form asp-action="Resubmit" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label">Catatan Perbaikan (wajib)</label>
+                                <textarea name="requestComment" class="form-control" rows="3" maxlength="1024" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-warning text-dark">Kirim Ulang Request</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-3">
+        <div class="card-header bg-light">
+            <strong>Riwayat Approval</strong>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Actor</th>
+                            <th>Transisi</th>
+                            <th>Komentar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (!Model.Logs.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted">Belum ada log.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var log in Model.Logs.OrderByDescending(x => x.CreatedAt))
+                        {
+                            <tr>
+                                <td>@log.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                <td>@log.ActorUserName (@log.ActorRole)</td>
+                                <td>@(log.FromStatus?.ToString() ?? "-") → @log.ToStatus</td>
+                                <td>@log.Comment</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

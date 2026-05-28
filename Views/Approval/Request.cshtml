@@ -1,0 +1,36 @@
+@using VelastoProductionSystem.Models
+@{
+    ViewData["Title"] = "Request Approval";
+    var actionType = (ApprovalActionType)ViewBag.ActionType;
+    var targetKey = (string?)ViewBag.TargetKey ?? string.Empty;
+    var returnUrl = (string?)ViewBag.ReturnUrl;
+}
+
+<div class="container-fluid py-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Kirim Request Approval</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-2"><strong>Tipe Aksi:</strong> @actionType</div>
+            <div class="mb-3"><strong>Target:</strong> @(string.IsNullOrWhiteSpace(targetKey) ? "GENERAL" : targetKey)</div>
+
+            <form asp-action="Request" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="actionType" value="@actionType" />
+                <input type="hidden" name="targetKey" value="@targetKey" />
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                <div class="mb-3">
+                    <label class="form-label">Pesan ke Admin (wajib)</label>
+                    <textarea class="form-control" name="requestComment" rows="4" maxlength="1024" required placeholder="Jelaskan perubahan yang diajukan dan alasan revisi..."></textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Kirim Request</button>
+                    <a asp-action="MyRequests" class="btn btn-outline-secondary">Lihat Request Saya</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

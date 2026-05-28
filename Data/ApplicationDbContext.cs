@@ -24,6 +24,8 @@ namespace VelastoProductionSystem.Data
         public DbSet<ShiftMaster> ShiftMasters { get; set; }
         public DbSet<ProductionMaterialLot> ProductionMaterialLots { get; set; }
         public DbSet<SensorIngestLog> SensorIngestLogs { get; set; }
+        public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
+        public DbSet<ApprovalRequestLog> ApprovalRequestLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -88,6 +90,25 @@ namespace VelastoProductionSystem.Data
                 .HasIndex(s => new { s.MachineCode, s.SensorTimestamp });
             modelBuilder.Entity<SensorIngestLog>()
                 .HasIndex(s => s.DeviceId);
+
+            modelBuilder.Entity<ApprovalRequest>()
+                .HasMany(r => r.Logs)
+                .WithOne(l => l.ApprovalRequest)
+                .HasForeignKey(l => l.ApprovalRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ApprovalRequest>()
+                .HasIndex(r => new { r.Status, r.CreatedAt });
+
+            modelBuilder.Entity<ApprovalRequest>()
+                .HasIndex(r => new { r.RequesterUserName, r.Status });
+
+            modelBuilder.Entity<ApprovalRequest>()
+                .HasIndex(r => new { r.ActionType, r.TargetKey, r.RequesterUserName, r.Status });
+
+            modelBuilder.Entity<ApprovalRequest>()
+                .HasIndex(r => r.RequestCode)
+                .IsUnique();
 
             // Seed initial data (optional)
             SeedData(modelBuilder);

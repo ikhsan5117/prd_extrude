@@ -83,6 +83,37 @@ namespace VelastoProductionSystem.Controllers
                     userRole = "ADMIN_ENG";
                     displayName = "Admin Engineering";
                 }
+                else if (lowerAdmin == "eng_temp")
+                {
+                    if (password != "engtemp123!")
+                    {
+                        ModelState.AddModelError("", "Password Engineering sementara salah!");
+                        await PrepareLoginViewData();
+                        return View();
+                    }
+
+                    // Temporary engineering requester account (non-admin) for approval flow testing.
+                    string engMachineName = "ENG";
+                    int engMachineId = 0;
+
+                    if (machineId.HasValue && machineId > 0)
+                    {
+                        var selectedMachine = await _context.ElwpMachines.FindAsync(machineId.Value);
+                        if (selectedMachine != null)
+                        {
+                            engMachineName = selectedMachine.KodeMesin ?? "ENG";
+                            engMachineId = selectedMachine.Id;
+                        }
+                    }
+
+                    HttpContext.Session.SetString("UserName", "Engineering Temporary");
+                    HttpContext.Session.SetString("IsAdmin", "false");
+                    HttpContext.Session.SetString("UserRole", "ENGINEERING");
+                    HttpContext.Session.SetString("MachineName", engMachineName);
+                    HttpContext.Session.SetInt32("MachineId", engMachineId);
+
+                    return RedirectToAction("Index", "SpsMaster");
+                }
                 else
                 {
                     ModelState.AddModelError("", "Username Admin tidak dikenal!");
@@ -139,13 +170,25 @@ namespace VelastoProductionSystem.Controllers
                 return View();
             }
 
+            var resolvedUserName = user.FullName ?? user.Username ?? string.Empty;
+            var isTrialEngineering =
+                resolvedUserName.Contains("TRIAL", StringComparison.OrdinalIgnoreCase) ||
+                (user.Username?.Contains("TRIAL", StringComparison.OrdinalIgnoreCase) ?? false);
+
+            var operatorRole = isTrialEngineering ? "ENGINEERING" : "OPERATOR";
+
             // Simpan ke Session
             HttpContext.Session.SetInt32("UserId", user.Id);
-            HttpContext.Session.SetString("UserName", user.FullName ?? user.Username ?? "");
+            HttpContext.Session.SetString("UserName", resolvedUserName);
             HttpContext.Session.SetString("IsAdmin", "false");
-            HttpContext.Session.SetString("UserRole", "OPERATOR");
+            HttpContext.Session.SetString("UserRole", operatorRole);
             HttpContext.Session.SetInt32("MachineId", machine.Id);
             HttpContext.Session.SetString("MachineName", machine.KodeMesin ?? machine.NamaMesin ?? "");
+
+            if (isTrialEngineering)
+            {
+                return RedirectToAction("Index", "SpsMaster");
+            }
 
             // Langsung arahkan ke menu utama produksi (Form Parameter Setting)
             return RedirectToAction("Create", "ProductionReport");

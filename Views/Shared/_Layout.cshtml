@@ -12,6 +12,23 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+    @inject VelastoProductionSystem.Services.IApprovalService ApprovalService
+    @{
+        var sidebarRole = Context.Session.GetString("UserRole") ?? string.Empty;
+        var sidebarIsAdmin = Context.Session.GetString("IsAdmin") == "true";
+        var inboxPendingCount = 0;
+        var myOpenRequestCount = 0;
+
+        if (sidebarIsAdmin && sidebarRole == "SUPERADMIN")
+        {
+            inboxPendingCount = await ApprovalService.CountInboxPendingAsync();
+        }
+        else if (!sidebarIsAdmin || sidebarRole == "ADMIN_ENG")
+        {
+            myOpenRequestCount = await ApprovalService.CountMyOpenRequestsAsync();
+        }
+    }
+
     <!-- Animated Background -->
     <div class="animated-bg"></div>
 
@@ -113,6 +130,28 @@
                             <i class="bi bi-list-check"></i>
                             <span>SPS Item List</span>
                         </a>
+                        @if (Context.Session.GetString("UserRole") == "SUPERADMIN")
+                        {
+                            <a asp-controller="Approval" asp-action="Inbox" class="nav-item sub">
+                                <i class="bi bi-check2-square"></i>
+                                <span>Approval Inbox</span>
+                                @if (inboxPendingCount > 0)
+                                {
+                                    <span class="badge bg-danger ms-2">@inboxPendingCount</span>
+                                }
+                            </a>
+                        }
+                        @if (Context.Session.GetString("UserRole") == "ADMIN_ENG")
+                        {
+                            <a asp-controller="Approval" asp-action="MyRequests" class="nav-item sub">
+                                <i class="bi bi-envelope-paper"></i>
+                                <span>Approval Requests</span>
+                                @if (myOpenRequestCount > 0)
+                                {
+                                    <span class="badge bg-warning text-dark ms-2">@myOpenRequestCount</span>
+                                }
+                            </a>
+                        }
                     }
                     <a asp-controller="ExtrudeUser" asp-action="Index" class="nav-item sub">
                         <i class="bi bi-people"></i>
@@ -191,6 +230,25 @@
                     <a asp-controller="Dimensi" asp-action="Index" class="nav-item sub">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M208-120q-37 0-62.5-25.5T120-208v-548q0-29 27-40.5t47 8.5l90 90-54 54 28 28 54-54 104 104-54 54 28 28 54-54 104 104-54 54 28 28 54-54 104 104-54 54 28 28 54-54 80 80q20 20 8.5 47T756-120H208Zm32-120h332L240-572v332Z"/></svg>
                         <span class="fw-bold">Input Dimensi</span>
+                    </a>
+                    @if (Context.Session.GetString("UserRole") == "ENGINEERING")
+                    {
+                        <a asp-controller="SpsMaster" asp-action="Index" class="nav-item sub">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span class="fw-bold">SPS Document</span>
+                        </a>
+                        <a asp-controller="SpsItemList" asp-action="Index" class="nav-item sub">
+                            <i class="bi bi-list-check"></i>
+                            <span class="fw-bold">SPS Item List</span>
+                        </a>
+                    }
+                    <a asp-controller="Approval" asp-action="MyRequests" class="nav-item sub">
+                        <i class="bi bi-envelope-paper"></i>
+                        <span class="fw-bold">Approval Requests</span>
+                        @if (myOpenRequestCount > 0)
+                        {
+                            <span class="badge bg-warning text-dark ms-2">@myOpenRequestCount</span>
+                        }
                     </a>
                 </div>
             }

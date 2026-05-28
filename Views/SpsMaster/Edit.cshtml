@@ -65,6 +65,15 @@
                     </div>
                 </div>
                 <div class="card-body p-4">
+                    @if (Context.Session.GetString("IsAdmin") != "true" || Context.Session.GetString("UserRole") == "ADMIN_ENG")
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-shield-lock-fill me-2"></i>
+                            <strong>Approval Diperlukan:</strong> Perubahan dokumen SPS membutuhkan approval admin sebelum bisa disimpan.
+                            <a asp-controller="Approval" asp-action="MyRequests" class="alert-link ms-1">Lihat status request Anda</a>.
+                        </div>
+                    }
+
                     <!-- Feature Explanation -->
                     <div class="alert alert-primary" role="alert">
                         <h6 class="alert-heading">

@@ -10,6 +10,15 @@
             <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>@ViewData["Title"]</h4>
         </div>
         <div class="card-body p-4">
+            @if (Context.Session.GetString("IsAdmin") != "true" || Context.Session.GetString("UserRole") == "ADMIN_ENG")
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-shield-lock-fill me-2"></i>
+                    Buat Item List membutuhkan approval admin.
+                    <a asp-controller="Approval" asp-action="MyRequests" class="alert-link">Cek request approval</a>.
+                </div>
+            }
+
             <form asp-action="Create">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 

@@ -21,9 +21,10 @@ namespace VelastoProductionSystem.Migrations
                     ALTER TABLE [dbo].[ProductionReports] DROP CONSTRAINT [FK_ProductionReports_StandardParameterSettings_StandardParameterSettingId];
             ");
 
-            // Conditional: rename column only if old name still exists
+            // Conditional: rename column only if old name exists and new name does not exist
             migrationBuilder.Sql(@"
                 IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('[dbo].[ProductionReports]') AND name = 'StandardParameterSettingId')
+                   AND NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('[dbo].[ProductionReports]') AND name = 'SpsId')
                     EXEC sp_rename N'[dbo].[ProductionReports].[StandardParameterSettingId]', N'SpsId', N'COLUMN';
             ");
 
@@ -103,13 +104,17 @@ namespace VelastoProductionSystem.Migrations
 
             // Conditional: add FK_DimensionReports_StandardParameterSettings_SpsId only if not exists
             migrationBuilder.Sql(@"
-                IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_DimensionReports_StandardParameterSettings_SpsId' AND parent_object_id = OBJECT_ID('[dbo].[DimensionReports]'))
+                IF OBJECT_ID('[dbo].[StandardParameterSettings]') IS NOT NULL
+                   AND OBJECT_ID('[dbo].[DimensionReports]') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_DimensionReports_StandardParameterSettings_SpsId' AND parent_object_id = OBJECT_ID('[dbo].[DimensionReports]'))
                     ALTER TABLE [dbo].[DimensionReports] ADD CONSTRAINT [FK_DimensionReports_StandardParameterSettings_SpsId] FOREIGN KEY ([SpsId]) REFERENCES [dbo].[StandardParameterSettings] ([Id]) ON DELETE SET NULL;
             ");
 
             // Conditional: add FK_ProductionReports_StandardParameterSettings_SpsId only if not exists
             migrationBuilder.Sql(@"
-                IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_ProductionReports_StandardParameterSettings_SpsId' AND parent_object_id = OBJECT_ID('[dbo].[ProductionReports]'))
+                IF OBJECT_ID('[dbo].[StandardParameterSettings]') IS NOT NULL
+                   AND OBJECT_ID('[dbo].[ProductionReports]') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_ProductionReports_StandardParameterSettings_SpsId' AND parent_object_id = OBJECT_ID('[dbo].[ProductionReports]'))
                     ALTER TABLE [dbo].[ProductionReports] ADD CONSTRAINT [FK_ProductionReports_StandardParameterSettings_SpsId] FOREIGN KEY ([SpsId]) REFERENCES [dbo].[StandardParameterSettings] ([Id]) ON DELETE SET NULL;
             ");
         }
