@@ -604,8 +604,10 @@ namespace VelastoProductionSystem.Controllers
                     s.SpsNoDoc.Customer,
                     s.SpsNoDoc.OdSensor_Asli, s.SpsNoDoc.OdSensor_Max, s.SpsNoDoc.OdSensor_Min,
                     s.SpsNoDoc.ControlValue_Asli, s.SpsNoDoc.ControlValue_Max, s.SpsNoDoc.ControlValue_Min,
-                    s.SpsNoDoc.ToleranceOuter_Asli, s.SpsNoDoc.ToleranceOuter,
-                    s.SpsNoDoc.ToleranceInner_Asli, s.SpsNoDoc.ToleranceInner,
+                    s.SpsNoDoc.ToleranceInner_Min, s.SpsNoDoc.ToleranceInner_Asli, s.SpsNoDoc.ToleranceInner_Max,
+                    s.SpsNoDoc.ToleranceOuter_Min, s.SpsNoDoc.ToleranceOuter_Asli, s.SpsNoDoc.ToleranceOuter_Max,
+                    s.SpsNoDoc.ToleranceOuter,
+                    s.SpsNoDoc.ToleranceInner,
                     s.SpsNoDoc.HoseSpeed_Asli, s.SpsNoDoc.HoseSpeed_Max, s.SpsNoDoc.HoseSpeed_Min,
                     s.SpsNoDoc.HeadTemp1_Asli, s.SpsNoDoc.HeadTemp1_Max, s.SpsNoDoc.HeadTemp1_Min,
                     s.SpsNoDoc.HeadTemp2_Asli, s.SpsNoDoc.HeadTemp2_Max, s.SpsNoDoc.HeadTemp2_Min,
@@ -648,7 +650,7 @@ namespace VelastoProductionSystem.Controllers
             DateTime? endDate   = null,
             string? startTime   = "00:00", // Format HH:mm
             string? endTime     = "23:59", // Format HH:mm
-            int?    spsId       = null)
+            string? spsId       = null)
         {
             var now       = DateTime.Now;
             var fromTime  = startDate ?? now.AddHours(-hours);
@@ -710,10 +712,16 @@ namespace VelastoProductionSystem.Controllers
             SpsNoDoc? spsNew = null;
             SpsNoDoc? spsOld = null;
 
-            if (spsId.HasValue)
+            if (!string.IsNullOrWhiteSpace(spsId))
             {
-                // spsId now corresponds to DocumentNumber (string), but API still passes int; use machineCode fallback
-                spsNew = await _context.SpsNoDocs.FirstOrDefaultAsync(s => s.MachineCode == machineCode);
+                spsNew = await _context.SpsNoDocs
+                    .FirstOrDefaultAsync(s => s.DocumentNumber == spsId);
+
+                if (spsNew == null)
+                {
+                    spsNew = await _context.SpsNoDocs
+                        .FirstOrDefaultAsync(s => s.DocumentNumber != null && s.DocumentNumber.Contains(spsId));
+                }
             }
             else if (!string.IsNullOrEmpty(machineCode))
             {
@@ -779,28 +787,35 @@ namespace VelastoProductionSystem.Controllers
             switch (metricKey)
             {
                 case "outer_diameter":
-                    target = sps.OdSensor_Asli ?? sps.ControlValue_Asli;
-                    ucl    = sps.OdSensor_Max  ?? sps.ControlValue_Max;
-                    lcl    = sps.OdSensor_Min  ?? sps.ControlValue_Min;
+                    target = sps.ToleranceOuter_Asli ?? sps.OdSensor_Asli ?? sps.ControlValue_Asli;
+                    ucl    = sps.ToleranceOuter_Max  ?? sps.OdSensor_Max  ?? sps.ControlValue_Max;
+                    lcl    = sps.ToleranceOuter_Min  ?? sps.OdSensor_Min  ?? sps.ControlValue_Min;
                     
-                    // Fallback to Tolerance if Min/Max are empty
+                    // Fallback to parsed text tolerance if explicit min/max are empty.
                     if (ucl == null && target != null)
                     {
-                        var tol = sps.ToleranceOuter_Asli ?? TryParseTolerance(sps.ToleranceOuter);
+                        var tol = sps.ToleranceOuter_Asli
+                               ?? TryParseTolerance(sps.ToleranceOuter)
+                               ?? TryParseTolerance(sps.OdSensor)
+                               ?? TryParseTolerance(sps.ControlValue);
                         if (tol != null) { ucl = target + tol; lcl = target - tol; }
                     }
                     
                     label = "Outer Diameter"; unit = "mm"; break;
                 case "inner_diameter":
-                    target = TryParseFirst(sps.InnerTarget);
-                    ucl    = TryParseFirst(sps.InnerMax) ?? TryParseFirst(sps.InnerUCL);
-                    lcl    = TryParseFirst(sps.InnerMin) ?? TryParseFirst(sps.InnerLCL);
+                    target = sps.ToleranceInner_Asli ?? TryParseFirst(sps.InnerTarget);
+                    ucl    = sps.ToleranceInner_Max ?? TryParseFirst(sps.InnerMax) ?? TryParseFirst(sps.InnerUCL);
+                    lcl    = sps.ToleranceInner_Min ?? TryParseFirst(sps.InnerMin) ?? TryParseFirst(sps.InnerLCL);
 
-                    // Fallback to ToleranceInner_Asli if Min/Max are empty
-                    if (ucl == null && target != null && sps.ToleranceInner_Asli != null)
+                    // Fallback to parsed text tolerance if explicit min/max are empty
+                    if (ucl == null && target != null)
                     {
-                        ucl = target + sps.ToleranceInner_Asli;
-                        lcl = target - sps.ToleranceInner_Asli;
+                        var tol = sps.ToleranceInner_Asli ?? TryParseTolerance(sps.ToleranceInner);
+                        if (tol != null)
+                        {
+                            ucl = target + tol;
+                            lcl = target - tol;
+                        }
                     }
                     label = "Inner Diameter"; unit = "mm"; break;
                 case "hose_speed":
@@ -865,16 +880,15 @@ namespace VelastoProductionSystem.Controllers
             switch (metricKey)
             {
                 case "outer_diameter":
-                    // Gunakan OdSensor sebagai nilai standar OD sensor
-                    target    = TryParseFirst(sps.OdSensor) ?? TryParseFirst(sps.ControlValue);
+                    target    = TryParseFirst(sps.ToleranceOuter) ?? TryParseFirst(sps.OdSensor) ?? TryParseFirst(sps.ControlValue);
                     tolerance = TryParseTolerance(sps.ToleranceOuter)
-                             ?? TryParseTolerance(sps.ToleranceInner)
-                             ?? TryParseTolerance(sps.OdSensor);
+                             ?? TryParseTolerance(sps.OdSensor)
+                             ?? TryParseTolerance(sps.ControlValue);
                     label = "Outer Diameter"; unit = "mm";
                     break;
                 case "inner_diameter":
-                    target    = TryParseFirst(sps.InnerTarget);
-                    tolerance = TryParseTolerance(sps.InnerTol);
+                    target    = TryParseFirst(sps.ToleranceInner) ?? TryParseFirst(sps.InnerTarget);
+                    tolerance = TryParseTolerance(sps.ToleranceInner) ?? TryParseTolerance(sps.InnerTol);
                     // Jika ada UCL/LCL eksplisit, gunakan langsung
                     if (sps.InnerUCL != null)
                         ucl = TryParseFirst(sps.InnerUCL);

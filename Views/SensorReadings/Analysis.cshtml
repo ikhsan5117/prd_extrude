@@ -373,8 +373,8 @@ if (window.Chart) {
 
 // Mapping metricType -> field SpsMasters (camelCase for JSON)
 const METRIC_MAP = {
-    outer_diameter:    { field:'odSensor_Asli',          altField:'controlValue_Asli',    minField:'odSensor_Min', maxField:'odSensor_Max', tolFields:['toleranceOuter_Asli', 'toleranceOuter'], label:'Outer Diameter',    unit:'mm'    },
-    inner_diameter:    { field:'innerTarget',       minField:'innerMin', maxField:'innerMax', tolFields:['toleranceInner_Asli', 'toleranceInner'], label:'Inner Diameter',    unit:'mm'    },
+    outer_diameter:    { field:'toleranceOuter_Asli',    altField:'odSensor_Asli',        minField:'toleranceOuter_Min', maxField:'toleranceOuter_Max', tolFields:['toleranceOuter', 'odSensor', 'controlValue'], label:'Outer Diameter',    unit:'mm'    },
+    inner_diameter:    { field:'toleranceInner_Asli',    altField:'innerTarget',          minField:'toleranceInner_Min', maxField:'toleranceInner_Max', tolFields:['toleranceInner', 'innerTol'], label:'Inner Diameter',    unit:'mm'    },
     hose_speed:        { field:'hoseSpeed_Asli',         minField:'hoseSpeed_Min', maxField:'hoseSpeed_Max', label:'Hose Speed',        unit:'m/min' },
     head_temp_inner:   { field:'headTemp1_Asli',         minField:'headTemp1_Min', maxField:'headTemp1_Max', label:'Head Temp Inner',   unit:'°C'    },
     head_temp_outer:   { field:'headTemp2_Asli',         minField:'headTemp2_Min', maxField:'headTemp2_Max', label:'Head Temp Outer',   unit:'°C'    },
@@ -415,7 +415,7 @@ function renderSpsGrid(list) {
     }
     grid.innerHTML = list.map(s => `
         <div class="col-sm-6 col-md-4 col-lg-3">
-            <div class="sps-card p-3 h-100 ${selectedSps && selectedSps.id === s.id ? 'selected' : ''}" onclick="selectSps(${s.id})">
+            <div class="sps-card p-3 h-100 ${selectedSps && String(selectedSps.id) === String(s.id) ? 'selected' : ''}" onclick='selectSps(${JSON.stringify(s.id ?? "")})'>
                 <div class="d-flex justify-content-between align-items-start mb-1">
                     <span class="badge bg-info text-dark" style="font-size:.7rem;">${s.documentNumber || '-'}</span>
                     ${s.machineCode ? `<span class="badge bg-secondary" style="font-size:.7rem;">${s.machineCode}</span>` : ''}
@@ -436,7 +436,7 @@ function filterSps(keyword) {
 }
 
 function selectSps(id) {
-    selectedSps = SPS_LIST.find(s => s.id === id) || null;
+    selectedSps = SPS_LIST.find(s => String(s.id) === String(id)) || null;
     renderSpsGrid(getFilteredList());
     updateSelectedPanel();
 }
@@ -554,8 +554,8 @@ function updateMetricStdDisplay() {
 
 function buildAllParamPills(s) {
     const params = [
-        { l:'OD Target',       v:s.odSensor_Asli || s.controlValue_Asli, u:'mm',     m:'outer_diameter' },
-        { l:'Inner Target',    v:s.innerTarget,      u:'mm',     m:'inner_diameter' },
+        { l:'Outer Dia',       v:s.toleranceOuter_Asli || s.odSensor_Asli || s.controlValue_Asli, u:'mm',     m:'outer_diameter' },
+        { l:'Inner Dia',       v:s.toleranceInner_Asli || s.innerTarget, u:'mm',     m:'inner_diameter' },
         { l:'Head Temp 1',     v:s.headTemp1_Asli,   u:'C',      m:'head_temp_inner' },
         { l:'Head Temp 2',     v:s.headTemp2_Asli,   u:'C',      m:'head_temp_outer' },
         { l:'Screw Spd 1',     v:s.screwSpeed1_Asli, u:'rpm',    m:'screw_speed_inner' },
@@ -701,7 +701,7 @@ async function loadAnalysis() {
 
     let url = `/api/sensor-readings/analysis-data?metricType=${encodeURIComponent(metric)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
     if (machine)     url += `&machineCode=${encodeURIComponent(machine)}`;
-    if (selectedSps) url += `&spsId=${selectedSps.id}`;
+    if (selectedSps) url += `&spsId=${encodeURIComponent(selectedSps.id)}`;
 
     const btn = document.getElementById('btnAnalysis');
     btn.disabled = true;
