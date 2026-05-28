@@ -682,7 +682,34 @@
                         @foreach(var die in diesList) {
                             <div class="col-md-6 col-xl-4 die-container-item" id="die_card_@die.SpecKey">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
+
+                                    <!-- TOP: Standard bar with min / std / max -->
+                                    <div class="die-spec-bar mb-3 px-2 pt-2 pb-2 rounded-2" style="background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.15);">
+                                        <div class="text-center mb-1">
+                                            <span style="font-size: 0.48rem; font-weight: 900; letter-spacing: 2px; color: var(--accent-glow, #38bdf8); text-transform: uppercase;">STANDARD</span>
+                                        </div>
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            <div class="text-center">
+                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">min</div>
+                                                <div id="spec_min_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
+                                            </div>
+                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
+                                            <div class="text-center">
+                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase;">std</div>
+                                                <div id="spec_std_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.95rem; color: #7dd3fc; min-width: 48px;">--</div>
+                                            </div>
+                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
+                                            <div class="text-center">
+                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">max</div>
+                                                <div id="spec_max_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Hidden full spec value for JS validation -->
+                                    <div id="spec_@die.SpecKey" style="display:none;">@die.Std</div>
+
+                                    <!-- MIDDLE: Instrument name + OK/NG -->
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="label-stack">
                                             <span class="label-sub">INSTRUMENT</span>
                                             <span class="label-main fs-6">@die.Name</span>
@@ -693,24 +720,15 @@
                                         </div>
                                     </div>
 
-                                    <div class="row g-2 align-items-end mt-auto">
-                                        <div class="col-4">
-                                            <div class="text-center">
-                                                <label class="lbl-small mb-1 text-info-glow" style="font-size: 0.55rem;">STANDARD</label>
-                                                <div class="hud-input-underlined py-1 text-info-glow bg-dark bg-opacity-50 rounded-2 border-0" id="spec_@die.SpecKey" style="font-size: 0.9rem; min-height: 35px;">@die.Std</div>
-                                            </div>
+                                    <!-- BOTTOM: Before + After centered -->
+                                    <div class="d-flex justify-content-center gap-3 mt-auto">
+                                        <div class="text-center" style="width: 130px;">
+                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">BEFORE</label>
+                                            <input name="@die.InitName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
                                         </div>
-                                        <div class="col-4">
-                                            <div class="text-center">
-                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">BEFORE</label>
-                                                <input name="@die.InitName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="text-center">
-                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">AFTER</label>
-                                                <input name="@die.FinalName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
-                                            </div>
+                                        <div class="text-center" style="width: 130px;">
+                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">AFTER</label>
+                                            <input name="@die.FinalName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
                                         </div>
                                     </div>
                                 </div>
@@ -1346,54 +1364,51 @@
                 middleCard.style.display = is3Layer ? '' : 'none';
             }
 
-            const formatVal = (val, prefix = '', suffix = '') => {
+            // formatVal: server now returns "Min | Asli | Max" ranges directly
+            const formatVal = (val) => {
                 if (val === undefined || val === null || val === '') return '---';
-                let strVal = String(val).trim();
-                // Prevent duplicate symbols
-                if (strVal === '-' || strVal === '' || strVal === '---') return strVal;
-                if (suffix.includes('±') && strVal.includes('±')) suffix = '';
-                if (prefix.toLowerCase().includes('max') && (strVal.toLowerCase().includes('max') || strVal.includes('±'))) prefix = '';
-                return `${prefix}${strVal}${suffix}`;
+                const strVal = String(val).trim();
+                return (strVal === '' || strVal === '-') ? '---' : strVal;
             };
 
             const specMappings = {
-                'HeadTempInner': formatVal(sps.headTempInner || sps.headTemp || sps.HeadTemp || sps.HeadTemp1, '', ' ± 5'),
-                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_1, '', ' ± 5'),
-                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_1, '', ' ± 5'),
-                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder1_3, '', ' ± 5'),
-                'ScrewTempInner': formatVal(sps.screwTempInner || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp1, '', ' ± 5'),
-                'ScrewSpeedInner': formatVal(sps.screwSpeedInner || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed1, '', ' ± 5'),
-                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.FeedRollRatioInner || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed1, 'Max '),
-                'PressureInner': formatVal(sps.pressureInner || sps.pressure || sps.Pressure || sps.Pressure1, 'Max '),
+                'HeadTempInner':      formatVal(sps.headTempInner      || sps.HeadTempInner),
+                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner || sps.Cylinder1TempInner),
+                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner || sps.Cylinder2TempInner),
+                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner || sps.Cylinder3TempInner),
+                'ScrewTempInner':     formatVal(sps.screwTempInner     || sps.ScrewTempInner),
+                'ScrewSpeedInner':    formatVal(sps.screwSpeedInner    || sps.ScrewSpeedInner),
+                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.FeedRollRatioInner),
+                'PressureInner':      formatVal(sps.pressureInner      || sps.PressureInner),
 
-                'HeadTempOuter': formatVal(sps.headTempOuter || sps.headTemp || sps.HeadTemp || sps.HeadTemp2, '', ' ± 5'),
-                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter || sps.cylinder1Temp || sps.Cylinder1Temp || sps.Cylinder1_2, '', ' ± 5'),
-                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter || sps.cylinder2Temp || sps.Cylinder2Temp || sps.Cylinder2_2, '', ' ± 5'),
-                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter || sps.cylinder3Temp || sps.Cylinder3Temp || sps.Cylinder3_2, '', ' ± 5'),
-                'ScrewTempOuter': formatVal(sps.screwTempOuter || sps.screwTemp || sps.ScrewTemp || sps.ScrewTemp2, '', ' ± 5'),
-                'ScrewSpeedOuter': formatVal(sps.screwSpeedOuter || sps.screwSpeed || sps.ScrewSpeed || sps.ScrewSpeed2, '', ' ± 5'),
-                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.FeedRollRatioOuter || sps.feedRollRatio || sps.FeedRollRatio || sps.Feed2, 'Max '),
-                'PressureOuter': formatVal(sps.pressureOuter || sps.pressure || sps.Pressure || sps.Pressure2, 'Max '),
+                'HeadTempOuter':      formatVal(sps.headTempOuter      || sps.HeadTempOuter),
+                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter || sps.Cylinder1TempOuter),
+                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter || sps.Cylinder2TempOuter),
+                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter || sps.Cylinder3TempOuter),
+                'ScrewTempOuter':     formatVal(sps.screwTempOuter     || sps.ScrewTempOuter),
+                'ScrewSpeedOuter':    formatVal(sps.screwSpeedOuter    || sps.ScrewSpeedOuter),
+                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.FeedRollRatioOuter),
+                'PressureOuter':      formatVal(sps.pressureOuter      || sps.PressureOuter),
 
-                'SpiralSpeed': formatVal(sps.spiralSpeed || sps.SpiralSpeed, '', ' ± 20'),
-                'SpiralPitchSetting': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
-                'SpiralPitchDisplay': formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch, '', ' ± 5'),
-                'PresetValue': formatVal(sps.presetValue || sps.PresetValue, '', ' ± 0.5'),
-                'ControlValue': formatVal(sps.controlValue || sps.ControlValue),
-                'HoseSpeed': formatVal(sps.hoseSpeed || sps.HoseSpeed),
-                'TakeupConveyorSpeed': formatVal(sps.takeUpConveyorSpeed || sps.TakeUpConveyorSpeed || sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed),
-                'CoolConveyorSpeed': formatVal(sps.coolConveyorSpeed || sps.CoolConveyorSpeed),
-                'ConveyorRatio': formatVal(sps.conveyorRatio || sps.ConveyorRatio),
-                'ChillerWaterTemp': formatVal(sps.chillerWaterTemp || sps.ChillerWaterTemp),
-                'CaterpillarGap': formatVal(sps.caterpillarGap || sps.CaterpillarGap),
-                'UnsmoothSurface': formatVal(sps.unsmoothSurface || sps.UnsmoothSurface || 'OK'),
+                'SpiralSpeed':         formatVal(sps.spiralSpeed         || sps.SpiralSpeed),
+                'SpiralPitchSetting':  formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch),
+                'SpiralPitchDisplay':  formatVal(sps.spiralPitchDisplay   || sps.SpiralPitchDisplay || sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch),
+                'PresetValue':         formatVal(sps.presetValue         || sps.PresetValue),
+                'ControlValue':        formatVal(sps.controlValue        || sps.ControlValue),
+                'HoseSpeed':           formatVal(sps.hoseSpeed           || sps.HoseSpeed),
+                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed || sps.TakeUpConveyorSpeed),
+                'CoolConveyorSpeed':   formatVal(sps.coolConveyorSpeed   || sps.CoolConveyorSpeed),
+                'ConveyorRatio':       formatVal(sps.conveyorRatio       || sps.ConveyorRatio),
+                'ChillerWaterTemp':    formatVal(sps.chillerWaterTemp    || sps.ChillerWaterTemp),
+                'CaterpillarGap':      formatVal(sps.caterpillarGap      || sps.CaterpillarGap),
+                'UnsmoothSurface':     formatVal(sps.unsmoothSurface     || sps.UnsmoothSurface || 'OK'),
 
-                'NippleDie': formatVal(sps.innerDie || sps.InnerDie || sps.nipple || sps.Nipple),
-                'TubeDie': formatVal(sps.tubeDie || sps.TubeDie),
-                'MiddleDie': formatVal(sps.middleDie || sps.MiddleDie),
-                'CoverDie': formatVal(sps.coverDie || sps.CoverDie),
-                'SpacerDie': formatVal(sps.spacerDie || sps.SpacerDie),
-                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie || sps.toleranceInner || sps.ToleranceInner)
+                'NippleDie':    formatVal(sps.innerDie    || sps.InnerDie   || sps.Nipple),
+                'TubeDie':      formatVal(sps.tubeDie     || sps.TubeDie),
+                'MiddleDie':    formatVal(sps.middleDie   || sps.MiddleDie),
+                'CoverDie':     formatVal(sps.coverDie    || sps.CoverDie),
+                'SpacerDie':    formatVal(sps.spacerDie   || sps.SpacerDie),
+                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie)
             };
 
             for (const [key, val] of Object.entries(specMappings)) {
@@ -1403,6 +1418,16 @@
 
                 if (el) {
                     el.innerText = val;
+                    // Populate min/std/max split display for die cards
+                    const minEl = document.getElementById('spec_min_' + key);
+                    const stdEl = document.getElementById('spec_std_' + key);
+                    const maxEl = document.getElementById('spec_max_' + key);
+                    if (minEl || stdEl || maxEl) {
+                        const parts = val.split('|').map(s => s.trim());
+                        if (minEl) minEl.textContent = parts[0] || '--';
+                        if (stdEl) stdEl.textContent = parts[1] || (parts[0] || '--');
+                        if (maxEl) maxEl.textContent = parts[2] || '--';
+                    }
                     el.classList.add('blink-once');
                     
                     // Logic to Disable/Lock inputs if no standard exists
@@ -2103,7 +2128,7 @@
                 DRAC_Awal: document.getElementById('DRAC_Awal').value,
                 DRAC_Akhir: document.getElementById('DRAC_Akhir').value,
 
-                SpsId: document.getElementById('SpsId')?.value ? parseInt(document.getElementById('SpsId').value) : null,
+                SpsId: document.getElementById('SpsId')?.value || null,
                 ItemCode: document.getElementById('ItemCode')?.value,
 
                 NippleDieOK: document.querySelector('input[name="NippleDieOK"]:checked')?.value === 'true',

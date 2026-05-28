@@ -120,9 +120,9 @@ namespace VelastoProductionSystem.Controllers
             double stdDev = Math.Sqrt(sumOfSquares / (allValues.Count > 1 ? allValues.Count - 1 : 1));
             if (stdDev == 0) stdDev = 0.001; 
 
-            // Ambil data SPS untuk toleransi (MasterlistSpsDoubleLayers)
-            var sps = _context.MasterlistSpsDoubleLayers
-                .FirstOrDefault(s => s.HoseType == productCode || s.ItemList == productCode);
+            // Ambil data SPS untuk toleransi (SpsNoDocs - FIXED from MasterlistSpsDoubleLayers)
+            var sps = _context.SpsNoDocs
+                .FirstOrDefault(s => s.HoseType == productCode || s.DocumentNumber == productCode);
 
             double target = avg;
             double usl = target + 0.4;

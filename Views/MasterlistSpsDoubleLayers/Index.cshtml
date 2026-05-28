@@ -1045,7 +1045,7 @@
              // Trigger SweetAlert for messages from TempData
              @if (TempData["SuccessMessage"] != null)
              {
-                  var successMsg = TempData["SuccessMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "");
+                  var successMsg = TempData["SuccessMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "")?.Replace("'", "\\'");
                   var sheetLog = TempData["SheetLog"]?.ToString()?.Replace("\n", "\\n")?.Replace("\r", "")?.Replace("'", "\\'");
                  
                  <text>
@@ -1069,7 +1069,7 @@
              
              @if (TempData["ErrorMessage"] != null)
              {
-                  var errorMsg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "");
+                  var errorMsg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "")?.Replace("'", "\\'");
                  
                  <text>
                  Swal.fire({

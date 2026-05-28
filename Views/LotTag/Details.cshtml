@@ -1,0 +1,176 @@
+@model VelastoProductionSystem.Models.LotTag
+
+@{
+    ViewData["Title"] = "Lot Tag Details";
+}
+
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-tag-fill"></i> Details Lot Tag: <strong>@Model.LotTagNumber</strong></span>
+                <div class="btn-group">
+                    <a asp-action="Print" asp-route-id="@Model.Id" class="btn btn-sm btn-secondary" target="_blank">
+                        <i class="bi bi-printer"></i> Print
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <!-- Status Header -->
+                    <div class="col-12 text-center mb-4">
+                        <div class="d-inline-block px-4 py-2 rounded-pill bg-glass border">
+                            <span class="text-muted small uppercase letter-spacing-1">Status:</span>
+                            @switch (Model.Status)
+                            {
+                                case "Created": <span class="badge bg-info ms-2">Created</span> break;
+                                case "InProduction": <span class="badge bg-warning ms-2">In Production</span> break;
+                                case "Completed": <span class="badge bg-success ms-2">Completed</span> break;
+                                default: <span class="badge bg-secondary ms-2">@Model.Status</span> break;
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Column 1: Product Info -->
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3"><i class="bi bi-gear-wide-connected me-2"></i>Informasi Produk</h5>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="40%" class="text-muted">Part Number</td>
+                                <td>: <strong>@Model.PartNumber</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Description</td>
+                                <td>: @Model.PartDescription</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Plant</td>
+                                <td>: @Model.Plant</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Target Qty</td>
+                                <td>: @Model.TargetQty PCS</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Lot Packaging</td>
+                                <td>: @Model.LotPackaging PCS</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">No. Lot</td>
+                                <td>: @Model.NoLot</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Column 2: Material & Compound -->
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3"><i class="bi bi-box-seam me-2"></i>Compound & Material</h5>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="40%" class="text-muted">Compound Code</td>
+                                <td>: @Model.CompoundCode</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Compound Qty</td>
+                                <td>: @(Model.CompoundQty?.ToString("F2") ?? "-") KG</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">BOM Text</td>
+                                <td>: @Model.BomText</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Daftar Komponen</td>
+                                <td>: <small>@Model.DaftarKomponen</small></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- QC Section -->
+                    <div class="col-12 mt-4">
+                        <div class="card border-primary bg-glass">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-clipboard-check me-2"></i>Quality Control (QC)</span>
+                                <a asp-action="UpdateQC" asp-route-id="@Model.Id" class="btn btn-sm btn-light">
+                                    <i class="bi bi-pencil-square"></i> Update QC
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="p-3 text-center border-end">
+                                            <div class="text-muted small">Status Check</div>
+                                            <div class="h5 mt-1">
+                                                @if (Model.TanggalCheck != null)
+                                                {
+                                                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-warning"><i class="bi bi-clock-history"></i> Pending</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 text-center border-end">
+                                            <div class="text-muted small">Qty OK</div>
+                                            <div class="h3 mt-1 text-success">@(Model.QtyOK ?? 0) <small class="h6">PCS</small></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 text-center">
+                                            <div class="text-muted small">Qty NG</div>
+                                            <div class="h3 mt-1 text-danger">@(Model.QtyNG ?? 0) <small class="h6">PCS</small></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-3 pt-3 border-top">
+                                    <div class="col-md-4">
+                                        <strong>Subcon:</strong> @(Model.SubconCheck ?? "-")
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Mesin:</strong> @(Model.MesinCheck ?? "-")
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Tanggal QC:</strong> @(Model.TanggalCheck?.ToString("dd/MM/yyyy HH:mm") ?? "-")
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(Model.NGReason))
+                                    {
+                                        <div class="col-12 mt-3 p-2 bg-danger bg-opacity-10 border border-danger rounded">
+                                            <strong>NG Reason:</strong> @Model.NGReason
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- metadata -->
+                    <div class="col-12 mt-4 pt-3 border-top text-muted small">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <i class="bi bi-person me-1"></i> Created by: @Model.CreatedBy
+                            </div>
+                            <div class="col-md-4">
+                                <i class="bi bi-calendar-event me-1"></i> Created date: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                            <div class="col-md-4">
+                                <i class="bi bi-printer me-1"></i> Print Count: @Model.PrintCount | Last: @(Model.LastPrintedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 d-flex gap-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -22,112 +22,6 @@ namespace VelastoProductionSystem.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("VelastoProductionSystem.Models.DailyPlanActivity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ActualDurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ActualEnd")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ActualQty")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ActualStart")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DailyPlanExecutionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PartName1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PartName2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("PlanDurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PlanEnd")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("PlanQty")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PlanStart")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Remarks")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StopReason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DailyPlanExecutionId");
-
-                    b.ToTable("DailyPlanActivities");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.DailyPlanExecution", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("ExecutionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FinishMesin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("GroupName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("LineStopMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LineStopNote")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MachineName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pic1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pic2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Shift")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StartMesin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DailyPlanExecutions");
-                });
-
             modelBuilder.Entity("VelastoProductionSystem.Models.DimensionMeasurement", b =>
                 {
                     b.Property<int>("Id")
@@ -166,6 +60,10 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal?>("R5")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("R6")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -259,8 +157,8 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("Shift")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("SpsId")
-                        .HasColumnType("int");
+                    b.Property<string>("SpsId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StandardLength")
                         .HasColumnType("nvarchar(max)");
@@ -276,8 +174,6 @@ namespace VelastoProductionSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SpsId");
 
                     b.ToTable("DimensionReports");
                 });
@@ -322,111 +218,6 @@ namespace VelastoProductionSystem.Migrations
                     b.HasIndex("DimensionReportId");
 
                     b.ToTable("DimensionSummaries");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.LotTag", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ActualQty")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Barcode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BomText")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CompoundCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("CompoundQty")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DaftarKomponen")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("LastPrintedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("LotPackaging")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LotTagNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("MesinCheck")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NGReason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NoLot")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PartDescription")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PartNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Plant")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PrintCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("PrintedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ProductionReportId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("QtyNG")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("QtyOK")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SubconCheck")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("TanggalCheck")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TargetQty")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LotTagNumber")
-                        .IsUnique();
-
-                    b.HasIndex("PartNumber");
-
-                    b.HasIndex("ProductionReportId");
-
-                    b.ToTable("LotTags");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.Machine", b =>
@@ -485,554 +276,6 @@ namespace VelastoProductionSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Machines");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.MasterlistSpsDoubleLayer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ADistance")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AmMeter")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AmMeter2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AmMeter3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CaterpillarGap")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ChillerWaterTemp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ControlValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ConveyorRatio")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CoolConveyorSpeed")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CoolConveyorSpeed2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CoverDie")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CurrentValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Customer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CuttingSpeed")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder1_1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder1_2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder1_3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder2_1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder2_2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder2_3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder3_1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder3_2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Cylinder3_3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DancerPosition")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Dimensi")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ExcelId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Feed1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Feed2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Feed3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FeedRollRatio1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FeedRollRatio2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FeedRollRatio3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Formulasi")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HeadTemp1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HeadTemp2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HeadTemp3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HoseSpeed")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HoseType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerLCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMax")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidLCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidMax")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidMin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidTarget")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidTol")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMidUCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerMin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerTarget")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerTol")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerTube")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerUCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ItemList")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Machine")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MachineCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MarkingColour")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MarkingSort")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Material")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshDim1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshDim2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshDim3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshScreen1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshScreen2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshScreen3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MiddleDie")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MiddleTube")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Nipple")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("No")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OdSensor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OuterCover")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PitchYarn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PresetValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pressure1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pressure2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pressure3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RevisionDate")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RevisionNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScrewSpeed1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScrewSpeed2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScrewSpeed3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScrewTemp1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScrewTemp2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScrewTemp3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SelisihTebal")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SpacerDie")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SpiralPitchDisplay")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SpiralPitchSetting")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SpiralSpeed")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TakeUpConveyorSpeed")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TebalInner")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TebalInnerMiddle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TebalOuter")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TebalTotal")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TensionYarnInner")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TensionYarnOuter")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TextMarkingMaterial")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ThickLCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ThickMax")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ThickMin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ThickTarget")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ThickTol")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ThickUCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ToleranceInner")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ToleranceOuter")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ToleranceSpiralPitch")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalLCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalMax")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalMin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalTarget")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalTol")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalUCL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TubeDie")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UnsmoothSurface")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UseLimitsInner")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UseLimitsMiddle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UseLimitsOuter")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Yarn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MasterlistSpsDoubleLayers");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.NowProducing", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CHS2LTargetBenang")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CHS2LTargetDH")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CHS2LTargetMaterial")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CHS2LTargetWaktu")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CHS3LTargetBenang")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CHS3LTargetDH")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CHS3LTargetMaterial")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CHS3LTargetWaktu")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Class")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DandoriEndProdTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DandoriStartProdTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Dimension")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HoseType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaterialInner")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaterialInnerLotNo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("MaterialInnerSG")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("MaterialMiddle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaterialMiddleLotNo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("MaterialMiddleSG")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("MaterialOuter")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaterialOuterLotNo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("MaterialOuterSG")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ProductionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ProductionEndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ProductionStartTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("SPVCheck")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SPVCheckBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("SPVCheckTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Yarn")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NowProducings");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.PackingStandard", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ActualQty")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DH")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Dandori")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EffectiveDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MaterialName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NACode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PartNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Remarks")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StdQty")
-                        .HasColumnType("int");
-
-                    b.Property<string>("VinCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NACode")
-                        .IsUnique();
-
-                    b.ToTable("PackingStandards");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.PartMaster", b =>
@@ -1734,8 +977,8 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<bool>("SpacerDieOK")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("SpsId")
-                        .HasColumnType("int");
+                    b.Property<string>("SpsId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StandardLength")
                         .HasColumnType("nvarchar(max)");
@@ -1803,8 +1046,6 @@ namespace VelastoProductionSystem.Migrations
                     b.HasIndex("DocumentNumber");
 
                     b.HasIndex("ProductionDate");
-
-                    b.HasIndex("SpsId");
 
                     b.ToTable("ProductionReports");
                 });
@@ -1909,7 +1150,7 @@ namespace VelastoProductionSystem.Migrations
                     b.ToTable("ShiftMasters");
                 });
 
-            modelBuilder.Entity("VelastoProductionSystem.Models.SpsImportTrialRow", b =>
+            modelBuilder.Entity("VelastoProductionSystem.Models.SpsItemList", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1917,90 +1158,40 @@ namespace VelastoProductionSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BatchId")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("Customer")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("DetectedFormat")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("Dimensi")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
                     b.Property<string>("DocumentNumber")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("ExcelId")
                         .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool>("ExistsInProduction")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("HoseType")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTime>("ImportedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ImportedBy")
+                    b.Property<string>("ItemList")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("ItemCode")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("Machine")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("SourceFileName")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<int>("SourceRowIndex")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SourceSheet")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BatchId");
+                    b.HasIndex("DocumentNumber");
 
-                    b.HasIndex("ExcelId", "ItemCode")
-                        .IsUnique();
-
-                    b.ToTable("SpsImportTrialRows");
+                    b.ToTable("SpsItemLists");
                 });
 
-            modelBuilder.Entity("VelastoProductionSystem.Models.SpsMaster", b =>
+            modelBuilder.Entity("VelastoProductionSystem.Models.SpsNoDoc", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("DocumentNumber")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ADistance")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ADistance_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ADistance_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ADistance_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("AmMeter")
                         .HasColumnType("nvarchar(max)");
@@ -2008,20 +1199,104 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("AmMeter2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("AmMeter2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("AmMeter2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("AmMeter2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("AmMeter3")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("AmMeter3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("AmMeter3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("AmMeter3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("AmMeter_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("AmMeter_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("AmMeter_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("CaterpillarGap")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("CaterpillarGap_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CaterpillarGap_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CaterpillarGap_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ChillerWaterTemp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ChillerWaterTemp_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ChillerWaterTemp_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ChillerWaterTemp_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("ControlValue")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ControlValue_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ControlValue_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ControlValue_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ConveyorRatio")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ConveyorRatio_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ConveyorRatio_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ConveyorRatio_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("CoolConveyorSpeed")
                         .HasColumnType("nvarchar(max)");
@@ -2029,8 +1304,44 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("CoolConveyorSpeed2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("CoolConveyorSpeed2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CoolConveyorSpeed2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CoolConveyorSpeed2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CoolConveyorSpeed_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CoolConveyorSpeed_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CoolConveyorSpeed_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("CoverDie")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("CoverDie_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CoverDie_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CoverDie_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("CurrentValue")
                         .HasColumnType("nvarchar(max)");
@@ -2041,62 +1352,260 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("CuttingSpeed")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("CuttingSpeed_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CuttingSpeed_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("CuttingSpeed_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Cylinder1_1")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Cylinder1_1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder1_1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder1_1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Cylinder1_2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Cylinder1_2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder1_2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder1_2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Cylinder1_3")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Cylinder1_3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder1_3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder1_3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Cylinder2_1")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Cylinder2_1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder2_1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder2_1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Cylinder2_2")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Cylinder2_2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder2_2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder2_2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Cylinder2_3")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Cylinder2_3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder2_3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder2_3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Cylinder3_1")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Cylinder3_1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder3_1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder3_1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Cylinder3_2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Cylinder3_2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder3_2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder3_2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Cylinder3_3")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Cylinder3_3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder3_3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Cylinder3_3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("DancerPosition")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("DancerPosition_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("DancerPosition_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("DancerPosition_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Dimensi")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ExcelId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Feed1")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Feed1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Feed1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Feed1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Feed2")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Feed2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Feed2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Feed2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Feed3")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Feed3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Feed3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Feed3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("FeedRollRatio1")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("FeedRollRatio1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("FeedRollRatio1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("FeedRollRatio1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("FeedRollRatio2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("FeedRollRatio2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("FeedRollRatio2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("FeedRollRatio2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("FeedRollRatio3")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("FeedRollRatio3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("FeedRollRatio3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("FeedRollRatio3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Formulasi")
                         .HasColumnType("nvarchar(max)");
@@ -2104,14 +1613,62 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("HeadTemp1")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("HeadTemp1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HeadTemp1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HeadTemp1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("HeadTemp2")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("HeadTemp2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HeadTemp2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HeadTemp2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("HeadTemp3")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("HeadTemp3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HeadTemp3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HeadTemp3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("HoseSpeed")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("HoseSpeed_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HoseSpeed_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("HoseSpeed_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("HoseType")
                         .HasColumnType("nvarchar(max)");
@@ -2155,9 +1712,6 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("InnerUCL")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ItemList")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Machine")
                         .HasColumnType("nvarchar(max)");
 
@@ -2176,11 +1730,47 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("MeshDim1")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("MeshDim1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MeshDim1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MeshDim1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("MeshDim2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("MeshDim2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MeshDim2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MeshDim2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("MeshDim3")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("MeshDim3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MeshDim3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MeshDim3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("MeshScreen1")
                         .HasColumnType("nvarchar(max)");
@@ -2194,11 +1784,35 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("MiddleDie")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("MiddleDie_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MiddleDie_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("MiddleDie_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("MiddleTube")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Nipple")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Nipple_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Nipple_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Nipple_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("No")
                         .HasColumnType("nvarchar(max)");
@@ -2206,23 +1820,95 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("OdSensor")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("OdSensor_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("OdSensor_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("OdSensor_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("OuterCover")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PitchYarn")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("PitchYarn_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("PitchYarn_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("PitchYarn_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("PresetValue")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("PresetValue_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("PresetValue_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("PresetValue_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Pressure1")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Pressure1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Pressure1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Pressure1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Pressure2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("Pressure2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Pressure2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Pressure2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Pressure3")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Pressure3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Pressure3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("Pressure3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("RevisionDate")
                         .HasColumnType("nvarchar(max)");
@@ -2233,38 +1919,182 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("ScrewSpeed1")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ScrewSpeed1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewSpeed1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewSpeed1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ScrewSpeed2")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ScrewSpeed2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewSpeed2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewSpeed2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("ScrewSpeed3")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ScrewSpeed3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewSpeed3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewSpeed3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ScrewTemp1")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ScrewTemp1_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewTemp1_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewTemp1_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("ScrewTemp2")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ScrewTemp2_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewTemp2_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewTemp2_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ScrewTemp3")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ScrewTemp3_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewTemp3_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ScrewTemp3_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("SelisihTebal")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("SelisihTebal_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SelisihTebal_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SelisihTebal_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("SpacerDie")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("SpacerDie_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpacerDie_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpacerDie_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("SpiralPitchDisplay")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("SpiralPitchDisplay_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpiralPitchDisplay_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpiralPitchDisplay_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("SpiralPitchSetting")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("SpiralPitchSetting_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpiralPitchSetting_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpiralPitchSetting_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("SpiralSpeed")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("SpiralSpeed_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpiralSpeed_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("SpiralSpeed_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("TakeUpConveyorSpeed")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("TakeUpConveyorSpeed_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TakeUpConveyorSpeed_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TakeUpConveyorSpeed_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("TebalInner")
                         .HasColumnType("nvarchar(max)");
@@ -2272,11 +2102,59 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("TebalInnerMiddle")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("TebalInnerMiddle_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalInnerMiddle_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalInnerMiddle_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalInner_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalInner_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalInner_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("TebalOuter")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("TebalOuter_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalOuter_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalOuter_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("TebalTotal")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("TebalTotal_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalTotal_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TebalTotal_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("TensionYarnInner")
                         .HasColumnType("nvarchar(max)");
@@ -2308,11 +2186,47 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("ToleranceInner")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ToleranceInner_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ToleranceInner_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ToleranceInner_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ToleranceOuter")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ToleranceOuter_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ToleranceOuter_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ToleranceOuter_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("ToleranceSpiralPitch")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ToleranceSpiralPitch_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ToleranceSpiralPitch_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("ToleranceSpiralPitch_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("TotalLCL")
                         .HasColumnType("nvarchar(max)");
@@ -2335,6 +2249,18 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("TubeDie")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("TubeDie_Asli")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TubeDie_Max")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("TubeDie_Min")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("UnsmoothSurface")
                         .HasColumnType("nvarchar(max)");
 
@@ -2350,312 +2276,9 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<string>("Yarn")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("DocumentNumber");
 
-                    b.ToTable("SpsMasters");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.StandardParameterSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AirPressureA")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("AmMeter")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AmMeter2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AmMeter3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ApprovedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ApprovedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CaterpillarGap")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ChillerWaterTemp")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ControlValue")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ConveyorRatio")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CoolConveyorSpeed")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("CoverDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CustomerName")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Cylinder1Temp")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Cylinder1_2")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Cylinder1_3")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Cylinder2Temp")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Cylinder2_2")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Cylinder2_3")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Cylinder3Temp")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Cylinder3_2")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Cylinder3_3")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Diameter")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("EffectiveDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("FeedRollRatio")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("FeedRollRatio2")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("FeedRollRatio3")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("HeadTemp")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("HeadTemp2")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("HeadTemp3")
-                        .HasColumnType("int");
-
-                    b.Property<string>("HoseSpeed")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HoseType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("InnerDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("InnerMaterial")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ItemList")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LayerType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MachineCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MarkingMaterialColor")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("MarkingMaterialInner")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("MarkingMaterialOuter")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("MeshScreen")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshScreen2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MeshScreen3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("MiddleDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("OuterDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("OuterMaterial")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("PresetTemp")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PresetValve")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("Pressure")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("Pressure2")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("Pressure3")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("ProductCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RevisionNumber")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("ScrewSpeed")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("ScrewSpeed2")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("ScrewSpeed3")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("ScrewTemp")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ScrewTemp2")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ScrewTemp3")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("SpacerDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("SpiralPitch")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("SpiralPitchDisplay")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("SpiralSpeed")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("SpiralSpeedDisplay")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("TakeupConveyorSpeed")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Tol_CoverDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("Tol_MiddleDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("Tol_OuterDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("Tol_SpiralPitch")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("Tol_TubeDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("ToleranceDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("TubeDie")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("UnsmoothSurface")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("YarnType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerName");
-
-                    b.HasIndex("DocumentNumber");
-
-                    b.ToTable("StandardParameterSettings");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.DailyPlanActivity", b =>
-                {
-                    b.HasOne("VelastoProductionSystem.Models.DailyPlanExecution", "DailyPlanExecution")
-                        .WithMany("Activities")
-                        .HasForeignKey("DailyPlanExecutionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DailyPlanExecution");
+                    b.ToTable("SpsNoDocs");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.DimensionMeasurement", b =>
@@ -2669,16 +2292,6 @@ namespace VelastoProductionSystem.Migrations
                     b.Navigation("DimensionReport");
                 });
 
-            modelBuilder.Entity("VelastoProductionSystem.Models.DimensionReport", b =>
-                {
-                    b.HasOne("VelastoProductionSystem.Models.StandardParameterSetting", "StandardParameterSetting")
-                        .WithMany()
-                        .HasForeignKey("SpsId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("StandardParameterSetting");
-                });
-
             modelBuilder.Entity("VelastoProductionSystem.Models.DimensionSummary", b =>
                 {
                     b.HasOne("VelastoProductionSystem.Models.DimensionReport", "DimensionReport")
@@ -2688,16 +2301,6 @@ namespace VelastoProductionSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("DimensionReport");
-                });
-
-            modelBuilder.Entity("VelastoProductionSystem.Models.LotTag", b =>
-                {
-                    b.HasOne("VelastoProductionSystem.Models.ProductionReport", "ProductionReport")
-                        .WithMany()
-                        .HasForeignKey("ProductionReportId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("ProductionReport");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.ProductionMaterialLot", b =>
@@ -2722,16 +2325,6 @@ namespace VelastoProductionSystem.Migrations
                     b.Navigation("ProductionReport");
                 });
 
-            modelBuilder.Entity("VelastoProductionSystem.Models.ProductionReport", b =>
-                {
-                    b.HasOne("VelastoProductionSystem.Models.StandardParameterSetting", "StandardParameterSetting")
-                        .WithMany()
-                        .HasForeignKey("SpsId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("StandardParameterSetting");
-                });
-
             modelBuilder.Entity("VelastoProductionSystem.Models.SensorIngestLog", b =>
                 {
                     b.HasOne("VelastoProductionSystem.Models.ProductionReport", "ProductionReport")
@@ -2741,9 +2334,15 @@ namespace VelastoProductionSystem.Migrations
                     b.Navigation("ProductionReport");
                 });
 
-            modelBuilder.Entity("VelastoProductionSystem.Models.DailyPlanExecution", b =>
+            modelBuilder.Entity("VelastoProductionSystem.Models.SpsItemList", b =>
                 {
-                    b.Navigation("Activities");
+                    b.HasOne("VelastoProductionSystem.Models.SpsNoDoc", "SpsNoDoc")
+                        .WithMany("ItemLists")
+                        .HasForeignKey("DocumentNumber")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SpsNoDoc");
                 });
 
             modelBuilder.Entity("VelastoProductionSystem.Models.DimensionReport", b =>
@@ -2758,6 +2357,11 @@ namespace VelastoProductionSystem.Migrations
                     b.Navigation("MaterialLots");
 
                     b.Navigation("ProductionReadings");
+                });
+
+            modelBuilder.Entity("VelastoProductionSystem.Models.SpsNoDoc", b =>
+                {
+                    b.Navigation("ItemLists");
                 });
 #pragma warning restore 612, 618
         }

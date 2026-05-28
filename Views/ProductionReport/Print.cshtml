@@ -162,11 +162,13 @@
             </thead>
             <tbody>
                 @{
-                    var master = _context.MasterlistSpsDoubleLayers.FirstOrDefault(m => m.HoseType == Model.HoseType);
+                    // FIXED: Changed from MasterlistSpsDoubleLayers to SpsNoDocs
+                    var master = _context.SpsNoDocs.FirstOrDefault(m => m.HoseType == Model.HoseType);
                     
                     // Helper to parse string to decimal
                     decimal D(string? s, decimal def) => decimal.TryParse(s ?? "0", System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
                     
+                    // SpsNoDoc field names are the same as before (PascalCase)
                     decimal idNom = master != null ? D(master.Dimensi, 11.0m) : 11.0m;
                     decimal idTol = master != null ? D(master.ToleranceInner, 0.2m) : 0.2m;
                     decimal tubeNom = master != null ? D(master.TebalInner, 1.8m) : 1.8m;

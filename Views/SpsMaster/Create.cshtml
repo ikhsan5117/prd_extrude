@@ -89,12 +89,8 @@
                                     <div class="accordion-body">
                                         <div class="row g-3">
                                             <div class="col-md-3">
-                                                <label class="form-label text-white">Excel ID</label>
-                                                <input asp-for="ExcelId" class="form-control" placeholder="1-0, 2-1" />
-                                            </div>
-                                            <div class="col-md-3">
                                                 <label class="form-label text-white">No</label>
-                                                <input asp-for="No" class="form-control" type="number" />
+                                                <input asp-for="No" class="form-control" type="text" />
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label text-white">Machine <span class="text-danger">*</span></label>
@@ -116,22 +112,13 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-white">Revision Date</label>
-                                                <input asp-for="RevisionDate" class="form-control" type="date" />
+                                                <input asp-for="RevisionDate" class="form-control" />
                                             </div>
                                         </div>
                                         <div class="row g-3 mt-2">
-                                            <div class="col-md-4">
-                                                <label class="form-label text-white">Item List <span class="text-danger">*</span></label>
-                                                <input asp-for="ItemList" class="form-control bg-info bg-opacity-25 text-white fw-bold" required />
-                                                <small class="text-muted">Pisahkan dengan koma: ITEM001,ITEM002</small>
-                                            </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <label class="form-label text-white">Formulasi</label>
                                                 <input asp-for="Formulasi" class="form-control" />
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label text-white">Machine Code</label>
-                                                <input asp-for="MachineCode" class="form-control" />
                                             </div>
                                         </div>
                                     </div>
@@ -207,6 +194,20 @@
                                             <div class="col-md-4">
                                                 <label class="form-label text-white">Tension Yarn Outer</label>
                                                 <input asp-for="TensionYarnOuter" class="form-control" />
+                                            </div>
+                                        </div>
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Marking Sort</label>
+                                                <input asp-for="MarkingSort" class="form-control" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Text Marking Material</label>
+                                                <input asp-for="TextMarkingMaterial" class="form-control" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Marking Colour</label>
+                                                <input asp-for="MarkingColour" class="form-control" />
                                             </div>
                                         </div>
 
@@ -1337,17 +1338,34 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        $(document).ready(function() {
+            @if (TempData["ErrorMessage"] != null)
+            {
+                 var errorMsg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "")?.Replace("'", "\\'");
+                <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Menyimpan',
+                    html: '<div class="text-start" style="font-size: 0.9rem;">@Html.Raw(errorMsg)</div>',
+                    confirmButtonText: 'Tutup',
+                    background: '#1a1d21',
+                    color: '#fff',
+                    confirmButtonColor: '#7289da'
+                });
+                </text>
+            }
+        });
+
         // Form validation
         $('#createForm').on('submit', function(e) {
             const machine = $('[name="Machine"]').val();
-            const itemList = $('[name="ItemList"]').val();
             
-            if (!machine || !itemList) {
+            if (!machine) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'error',
                     title: 'Field Wajib Kosong',
-                    text: 'Machine dan Item List harus diisi!',
+                    text: 'Machine harus diisi!',
                     background: '#1a1d21',
                     color: '#fff'
                 });

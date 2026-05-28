@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Edit Master SPS";
+    var relatedCount = ViewBag.RelatedItemsCount ?? 0;
 }
 
 <style>
@@ -56,27 +57,134 @@
                 <div class="card-header bg-warning text-dark">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">
-                            <i class="bi bi-pencil-square me-2"></i>Edit Master SPS - @Model.ItemList
+                            <i class="bi bi-pencil-square me-2"></i>Edit Master SPS
                         </h4>
-                        <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                        <a asp-action="Index" class="btn btn-sm btn-outline-dark">
                             <i class="bi bi-arrow-left me-1"></i>Kembali
                         </a>
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <div class="alert alert-warning" role="alert">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        <strong>Mode Edit:</strong> Update field <span class="badge bg-success">MIN</span>, 
-                        <span class="badge bg-primary">ASLI</span>, dan <span class="badge bg-danger">MAX</span> 
-                        sesuai kebutuhan. Field yang wajib diisi ditandai dengan <span class="text-danger">*</span>
+                    <!-- Feature Explanation -->
+                    <div class="alert alert-primary" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-lightbulb-fill me-2"></i><strong>Fitur Baru: Update Massal</strong>
+                        </h6>
+                        <p class="mb-0 small">
+                            Saat mengedit item yang memiliki <strong>NO.DOC sama</strong> dengan item lain, 
+                            Anda dapat memilih untuk:
+                        </p>
+                        <ul class="mb-0 mt-2 small">
+                            <li><strong>Update Massal (ON):</strong> Semua item dengan NO.DOC yang sama akan diupdate sekaligus</li>
+                            <li><strong>Update Single (OFF):</strong> Hanya item ini saja yang diupdate</li>
+                        </ul>
+                        <hr class="my-2">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Toggle switch akan muncul otomatis jika ada item lain dengan NO.DOC yang sama.
+                        </small>
                     </div>
 
-                    <form asp-action="Edit" method="post" id="editForm">
-                        <input type="hidden" asp-for="Id" />
+                    <form asp-action="Edit" asp-route-documentNumber="@Model.DocumentNumber" method="post" id="editForm">
+                        <input type="hidden" name="originalDocumentNumber" value="@Model.DocumentNumber" />
+                        <!-- HIDDEN FIELDS FOR PRESERVING DATA NOT IN FORM -->
+                        <input type="hidden" asp-for="ADistance" />
+                        <input type="hidden" asp-for="AmMeter" />
+                        <input type="hidden" asp-for="AmMeter2" />
+                        <input type="hidden" asp-for="AmMeter3" />
+                        <input type="hidden" asp-for="CaterpillarGap" />
+                        <input type="hidden" asp-for="ChillerWaterTemp" />
+                        <input type="hidden" asp-for="ControlValue" />
+                        <input type="hidden" asp-for="ConveyorRatio" />
+                        <input type="hidden" asp-for="CoolConveyorSpeed" />
+                        <input type="hidden" asp-for="CoolConveyorSpeed2" />
+                        <input type="hidden" asp-for="CoverDie" />
+                        <input type="hidden" asp-for="CurrentValue" />
+                        <input type="hidden" asp-for="CuttingSpeed" />
+                        <input type="hidden" asp-for="Cylinder1_1" />
+                        <input type="hidden" asp-for="Cylinder1_2" />
+                        <input type="hidden" asp-for="Cylinder1_3" />
+                        <input type="hidden" asp-for="Cylinder2_1" />
+                        <input type="hidden" asp-for="Cylinder2_2" />
+                        <input type="hidden" asp-for="Cylinder2_3" />
+                        <input type="hidden" asp-for="Cylinder3_1" />
+                        <input type="hidden" asp-for="Cylinder3_2" />
+                        <input type="hidden" asp-for="Cylinder3_3" />
+                        <input type="hidden" asp-for="DancerPosition" />
+                        <input type="hidden" asp-for="Feed1" />
+                        <input type="hidden" asp-for="Feed2" />
+                        <input type="hidden" asp-for="Feed3" />
+                        <input type="hidden" asp-for="FeedRollRatio1" />
+                        <input type="hidden" asp-for="FeedRollRatio2" />
+                        <input type="hidden" asp-for="FeedRollRatio3" />
+                        <input type="hidden" asp-for="HeadTemp1" />
+                        <input type="hidden" asp-for="HeadTemp2" />
+                        <input type="hidden" asp-for="HeadTemp3" />
+                        <input type="hidden" asp-for="HoseSpeed" />
+                        <input type="hidden" asp-for="InnerLCL" />
+                        <input type="hidden" asp-for="InnerMax" />
+                        <input type="hidden" asp-for="InnerMidLCL" />
+                        <input type="hidden" asp-for="InnerMidMax" />
+                        <input type="hidden" asp-for="InnerMidMin" />
+                        <input type="hidden" asp-for="InnerMidTarget" />
+                        <input type="hidden" asp-for="InnerMidTol" />
+                        <input type="hidden" asp-for="InnerMidUCL" />
+                        <input type="hidden" asp-for="InnerMin" />
+                        <input type="hidden" asp-for="InnerTarget" />
+                        <input type="hidden" asp-for="InnerTol" />
+                        <input type="hidden" asp-for="InnerUCL" />
+                        <input type="hidden" asp-for="MeshDim1" />
+                        <input type="hidden" asp-for="MeshDim2" />
+                        <input type="hidden" asp-for="MeshDim3" />
+                        <input type="hidden" asp-for="MiddleDie" />
+                        <input type="hidden" asp-for="Nipple" />
+                        <input type="hidden" asp-for="OdSensor" />
+                        <input type="hidden" asp-for="PitchYarn" />
+                        <input type="hidden" asp-for="PresetValue" />
+                        <input type="hidden" asp-for="Pressure1" />
+                        <input type="hidden" asp-for="Pressure2" />
+                        <input type="hidden" asp-for="Pressure3" />
+                        <input type="hidden" asp-for="ScrewSpeed1" />
+                        <input type="hidden" asp-for="ScrewSpeed2" />
+                        <input type="hidden" asp-for="ScrewSpeed3" />
+                        <input type="hidden" asp-for="ScrewTemp1" />
+                        <input type="hidden" asp-for="ScrewTemp2" />
+                        <input type="hidden" asp-for="ScrewTemp3" />
+                        <input type="hidden" asp-for="SelisihTebal" />
+                        <input type="hidden" asp-for="SpacerDie" />
+                        <input type="hidden" asp-for="SpiralPitchDisplay" />
+                        <input type="hidden" asp-for="SpiralPitchSetting" />
+                        <input type="hidden" asp-for="SpiralSpeed" />
+                        <input type="hidden" asp-for="TakeUpConveyorSpeed" />
+                        <input type="hidden" asp-for="TebalInner" />
+                        <input type="hidden" asp-for="TebalInnerMiddle" />
+                        <input type="hidden" asp-for="TebalOuter" />
+                        <input type="hidden" asp-for="TebalTotal" />
+                        <input type="hidden" asp-for="ThickLCL" />
+                        <input type="hidden" asp-for="ThickMax" />
+                        <input type="hidden" asp-for="ThickMin" />
+                        <input type="hidden" asp-for="ThickTarget" />
+                        <input type="hidden" asp-for="ThickTol" />
+                        <input type="hidden" asp-for="ThickUCL" />
+                        <input type="hidden" asp-for="ToleranceInner" />
+                        <input type="hidden" asp-for="ToleranceOuter" />
+                        <input type="hidden" asp-for="ToleranceSpiralPitch" />
+                        <input type="hidden" asp-for="TotalLCL" />
+                        <input type="hidden" asp-for="TotalMax" />
+                        <input type="hidden" asp-for="TotalMin" />
+                        <input type="hidden" asp-for="TotalTarget" />
+                        <input type="hidden" asp-for="TotalTol" />
+                        <input type="hidden" asp-for="TotalUCL" />
+                        <input type="hidden" asp-for="TubeDie" />
+                        <input type="hidden" asp-for="UnsmoothSurface" />
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-                        
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <strong>Mode Edit Dokumen:</strong> Menyimpan perubahan akan langsung berlaku pada dokumen ini.
+                        </div>
                         <!-- ACCORDION SECTIONS -->
-                        <div class="accordion" id="accordionEdit">
+                        <div class="accordion" id="accordionCreate">
                             
                             <!-- SECTION 1: IDENTIFIKASI UTAMA -->
                             <div class="accordion-item bg-dark border-secondary">
@@ -90,12 +198,8 @@
                                     <div class="accordion-body">
                                         <div class="row g-3">
                                             <div class="col-md-3">
-                                                <label class="form-label text-white">Excel ID</label>
-                                                <input asp-for="ExcelId" class="form-control" placeholder="1-0, 2-1" />
-                                            </div>
-                                            <div class="col-md-3">
                                                 <label class="form-label text-white">No</label>
-                                                <input asp-for="No" class="form-control" type="number" />
+                                                <input asp-for="No" class="form-control" type="text" />
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label text-white">Machine <span class="text-danger">*</span></label>
@@ -108,8 +212,8 @@
                                         </div>
                                         <div class="row g-3 mt-2">
                                             <div class="col-md-4">
-                                                <label class="form-label text-white">Document Number</label>
-                                                <input asp-for="DocumentNumber" class="form-control" />
+                                                <label class="form-label text-white">Document Number <i class="bi bi-info-circle ms-1" title="Identifier Unik (Tidak bisa diedit)"></i></label>
+                                                <input asp-for="DocumentNumber" class="form-control text-muted" readonly style="cursor: not-allowed;" />
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-white">Revision Number</label>
@@ -117,22 +221,13 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-white">Revision Date</label>
-                                                <input asp-for="RevisionDate" class="form-control" type="date" />
+                                                <input asp-for="RevisionDate" class="form-control" />
                                             </div>
                                         </div>
                                         <div class="row g-3 mt-2">
-                                            <div class="col-md-4">
-                                                <label class="form-label text-white">Item List <span class="text-danger">*</span></label>
-                                                <input asp-for="ItemList" class="form-control bg-info bg-opacity-25 text-white fw-bold" required />
-                                                <small class="text-muted">Pisahkan dengan koma: ITEM001,ITEM002</small>
-                                            </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <label class="form-label text-white">Formulasi</label>
                                                 <input asp-for="Formulasi" class="form-control" />
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label text-white">Machine Code</label>
-                                                <input asp-for="MachineCode" class="form-control" />
                                             </div>
                                         </div>
                                     </div>
@@ -208,6 +303,20 @@
                                             <div class="col-md-4">
                                                 <label class="form-label text-white">Tension Yarn Outer</label>
                                                 <input asp-for="TensionYarnOuter" class="form-control" />
+                                            </div>
+                                        </div>
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Marking Sort</label>
+                                                <input asp-for="MarkingSort" class="form-control" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Text Marking Material</label>
+                                                <input asp-for="TextMarkingMaterial" class="form-control" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Marking Colour</label>
+                                                <input asp-for="MarkingColour" class="form-control" />
                                             </div>
                                         </div>
 
@@ -1319,8 +1428,8 @@
                         <!-- Form Actions -->
                         <div class="row mt-4">
                             <div class="col-12 d-flex gap-3 justify-content-center">
-                                <button type="submit" class="btn btn-warning btn-lg px-5 text-dark fw-bold">
-                                    <i class="bi bi-check-circle me-2"></i>UPDATE DATA
+                                <button type="submit" class="btn btn-success btn-lg px-5">
+                                    <i class="bi bi-check-circle me-2"></i>SIMPAN DATA
                                 </button>
                                 <a asp-action="Index" class="btn btn-secondary btn-lg px-5">
                                     <i class="bi bi-x-circle me-2"></i>BATAL
@@ -1341,14 +1450,13 @@
         // Form validation
         $('#editForm').on('submit', function(e) {
             const machine = $('[name="Machine"]').val();
-            const itemList = $('[name="ItemList"]').val();
             
-            if (!machine || !itemList) {
+            if (!machine) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'error',
                     title: 'Field Wajib Kosong',
-                    text: 'Machine dan Item List harus tetap diisi!',
+                    text: 'Machine harus diisi!',
                     background: '#1a1d21',
                     color: '#fff'
                 });

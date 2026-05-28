@@ -31,7 +31,7 @@ namespace VelastoProductionSystem.Models
         public string? Shift { get; set; }
         public int RevisionNumber { get; set; }
         public string? CreatedBy { get; set; }
-        public int? SpsId { get; set; }
+        public string? SpsId { get; set; }
         
         // Dimension readings array
         public List<DimensionReadingData> DimensionReadings { get; set; } = new List<DimensionReadingData>();
@@ -122,7 +122,7 @@ namespace VelastoProductionSystem.Models
         public string? CreatedBy { get; set; }
         
         // --- NEW FIELDS ---
-        public int? SpsId { get; set; }
+        public string? SpsId { get; set; }
         public string? ItemCode { get; set; }
         
         // Dies

@@ -10,10 +10,11 @@ namespace VelastoProductionSystem.Data
         {
         }
 
+        // Database Tables (sesuai dengan prd_extrude_hose)
         public DbSet<ProductionReport> ProductionReports { get; set; }
         public DbSet<ProductionReading> ProductionReadings { get; set; }
-        public DbSet<MasterlistSpsDoubleLayer> MasterlistSpsDoubleLayers { get; set; }
-        public DbSet<SpsMaster> SpsMasters { get; set; }
+        public DbSet<SpsNoDoc> SpsNoDocs { get; set; }
+        public DbSet<SpsItemList> SpsItemLists { get; set; }
         public DbSet<DimensionReport> DimensionReports { get; set; }
         public DbSet<DimensionMeasurement> DimensionMeasurements { get; set; }
         public DbSet<DimensionSummary> DimensionSummaries { get; set; }
@@ -23,13 +24,18 @@ namespace VelastoProductionSystem.Data
         public DbSet<ShiftMaster> ShiftMasters { get; set; }
         public DbSet<ProductionMaterialLot> ProductionMaterialLots { get; set; }
         public DbSet<SensorIngestLog> SensorIngestLogs { get; set; }
-        public DbSet<SpsImportTrialRow> SpsImportTrialRows { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // Configure relationships
+
+            modelBuilder.Entity<SpsItemList>()
+                .HasOne(item => item.SpsNoDoc)
+                .WithMany(doc => doc.ItemLists)
+                .HasForeignKey(item => item.DocumentNumber)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ProductionReading>()
                 .HasOne(p => p.ProductionReport)
@@ -49,7 +55,7 @@ namespace VelastoProductionSystem.Data
                 .HasForeignKey(s => s.DimensionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Decimal precision for removed models cleaned up
+            // Decimal precision for ProductionReading properties
 
             modelBuilder.Entity<ProductionReading>().Property(p => p.ScrewSpeedInner).HasPrecision(18, 4);
             modelBuilder.Entity<ProductionReading>().Property(p => p.PressureInner).HasPrecision(18, 4);
@@ -82,12 +88,6 @@ namespace VelastoProductionSystem.Data
                 .HasIndex(s => new { s.MachineCode, s.SensorTimestamp });
             modelBuilder.Entity<SensorIngestLog>()
                 .HasIndex(s => s.DeviceId);
-
-            modelBuilder.Entity<SpsImportTrialRow>()
-                .HasIndex(s => new { s.ExcelId, s.ItemCode })
-                .IsUnique();
-            modelBuilder.Entity<SpsImportTrialRow>()
-                .HasIndex(s => s.BatchId);
 
             // Seed initial data (optional)
             SeedData(modelBuilder);

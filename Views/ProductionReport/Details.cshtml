@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Production Monitoring Dashboard";
     var readings = Model.ProductionReadings.OrderBy(r => r.ReadingTime).ToList();
-    var std = (ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster) ?? new VelastoProductionSystem.Models.SpsMaster();
+    var std = (ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc) ?? new VelastoProductionSystem.Models.SpsNoDoc();
     var currentPortal = Context.Request.Query["portal"].ToString();
 
     // Helpers for robust parsing
@@ -338,15 +338,15 @@
                         </thead>
                         <tbody>
                             @{
-                                var master = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
-                                var stdVal = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
+                                var master = ViewBag.Masterlist as VelastoProductionSystem.Models.SpsNoDoc;
+                                var stdVal = ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc;
 
                                 // PRIORITY: SpsMaster (stdVal) > Masterlist > Default
-                                decimal idNom = (stdVal != null) ? D(stdVal.InnerTarget, 11.0m) : D(master?.Dimensi, 11.0m);
+                                decimal idNom = (stdVal != null) ? D(stdVal.InnerTarget, stdVal.ToleranceInner_Asli ?? 11.0m) : D(master?.Dimensi, 11.0m);
                                 decimal idTol = (stdVal != null) ? D(stdVal.InnerTol, 0.1m) : DTol(master?.ToleranceInner, 0.1m);
-                                decimal tubeNom = (stdVal != null) ? D(stdVal.ThickTarget, 1.8m) : D(master?.TebalInner, 1.8m);
+                                decimal tubeNom = (stdVal != null) ? D(stdVal.ThickTarget, stdVal.TebalInner_Asli ?? 1.8m) : D(master?.TebalInner, 1.8m);
                                 decimal tubeTol = (stdVal != null) ? D(stdVal.ThickTol, 0.2m) : DTol(master?.ToleranceOuter, 0.2m);
-                                decimal coverNom = (stdVal != null) ? D(stdVal.TotalTarget, 3.3m) : D(master?.TebalTotal, 3.3m);
+                                decimal coverNom = (stdVal != null) ? D(stdVal.TotalTarget, stdVal.TebalTotal_Asli ?? 3.3m) : D(master?.TebalTotal, 3.3m);
                                 decimal coverTol = (stdVal != null) ? D(stdVal.TotalTol, 0.2m) : DTol(master?.ToleranceOuter, 0.2m);
 
                                 var sections = new[] {
@@ -436,7 +436,7 @@
                         <div class="text-white-50 font-size-7 ps-2 mt-1 lh-sm">
                             1. Operator wajib menggunakan APD lengkap<br/>
                             2. Periksa Dies Sebelum dan sesudah proses<br/>
-                            3. Parameter harus sesuai Standard Parameter Setting (SPS)
+                            3. Parameter harus sesuai Standar Parameter Setting (SPS)
                         </div>
                     </div>
                 </div>
@@ -520,7 +520,7 @@
                                 <tr>
                                     <td class="border-bottom-form py-1 ps-2">PART NO.</td>
                                     <td class="border-bottom-form py-1 text-center">:</td>
-                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-info">@(std?.ItemList ?? "-")</td>
+                                    <td class="border-bottom-form py-1 pe-2 ps-1 text-info">@(std?.ItemLists?.FirstOrDefault()?.ItemList ?? "-")</td>
                                 </tr>
                                 <tr>
                                     <td class="border-bottom-form py-1 ps-2">DATE</td>
@@ -644,7 +644,7 @@
                             </tr>
                             
                             @{
-                                var mSps = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                                var mSps = ViewBag.Masterlist as VelastoProductionSystem.Models.SpsNoDoc;
                                 string FDie(string? fromSps, decimal stdVal, string hardcode) {
                                     if (!string.IsNullOrEmpty(fromSps) && fromSps != "-" && fromSps != "0") return fromSps;
                                     if (stdVal != 0) return stdVal.ToString();
@@ -855,7 +855,7 @@
                         <tbody>
                             <!-- INNER SECTION -->
                             @{
-                                var sMaster = ViewBag.Masterlist as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                                var sMaster = ViewBag.Masterlist as VelastoProductionSystem.Models.SpsNoDoc;
                                 string F(string? strVal, decimal fallbackVal, string prefix, string suffix) {
                                     string res = "-";
                                     if (!string.IsNullOrWhiteSpace(strVal) && strVal != "-") {

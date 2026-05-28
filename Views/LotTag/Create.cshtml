@@ -1,0 +1,179 @@
+@model VelastoProductionSystem.Models.LotTag
+
+@{
+    ViewData["Title"] = "Create Lot Tag";
+}
+
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-tag-fill"></i> Create New Lot Tag
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-4">
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3 text-primary"><i class="bi bi-info-circle me-2"></i>Informasi Dasar</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="LotTagNumber" class="form-label"></label>
+                                <input asp-for="LotTagNumber" class="form-control" readonly />
+                                <span asp-validation-for="LotTagNumber" class="text-danger"></span>
+                                <small class="text-muted">Generated otomatis oleh sistem</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Plant" class="form-label"></label>
+                                <input asp-for="Plant" class="form-control" />
+                                <span asp-validation-for="Plant" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="ProductionReportId" class="form-label">Production Report (Optional)</label>
+                                <select asp-for="ProductionReportId" class="form-select" asp-items="ViewBag.ProductionReports">
+                                    <option value="">-- Pilih Production Report --</option>
+                                </select>
+                                <span asp-validation-for="ProductionReportId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="CreatedBy" class="form-label">Dibuat Oleh</label>
+                                <input asp-for="CreatedBy" class="form-control" placeholder="Nama Operator/Staff" />
+                                <span asp-validation-for="CreatedBy" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Product Specification -->
+                        <div class="col-12 mt-4">
+                            <h5 class="border-bottom pb-2 mb-3 text-primary"><i class="bi bi-gear me-2"></i>Spesifikasi Produk</h5>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="PartNumber" class="form-label"></label>
+                                <input asp-for="PartNumber" class="form-control" placeholder="Contoh: 90445-12073" />
+                                <span asp-validation-for="PartNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="PartDescription" class="form-label"></label>
+                                <input asp-for="PartDescription" class="form-control" placeholder="Contoh: HOSE, FUEL 8MM" />
+                                <span asp-validation-for="PartDescription" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="TargetQty" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="TargetQty" class="form-control" type="number" />
+                                    <span class="input-group-text">PCS</span>
+                                </div>
+                                <span asp-validation-for="TargetQty" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="LotPackaging" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="LotPackaging" class="form-control" type="number" />
+                                    <span class="input-group-text">PCS</span>
+                                </div>
+                                <span asp-validation-for="LotPackaging" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="NoLot" class="form-label"></label>
+                                <input asp-for="NoLot" class="form-control" placeholder="Contoh: LOT-001" />
+                                <span asp-validation-for="NoLot" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Compound & Component -->
+                        <div class="col-12 mt-4">
+                            <h5 class="border-bottom pb-2 mb-3 text-primary"><i class="bi bi-box-seam me-2"></i>Compound & Komponen</h5>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="CompoundCode" class="form-label"></label>
+                                <input asp-for="CompoundCode" class="form-control" />
+                                <span asp-validation-for="CompoundCode" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="CompoundQty" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="CompoundQty" class="form-control" />
+                                    <span class="input-group-text">KG</span>
+                                </div>
+                                <span asp-validation-for="CompoundQty" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="BomText" class="form-label"></label>
+                                <input asp-for="BomText" class="form-control" />
+                                <span asp-validation-for="BomText" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-group mb-3">
+                                <label asp-for="DaftarKomponen" class="form-label"></label>
+                                <textarea asp-for="DaftarKomponen" class="form-control" rows="3" placeholder="List komponen..."></textarea>
+                                <span asp-validation-for="DaftarKomponen" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top d-flex gap-2">
+                        <button type="submit" class="btn btn-velasto px-4">
+                            <i class="bi bi-save"></i> Simpan Lot Tag
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle"></i> Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Logic to auto-fill Part Number etc if Production Report is selected
+            $('#ProductionReportId').change(function() {
+                const reportId = $(this).val();
+                if (reportId) {
+                    // This could be an AJAX call to get report details
+                    // For now we'll just leave it for the user to fill or implement AJAX later
+                }
+            });
+        });
+    </script>
+}

@@ -593,8 +593,8 @@
             
             <div class="row g-4" id="dimGridHUD">
                 @{
-                    var stdVal = (VelastoProductionSystem.Models.SpsMaster)ViewBag.Sps;
-                    var master = (VelastoProductionSystem.Models.MasterlistSpsDoubleLayer)ViewBag.Masterlist;
+                    var stdVal = (VelastoProductionSystem.Models.SpsNoDoc)ViewBag.Sps;
+                    var master = (VelastoProductionSystem.Models.SpsNoDoc)ViewBag.Masterlist;
 
                     decimal D(string? s, decimal def) {
                         if (string.IsNullOrWhiteSpace(s)) return def;
@@ -606,11 +606,11 @@
                         return def;
                     }
 
-                    decimal idNom = stdVal != null ? D(stdVal.InnerTarget, 0m) : (master != null ? D(master.Dimensi, 0m) : 0m);
+                    decimal idNom = stdVal != null ? D(stdVal.InnerTarget, stdVal.ToleranceInner_Asli ?? 0m) : (master != null ? D(master.Dimensi, 0m) : 0m);
                     decimal idTol = stdVal != null ? D(stdVal.InnerTol, 0.1m) : (master != null ? D(master.ToleranceInner, 0.1m) : 0.1m);
-                    decimal tubeNom = stdVal != null ? D(stdVal.ThickTarget, 0m) : (master != null ? D(master.TebalInner, 0m) : 0m);
+                    decimal tubeNom = stdVal != null ? D(stdVal.ThickTarget, stdVal.TebalInner_Asli ?? 0m) : (master != null ? D(master.TebalInner, 0m) : 0m);
                     decimal tubeTol = stdVal != null ? D(stdVal.ThickTol, 0.2m) : 0.2m;
-                    decimal coverNom = stdVal != null ? D(stdVal.TotalTarget, 0m) : (master != null ? D(master.TebalTotal, 0m) : 0m);
+                    decimal coverNom = stdVal != null ? D(stdVal.TotalTarget, stdVal.TebalTotal_Asli ?? 0m) : (master != null ? D(master.TebalTotal, 0m) : 0m);
                     decimal coverTol = stdVal != null ? D(stdVal.TotalTol, 0.3m) : (master != null ? D(master.ToleranceOuter, 0.3m) : 0.3m);
 
                     var idNomDisp = idNom.ToString("0.00");
@@ -625,8 +625,8 @@
                     var coverTolDisp = coverTol.ToString("0.00");
                     var coverFull = coverNom > 0 ? $"{coverNomDisp} ± {coverTolDisp}" : "0.00 ± 0.00";
 
-                    var pitchNom = stdVal != null ? D(stdVal.SpiralPitchSetting, 38m) : 38m;
-                    var pitchTol = stdVal != null ? D(stdVal.ToleranceSpiralPitch, 5m) : 5m;
+                    var pitchNom = stdVal != null ? (stdVal.SpiralPitchSetting_Asli ?? D(stdVal.SpiralPitchSetting, 38m)) : 38m;
+                    var pitchTol = stdVal != null ? (stdVal.ToleranceSpiralPitch_Asli ?? D(stdVal.ToleranceSpiralPitch, 5m)) : 5m;
                     var pitchFull = $"{pitchNom.ToString("0")} ± {pitchTol.ToString("0")}";
 
                     var dimensionPoints = new[] {
@@ -1018,7 +1018,7 @@
                 Remark: document.getElementById('remark')?.value || '',
                 Shift: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Shift ?? "I")),
                 CreatedBy: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CreatedBy ?? "Operator")),
-                SpsId: @(Model.SpsId ?? 0),
+                SpsId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SpsId ?? "")),
                 DimensionReadings: []
             };
 

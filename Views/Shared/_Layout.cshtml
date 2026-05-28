@@ -106,8 +106,12 @@
                     {
                         @* SPS Master (Production) - hidden per request *@
                         <a asp-controller="SpsMaster" asp-action="Index" class="nav-item sub">
-                            <i class="bi bi-gear-fill"></i>
-                            <span>SPS Master</span>
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>SPS Document</span>
+                        </a>
+                        <a asp-controller="SpsItemList" asp-action="Index" class="nav-item sub">
+                            <i class="bi bi-list-check"></i>
+                            <span>SPS Item List</span>
                         </a>
                     }
                     <a asp-controller="ExtrudeUser" asp-action="Index" class="nav-item sub">

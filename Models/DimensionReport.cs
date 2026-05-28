@@ -24,7 +24,7 @@ namespace VelastoProductionSystem.Models
         public string? ItemCode { get; set; }
 
         [Display(Name = "SPS ID")]
-        public int? SpsId { get; set; }
+        public string? SpsId { get; set; }
 
         [Display(Name = "Customer")]
         public string? CustomerName { get; set; }

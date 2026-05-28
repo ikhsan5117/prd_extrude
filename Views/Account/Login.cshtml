@@ -269,81 +269,7 @@
             backdrop-filter: blur(5px);
         }
 
-        /* --- ANIMATIONS --- */
-        @@keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
-        }
-
-        @@keyframes pulse-glow {
-            0% { box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 0px rgba(0, 210, 254, 0); }
-            50% { box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 30px rgba(0, 210, 254, 0.15); }
-            100% { box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 0px rgba(0, 210, 254, 0); }
-        }
-
-
-
-        /* --- 3D SHARDS BACKGROUND --- */
-        .shard-container {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            overflow: hidden;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .shard-wrapper {
-            position: absolute;
-            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.6));
-        }
-
-        .shard-face-left, .shard-face-right {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            backdrop-filter: blur(8px);
-        }
-
-        .shard-face-left {
-            clip-path: polygon(50% 0, 0 85%, 50% 100%);
-            background: linear-gradient(135deg, rgba(0, 210, 254, 0.4) 0%, rgba(3, 20, 31, 0.2) 100%);
-            border-left: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .shard-face-right {
-            clip-path: polygon(50% 0, 50% 100%, 100% 75%);
-            background: linear-gradient(225deg, rgba(255, 255, 255, 0.15) 0%, rgba(2, 11, 19, 0.5) 100%);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Shard Variants */
-        .shard-1 {
-            width: 320px; height: 380px;
-            bottom: -80px; right: 8%;
-            transform: rotate(15deg);
-            animation: float 12s ease-in-out infinite;
-        }
-        
-        .shard-2 {
-            width: 180px; height: 210px;
-            top: 12%; left: 8%;
-            transform: rotate(-25deg);
-            opacity: 0.9;
-            animation: float 18s ease-in-out infinite reverse;
-        }
-
-        .shard-3 {
-            width: 90px; height: 110px;
-            top: 15%; right: 28%;
-            transform: rotate(45deg);
-            opacity: 0.6;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)) blur(2px);
-            animation: float 15s ease-in-out infinite 2s;
-        }
-
-        .login-card {
-            animation: pulse-glow 8s ease-in-out infinite;
-        }
+        /* --- ANIMATIONS DISABLED FOR PERFORMANCE --- */
 
         .role-btn:hover {
             background: rgba(0, 210, 254, 0.1) !important;
@@ -404,21 +330,7 @@
 </head>
 <body>
 
-<!-- 3D SHARDS BACKGROUND -->
-<div class="shard-container">
-    <div class="shard-wrapper shard-1">
-        <div class="shard-face-left"></div>
-        <div class="shard-face-right"></div>
-    </div>
-    <div class="shard-wrapper shard-2">
-        <div class="shard-face-left"></div>
-        <div class="shard-face-right"></div>
-    </div>
-    <div class="shard-wrapper shard-3">
-        <div class="shard-face-left"></div>
-        <div class="shard-face-right"></div>
-    </div>
-</div>
+<!-- 3D SHARDS BACKGROUND - DISABLED FOR PERFORMANCE -->
 
 <div class="login-card">
     <div class="left-panel">

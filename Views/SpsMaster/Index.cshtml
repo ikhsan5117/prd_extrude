@@ -1,4 +1,4 @@
-﻿@model IEnumerable<VelastoProductionSystem.Models.SpsMaster>
+@model IEnumerable<VelastoProductionSystem.Models.SpsMaster>
 
 @{
     ViewData["Title"] = "Master SPS";
@@ -363,6 +363,8 @@
 </style>
 
 <div class="row fade-in">
+    @Html.AntiForgeryToken()
+    
     <div class="col-12">
         <!-- Modern Alert Notifications -->
         <!-- Alerts removed from here to use SweetAlert instead -->
@@ -383,9 +385,12 @@
                 <a asp-action="Create" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow">
                     <i class="bi bi-plus-circle-fill"></i> Tambah Data
                 </a>
+                
+                <!-- UPLOAD MODE 2: Import SPS -->
                 <button type="button" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#importModal">
-                    <i class="bi bi-cloud-arrow-up-fill"></i> Sinkronisasi Excel
+                    <i class="bi bi-cloud-arrow-up-fill"></i> Upload Sps
                 </button>
+                
                 <a asp-action="ExportExcel" class="btn btn-outline-info btn-sm rounded-pill px-3 fw-bold shadow">
                     <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
                 </a>
@@ -400,7 +405,6 @@
                         <div class="position-relative" style="max-width: 130px;">
                             <select id="searchCategory" class="form-select hud-input border-end-0 w-100" style="background-color: rgba(13, 110, 253, 0.1); appearance: none; -webkit-appearance: none;">
                                 <option value="all">Semua</option>
-                                <option value="item">Item List</option>
                                 <option value="doc">No. Doc</option>
                             </select>
                             <i class="bi bi-chevron-down position-absolute end-0 top-50 translate-middle-y me-2 text-info" style="pointer-events: none; font-size: 0.7rem;"></i>
@@ -481,32 +485,13 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- Column Search/Filter -->
-            <div class="row g-3 mt-2 pt-3 border-top border-secondary border-opacity-25">
-                <div class="col-12">
-                    <label class="hud-label"><i class="bi bi-funnel-fill me-1"></i> Filter Kolom Tabel</label>
-                    <div class="d-flex gap-2">
-                        <div class="position-relative flex-grow-1">
-                            <input type="text" id="columnSearch" class="form-control hud-input" placeholder="Cari kolom (misal: Nipple, Feed, Temp, dll)..." autocomplete="off">
-                            <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-info" style="pointer-events: none;"></i>
-                        </div>
-                        <button type="button" class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#columnFilterModal">
-                            <i class="bi bi-grid-3x3-gap-fill"></i> Pilih Kolom (<span id="visibleColumnCount">0</span>/<span id="totalColumnCount">0</span>)
-                        </button>
-                        <button type="button" onclick="resetColumnFilter()" class="btn btn-outline-secondary btn-sm px-3">
-                            <i class="bi bi-arrow-counterclockwise"></i> Tampilkan Semua
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="table-container shadow-lg">
             <table class="table table-dark table-hover main-table" id="spsTable">
                 <thead>
                     <!-- Primary Header Category -->
                     <tr>
-                        <th colspan="11" class="group-label">Identifikasi Utama</th>
+                        <th colspan="9" class="group-label">Identifikasi Utama</th>
                         <th colspan="34" class="group-label group-label-orange">Spesifikasi Hose & Dies</th>
                         <th colspan="12" class="group-label">Mesh</th>
                         <th colspan="45" class="group-label group-label-orange">Suhu Pengerjaan (°C)</th>
@@ -519,10 +504,8 @@
                     <tr>
                         <th class="sticky-check"><input type="checkbox" id="selectAll" class="form-check-input" /></th>
                         <th class="sticky-id">AKSI</th>
-                        <th class="sticky-id-2">ID EXCEL</th>
                         <th>NO</th>
                         <th>Machine</th>
-                        <th>ITEM List</th>
                         <th>NO. DOC</th>
                         <th>NO. REV</th>
                         <th>REV. DATE</th>
@@ -541,205 +524,205 @@
                         <th>Use Limits Out</th>
                         <th>Yarn</th>
                         <th class="bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Pitch Yarn</th>
-                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Pitch Yarn</th>
+                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Pitch Yarn</th>
                         <th class="bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Pitch Yarn</th>
                         <th>Tension In</th>
                         <th>Tension Out</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Nipple</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Nipple</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Nipple</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Nipple</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Tube Die</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Tube Die</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Tube Die</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Tube Die</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Middle Die</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Middle Die</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Middle Die</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Middle Die</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cover Die</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cover Die</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cover Die</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cover Die</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Spacer</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Spacer</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Spacer</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Spacer</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> A Distance</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> A Distance</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> A Distance</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> A Distance</th>
 
                         <th class="group-start">Mesh Screen 1</th>
                         <th class="bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Mesh Dim 1</th>
-                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Mesh Dim 1</th>
+                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Mesh Dim 1</th>
                         <th class="bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Mesh Dim 1</th>
                         <th>Mesh Screen 2</th>
                         <th class="bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Mesh Dim 2</th>
-                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Mesh Dim 2</th>
+                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Mesh Dim 2</th>
                         <th class="bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Mesh Dim 2</th>
                         <th>Mesh Screen 3</th>
                         <th class="bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Mesh Dim 3</th>
-                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Mesh Dim 3</th>
+                        <th class="bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Mesh Dim 3</th>
                         <th class="bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Mesh Dim 3</th>
 
                         <th class="marker-re bg-success bg-opacity-10 group-start"><span class="badge bg-success">MIN</span> Head 1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Head 1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Head 1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Head 1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 1-1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 1-1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 1-1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 1-1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 2-1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 2-1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 2-1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 2-1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 3-1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 3-1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 3-1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 3-1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Screw 1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Screw 1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Screw 1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Screw 1</th>
 
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Head 2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Head 2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Head 2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Head 2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 1-2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 1-2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 1-2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 1-2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 2-2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 2-2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 2-2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 2-2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 3-2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 3-2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 3-2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 3-2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Screw 2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Screw 2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Screw 2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Screw 2</th>
 
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Head 3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Head 3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Head 3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Head 3</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 1-3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 1-3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 1-3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 1-3</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 2-3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 2-3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 2-3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 2-3</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cyl 3-3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cyl 3-3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cyl 3-3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cyl 3-3</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Screw 3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Screw 3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Screw 3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Screw 3</th>
 
                         <th class="marker-re bg-success bg-opacity-10 group-start"><span class="badge bg-success">MIN</span> Feed 1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Feed 1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Feed 1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Feed 1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Feed 2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Feed 2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Feed 2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Feed 2</th>
 
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Screw V1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Screw V1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Screw V1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Screw V1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Screw V2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Screw V2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Screw V2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Screw V2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Screw V3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Screw V3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Screw V3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Screw V3</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Feed Roll 1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Feed Roll 1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Feed Roll 1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Feed Roll 1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Feed Roll 2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Feed Roll 2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Feed Roll 2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Feed Roll 2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Feed 3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Feed 3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Feed 3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Feed 3</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Press 1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Press 1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Press 1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Press 1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Press 2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Press 2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Press 2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Press 2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Press 3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Press 3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Press 3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Press 3</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Curr Val</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Am 1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Am 1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Am 1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Am 1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Am 2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Am 2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Am 2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Am 2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Am 3</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Am 3</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Am 3</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Am 3</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Preset</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Preset</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Preset</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Preset</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Control</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Control</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Control</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Control</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Sp-Set</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Sp-Set</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Sp-Set</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Sp-Set</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Sp-Disp</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Sp-Disp</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Sp-Disp</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Sp-Disp</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Spiral Speed</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Spiral Speed</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Spiral Speed</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Spiral Speed</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Hose Speed</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Hose Speed</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Hose Speed</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Hose Speed</th>
                         <th class="marker-re"><span class="badge-re">RE</span>Unsmooth</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> OD Sensor</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> OD Sensor</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> OD Sensor</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> OD Sensor</th>
 
                         <th class="marker-im bg-success bg-opacity-10 group-start"><span class="badge bg-success">MIN</span> Chiller</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Chiller</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Chiller</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Chiller</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Dancer</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Dancer</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Dancer</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Dancer</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Caterpillar Gap</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Caterpillar Gap</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Caterpillar Gap</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Caterpillar Gap</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cutting</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cutting</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cutting</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cutting</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Take-up Speed</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Take-up Speed</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Take-up Speed</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Take-up Speed</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cool-S 1</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cool-S 1</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cool-S 1</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cool-S 1</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Cool-S 2</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Cool-S 2</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Cool-S 2</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Cool-S 2</th>
                         <th class="marker-re bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Conv-R</th>
-                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Conv-R</th>
+                        <th class="marker-re bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Conv-R</th>
                         <th class="marker-re bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Conv-R</th>
                         <th>Mark Sort</th>
                         <th>Text Material</th>
                         <th>Mark Colour</th>
 
                         <th class="marker-im bg-success bg-opacity-10 group-start"><span class="badge bg-success">MIN</span> ± Inner</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> ± Inner</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> ± Inner</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> ± Inner</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> ± Outer</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> ± Outer</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> ± Outer</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> ± Outer</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Tebal Inner</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Tebal Inner</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Tebal Inner</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Tebal Inner</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Inner+Middle</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Inner+Middle</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Inner+Middle</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Inner+Middle</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Tebal Outer</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Tebal Outer</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Tebal Outer</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Tebal Outer</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Total Thickness</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Total Thickness</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Total Thickness</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Total Thickness</th>
                         <th class="marker-im bg-success bg-opacity-10"><span class="badge bg-success">MIN</span> Selisih</th>
-                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">ASLI</span> Selisih</th>
+                        <th class="marker-im bg-primary bg-opacity-10"><span class="badge bg-primary">STN</span> Selisih</th>
                         <th class="marker-im bg-danger bg-opacity-10"><span class="badge bg-danger">MAX</span> Selisih</th>
                         <th class="matrix-h">In Target</th>
                         <th class="matrix-h">In Tol</th>
@@ -771,21 +754,19 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td class="sticky-check"><input type="checkbox" class="row-check form-check-input" value="@item.Id" /></td>
+                            <td class="sticky-check"><input type="checkbox" class="row-check form-check-input" value="@item.DocumentNumber" /></td>
                             <td class="sticky-id">
                                 <div class="d-flex gap-1">
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-xs p-1 rounded text-white" title="Details">
+                                    <a asp-action="Details" asp-route-documentNumber="@item.DocumentNumber" class="btn btn-info btn-xs p-1 rounded text-white" title="Lihat Detail">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-xs p-1 rounded text-dark" title="Edit">
+                                    <a asp-action="Edit" asp-route-documentNumber="@item.DocumentNumber" class="btn btn-warning btn-xs p-1 rounded text-dark" title="Edit Item Ini">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
                                 </div>
                             </td>
-                            <td class="sticky-id-2 text-info fw-bold">@item.ExcelId</td>
                             <td>@item.No</td>
                             <td>@item.Machine</td>
-                            <td class="x-small" style="min-width: 250px; white-space: normal; line-height: 1.2;">@(item.ItemList != null ? item.ItemList.Replace("-", "") : "")</td>
                             <td class="x-small text-white-50">@item.DocumentNumber</td>
                             <td>@item.RevisionNumber</td>
                             <td>@item.RevisionDate</td>
@@ -906,22 +887,22 @@
                             <td class="text-danger">@(item.ScrewSpeed3_Max?.ToString("F2") ?? "")</td>
                             <td class="text-success">@(item.FeedRollRatio1_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.FeedRollRatio1_Asli?.ToString("F2") ?? "")</td>
-                            <td class="text-danger">@(item.FeedRollRatio1_Max?.ToString("F2") ?? "")</td>
+                            <td class="text-danger">@(item.FeedRollRatio1_Asli == null && !string.IsNullOrEmpty(item.FeedRollRatio1) ? item.FeedRollRatio1 : (item.FeedRollRatio1_Max?.ToString("F2") ?? ""))</td>
                             <td class="text-success">@(item.FeedRollRatio2_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.FeedRollRatio2_Asli?.ToString("F2") ?? "")</td>
-                            <td class="text-danger">@(item.FeedRollRatio2_Max?.ToString("F2") ?? "")</td>
+                            <td class="text-danger">@(item.FeedRollRatio2_Asli == null && !string.IsNullOrEmpty(item.FeedRollRatio2) ? item.FeedRollRatio2 : (item.FeedRollRatio2_Max?.ToString("F2") ?? ""))</td>
                             <td class="text-success">@(item.Feed3_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.Feed3_Asli?.ToString("F2") ?? "")</td>
-                            <td class="text-danger">@(item.Feed3_Max?.ToString("F2") ?? "")</td>
+                            <td class="text-danger">@(item.Feed3_Asli == null && !string.IsNullOrEmpty(item.FeedRollRatio3) ? item.FeedRollRatio3 : (item.Feed3_Max?.ToString("F2") ?? ""))</td>
                             <td class="text-success">@(item.Pressure1_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.Pressure1_Asli?.ToString("F2") ?? "")</td>
-                            <td class="text-danger">@(item.Pressure1_Max?.ToString("F2") ?? "")</td>
+                            <td class="text-danger">@(item.Pressure1_Asli == null && !string.IsNullOrEmpty(item.Pressure1) ? item.Pressure1 : (item.Pressure1_Max?.ToString("F2") ?? ""))</td>
                             <td class="text-success">@(item.Pressure2_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.Pressure2_Asli?.ToString("F2") ?? "")</td>
-                            <td class="text-danger">@(item.Pressure2_Max?.ToString("F2") ?? "")</td>
+                            <td class="text-danger">@(item.Pressure2_Asli == null && !string.IsNullOrEmpty(item.Pressure2) ? item.Pressure2 : (item.Pressure2_Max?.ToString("F2") ?? ""))</td>
                             <td class="text-success">@(item.Pressure3_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.Pressure3_Asli?.ToString("F2") ?? "")</td>
-                            <td class="text-danger">@(item.Pressure3_Max?.ToString("F2") ?? "")</td>
+                            <td class="text-danger">@(item.Pressure3_Asli == null && !string.IsNullOrEmpty(item.Pressure3) ? item.Pressure3 : (item.Pressure3_Max?.ToString("F2") ?? ""))</td>
                             <td class="text-info">@item.CurrentValue</td>
                             <td class="text-success">@(item.AmMeter_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.AmMeter_Asli?.ToString("F2") ?? "")</td>
@@ -957,7 +938,7 @@
 
                             <td class="text-success">@(item.ChillerWaterTemp_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.ChillerWaterTemp_Asli?.ToString("F2") ?? "")</td>
-                            <td class="text-danger">@(item.ChillerWaterTemp_Max?.ToString("F2") ?? "")</td>
+                            <td class="text-danger">@(item.ChillerWaterTemp_Asli == null && !string.IsNullOrEmpty(item.ChillerWaterTemp) ? item.ChillerWaterTemp : (item.ChillerWaterTemp_Max?.ToString("F2") ?? ""))</td>
                             <td class="text-success">@(item.DancerPosition_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.DancerPosition_Asli?.ToString("F2") ?? "")</td>
                             <td class="text-danger">@(item.DancerPosition_Max?.ToString("F2") ?? "")</td>
@@ -1043,134 +1024,60 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-dark text-white border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-excel-fill text-success me-2"></i> Import SPS Excel</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-excel-fill text-success me-2"></i> Upload Sps</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form asp-action="ImportExcel" method="post" enctype="multipart/form-data" id="importForm">
                 <div class="modal-body p-4">
-                    <!-- Panduan Upload Template -->
+                    <!-- Panduan Upload Sps -->
                     <div class="card bg-gradient mb-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="card-body p-3">
                             <h6 class="text-white fw-bold mb-3">
-                                <i class="bi bi-lightbulb-fill me-2"></i>Panduan Upload Template
+                                <i class="bi bi-upload me-2"></i>Cara Upload Sps:
                             </h6>
-                            <div class="accordion accordion-flush" id="guideAccordion">
-                                <div class="accordion-item bg-transparent border-0">
-                                    <h2 class="accordion-header" id="headingOne">
-                                        <button class="accordion-button collapsed bg-dark bg-opacity-75 text-white fw-bold py-2 px-3 rounded-3 mb-2 border border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne" style="font-size: 0.85rem;">
-                                            <i class="bi bi-1-circle-fill me-2"></i> Download Template
-                                        </button>
-                                    </h2>
-                                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#guideAccordion">
-                                        <div class="accordion-body text-white py-2 px-3" style="font-size: 0.85rem;">
-                                            <ul class="mb-0">
-                                                <li>Klik tombol <strong>"Download Template"</strong> di bawah</li>
-                                                <li>Template format baru (2026):
-                                                    <ul>
-                                                        <li><strong>216 Kolom Total</strong></li>
-                                                        <li>45 kolom basic info + material</li>
-                                                        <li>171 kolom tolerance (57 parameter × 3: MIN | ASLI | MAX)</li>
-                                                    </ul>
-                                                </li>
-                                                <li><span class="badge bg-success">NEW</span> Format tolerance terpisah: <strong>MIN | ASLI | MAX</strong> (bukan ± lagi)</li>
-                                                <li>Template akan terdownload dalam format Excel (.xlsx)</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="accordion-item bg-transparent border-0">
-                                    <h2 class="accordion-header" id="headingTwo">
-                                        <button class="accordion-button collapsed bg-dark bg-opacity-75 text-white fw-bold py-2 px-3 rounded-3 mb-2 border border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" style="font-size: 0.85rem;">
-                                            <i class="bi bi-2-circle-fill me-2"></i> Isi Data Template
-                                        </button>
-                                    </h2>
-                                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#guideAccordion">
-                                        <div class="accordion-body text-white py-2 px-3" style="font-size: 0.85rem;">
-                                            <ul class="mb-2">
-                                                <li>Buka file template yang sudah didownload</li>
-                                                <li><strong>JANGAN ubah/hapus Row 1-6</strong> (Header template)</li>
-                                                <li>Mulai isi data dari <strong>Row 7 ke bawah</strong></li>
-                                                <li>Kolom wajib diisi:
-                                                    <ul>
-                                                        <li><strong>ID Excel</strong> (Kolom A) - Contoh: 1-0, 2-1, 3-0</li>
-                                                        <li><strong>Machine</strong> (Kolom C) - Nama mesin</li>
-                                                        <li><strong>Item List</strong> (Kolom terakhir) - Kode produk</li>
-                                                    </ul>
-                                                </li>
-                                            </ul>
-                                            <div class="alert alert-warning mb-0 py-2 px-3" style="font-size: 0.8rem;">
-                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                                <strong>Penting!</strong> Untuk multiple items, pisahkan dengan koma tanpa spasi:
-                                                <br><code class="text-dark">VHFUNC12345,VHFUNC67890,VHFUNC11111</code>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="accordion-item bg-transparent border-0">
-                                    <h2 class="accordion-header" id="headingThree">
-                                        <button class="accordion-button collapsed bg-dark bg-opacity-75 text-white fw-bold py-2 px-3 rounded-3 mb-2 border border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" style="font-size: 0.85rem;">
-                                            <i class="bi bi-3-circle-fill me-2"></i> Upload & Import
-                                        </button>
-                                    </h2>
-                                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#guideAccordion">
-                                        <div class="accordion-body text-white py-2 px-3" style="font-size: 0.85rem;">
-                                            <ul class="mb-0">
-                                                <li>Klik tombol <strong>"Choose file"</strong> di bawah</li>
-                                                <li>Pilih file Excel yang sudah diisi</li>
-                                                <li>(Opsional) Klik <strong>"Preview"</strong> untuk melihat data sebelum import</li>
-                                                <li>Klik <strong>"IMPORT SEKARANG"</strong> untuk memulai import</li>
-                                                <li>Sistem akan otomatis:
-                                                    <ul>
-                                                        <li>✓ Deteksi format Excel (3L / 2L / DL)</li>
-                                                        <li>✓ Tambah data baru atau update data existing</li>
-                                                        <li>✓ Validasi struktur dan kolom</li>
-                                                    </ul>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Tips Tambahan -->
-                            <div class="mt-3 p-3 bg-white bg-opacity-10 rounded-3" style="font-size: 0.8rem;">
-                                <strong class="text-warning d-block mb-2">
-                                    <i class="bi bi-star-fill me-1"></i>Tips & Catatan Penting:
+                            <ol class="text-white mb-2" style="font-size: 0.9rem;">
+                                <li>Download <strong>Template Sps</strong> di bawah</li>
+                                <li>Isi kolom sesuai data — kolom MIN/STD/MAX bisa diisi manual</li>
+                                <li>Kolom <strong>Item List</strong> di ujung kanan bersifat <em>opsional</em> (bisa upload terpisah)</li>
+                                <li>Upload file Excel (.xlsx)</li>
+                            </ol>
+                            <div class="bg-white bg-opacity-10 rounded-3 p-2" style="font-size: 0.75rem;">
+                                <strong class="text-warning d-block mb-1">
+                                    <i class="bi bi-info-circle me-1"></i>Kolom Wajib:
                                 </strong>
-                                <ul class="mb-0 text-white-50" style="font-size: 0.75rem;">
-                                    <li>✓ File Excel maksimal 10 MB</li>
-                                    <li>✓ Pastikan format file adalah .xlsx atau .xls</li>
-                                    <li>✓ Jika ID Excel sudah ada, data akan di-update (bukan duplikat)</li>
-                                    <li>✓ Format baru: Setiap parameter toleransi memiliki 3 kolom terpisah (MIN, ASLI, MAX)</li>
-                                    <li>✓ Sheet yang dibaca: "Parameter Setting", "Master 1", "SPS", atau sheet terbesar</li>
+                                <ul class="mb-0 text-white" style="font-size: 0.75rem;">
+                                    <li><strong>ID Excel</strong> (Kolom A)</li>
+                                    <li><strong>Machine</strong> (Kolom C)</li>
+                                    <li><strong>NO. DOC</strong> (Kolom D)</li>
                                 </ul>
+                                <hr class="border-white border-opacity-25 my-2">
+                                <span class="text-white-50"><i class="bi bi-lightbulb me-1"></i>Kolom ± (toleransi): isi format <strong class="text-warning">X±Y</strong> — sistem hitung MIN &amp; MAX otomatis. Nilai manual di kolom MIN/STD/MAX tetap disimpan sebagai pembanding.</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="alert alert-info mb-3" role="alert" style="font-size: 0.85rem;">
-                        <i class="bi bi-info-circle me-1"></i>
-                        <strong>Format Template Terbaru (2026):</strong>
-                        <ul class="mb-0 mt-2">
-                            <li><strong>216 Kolom Total</strong> - 45 basic + 171 tolerance (57 param × 3)</li>
-                            <li><strong>Format MIN | ASLI | MAX</strong> - Setiap parameter tolerance punya 3 kolom terpisah</li>
-                            <li><strong>Auto-compatible</strong> - Support import dari format lama (akan di-convert otomatis)</li>
-                        </ul>
-                        <hr class="border-info border-opacity-25 my-2">
+
+                    <div class="alert alert-info mb-3 py-2" role="alert" style="font-size: 0.8rem;">
                         <div class="d-flex align-items-center justify-content-between">
-                            <span class="text-info"><i class="bi bi-question-circle me-1"></i> Belum punya file master?</span>
-                            <a asp-action="DownloadEmptyTemplate" class="btn btn-info btn-sm fw-bold shadow-sm">
-                                <i class="bi bi-download me-1"></i> Download Template Kosong
-                            </a>
+                            <div>
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+                                <strong>Belum punya template?</strong>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="DownloadTemplateFull" class="btn btn-success btn-sm fw-bold shadow-sm">
+                                    <i class="bi bi-download me-1"></i> Template Sps
+                                </a>
+                            </div>
                         </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Template Sps</strong> memuat seluruh kolom database lengkap dengan kolom <strong class="text-warning">MIN / STD / MAX</strong> terpisah untuk setiap parameter. Kolom <strong class="text-success">Item List</strong> opsional.
+                        </small>
                     </div>
                     
                     <div class="upload-area border border-secondary border-dashed p-4 text-center rounded-3 bg-black bg-opacity-25 position-relative">
                          <i class="bi bi-cloud-arrow-up fs-1 text-info mb-2 d-block"></i>
                          <p class="text-white fw-bold mb-2">Drag & Drop atau Klik untuk Upload</p>
-                         <input class="form-control bg-dark text-white border-secondary mb-2" type="file" id="file" name="file" accept=".xlsx,.xls" required onchange="enablePreview()">
+                         <input class="form-control bg-dark text-white border-secondary mb-2" type="file" id="file" name="file" accept=".xlsx,.xls" required>
                          <small class="text-muted d-block mb-2">Pilih file Excel SPS (.xlsx atau .xls)</small>
                          <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap mt-3" style="font-size: 0.7rem;">
                              <span class="badge bg-success bg-opacity-75">
@@ -1185,38 +1092,8 @@
                          </div>
                     </div>
                     
-                    <!-- Contoh Format Item List -->
-                    <div class="alert alert-dark border border-secondary mt-3 mb-0" role="alert" style="font-size: 0.75rem;">
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <strong class="text-success d-block mb-1">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Contoh Item List BENAR:
-                                </strong>
-                                <code class="d-block bg-success bg-opacity-10 p-2 rounded text-success">VHFUNC12345,VHFUNC67890,ITEM001</code>
-                                <small class="text-muted">Pisahkan dengan koma tanpa spasi</small>
-                            </div>
-                            <div class="col-md-6">
-                                <strong class="text-danger d-block mb-1">
-                                    <i class="bi bi-x-circle-fill me-1"></i>Contoh Item List SALAH:
-                                </strong>
-                                <code class="d-block bg-danger bg-opacity-10 p-2 rounded text-danger">VHFUNC12345, VHFUNC67890</code>
-                                <small class="text-muted">Jangan ada spasi setelah koma</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Preview Area -->
-                    <div id="previewArea" class="mt-3" style="display:none;">
-                        <div class="alert alert-warning" role="alert">
-                            <i class="bi bi-hourglass-split me-1"></i>
-                            <small>Preview sedang dimuat...</small>
-                        </div>
-                    </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 pb-4 justify-content-center gap-2">
-                    <button type="button" id="btnPreview" class="btn btn-info px-4 rounded-pill fw-bold shadow-sm" onclick="previewExcel()" disabled>
-                        <i class="bi bi-eye"></i> Preview
-                    </button>
+                <div class="modal-footer border-0 pt-0 pb-4 justify-content-center">
                     <button type="submit" class="btn btn-success px-5 rounded-pill fw-bold shadow-sm" onclick="showLoading()">
                         <i class="bi bi-cloud-arrow-up"></i> IMPORT SEKARANG
                     </button>
@@ -1226,154 +1103,14 @@
     </div>
 </div>
 
-<!-- Modal Column Filter -->
-<div class="modal fade" id="columnFilterModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-        <div class="modal-content bg-dark text-white border-0 shadow-lg" style="border-radius: 20px; max-height: 85vh;">
-            <div class="modal-header border-bottom border-secondary border-opacity-25">
-                <h5 class="modal-title fw-bold"><i class="bi bi-funnel-fill text-warning me-2"></i> Filter Kolom Tabel</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row mb-3">
-                    <div class="col-md-8">
-                        <input type="text" id="columnSearchInModal" class="form-control hud-input" placeholder="Cari nama kolom di sini...">
-                    </div>
-                    <div class="col-md-4 d-flex gap-2">
-                        <button type="button" onclick="selectAllColumns()" class="btn btn-success btn-sm flex-fill">
-                            <i class="bi bi-check-all"></i> Pilih Semua
-                        </button>
-                        <button type="button" onclick="deselectAllColumns()" class="btn btn-danger btn-sm flex-fill">
-                            <i class="bi bi-x-lg"></i> Kosongkan
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="alert alert-info py-2" style="font-size: 0.85rem;">
-                    <i class="bi bi-info-circle me-2"></i>
-                    <strong>Tip:</strong> Centang kolom yang ingin ditampilkan, kosongkan untuk menyembunyikan. Kolom ID dan Aksi tidak bisa disembunyikan.
-                </div>
-
-                <!-- Column Groups -->
-                <div class="accordion accordion-flush" id="columnAccordion">
-                    <!-- Group 1: Identifikasi -->
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdent">
-                                <i class="bi bi-bookmark-fill text-primary me-2"></i> Identifikasi Utama (11 kolom)
-                            </button>
-                        </h2>
-                        <div id="collapseIdent" class="accordion-collapse collapse show">
-                            <div class="accordion-body">
-                                <div class="row g-2" id="columnGroupIdent"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Group 2: Spesifikasi -->
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpec">
-                                <i class="bi bi-gear-fill text-warning me-2"></i> Spesifikasi Hose & Dies (34 kolom)
-                            </button>
-                        </h2>
-                        <div id="collapseSpec" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-2" id="columnGroupSpec"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Group 3: Mesh -->
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMesh">
-                                <i class="bi bi-grid-3x3-gap-fill text-info me-2"></i> Mesh (12 kolom)
-                            </button>
-                        </h2>
-                        <div id="collapseMesh" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-2" id="columnGroupMesh"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Group 4: Suhu -->
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTemp">
-                                <i class="bi bi-thermometer-half text-danger me-2"></i> Suhu Pengerjaan (45 kolom)
-                            </button>
-                        </h2>
-                        <div id="collapseTemp" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-2" id="columnGroupTemp"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Group 5: Output Mesin -->
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput">
-                                <i class="bi bi-speedometer2 text-success me-2"></i> Output Mesin (67 kolom)
-                            </button>
-                        </h2>
-                        <div id="collapseOutput" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-2" id="columnGroupOutput"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Group 6: Proses Akhir -->
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProses">
-                                <i class="bi bi-arrow-right-circle-fill text-primary me-2"></i> Proses Akhir (25 kolom)
-                            </button>
-                        </h2>
-                        <div id="collapseProses" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-2" id="columnGroupProses"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Group 7: Final Quality -->
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuality">
-                                <i class="bi bi-patch-check-fill text-success me-2"></i> Final Quality Matrix (45 kolom)
-                            </button>
-                        </h2>
-                        <div id="collapseQuality" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-2" id="columnGroupQuality"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-top border-secondary border-opacity-25 justify-content-between">
-                <div class="text-muted" style="font-size: 0.85rem;">
-                    Ditampilkan: <span id="modalVisibleCount" class="text-success fw-bold">0</span> / <span id="modalTotalCount">0</span> kolom
-                </div>
-                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
-                    <i class="bi bi-check-circle"></i> Terapkan
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function () {
              // Pre-fetch lists from server-side for fast JS filtering
-             const itemsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ItemList));
-             const docsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DocList));
+             const itemsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ItemList ?? new List<string>()));
+             const docsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DocList ?? new List<string>()));
 
              // Real-time Filtering Logic (Main Table)
              $("#globalSearch, #machineFilter").on("keyup change", function() {
@@ -1458,7 +1195,7 @@
              // Trigger SweetAlert for messages from TempData
              @if (TempData["SuccessMessage"] != null)
              {
-                  var successMsg = TempData["SuccessMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "");
+                  var successMsg = TempData["SuccessMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "")?.Replace("'", "\\'");
                   var sheetLog = TempData["SheetLog"]?.ToString()?.Replace("\n", "\\n")?.Replace("\r", "")?.Replace("'", "\\'");
                  
                  <text>
@@ -1482,7 +1219,7 @@
              
              @if (TempData["ErrorMessage"] != null)
              {
-                  var errorMsg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "");
+                  var errorMsg = TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br>")?.Replace("\r", "")?.Replace("'", "\\'");
                  
                  <text>
                  Swal.fire({
@@ -1563,153 +1300,12 @@
             if(fileRef.files.length > 0) {
                 $('#importModal').modal('hide');
                 Swal.fire({
-                    title: 'Sinkronisasi...',
+                    title: 'Uploading...',
                     html: 'Sedang merekam data parameter standar ke database.<br>Harap tidak menutup browser.',
                     allowOutsideClick: false,
                     didOpen: () => { Swal.showLoading(); }
                 });
             }
-        }
-
-        function enablePreview() {
-            var fileRef = document.getElementById('file');
-            var btnPreview = document.getElementById('btnPreview');
-            if(fileRef.files.length > 0) {
-                btnPreview.disabled = false;
-            } else {
-                btnPreview.disabled = true;
-            }
-        }
-
-        function previewExcel() {
-            var fileRef = document.getElementById('file');
-            if(fileRef.files.length === 0) {
-                alert('Pilih file Excel terlebih dahulu');
-                return;
-            }
-
-            var formData = new FormData();
-            formData.append('file', fileRef.files[0]);
-
-            $('#previewArea').show().html(`
-                <div class="alert alert-warning" role="alert">
-                    <i class="bi bi-hourglass-split me-1"></i>
-                    <small>Menganalisis file Excel...</small>
-                </div>
-            `);
-
-            $.ajax({
-                url: '@Url.Action("PreviewExcel", "SpsMaster")',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if(response.success) {
-                        var statusClass = response.isValid ? 'success' : 'warning';
-                        var statusIcon = response.isValid ? 'check-circle' : 'exclamation-triangle';
-                        var statusText = response.isValid ? '✓ Valid' : '⚠ Ada Masalah';
-                        
-                        var html = `
-                            <div class="alert alert-${statusClass}" role="alert">
-                                <i class="bi bi-${statusIcon} me-1"></i>
-                                <strong>${statusText}</strong>
-                            </div>
-                            <div class="card bg-dark border-secondary mb-2">
-                                <div class="card-body p-3">
-                                    <h6 class="text-white mb-2"><i class="bi bi-file-earmark-check me-1"></i> Informasi File</h6>
-                                    <table class="table table-sm table-dark table-bordered" style="font-size: 0.8rem;">
-                                        <tr><td><strong>File:</strong></td><td>${response.fileName}</td></tr>
-                                        <tr><td><strong>Ukuran:</strong></td><td>${(response.fileSize / 1024).toFixed(2)} KB</td></tr>
-                                        <tr><td><strong>Sheet Dipilih:</strong></td><td>${response.selectedSheet}</td></tr>
-                                        <tr><td><strong>Format Terdeteksi:</strong></td><td><span class="badge bg-info">${response.detectedFormat}</span></td></tr>
-                                        <tr><td><strong>Kolom Item:</strong></td><td>${response.expectedItemColumn}</td></tr>
-                                        <tr><td><strong>Total Rows:</strong></td><td>${response.totalRows}</td></tr>
-                                        <tr><td><strong>Total Columns:</strong></td><td>${response.totalColumns}</td></tr>
-                                        <tr><td><strong>Estimasi Data:</strong></td><td>${response.estimatedRecords}</td></tr>
-                                    </table>
-                                </div>
-                            </div>
-                        `;
-
-                        if (!response.isValid) {
-                            html += `
-                                <div class="alert alert-danger" role="alert" style="font-size: 0.85rem;">
-                                    <strong>⚠ Validasi Error:</strong><br>
-                                    <pre class="mb-0 mt-1" style="font-size: 0.75rem;">${response.validationError}</pre>
-                                </div>
-                            `;
-                        }
-
-                        if (response.sampleData && response.sampleData.length > 0) {
-                            html += `
-                                <div class="card bg-dark border-secondary mb-2">
-                                    <div class="card-body p-3">
-                                        <h6 class="text-white mb-2"><i class="bi bi-table me-1"></i> Sample Data (${response.sampleData.length} baris)</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-dark table-bordered" style="font-size: 0.75rem;">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Row</th><th>ID Excel</th><th>No</th><th>Machine</th>
-                                                        <th>Customer</th><th>Item List</th><th>Dimensi</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                            `;
-                            
-                            response.sampleData.forEach(function(row) {
-                                html += `<tr>
-                                    <td>${row.rowIndex}</td>
-                                    <td>${row.idExcel}</td>
-                                    <td>${row.no}</td>
-                                    <td>${row.machine}</td>
-                                    <td>${row.customer}</td>
-                                    <td><strong class="text-info">${row.itemList}</strong></td>
-                                    <td>${row.dimensi}</td>
-                                </tr>`;
-                            });
-                            
-                            html += `
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-
-                        html += `
-                            <div class="card bg-dark border-secondary">
-                                <div class="card-body p-2">
-                                    <details>
-                                        <summary style="cursor: pointer; font-size: 0.8rem;" class="text-muted">
-                                            <i class="bi bi-code-square me-1"></i> Detection Log
-                                        </summary>
-                                        <pre class="mb-0 mt-2 p-2 bg-black rounded" style="font-size: 0.7rem; max-height: 200px; overflow-y: auto;">${response.detectionLog}</pre>
-                                    </details>
-                                </div>
-                            </div>
-                        `;
-
-                        $('#previewArea').html(html);
-                    } else {
-                        $('#previewArea').html(`
-                            <div class="alert alert-danger" role="alert">
-                                <i class="bi bi-x-circle me-1"></i>
-                                <strong>Error:</strong> ${response.message}
-                            </div>
-                        `);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $('#previewArea').html(`
-                        <div class="alert alert-danger" role="alert">
-                            <i class="bi bi-x-circle me-1"></i>
-                            <strong>Error:</strong> ${error}
-                        </div>
-                    `);
-                }
-            });
         }
 
         // --- Bulk Delete Logic ---
@@ -1742,7 +1338,7 @@
         });
 
         function confirmBulkDelete() {
-            const checkedIds = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => parseInt(cb.value));
+            const checkedIds = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.value);
             
             if (checkedIds.length === 0) return;
 
@@ -1765,17 +1361,19 @@
         }
 
         function deleteSelected(ids) {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-            
             fetch('@Url.Action("DeleteMultiple")', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(ids)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     Swal.fire({
@@ -1797,272 +1395,151 @@
             });
         }
 
-        // ========== COLUMN FILTER FUNCTIONALITY ==========
-        let allColumns = [];
-        const columnGroups = {
-            ident: { start: 0, end: 11, name: 'Identifikasi Utama' },
-            spec: { start: 11, end: 45, name: 'Spesifikasi Hose & Dies' },
-            mesh: { start: 45, end: 57, name: 'Mesh' },
-            temp: { start: 57, end: 102, name: 'Suhu Pengerjaan' },
-            output: { start: 102, end: 169, name: 'Output Mesin' },
-            proses: { start: 169, end: 194, name: 'Proses Akhir' },
-            quality: { start: 194, end: 239, name: 'Final Quality Matrix' }
-        };
-
-        // Initialize column filter on page load
-        $(document).ready(function() {
-            collectColumns();
-            loadColumnState();
-            populateColumnModal();
+        // === AJAX HANDLER FOR IMPORT FORMS ===
+        $('#importItemListForm').on('submit', function(e) {
+            e.preventDefault();
             
-            // Search dalam modal
-            $('#columnSearchInModal').on('keyup', function() {
-                filterColumnsInModal($(this).val());
-            });
-
-            // Search kolom langsung dari input utama
-            $('#columnSearch').on('keyup', function() {
-                filterColumnsBySearch($(this).val());
-            });
-        });
-
-        // Collect all columns from table
-        function collectColumns() {
-            allColumns = [];
-            $('#spsTable thead tr:last th').each(function(index) {
-                const colText = $(this).text().trim();
-                const isSticky = $(this).hasClass('sticky-check') || $(this).hasClass('sticky-id') || $(this).hasClass('sticky-id-2');
-                
-                allColumns.push({
-                    index: index,
-                    name: colText,
-                    visible: true,
-                    isSticky: isSticky,
-                    element: $(this)
+            var formData = new FormData(this);
+            var fileInput = $('#fileItemList')[0];
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'File Belum Dipilih',
+                    text: 'Silakan pilih file Excel terlebih dahulu',
+                    background: '#1a1d21',
+                    color: '#fff'
                 });
-            });
-            updateColumnCount();
-        }
-
-        // Populate modal with checkboxes
-        function populateColumnModal() {
-            // Clear existing content
-            Object.keys(columnGroups).forEach(groupKey => {
-                $(`#columnGroup${capitalize(groupKey)}`).empty();
-            });
-
-            // Populate each group
-            allColumns.forEach((col, idx) => {
-                if (col.isSticky) return; // Skip sticky columns (ID, Aksi)
-
-                // Determine which group this column belongs to
-                let groupKey = getColumnGroup(idx);
-                if (!groupKey) return;
-
-                const checkbox = `
-                    <div class="col-md-4 col-lg-3">
-                        <div class="form-check">
-                            <input class="form-check-input column-checkbox" type="checkbox" 
-                                   id="col_${idx}" data-index="${idx}" ${col.visible ? 'checked' : ''}>
-                            <label class="form-check-label text-truncate" for="col_${idx}" 
-                                   title="${col.name}" style="font-size: 0.8rem;">
-                                ${col.name}
-                            </label>
-                        </div>
-                    </div>
-                `;
-                $(`#columnGroup${capitalize(groupKey)}`).append(checkbox);
-            });
-
-            // Add event listeners to checkboxes
-            $('.column-checkbox').on('change', function() {
-                const index = parseInt($(this).data('index'));
-                allColumns[index].visible = $(this).is(':checked');
-                applyColumnVisibility();
-                saveColumnState();
-                updateColumnCount();
-            });
-
-            updateModalCount();
-        }
-
-        // Get column group based on index
-        function getColumnGroup(index) {
-            for (let key in columnGroups) {
-                const group = columnGroups[key];
-                if (index >= group.start && index < group.end) {
-                    return key;
-                }
-            }
-            return null;
-        }
-
-        // Apply column visibility to table
-        function applyColumnVisibility() {
-            allColumns.forEach((col, idx) => {
-                if (col.isSticky) return; // Never hide sticky columns
-
-                const selector = `#spsTable th:nth-child(${idx + 1}), #spsTable td:nth-child(${idx + 1})`;
-                if (col.visible) {
-                    $(selector).show();
-                } else {
-                    $(selector).hide();
-                }
-            });
-        }
-
-        // Filter columns by search in main input
-        function filterColumnsBySearch(searchText) {
-            if (!searchText) {
-                // Show all columns if search is empty
-                resetColumnFilter();
                 return;
             }
 
-            const search = searchText.toLowerCase();
-            let matchCount = 0;
-
-            allColumns.forEach((col, idx) => {
-                if (col.isSticky) return;
-
-                const matches = col.name.toLowerCase().includes(search);
-                col.visible = matches;
-                
-                if (matches) matchCount++;
-
-                const selector = `#spsTable th:nth-child(${idx + 1}), #spsTable td:nth-child(${idx + 1})`;
-                if (matches) {
-                    $(selector).show().css('background-color', 'rgba(255, 193, 7, 0.15)');
-                } else {
-                    $(selector).hide();
-                }
+            Swal.fire({
+                title: 'Uploading...',
+                html: 'Sedang memproses import Item List.<br>Harap tunggu...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
             });
 
-            // Update checkboxes in modal
-            $('.column-checkbox').each(function() {
-                const index = parseInt($(this).data('index'));
-                $(this).prop('checked', allColumns[index].visible);
-            });
-
-            updateColumnCount();
-            updateModalCount();
-
-            // Show notification
-            if (matchCount === 0) {
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'info',
-                    title: 'Tidak ada kolom yang cocok',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-            }
-        }
-
-        // Filter columns in modal
-        function filterColumnsInModal(searchText) {
-            const search = searchText.toLowerCase();
-            $('.column-checkbox').each(function() {
-                const label = $(this).next('label').text().toLowerCase();
-                const matches = label.includes(search);
-                $(this).parent().parent().toggle(matches);
-            });
-        }
-
-        // Select all columns
-        function selectAllColumns() {
-            allColumns.forEach((col, idx) => {
-                if (!col.isSticky) {
-                    col.visible = true;
-                }
-            });
-            $('.column-checkbox').prop('checked', true);
-            applyColumnVisibility();
-            saveColumnState();
-            updateColumnCount();
-            updateModalCount();
-        }
-
-        // Deselect all columns (except sticky)
-        function deselectAllColumns() {
-            allColumns.forEach((col, idx) => {
-                if (!col.isSticky) {
-                    col.visible = false;
-                }
-            });
-            $('.column-checkbox').prop('checked', false);
-            applyColumnVisibility();
-            saveColumnState();
-            updateColumnCount();
-            updateModalCount();
-        }
-
-        // Reset column filter
-        function resetColumnFilter() {
-            $('#columnSearch').val('');
-            allColumns.forEach((col, idx) => {
-                if (!col.isSticky) {
-                    col.visible = true;
-                }
-            });
-            $('.column-checkbox').prop('checked', true);
-            
-            // Remove highlight
-            $('#spsTable th, #spsTable td').css('background-color', '');
-            
-            applyColumnVisibility();
-            saveColumnState();
-            updateColumnCount();
-            updateModalCount();
-        }
-
-        // Save column state to localStorage
-        function saveColumnState() {
-            const state = allColumns.map(col => ({
-                index: col.index,
-                visible: col.visible
-            }));
-            localStorage.setItem('spsColumnState', JSON.stringify(state));
-        }
-
-        // Load column state from localStorage
-        function loadColumnState() {
-            const saved = localStorage.getItem('spsColumnState');
-            if (saved) {
-                try {
-                    const state = JSON.parse(saved);
-                    state.forEach(item => {
-                        if (allColumns[item.index]) {
-                            allColumns[item.index].visible = item.visible;
+            $.ajax({
+                url: '@Url.Action("ImportItemListOnly")',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $('#importItemListModal').modal('hide');
+                    
+                    var iconType = response.success ? 'success' : 'error';
+                    var titleText = response.success ? 'Import Berhasil!' : 'Import Gagal';
+                    
+                    var errorHtml = '';
+                    if (response.errorDetails && response.errorDetails.length > 0) {
+                        errorHtml = '<hr><div class=\"text-start\" style=\"font-size: 0.85rem; max-height: 200px; overflow-y: auto;\"><strong>Detail Error:</strong><ul>';
+                        response.errorDetails.forEach(function(err) {
+                            errorHtml += '<li>' + err + '</li>';
+                        });
+                        errorHtml += '</ul></div>';
+                    }
+                    
+                    Swal.fire({
+                        icon: iconType,
+                        title: titleText,
+                        html: '<div style=\"font-size: 0.95rem;\">' + response.message + '</div>' + errorHtml,
+                        confirmButtonText: 'OK',
+                        background: '#1a1d21',
+                        color: '#fff',
+                        width: '600px'
+                    }).then(() => {
+                        if (response.success && response.imported > 0) {
+                            location.reload();
                         }
                     });
-                    applyColumnVisibility();
-                } catch (e) {
-                    console.error('Failed to load column state:', e);
+                },
+                error: function(xhr, status, error) {
+                    $('#importItemListModal').modal('hide');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan: ' + error,
+                        background: '#1a1d21',
+                        color: '#fff'
+                    });
                 }
+            });
+        });
+
+        $('#importForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            var formData = new FormData(this);
+            var fileInput = $('#file')[0];
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'File Belum Dipilih',
+                    text: 'Silakan pilih file Excel terlebih dahulu',
+                    background: '#1a1d21',
+                    color: '#fff'
+                });
+                return;
             }
-        }
 
-        // Update column count display
-        function updateColumnCount() {
-            const visibleCount = allColumns.filter(col => col.visible).length;
-            const totalCount = allColumns.length;
-            $('#visibleColumnCount').text(visibleCount);
-            $('#totalColumnCount').text(totalCount);
-        }
+            $('#importModal').modal('hide');
+            
+            Swal.fire({
+                title: 'Uploading...',
+                html: 'Sedang memproses Upload Sps.<br>Harap tunggu, ini mungkin memakan waktu...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
 
-        // Update modal count
-        function updateModalCount() {
-            const visibleCount = $('.column-checkbox:checked').length;
-            const totalCount = $('.column-checkbox').length;
-            $('#modalVisibleCount').text(visibleCount);
-            $('#modalTotalCount').text(totalCount);
-        }
-
-        // Capitalize first letter
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
+            $.ajax({
+                url: '@Url.Action("ImportExcel")',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                timeout: 300000, // 5 minutes timeout
+                success: function(response) {
+                    var iconType = response.success ? 'success' : 'error';
+                    var titleText = response.success ? 'Upload Sps Berhasil!' : 'Upload Gagal';
+                    
+                    var errorHtml = '';
+                    if (response.errorDetails && response.errorDetails.length > 0) {
+                        errorHtml = '<hr><div class=\"text-start\" style=\"font-size: 0.85rem; max-height: 250px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px; color: #333;\"><strong>Detail Error (Showing first 10):</strong><ul>';
+                        response.errorDetails.forEach(function(err) {
+                            errorHtml += '<li>' + err + '</li>';
+                        });
+                        errorHtml += '</ul></div>';
+                    }
+                    
+                    Swal.fire({
+                        icon: iconType,
+                        title: titleText,
+                        html: '<div style=\"font-size: 0.95rem;\">' + response.message + '</div>' + errorHtml,
+                        confirmButtonText: 'OK',
+                        background: '#1a1d21',
+                        color: '#fff',
+                        width: '700px'
+                    }).then(() => {
+                        // Reload jika ada documents ATAU itemlists yang di-import
+                        if (response.success && (response.imported > 0 || response.importedDocs > 0)) {
+                            location.reload();
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan: ' + (xhr.responseJSON?.message || error),
+                        background: '#1a1d21',
+                        color: '#fff'
+                    });
+                }
+            });
+        });
+    </script>
     </script>
 }

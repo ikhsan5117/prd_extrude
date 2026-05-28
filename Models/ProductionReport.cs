@@ -36,7 +36,7 @@ namespace VelastoProductionSystem.Models
         public string? ItemCode { get; set; }
 
         [Display(Name = "SPS ID")]
-        public int? SpsId { get; set; }
+        public string? SpsId { get; set; }
 
         // IMAGE 1: NOW I'M PRODUCE (Keeping legacy names to avoid breakage)
         [Display(Name = "Material Inner")]

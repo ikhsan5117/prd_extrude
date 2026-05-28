@@ -1,0 +1,43 @@
+@model VelastoProductionSystem.Models.SpsItemList
+
+@{
+    ViewData["Title"] = "Tambah Item List SPS";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm col-md-6 mx-auto">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>@ViewData["Title"]</h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="ItemList" class="form-label fw-bold"></label>
+                    <input asp-for="ItemList" class="form-control" placeholder="Contoh: ITEM, TA1080, dll" />
+                    <span asp-validation-for="ItemList" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="DocumentNumber" class="form-label fw-bold"></label>
+                    <select asp-for="DocumentNumber" class="form-select" asp-items="ViewBag.DocumentNumber">
+                        <option value="">-- Pilih Document --</option>
+                    </select>
+                    <span asp-validation-for="DocumentNumber" class="text-danger"></span>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Kembali</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

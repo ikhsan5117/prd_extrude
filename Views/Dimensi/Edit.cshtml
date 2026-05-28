@@ -1116,22 +1116,22 @@
         // Inject standards from server if available (Fix for historical consistency)
         @if (ViewBag.Sps != null || ViewBag.Master != null)
         {
-            var s = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
-            var m = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+            var s = ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc;
+            var m = ViewBag.Master as VelastoProductionSystem.Models.SpsNoDoc;
 
-            string targetInner = null;
-            string targetThick = null;
-            string targetTotal = null;
+            string? targetInner = null;
+            string? targetThick = null;
+            string? targetTotal = null;
 
             if (s != null)
             {
-                targetInner = s.ToleranceInner_Asli?.ToString("F2") ?? s.InnerTarget;
+                targetInner = s.InnerTarget;
                 if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = s.Dimensi;
 
-                targetThick = s.TebalInner_Asli?.ToString("F2") ?? s.ThickTarget;
+                targetThick = s.ThickTarget;
                 if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = s.TebalInner;
 
-                targetTotal = s.TebalTotal_Asli?.ToString("F2") ?? s.TotalTarget;
+                targetTotal = s.TotalTarget;
                 if (string.IsNullOrEmpty(targetTotal) || targetTotal == "0") targetTotal = s.TebalTotal;
             }
             else if (m != null)
@@ -1147,7 +1147,7 @@
             }
             
             // Robust Tolerance Selection
-            var tolInner = s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1";
+            var tolInner = s?.ToleranceInner_Asli?.ToString("F2") ?? s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1";
             var tolThick = s?.ThickTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.2";
             var tolTotal = s?.TotalTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.3";
 
@@ -1157,7 +1157,7 @@
                 innerthicknessy = new { id = "innerthicknessy", val = targetThick, tol = tolThick },
                 totalthicknessx = new { id = "totalthicknessx", val = targetTotal, tol = tolTotal },
                 totalthicknessy = new { id = "totalthicknessy", val = targetTotal, tol = tolTotal },
-                spiralpitch = new { id = "spiralpitch", val = s?.SpiralPitchSetting ?? m?.SpiralPitchSetting, tol = s?.ToleranceSpiralPitch ?? m?.ToleranceSpiralPitch ?? "5" }
+                spiralpitch = new { id = "spiralpitch", val = s?.SpiralPitchSetting_Asli?.ToString("F2") ?? s?.SpiralPitchSetting ?? m?.SpiralPitchSetting, tol = s?.ToleranceSpiralPitch_Asli?.ToString("F2") ?? s?.ToleranceSpiralPitch ?? m?.ToleranceSpiralPitch ?? "5" }
             };
             <text>
             const serverStds = @Html.Raw(Json.Serialize(stdObj));
@@ -2903,14 +2903,14 @@
                 // Read SpsId from hidden field
                 const spsIdField = document.getElementById('SpsId');
                 const spsIdValue = spsIdField?.value;
-                const spsIdInt = spsIdValue && spsIdValue !== '' ? parseInt(spsIdValue) : null;
+                const spsIdStr = spsIdValue && spsIdValue !== '' ? spsIdValue : null;
                 
                 console.log('═══════════════════════════════════════');
                 console.log('🔍 SpsId Debug Information:');
                 console.log('  - Hidden Field Element:', spsIdField);
                 console.log('  - Raw Value:', spsIdValue);
-                console.log('  - Parsed Integer:', spsIdInt);
-                console.log('  - Type:', typeof spsIdInt);
+                console.log('  - Parsed String:', spsIdStr);
+                console.log('  - Type:', typeof spsIdStr);
                 console.log('═══════════════════════════════════════');
 
                 // === AGGREGATE SUMMARIES & TOTALS FROM ALL SLOTS ===

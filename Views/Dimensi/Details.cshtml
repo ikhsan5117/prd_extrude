@@ -158,8 +158,8 @@
                 <tr><td>Date</td><td>: @Model.ProductionDate.ToString("dd MMM yyyy")</td></tr>
                 <tr><td>Shift</td><td>: @(Model.Shift ?? "-")</td></tr>
                 @{
-                    var spsForCustomer = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
-                    var masterForCustomer = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                    var spsForCustomer = ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc;
+                    var masterForCustomer = ViewBag.Master as VelastoProductionSystem.Models.SpsNoDoc;
                     var displayCustomer = !string.IsNullOrWhiteSpace(Model.CustomerName) && Model.CustomerName != "-"
                         ? Model.CustomerName
                         : (spsForCustomer?.Customer ?? masterForCustomer?.Customer ?? "-");
@@ -221,8 +221,8 @@
                 </tr>
                 @{
                     var measurements = Model.Measurements?.ToDictionary(m => m.PointName, StringComparer.OrdinalIgnoreCase) ?? new Dictionary<string, VelastoProductionSystem.Models.DimensionMeasurement>(StringComparer.OrdinalIgnoreCase);
-                    var sps = ViewBag.Sps as VelastoProductionSystem.Models.SpsMaster;
-                    var master = ViewBag.Master as VelastoProductionSystem.Models.MasterlistSpsDoubleLayer;
+                    var sps = ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc;
+                    var master = ViewBag.Master as VelastoProductionSystem.Models.SpsNoDoc;
                     
                     var mainPoints = new[] {
                         "Inner Diameter", "Inner Thickness (x)", "Inner Thickness (y)", 
@@ -368,8 +368,8 @@
                 @{
                     var spiralRow = measurements.ContainsKey("Spiral Pitch") ? measurements["Spiral Pitch"] : null;
                     var visualRow = measurements.ContainsKey("Visual Check") ? measurements["Visual Check"] : null;
-                    var spiralStd = (sps != null && ParseNum(sps.SpiralPitchSetting) > 0) 
-                        ? $"{ParseNum(sps.SpiralPitchSetting).ToString("0")} ± {ParseTol(sps.ToleranceSpiralPitch, 5.0m).ToString("0")}" 
+                    var spiralStd = sps != null && (sps.SpiralPitchSetting_Asli.HasValue || ParseNum(sps.SpiralPitchSetting) > 0)
+                        ? $"{(sps.SpiralPitchSetting_Asli ?? ParseNum(sps.SpiralPitchSetting)).ToString("0")} ± {(sps.ToleranceSpiralPitch_Asli ?? ParseTol(sps.ToleranceSpiralPitch, 5.0m)).ToString("0")}"
                         : (sps != null && !string.IsNullOrEmpty(sps.SpiralPitchDisplay) ? sps.SpiralPitchDisplay : (spiralRow?.StandardDimension ?? "38 ± 5"));
                 }
                 <tr>

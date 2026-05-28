@@ -493,7 +493,34 @@
                             var isMiddleDie = die.Name == "Middle Die";
                             <div class="col-md-6 col-xl-4 @(isMiddleDie && string.IsNullOrEmpty(die.SpecKey) ? "d-none" : "")" id="die_card_@die.SpecKey">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
+
+                                    <!-- TOP: Standard bar with min / std / max -->
+                                    <div class="die-spec-bar mb-3 px-2 pt-2 pb-2 rounded-2" style="background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.15);">
+                                        <div class="text-center mb-1">
+                                            <span style="font-size: 0.48rem; font-weight: 900; letter-spacing: 2px; color: var(--accent-glow, #38bdf8); text-transform: uppercase;">STANDARD</span>
+                                        </div>
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            <div class="text-center">
+                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">min</div>
+                                                <div id="spec_min_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
+                                            </div>
+                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
+                                            <div class="text-center">
+                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase;">std</div>
+                                                <div id="spec_std_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.95rem; color: #7dd3fc; min-width: 48px;">--</div>
+                                            </div>
+                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
+                                            <div class="text-center">
+                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">max</div>
+                                                <div id="spec_max_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Hidden full spec value for JS validation -->
+                                    <div id="spec_@die.SpecKey" style="display:none;">--</div>
+
+                                    <!-- MIDDLE: Instrument name + OK/NG -->
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="label-stack">
                                             <span class="label-sub">INSTRUMENT</span>
                                             <span class="label-main fs-6">@die.Name</span>
@@ -504,24 +531,15 @@
                                         </div>
                                     </div>
 
-                                    <div class="row g-2 align-items-end mt-auto">
-                                        <div class="col-4">
-                                            <div class="text-center">
-                                                <label class="lbl-small mb-1 text-info-glow" style="font-size: 0.55rem;">STANDARD</label>
-                                                <div class="hud-input-underlined py-1 text-info-glow bg-dark bg-opacity-50 rounded-2 border-0" id="spec_@die.SpecKey" style="font-size: 0.9rem; min-height: 35px;">--</div>
-                                            </div>
+                                    <!-- BOTTOM: Before + After centered -->
+                                    <div class="d-flex justify-content-center gap-3 mt-auto">
+                                        <div class="text-center" style="width: 130px;">
+                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">BEFORE</label>
+                                            <input name="@die.InitName" value="@die.InitVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
                                         </div>
-                                        <div class="col-4">
-                                            <div class="text-center">
-                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">BEFORE</label>
-                                                <input name="@die.InitName" value="@die.InitVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="text-center">
-                                                <label class="lbl-small mb-1 text-warning" style="font-size: 0.55rem;">AFTER</label>
-                                                <input name="@die.FinalName" value="@die.FinalVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
-                                            </div>
+                                        <div class="text-center" style="width: 130px;">
+                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">AFTER</label>
+                                            <input name="@die.FinalName" value="@die.FinalVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
                                         </div>
                                     </div>
                                 </div>
@@ -1262,21 +1280,31 @@
             if (yarnEl) yarnEl.value = yarnStd;
 
             // Populate parameter standards
-            const setSpec = (id, val) => {
+            const setSpec = (id, val, minVal, maxVal) => {
                 const el = document.getElementById('spec_' + id);
                 if (el) el.textContent = val || '--';
+                // Populate split min/std/max display for die cards
+                const minEl = document.getElementById('spec_min_' + id);
+                const stdEl = document.getElementById('spec_std_' + id);
+                const maxEl = document.getElementById('spec_max_' + id);
+                if (minEl || stdEl || maxEl) {
+                    const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? v : '--';
+                    if (minEl) minEl.textContent = fmt(minVal);
+                    if (stdEl) stdEl.textContent = val || '--';
+                    if (maxEl) maxEl.textContent = fmt(maxVal);
+                }
             };
             
             // Dies dimension standards
-            setSpec('NippleDie', sps.InnerDie || sps.innerDie);
-            setSpec('TubeDie', sps.TubeDie || sps.tubeDie);
-            setSpec('MiddleDie', sps.MiddleDie || sps.middleDie);
-            setSpec('CoverDie', sps.CoverDie || sps.coverDie);
-            setSpec('SpacerDie', sps.SpacerDie || sps.spacerDie);
-            setSpec('ToleranceDie', sps.ToleranceDie || sps.toleranceDie);
+            setSpec('NippleDie',    sps.Nipple_Asli    || sps.nipple_Asli    || sps.Nipple    || sps.nipple,    sps.Nipple_Min    || sps.nipple_Min,    sps.Nipple_Max    || sps.nipple_Max);
+            setSpec('TubeDie',      sps.TubeDie_Asli   || sps.tubeDie_Asli   || sps.TubeDie   || sps.tubeDie,   sps.TubeDie_Min   || sps.tubeDie_Min,   sps.TubeDie_Max   || sps.tubeDie_Max);
+            setSpec('MiddleDie',    sps.MiddleDie_Asli  || sps.middleDie_Asli  || sps.MiddleDie  || sps.middleDie,  sps.MiddleDie_Min  || sps.middleDie_Min,  sps.MiddleDie_Max  || sps.middleDie_Max);
+            setSpec('CoverDie',     sps.CoverDie_Asli  || sps.coverDie_Asli  || sps.CoverDie  || sps.coverDie,  sps.CoverDie_Min  || sps.coverDie_Min,  sps.CoverDie_Max  || sps.coverDie_Max);
+            setSpec('SpacerDie',    sps.SpacerDie_Asli || sps.spacerDie_Asli || sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max);
+            setSpec('ToleranceDie', sps.ADistance_Asli || sps.aDistance_Asli || sps.ToleranceDie || sps.toleranceDie || '--', sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max);
 
             // AUTO-HIDE Middle Die Card if empty OR if it's a Double Layer machine
-            const midVal = (sps.MiddleDie || sps.middleDie || '').trim();
+            const midVal = (sps.MiddleDie_Asli || sps.middleDie_Asli || sps.MiddleDie || sps.middleDie || '').toString().trim();
             
             // SUPER ROBUST Machine Detection
             const machineHidden = document.getElementById('MachineName')?.value || '';
@@ -1301,28 +1329,28 @@
             }
             
             // Map SPS fields to spec labels
-            setSpec('HeadTempInner', sps.HeadTempInner || sps.headTempInner || sps.HeadTemp || sps.HeadTemp1);
-            setSpec('Cylinder1TempInner', sps.Cylinder1TempInner || sps.cylinder1TempInner || sps.Cylinder1Temp || sps.Cylinder1_1);
-            setSpec('Cylinder2TempInner', sps.Cylinder2TempInner || sps.cylinder2TempInner || sps.Cylinder2Temp || sps.Cylinder2_1);
-            setSpec('Cylinder3TempInner', sps.Cylinder3TempInner || sps.cylinder3TempInner || sps.Cylinder3Temp || sps.Cylinder1_3);
-            setSpec('ScrewTempInner', sps.ScrewTempInner || sps.screwTempInner || sps.ScrewTemp || sps.ScrewTemp1);
-            setSpec('ScrewSpeedInner', sps.ScrewSpeedInner || sps.screwSpeedInner || sps.ScrewSpeed || sps.ScrewSpeed1);
-            setSpec('FeedRollRatioInner', sps.FeedRollRatioInner || sps.feedRollRatioInner || sps.FeedRollRatio || sps.Feed1);
-            setSpec('PressureInner', sps.PressureInner || sps.pressureInner || sps.Pressure || sps.Pressure1);
+            setSpec('HeadTempInner', sps.HeadTemp1_Asli || sps.headTemp1_Asli || sps.HeadTemp1 || sps.headTemp1);
+            setSpec('Cylinder1TempInner', sps.Cylinder1_1_Asli || sps.cylinder1_1_Asli || sps.Cylinder1_1 || sps.cylinder1_1);
+            setSpec('Cylinder2TempInner', sps.Cylinder2_1_Asli || sps.cylinder2_1_Asli || sps.Cylinder2_1 || sps.cylinder2_1);
+            setSpec('Cylinder3TempInner', sps.Cylinder3_1_Asli || sps.cylinder3_1_Asli || sps.Cylinder3_1 || sps.cylinder3_1);
+            setSpec('ScrewTempInner', sps.ScrewTemp1_Asli || sps.screwTemp1_Asli || sps.ScrewTemp1 || sps.screwTemp1);
+            setSpec('ScrewSpeedInner', sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1);
+            setSpec('FeedRollRatioInner', sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1);
+            setSpec('PressureInner', sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1);
 
-            setSpec('HeadTempOuter', sps.HeadTempOuter || sps.headTempOuter || sps.HeadTemp || sps.HeadTemp2);
-            setSpec('Cylinder1TempOuter', sps.Cylinder1TempOuter || sps.cylinder1TempOuter || sps.Cylinder1Temp || sps.Cylinder1_2);
-            setSpec('Cylinder2TempOuter', sps.Cylinder2TempOuter || sps.cylinder2TempOuter || sps.Cylinder2Temp || sps.Cylinder2_2);
-            setSpec('Cylinder3TempOuter', sps.Cylinder3TempOuter || sps.cylinder3TempOuter || sps.Cylinder3Temp || sps.Cylinder3_2);
-            setSpec('ScrewTempOuter', sps.ScrewTempOuter || sps.screwTempOuter || sps.ScrewTemp || sps.ScrewTemp2);
-            setSpec('ScrewSpeedOuter', sps.ScrewSpeedOuter || sps.screwSpeedOuter || sps.ScrewSpeed || sps.ScrewSpeed2);
-            setSpec('FeedRollRatioOuter', sps.FeedRollRatioOuter || sps.feedRollRatioOuter || sps.FeedRollRatio || sps.Feed2);
-            setSpec('PressureOuter', sps.PressureOuter || sps.pressureOuter || sps.Pressure || sps.Pressure2);
+            setSpec('HeadTempOuter', sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2);
+            setSpec('Cylinder1TempOuter', sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2);
+            setSpec('Cylinder2TempOuter', sps.Cylinder2_2_Asli || sps.cylinder2_2_Asli || sps.Cylinder2_2 || sps.cylinder2_2);
+            setSpec('Cylinder3TempOuter', sps.Cylinder3_2_Asli || sps.cylinder3_2_Asli || sps.Cylinder3_2 || sps.cylinder3_2);
+            setSpec('ScrewTempOuter', sps.ScrewTemp2_Asli || sps.screwTemp2_Asli || sps.ScrewTemp2 || sps.screwTemp2);
+            setSpec('ScrewSpeedOuter', sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2);
+            setSpec('FeedRollRatioOuter', sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2);
+            setSpec('PressureOuter', sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2);
 
-            setSpec('SpiralSpeed', sps.SpiralSpeed || sps.spiralSpeed);
-            setSpec('SpiralPitchSetting', sps.SpiralPitch || sps.spiralPitch || sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch);
-            setSpec('HoseSpeed', sps.HoseSpeed || sps.hoseSpeed);
-            setSpec('ConveyorRatio', sps.ConveyorRatio || sps.conveyorRatio);
+            setSpec('SpiralSpeed', sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed);
+            setSpec('SpiralPitchSetting', sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting);
+            setSpec('HoseSpeed', sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed);
+            setSpec('ConveyorRatio', sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio);
 
             // Populate Emboss Marking Date if empty
             const dateEl = document.getElementById('EmbossMarkDate');
@@ -1749,7 +1777,7 @@
                 CustomerName: document.getElementById('CustomerName').value,
                 HoseType: document.getElementById('HoseType').value,
                 ItemCode: document.getElementById('ItemCode').value,
-                SpsId: parseInt(document.getElementById('SpsId').value) || null,
+                SpsId: document.getElementById('SpsId')?.value || null,
 
                 InnerMaterial: document.getElementById('InnerMaterial')?.value || document.querySelector('input[name="InnerMaterial"]')?.value || '',
                 InnerMaterialActual: document.getElementById('InnerMaterialActual')?.value || document.querySelector('input[name="InnerMaterialActual"]')?.value || '',

@@ -11,43 +11,51 @@ namespace VelastoProductionSystem.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_ProductionReports_StandardParameterSettings_StandardParameterSettingId",
-                table: "ProductionReports");
+            // Conditional: drop FK only if still exists (may have been dropped by RenameSpsIdColumn migration)
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT 1 FROM sys.foreign_keys
+                    WHERE name = 'FK_ProductionReports_StandardParameterSettings_StandardParameterSettingId'
+                      AND parent_object_id = OBJECT_ID('[dbo].[ProductionReports]')
+                )
+                    ALTER TABLE [dbo].[ProductionReports] DROP CONSTRAINT [FK_ProductionReports_StandardParameterSettings_StandardParameterSettingId];
+            ");
 
-            migrationBuilder.RenameColumn(
-                name: "StandardParameterSettingId",
-                table: "ProductionReports",
-                newName: "SpsId");
+            // Conditional: rename column only if old name still exists
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('[dbo].[ProductionReports]') AND name = 'StandardParameterSettingId')
+                    EXEC sp_rename N'[dbo].[ProductionReports].[StandardParameterSettingId]', N'SpsId', N'COLUMN';
+            ");
 
-            migrationBuilder.RenameIndex(
-                name: "IX_ProductionReports_StandardParameterSettingId",
-                table: "ProductionReports",
-                newName: "IX_ProductionReports_SpsId");
+            // Conditional: rename index only if old name still exists
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ProductionReports_StandardParameterSettingId' AND object_id = OBJECT_ID('[dbo].[ProductionReports]'))
+                    EXEC sp_rename N'[dbo].[ProductionReports].[IX_ProductionReports_StandardParameterSettingId]', N'IX_ProductionReports_SpsId', N'INDEX';
+            ");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "DandoriEndEndTime",
-                table: "ProductionReports",
-                type: "datetime2",
-                nullable: true);
+            // Conditional: add DandoriEndEndTime only if not exists
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('[dbo].[ProductionReports]') AND name = 'DandoriEndEndTime')
+                    ALTER TABLE [dbo].[ProductionReports] ADD [DandoriEndEndTime] datetime2 NULL;
+            ");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "DandoriEndStartTime",
-                table: "ProductionReports",
-                type: "datetime2",
-                nullable: true);
+            // Conditional: add DandoriEndStartTime only if not exists
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('[dbo].[ProductionReports]') AND name = 'DandoriEndStartTime')
+                    ALTER TABLE [dbo].[ProductionReports] ADD [DandoriEndStartTime] datetime2 NULL;
+            ");
 
-            migrationBuilder.AddColumn<string>(
-                name: "ItemCode",
-                table: "ProductionReports",
-                type: "nvarchar(max)",
-                nullable: true);
+            // Conditional: add ItemCode to ProductionReports only if not exists
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('[dbo].[ProductionReports]') AND name = 'ItemCode')
+                    ALTER TABLE [dbo].[ProductionReports] ADD [ItemCode] nvarchar(max) NULL;
+            ");
 
-            migrationBuilder.AddColumn<int>(
-                name: "SpsId",
-                table: "DimensionReports",
-                type: "int",
-                nullable: true);
+            // Conditional: add SpsId to DimensionReports only if not exists
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('[dbo].[DimensionReports]') AND name = 'SpsId')
+                    ALTER TABLE [dbo].[DimensionReports] ADD [SpsId] int NULL;
+            ");
 
             migrationBuilder.CreateTable(
                 name: "SpsImportTrialRows",
@@ -76,10 +84,11 @@ namespace VelastoProductionSystem.Migrations
                     table.PrimaryKey("PK_SpsImportTrialRows", x => x.Id);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_DimensionReports_SpsId",
-                table: "DimensionReports",
-                column: "SpsId");
+            // Conditional: create IX_DimensionReports_SpsId only if not exists
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_DimensionReports_SpsId' AND object_id = OBJECT_ID('[dbo].[DimensionReports]'))
+                    CREATE INDEX [IX_DimensionReports_SpsId] ON [dbo].[DimensionReports] ([SpsId]);
+            ");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SpsImportTrialRows_BatchId",
@@ -92,21 +101,17 @@ namespace VelastoProductionSystem.Migrations
                 columns: new[] { "ExcelId", "ItemCode" },
                 unique: true);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_DimensionReports_StandardParameterSettings_SpsId",
-                table: "DimensionReports",
-                column: "SpsId",
-                principalTable: "StandardParameterSettings",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+            // Conditional: add FK_DimensionReports_StandardParameterSettings_SpsId only if not exists
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_DimensionReports_StandardParameterSettings_SpsId' AND parent_object_id = OBJECT_ID('[dbo].[DimensionReports]'))
+                    ALTER TABLE [dbo].[DimensionReports] ADD CONSTRAINT [FK_DimensionReports_StandardParameterSettings_SpsId] FOREIGN KEY ([SpsId]) REFERENCES [dbo].[StandardParameterSettings] ([Id]) ON DELETE SET NULL;
+            ");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_ProductionReports_StandardParameterSettings_SpsId",
-                table: "ProductionReports",
-                column: "SpsId",
-                principalTable: "StandardParameterSettings",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+            // Conditional: add FK_ProductionReports_StandardParameterSettings_SpsId only if not exists
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_ProductionReports_StandardParameterSettings_SpsId' AND parent_object_id = OBJECT_ID('[dbo].[ProductionReports]'))
+                    ALTER TABLE [dbo].[ProductionReports] ADD CONSTRAINT [FK_ProductionReports_StandardParameterSettings_SpsId] FOREIGN KEY ([SpsId]) REFERENCES [dbo].[StandardParameterSettings] ([Id]) ON DELETE SET NULL;
+            ");
         }
 
         /// <inheritdoc />

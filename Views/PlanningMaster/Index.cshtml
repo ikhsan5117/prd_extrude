@@ -158,13 +158,16 @@
                                 <input type="text" name="query" value="@ViewBag.Query" placeholder="Part code, shift..." class="form-control form-control-dark border-0 ms-n3" style="padding-left: 40px;" />
                             </div>
                         </div>
-                        <div class="col-md-auto d-flex align-items-end">
+                        <div class="col-md-auto d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-sm neon-btn py-2 px-4 shadow-sm h-100" style="min-height: 38px;">
                                 <i class="bi bi-filter me-1"></i> APPLY FILTER
                             </button>
+                            <a href="@Url.Action("Index", new { filterDate = DateTime.Today.ToString("yyyy-MM-dd") })" class="btn btn-sm btn-info py-2 px-4 shadow-sm h-100" style="min-height: 38px;" title="Tampilkan planning hari ini">
+                                <i class="bi bi-calendar-check me-1"></i> PLANNING HARI INI
+                            </a>
                             @if (ViewBag.FilterDate != null || !string.IsNullOrEmpty(ViewBag.Query) || ViewBag.MachineId != null)
                             {
-                                <a asp-action="Index" class="btn btn-sm btn-link text-white-50 text-decoration-none ms-2 pb-2">Reset</a>
+                                <a asp-action="Index" class="btn btn-sm btn-link text-white-50 text-decoration-none pb-2">Reset</a>
                             }
                         </div>
                     </form>

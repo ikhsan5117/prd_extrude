@@ -30,7 +30,9 @@ namespace VelastoProductionSystem.Data
         //     }
         // }
             // StandardParameterSettings seeding removed (table dropped)
+            // MasterlistSpsDoubleLayers seeding removed (table dropped)
 
+            /*
             // Seed Masterlist SPS (Fallback Master) - Ensuring ITEM-001/002/003 have standards
             if (!context.MasterlistSpsDoubleLayers.Any())
             {
@@ -83,6 +85,7 @@ namespace VelastoProductionSystem.Data
                 });
             }
             context.SaveChanges();
+            */
 
             // PackingStandards seeding removed (table dropped)
 

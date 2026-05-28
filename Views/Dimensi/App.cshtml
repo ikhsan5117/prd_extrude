@@ -2080,7 +2080,7 @@
             }
             const targetInput = document.getElementById('disp-qty-target');
             if (targetInput && (targetInput.value === '0' || targetInput.value === '')) {
-                targetInput.value = '@Model.QtyTarget' || '0';
+                targetInput.value = '@(Model?.QtyTarget)' || '0';
             }
 
             // 5. Render Production Summaries
@@ -2623,7 +2623,7 @@
                 });
 
                 const payload = {
-                    ReportId: @Model.Id,
+                    ReportId: @(Model?.Id ?? 0),
                     SpsId: window._dimSpsId || null,
                     DocumentNumber: document.getElementById('h-doc')?.innerText || '---',
                     ItemCode: document.getElementById('itemCode')?.value || window._dimSelectedItemCode || '',

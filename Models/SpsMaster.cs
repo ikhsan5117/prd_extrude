@@ -5,19 +5,15 @@ namespace VelastoProductionSystem.Models
 {
     public class SpsMaster
     {
-        public int Id { get; set; }
-
-        [Display(Name = "ID Excel")]
-        public string? ExcelId { get; set; }
-
         [Display(Name = "No")]
         public string? No { get; set; }
 
         [Display(Name = "Machine")]
         public string? Machine { get; set; }
 
+        [Key]
         [Display(Name = "No. Document")]
-        public string? DocumentNumber { get; set; }
+        public string DocumentNumber { get; set; } = string.Empty;
 
         [Display(Name = "No. Rev.")]
         public string? RevisionNumber { get; set; }
@@ -733,6 +729,13 @@ namespace VelastoProductionSystem.Models
         public decimal? ToleranceOuter_Asli { get; set; }
         [Display(Name = "Tolerance Outer Max")]
         public decimal? ToleranceOuter_Max { get; set; }
+
+        [Display(Name = "Tolerance Spiral Pitch Min")]
+        public decimal? ToleranceSpiralPitch_Min { get; set; }
+        [Display(Name = "Tolerance Spiral Pitch Asli")]
+        public decimal? ToleranceSpiralPitch_Asli { get; set; }
+        [Display(Name = "Tolerance Spiral Pitch Max")]
+        public decimal? ToleranceSpiralPitch_Max { get; set; }
 
         [Display(Name = "Selisih Tebal Min")]
         public decimal? SelisihTebal_Min { get; set; }

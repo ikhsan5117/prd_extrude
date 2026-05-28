@@ -104,16 +104,30 @@ namespace VelastoProductionSystem.Controllers
             ViewBag.ApiKey    = configuredKey;
             ViewBag.IngestUrl = $"{Request.Scheme}://{Request.Host}/api/sensor-readings/ingest";
 
-            // Ambil semua SPS untuk ditampilkan di simulator (Prioritaskan SpsMasters/Edit)
-            var spsList = await _context.SpsMasters
-                .OrderBy(s => s.ItemList)
+            // Ambil semua SPS untuk ditampilkan di simulator (join ke ItemList)
+            var spsList = await _context.SpsItemLists
+                .Include(i => i.SpsNoDoc)
                 .Select(s => new {
-                    s.Id,
-                    s.DocumentNumber,
-                    s.No,
-                    s.ItemList,
-                    s.MachineCode,
-                    s.Customer
+                    Id = s.DocumentNumber,
+                    s.SpsNoDoc!.DocumentNumber,
+                    s.SpsNoDoc.No,
+                    ItemList = s.ItemList,
+                    s.SpsNoDoc.MachineCode,
+                    s.SpsNoDoc.Customer,
+                    // Standard parameter fields (_Asli = nilai target)
+                    s.SpsNoDoc.OdSensor_Asli,    s.SpsNoDoc.OdSensor_Max,    s.SpsNoDoc.OdSensor_Min,
+                    s.SpsNoDoc.HoseSpeed_Asli,   s.SpsNoDoc.HoseSpeed_Max,   s.SpsNoDoc.HoseSpeed_Min,
+                    s.SpsNoDoc.HeadTemp1_Asli,   s.SpsNoDoc.HeadTemp1_Max,   s.SpsNoDoc.HeadTemp1_Min,
+                    s.SpsNoDoc.HeadTemp2_Asli,   s.SpsNoDoc.HeadTemp2_Max,   s.SpsNoDoc.HeadTemp2_Min,
+                    s.SpsNoDoc.ScrewSpeed1_Asli, s.SpsNoDoc.ScrewSpeed1_Max, s.SpsNoDoc.ScrewSpeed1_Min,
+                    s.SpsNoDoc.ScrewSpeed2_Asli, s.SpsNoDoc.ScrewSpeed2_Max, s.SpsNoDoc.ScrewSpeed2_Min,
+                    s.SpsNoDoc.Pressure1_Asli,   s.SpsNoDoc.Pressure1_Max,   s.SpsNoDoc.Pressure1_Min,
+                    s.SpsNoDoc.Pressure2_Asli,   s.SpsNoDoc.Pressure2_Max,   s.SpsNoDoc.Pressure2_Min,
+                    s.SpsNoDoc.SpiralPitchSetting_Asli, s.SpsNoDoc.SpiralPitchSetting_Max, s.SpsNoDoc.SpiralPitchSetting_Min,
+                    s.SpsNoDoc.CaterpillarGap_Asli, s.SpsNoDoc.CaterpillarGap_Max, s.SpsNoDoc.CaterpillarGap_Min,
+                    s.SpsNoDoc.ChillerWaterTemp_Asli, s.SpsNoDoc.ChillerWaterTemp_Max, s.SpsNoDoc.ChillerWaterTemp_Min,
+                    s.SpsNoDoc.InnerTarget, s.SpsNoDoc.InnerMin, s.SpsNoDoc.InnerMax,
+                    s.SpsNoDoc.ToleranceInner_Asli, s.SpsNoDoc.ToleranceSpiralPitch_Asli
                 })
                 .ToListAsync();
 
@@ -578,34 +592,34 @@ namespace VelastoProductionSystem.Controllers
                 .OrderBy(m => m)
                 .ToListAsync();
 
-            // Ambil semua SPS dari SpsMasters (Master SPS Edit)
-            var spsList = await _context.SpsMasters
-                .OrderBy(s => s.ItemList)
+            // Ambil semua SPS dari SpsNoDocs (join ke ItemList untuk ambil ItemList)
+            var spsList = await _context.SpsItemLists
+                .Include(i => i.SpsNoDoc)
                 .Select(s => new {
-                    s.Id,
-                    s.DocumentNumber,
-                    s.No,
-                    s.ItemList,
-                    s.MachineCode,
-                    s.Customer,
-                    s.OdSensor_Asli, s.OdSensor_Max, s.OdSensor_Min,
-                    s.ControlValue_Asli, s.ControlValue_Max, s.ControlValue_Min,
-                    s.ToleranceOuter_Asli, s.ToleranceOuter,
-                    s.ToleranceInner_Asli, s.ToleranceInner,
-                    s.HoseSpeed_Asli, s.HoseSpeed_Max, s.HoseSpeed_Min,
-                    s.HeadTemp1_Asli, s.HeadTemp1_Max, s.HeadTemp1_Min,
-                    s.HeadTemp2_Asli, s.HeadTemp2_Max, s.HeadTemp2_Min,
-                    s.ScrewSpeed1_Asli, s.ScrewSpeed1_Max, s.ScrewSpeed1_Min,
-                    s.ScrewSpeed2_Asli, s.ScrewSpeed2_Max, s.ScrewSpeed2_Min,
-                    s.Pressure1_Asli, s.Pressure1_Max, s.Pressure1_Min,
-                    s.Pressure2_Asli, s.Pressure2_Max, s.Pressure2_Min,
-                    s.SpiralPitchSetting_Asli, s.SpiralPitchSetting_Max, s.SpiralPitchSetting_Min,
-                    s.ToleranceSpiralPitch,
-                    s.CaterpillarGap_Asli, s.CaterpillarGap_Max, s.CaterpillarGap_Min,
-                    s.ChillerWaterTemp_Asli, s.ChillerWaterTemp_Max, s.ChillerWaterTemp_Min,
-                    s.InnerTarget,
-                    s.InnerMin,
-                    s.InnerMax
+                    Id = s.DocumentNumber,
+                    s.SpsNoDoc!.DocumentNumber,
+                    s.SpsNoDoc.No,
+                    ItemList = s.ItemList,
+                    s.SpsNoDoc.MachineCode,
+                    s.SpsNoDoc.Customer,
+                    s.SpsNoDoc.OdSensor_Asli, s.SpsNoDoc.OdSensor_Max, s.SpsNoDoc.OdSensor_Min,
+                    s.SpsNoDoc.ControlValue_Asli, s.SpsNoDoc.ControlValue_Max, s.SpsNoDoc.ControlValue_Min,
+                    s.SpsNoDoc.ToleranceOuter_Asli, s.SpsNoDoc.ToleranceOuter,
+                    s.SpsNoDoc.ToleranceInner_Asli, s.SpsNoDoc.ToleranceInner,
+                    s.SpsNoDoc.HoseSpeed_Asli, s.SpsNoDoc.HoseSpeed_Max, s.SpsNoDoc.HoseSpeed_Min,
+                    s.SpsNoDoc.HeadTemp1_Asli, s.SpsNoDoc.HeadTemp1_Max, s.SpsNoDoc.HeadTemp1_Min,
+                    s.SpsNoDoc.HeadTemp2_Asli, s.SpsNoDoc.HeadTemp2_Max, s.SpsNoDoc.HeadTemp2_Min,
+                    s.SpsNoDoc.ScrewSpeed1_Asli, s.SpsNoDoc.ScrewSpeed1_Max, s.SpsNoDoc.ScrewSpeed1_Min,
+                    s.SpsNoDoc.ScrewSpeed2_Asli, s.SpsNoDoc.ScrewSpeed2_Max, s.SpsNoDoc.ScrewSpeed2_Min,
+                    s.SpsNoDoc.Pressure1_Asli, s.SpsNoDoc.Pressure1_Max, s.SpsNoDoc.Pressure1_Min,
+                    s.SpsNoDoc.Pressure2_Asli, s.SpsNoDoc.Pressure2_Max, s.SpsNoDoc.Pressure2_Min,
+                    s.SpsNoDoc.SpiralPitchSetting_Asli, s.SpsNoDoc.SpiralPitchSetting_Max, s.SpsNoDoc.SpiralPitchSetting_Min,
+                    s.SpsNoDoc.ToleranceSpiralPitch,
+                    s.SpsNoDoc.CaterpillarGap_Asli, s.SpsNoDoc.CaterpillarGap_Max, s.SpsNoDoc.CaterpillarGap_Min,
+                    s.SpsNoDoc.ChillerWaterTemp_Asli, s.SpsNoDoc.ChillerWaterTemp_Max, s.SpsNoDoc.ChillerWaterTemp_Min,
+                    s.SpsNoDoc.InnerTarget,
+                    s.SpsNoDoc.InnerMin,
+                    s.SpsNoDoc.InnerMax
                 })
                 .ToListAsync();
 
@@ -693,26 +707,25 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             // ── 2. Ambil standar — prioritas: spsId, lalu machineCode ─
-            SpsMaster? spsNew = null;
-            MasterlistSpsDoubleLayer? spsOld = null;
+            SpsNoDoc? spsNew = null;
+            SpsNoDoc? spsOld = null;
 
             if (spsId.HasValue)
             {
-                spsNew = await _context.SpsMasters.FirstOrDefaultAsync(s => s.Id == spsId.Value);
-                if (spsNew == null)
-                    spsOld = await _context.MasterlistSpsDoubleLayers.FirstOrDefaultAsync(s => s.Id == spsId.Value);
+                // spsId now corresponds to DocumentNumber (string), but API still passes int; use machineCode fallback
+                spsNew = await _context.SpsNoDocs.FirstOrDefaultAsync(s => s.MachineCode == machineCode);
             }
             else if (!string.IsNullOrEmpty(machineCode))
             {
-                spsNew = await _context.SpsMasters
+                spsNew = await _context.SpsNoDocs
                     .Where(s => s.MachineCode == machineCode)
-                    .OrderByDescending(s => s.Id)
+                    .OrderByDescending(s => s.DocumentNumber)
                     .FirstOrDefaultAsync();
                 
                 if (spsNew == null)
-                    spsOld = await _context.MasterlistSpsDoubleLayers
+                    spsOld = await _context.SpsNoDocs
                         .Where(s => s.MachineCode == machineCode)
-                        .OrderByDescending(s => s.Id)
+                        .OrderByDescending(s => s.DocumentNumber)
                         .FirstOrDefaultAsync();
             }
 
@@ -755,7 +768,7 @@ namespace VelastoProductionSystem.Controllers
         }
 
         /// <summary>Petakan metricType ke field standar di SpsMaster (BARU - Min/Asli/Max)</summary>
-        private static object? BuildStandardFromNew(string metricKey, SpsMaster sps)
+        private static object? BuildStandardFromNew(string metricKey, SpsNoDoc sps)
         {
             decimal? target = null;
             decimal? ucl    = null;
@@ -834,13 +847,13 @@ namespace VelastoProductionSystem.Controllers
             return new {
                 target, ucl, lcl, label, unit,
                 documentNumber = sps.DocumentNumber,
-                itemList       = sps.ItemList,
+                itemList       = sps.DocumentNumber,
                 machineCode    = sps.MachineCode,
             };
         }
 
-        /// <summary>Petakan metricType ke field standar di MasterlistSpsDoubleLayer (LAMA - legacy fallback)</summary>
-        private static object? BuildStandardFromOld(string metricKey, MasterlistSpsDoubleLayer sps)
+        /// <summary>Petakan metricType ke field standar di SpsNoDoc (LAMA - legacy fallback)</summary>
+        private static object? BuildStandardFromOld(string metricKey, SpsNoDoc sps)
         {
             decimal? target    = null;
             decimal? ucl       = null;
@@ -935,7 +948,7 @@ namespace VelastoProductionSystem.Controllers
                 label,
                 unit,
                 documentNumber = sps.DocumentNumber,
-                itemList       = sps.ItemList,
+                itemList       = sps.DocumentNumber,
                 machineCode    = sps.MachineCode,
             };
         }
