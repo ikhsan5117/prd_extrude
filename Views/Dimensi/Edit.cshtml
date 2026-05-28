@@ -1157,7 +1157,7 @@
                 innerthicknessy = new { id = "innerthicknessy", val = targetThick, tol = tolThick },
                 totalthicknessx = new { id = "totalthicknessx", val = targetTotal, tol = tolTotal },
                 totalthicknessy = new { id = "totalthicknessy", val = targetTotal, tol = tolTotal },
-                spiralpitch = new { id = "spiralpitch", val = s?.SpiralPitchSetting_Asli?.ToString("F2") ?? s?.SpiralPitchSetting ?? m?.SpiralPitchSetting, tol = s?.ToleranceSpiralPitch_Asli?.ToString("F2") ?? s?.ToleranceSpiralPitch ?? m?.ToleranceSpiralPitch ?? "5" }
+                spiralpitch = new { id = "spiralpitch", val = s?.SpiralPitchSetting_Asli?.ToString("F2") ?? s?.SpiralPitchDisplay_Asli?.ToString("F2") ?? s?.SpiralPitchSetting ?? s?.SpiralPitchDisplay ?? m?.SpiralPitchSetting ?? m?.SpiralPitchDisplay, tol = s?.ToleranceSpiralPitch_Asli?.ToString("F2") ?? s?.ToleranceSpiralPitch ?? m?.ToleranceSpiralPitch ?? "5" }
             };
             <text>
             const serverStds = @Html.Raw(Json.Serialize(stdObj));
@@ -2593,7 +2593,7 @@
                         { id: 'innerthicknessy', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
                         { id: 'totalthicknessx', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
                         { id: 'totalthicknessy', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
-                        { id: 'spiralpitch', v: m.spiralPitchSetting || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
+                        { id: 'spiralpitch', v: m.spiralPitchSetting || m.spiralPitchDisplay || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                     ];
 
                     configs.forEach(p => {

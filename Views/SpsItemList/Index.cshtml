@@ -2,6 +2,11 @@
 
 @{
     ViewData["Title"] = "Daftar Item List SPS";
+    var currentPage = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+    var pageSize = ViewBag.PageSize != null ? (int)ViewBag.PageSize : 50;
+    var totalPages = ViewBag.TotalPages != null ? (int)ViewBag.TotalPages : 1;
+    var totalCount = ViewBag.TotalCount != null ? (int)ViewBag.TotalCount : Model.Count();
+    var rowNo = (currentPage - 1) * pageSize;
 }
 
 <div class="container-fluid mt-4">
@@ -14,6 +19,9 @@
             <button type="button" class="btn btn-warning shadow-sm me-2 fw-bold" data-bs-toggle="modal" data-bs-target="#importItemListModal">
                 <i class="bi bi-list-ul"></i> Import Item List
             </button>
+            <a asp-action="DownloadExcel" asp-route-search="@ViewBag.Search" class="btn btn-success shadow-sm me-2 fw-bold">
+                <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+            </a>
             <a asp-action="Create" class="btn btn-primary shadow-sm fw-bold">
                 <i class="bi bi-plus-circle me-1"></i> Tambah Item List
             </a>
@@ -45,12 +53,17 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <table class="table table-striped table-hover align-middle">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="small text-muted">Total data: <strong>@totalCount</strong> | Halaman: <strong>@currentPage / @totalPages</strong> | 50 data per halaman</div>
+            </div>
+            <div class="table-responsive" style="max-height: 50vh; overflow: auto;">
+            <table class="table table-striped table-hover align-middle" id="spsItemListTable">
                 <thead class="table-dark">
                     <tr>
                         <th style="width: 40px; text-align: center;">
                             <input type="checkbox" id="selectAll" class="form-check-input" />
                         </th>
+                        <th style="width: 70px;">No</th>
                         <th>Item List</th>
                         <th>No. Document</th>
                         <th class="text-center">Aksi</th>
@@ -58,10 +71,12 @@
                 </thead>
                 <tbody>
                     @foreach (var item in Model) {
+                        rowNo++;
                         <tr>
                             <td class="text-center">
                                 <input type="checkbox" class="row-check form-check-input" value="@item.Id" />
                             </td>
+                            <td>@rowNo</td>
                             <td>
                                 <span class="badge bg-info text-dark fw-bold fs-6">@item.ItemList</span>
                             </td>
@@ -85,6 +100,27 @@
                     }
                 </tbody>
             </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <a asp-action="Index"
+                   asp-route-search="@ViewBag.Search"
+                   asp-route-page="@(currentPage > 1 ? currentPage - 1 : 1)"
+                   asp-route-pageSize="@pageSize"
+                   class="btn btn-outline-secondary @(currentPage <= 1 ? "disabled" : "")">
+                    <i class="bi bi-chevron-left"></i> Prev
+                </a>
+
+                <span class="small text-muted">Page @currentPage of @totalPages</span>
+
+                <a asp-action="Index"
+                   asp-route-search="@ViewBag.Search"
+                   asp-route-page="@(currentPage < totalPages ? currentPage + 1 : totalPages)"
+                   asp-route-pageSize="@pageSize"
+                   class="btn btn-outline-primary @(currentPage >= totalPages ? "disabled" : "")">
+                    Next <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 </div>

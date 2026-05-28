@@ -5,6 +5,8 @@ using VelastoProductionSystem.Models;
 using VelastoProductionSystem.Helpers;
 using OfficeOpenXml;
 using System.Text;
+using System.Reflection;
+using System.ComponentModel.DataAnnotations;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -738,22 +740,61 @@ namespace VelastoProductionSystem.Controllers
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SPS Master Data");
-                
-                // Headers
-                var headers = new[] {
-                    "ID", "Excel ID", "No", "Machine", "Item List", "Document Number",
-                    "Revision Number", "Customer", "Revision Date", "Formulasi", "Hose Type",
-                    "Dimensi", "Material", "Inner Tube", "Outer Cover", "Middle Tube",
-                    "Machine Code", "Yarn", "Inner Target", "Tolerance Inner", "Tolerance Outer"
+
+                // Keep first columns stable for operator expectation.
+                var pinnedColumns = new List<(string Header, Func<SpsMaster, object?> Value)>
+                {
+                    ("Machine", x => x.Machine),
+                    ("Item List", x => x.ItemList),
+                    ("Document Number", x => x.DocumentNumber),
+                    ("Revision Number", x => x.RevisionNumber),
+                    ("Revision Date", x => x.RevisionDate),
+                    ("Formulasi", x => x.Formulasi),
+                    ("Machine Code", x => x.MachineCode),
+                    ("Customer", x => x.Customer),
+                    ("Hose Type", x => x.HoseType),
+                    ("Dimensi", x => x.Dimensi),
+                    ("Material", x => x.Material)
                 };
-                
-                for (int i = 0; i < headers.Length; i++)
+
+                var pinnedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    nameof(SpsMaster.No),
+                    nameof(SpsMaster.Machine),
+                    nameof(SpsMaster.ItemList),
+                    nameof(SpsMaster.DocumentNumber),
+                    nameof(SpsMaster.RevisionNumber),
+                    nameof(SpsMaster.RevisionDate),
+                    nameof(SpsMaster.Formulasi),
+                    nameof(SpsMaster.MachineCode),
+                    nameof(SpsMaster.Customer),
+                    nameof(SpsMaster.HoseType),
+                    nameof(SpsMaster.Dimensi),
+                    nameof(SpsMaster.Material)
+                };
+
+                static string GetDisplayName(PropertyInfo prop)
+                {
+                    return prop.GetCustomAttribute<DisplayAttribute>()?.Name ?? prop.Name;
+                }
+
+                var dynamicProps = typeof(SpsMaster)
+                    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(p => p.CanRead && !pinnedNames.Contains(p.Name))
+                    .OrderBy(p => p.Name)
+                    .ToList();
+
+                var headers = new List<string> { "ID", "Excel ID", "No" };
+                headers.AddRange(pinnedColumns.Select(c => c.Header));
+                headers.AddRange(dynamicProps.Select(GetDisplayName));
+
+                for (int i = 0; i < headers.Count; i++)
                 {
                     worksheet.Cells[1, i + 1].Value = headers[i];
                 }
                 
                 // Style header
-                using (var range = worksheet.Cells[1, 1, 1, headers.Length])
+                using (var range = worksheet.Cells[1, 1, 1, headers.Count])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
@@ -762,29 +803,25 @@ namespace VelastoProductionSystem.Controllers
                 
                 // Data
                 int row = 2;
+                int runningId = 1;
                 foreach (var item in expandedData)
                 {
-                    worksheet.Cells[row, 1].Value = item.DocumentNumber;
-                    worksheet.Cells[row, 2].Value = item.DocumentNumber;
-                    worksheet.Cells[row, 3].Value = item.No;
-                    worksheet.Cells[row, 4].Value = item.Machine;
-                    worksheet.Cells[row, 5].Value = item.ItemList?.Replace("-", "");
-                    worksheet.Cells[row, 6].Value = item.DocumentNumber;
-                    worksheet.Cells[row, 7].Value = item.RevisionNumber;
-                    worksheet.Cells[row, 8].Value = item.Customer;
-                    worksheet.Cells[row, 9].Value = item.RevisionDate;
-                    worksheet.Cells[row, 10].Value = item.Formulasi;
-                    worksheet.Cells[row, 11].Value = item.HoseType;
-                    worksheet.Cells[row, 12].Value = item.Dimensi;
-                    worksheet.Cells[row, 13].Value = item.Material;
-                    worksheet.Cells[row, 14].Value = item.InnerTube;
-                    worksheet.Cells[row, 15].Value = item.OuterCover;
-                    worksheet.Cells[row, 16].Value = item.MiddleTube;
-                    worksheet.Cells[row, 17].Value = item.MachineCode;
-                    worksheet.Cells[row, 18].Value = item.Yarn;
-                    worksheet.Cells[row, 19].Value = item.InnerTarget;
-                    worksheet.Cells[row, 20].Value = item.ToleranceInner;
-                    worksheet.Cells[row, 21].Value = item.ToleranceOuter;
+                    int col = 1;
+                    worksheet.Cells[row, col++].Value = runningId;
+                    worksheet.Cells[row, col++].Value = item.No; // Excel ID from imported sheet
+                    worksheet.Cells[row, col++].Value = item.No;
+
+                    foreach (var pinned in pinnedColumns)
+                    {
+                        worksheet.Cells[row, col++].Value = pinned.Value(item);
+                    }
+
+                    foreach (var prop in dynamicProps)
+                    {
+                        worksheet.Cells[row, col++].Value = prop.GetValue(item);
+                    }
+
+                    runningId++;
                     row++;
                 }
                 

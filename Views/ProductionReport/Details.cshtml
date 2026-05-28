@@ -20,6 +20,35 @@
         decimal val = decimal.Parse(matches[matches.Count - 1].Value, System.Globalization.CultureInfo.InvariantCulture);
         return (val > 2.0m) ? def : val;
     }
+
+    string StandardSpec(decimal? asli, decimal? min, decimal? max, string? text, string suffix = "")
+    {
+        if (asli.HasValue && asli.Value > 0)
+        {
+            if (min.HasValue && max.HasValue)
+            {
+                return $"{min.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} | {asli.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} | {max.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+            }
+            return asli.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + suffix;
+        }
+
+        if (!string.IsNullOrWhiteSpace(text) && text != "-")
+        {
+            if (text.Contains("±", StringComparison.OrdinalIgnoreCase) || text.Contains("MAX", StringComparison.OrdinalIgnoreCase) || text.Contains("MIN", StringComparison.OrdinalIgnoreCase) || text.Contains("|"))
+                return text;
+            return text + suffix;
+        }
+
+        return "-";
+    }
+
+    string StandardSpecMax(decimal? asli, decimal? min, decimal? max, string? text)
+    {
+        var baseVal = StandardSpec(asli, min, max, text, "");
+        if (baseVal == "-") return "-";
+        if (baseVal.Contains("MAX", StringComparison.OrdinalIgnoreCase)) return baseVal;
+        return "MAX " + baseVal;
+    }
 }
 
 <div class="production-dashboard-sapphire fade-in">
@@ -855,20 +884,7 @@
                         <tbody>
                             <!-- INNER SECTION -->
                             @{
-                                var sMaster = ViewBag.Masterlist as VelastoProductionSystem.Models.SpsNoDoc;
-                                string F(string? strVal, decimal fallbackVal, string prefix, string suffix) {
-                                    string res = "-";
-                                    if (!string.IsNullOrWhiteSpace(strVal) && strVal != "-") {
-                                        if (strVal.Contains("±", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MAX", StringComparison.OrdinalIgnoreCase) || strVal.Contains("MIN", StringComparison.OrdinalIgnoreCase)) {
-                                            res = strVal;
-                                        } else {
-                                            res = $"{prefix}{strVal}{suffix}";
-                                        }
-                                    } else if (fallbackVal > 0) {
-                                        res = $"{prefix}{fallbackVal}{suffix}";
-                                    }
-                                    return res;
-                                }
+                                var spsStd = ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc ?? std;
 
                                 string FormatVal(object? val, string unit) {
                                     if (val == null) return "";
@@ -881,14 +897,14 @@
                                 }
 
                                 var innerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = F(sMaster?.HeadTemp1, std?.HeadTemp1_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = F(sMaster?.Cylinder1_1, std?.Cylinder1_1_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = F(sMaster?.Cylinder2_1, std?.Cylinder1_2_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = F(null, std?.Cylinder1_3_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = F(sMaster?.ScrewTemp1, D(std?.ScrewTemp1, 0), "", "±5"), U = "°C" },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = F(sMaster?.ScrewSpeed1, D(std?.ScrewSpeed1, 0), "", "±2.5"), U = "rpm" },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = F(sMaster?.Feed1, D(std?.FeedRollRatio1, 0), "MAX ", ""), U = "%" },
-                                    new { L = "PRESSURE", K = "PressureInner", S = F(sMaster?.Pressure1, D(std?.Pressure1, 0), "MAX ", ""), U = "MPa" }
+                                    new { L = "HEAD TEMP.", K = "HeadTempInner", S = StandardSpec(spsStd?.HeadTemp1_Asli, spsStd?.HeadTemp1_Min, spsStd?.HeadTemp1_Max, spsStd?.HeadTemp1, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = StandardSpec(spsStd?.Cylinder1_1_Asli, spsStd?.Cylinder1_1_Min, spsStd?.Cylinder1_1_Max, spsStd?.Cylinder1_1, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempInner", S = StandardSpec(spsStd?.Cylinder2_1_Asli, spsStd?.Cylinder2_1_Min, spsStd?.Cylinder2_1_Max, spsStd?.Cylinder2_1, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempInner", S = StandardSpec(spsStd?.Cylinder3_1_Asli, spsStd?.Cylinder3_1_Min, spsStd?.Cylinder3_1_Max, spsStd?.Cylinder3_1, "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempInner", S = StandardSpec(spsStd?.ScrewTemp1_Asli, spsStd?.ScrewTemp1_Min, spsStd?.ScrewTemp1_Max, spsStd?.ScrewTemp1, "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = StandardSpec(spsStd?.ScrewSpeed1_Asli, spsStd?.ScrewSpeed1_Min, spsStd?.ScrewSpeed1_Max, spsStd?.ScrewSpeed1, "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioInner", S = StandardSpecMax(spsStd?.FeedRollRatio1_Asli, spsStd?.FeedRollRatio1_Min, spsStd?.FeedRollRatio1_Max, !string.IsNullOrEmpty(spsStd?.FeedRollRatio1) ? spsStd!.FeedRollRatio1 : spsStd?.Feed1), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureInner", S = StandardSpecMax(spsStd?.Pressure1_Asli, spsStd?.Pressure1_Min, spsStd?.Pressure1_Max, spsStd?.Pressure1), U = "MPa" }
                                 };
                             }
                             @for(int r = 0; r < innerRows.Length; r++) {
@@ -909,14 +925,14 @@
                             <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var outerRows = new[] {
-                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = F(sMaster?.HeadTemp2, std?.HeadTemp2_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = F(sMaster?.Cylinder1_2, std?.Cylinder2_1_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = F(sMaster?.Cylinder2_2, std?.Cylinder2_2_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = F(null, std?.Cylinder2_3_Asli ?? 0, "", "±5"), U = "°C" },
-                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = F(sMaster?.ScrewTemp2, D(std?.ScrewTemp2, 0), "", "±5"), U = "°C" },
-                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = F(sMaster?.ScrewSpeed2, D(std?.ScrewSpeed2, 0), "", "±2.5"), U = "rpm" },
-                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = F(sMaster?.Feed2, D(std?.FeedRollRatio2, 0), "MAX ", ""), U = "%" },
-                                    new { L = "PRESSURE", K = "PressureOuter", S = F(sMaster?.Pressure2, D(std?.Pressure2, 0), "MAX ", ""), U = "MPa" }
+                                    new { L = "HEAD TEMP.", K = "HeadTempOuter", S = StandardSpec(spsStd?.HeadTemp2_Asli, spsStd?.HeadTemp2_Min, spsStd?.HeadTemp2_Max, spsStd?.HeadTemp2, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempOuter", S = StandardSpec(spsStd?.Cylinder1_2_Asli, spsStd?.Cylinder1_2_Min, spsStd?.Cylinder1_2_Max, spsStd?.Cylinder1_2, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempOuter", S = StandardSpec(spsStd?.Cylinder2_2_Asli, spsStd?.Cylinder2_2_Min, spsStd?.Cylinder2_2_Max, spsStd?.Cylinder2_2, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempOuter", S = StandardSpec(spsStd?.Cylinder3_2_Asli, spsStd?.Cylinder3_2_Min, spsStd?.Cylinder3_2_Max, spsStd?.Cylinder3_2, "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = StandardSpec(spsStd?.ScrewTemp2_Asli, spsStd?.ScrewTemp2_Min, spsStd?.ScrewTemp2_Max, spsStd?.ScrewTemp2, "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = StandardSpec(spsStd?.ScrewSpeed2_Asli, spsStd?.ScrewSpeed2_Min, spsStd?.ScrewSpeed2_Max, spsStd?.ScrewSpeed2, "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = StandardSpecMax(spsStd?.FeedRollRatio2_Asli, spsStd?.FeedRollRatio2_Min, spsStd?.FeedRollRatio2_Max, !string.IsNullOrEmpty(spsStd?.FeedRollRatio2) ? spsStd!.FeedRollRatio2 : spsStd?.Feed2), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureOuter", S = StandardSpecMax(spsStd?.Pressure2_Asli, spsStd?.Pressure2_Min, spsStd?.Pressure2_Max, spsStd?.Pressure2), U = "MPa" }
                                 };
                             }
                             @for(int r = 0; r < outerRows.Length; r++) {
@@ -937,17 +953,17 @@
                             <tr class="bg-secondary text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
                                 var otherRows = new[] {
-                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = F(null, D(std?.SpiralSpeed, 0), "", "±20"), U = "rpm" },
-                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = F(sMaster?.ToleranceSpiralPitch, D(std?.SpiralPitchSetting, 0), "", "±5"), U = "mm" },
-                                    new { L = "PRESET VALVE", K = "PresetValue", S = F(null, D(std?.PresetValue, 0), "", ""), U = "mm" },
-                                    new { L = "CONTROL VAL.", K = "ControlValue", S = (std?.ControlValue ?? "-"), U = "mm" },
-                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = (std?.HoseSpeed ?? "-"), U = "m/min" },
-                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = (sMaster?.TakeUpConveyorSpeed ?? std?.TakeUpConveyorSpeed ?? "-"), U = "m/min" },
-                                    new { L = "COOL SPEED", K = "CoolConveyorSpeed", S = (std?.CoolConveyorSpeed ?? "-"), U = "m/min" },
-                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = (std?.ConveyorRatio ?? "-"), U = "%" },
-                                    new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = (sMaster?.ChillerWaterTemp ?? std?.ChillerWaterTemp ?? "-"), U = "°C" },
-                                    new { L = "CATERPIL. GAP", K = "CaterpillarGap", S = (std?.CaterpillarGap ?? "-"), U = "mm" },
-                                    new { L = "SURFACE", K = "UnsmoothSurface", S = (std?.UnsmoothSurface ?? "OK"), U = "" }
+                                    new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = StandardSpec(spsStd?.SpiralSpeed_Asli, spsStd?.SpiralSpeed_Min, spsStd?.SpiralSpeed_Max, spsStd?.SpiralSpeed, "±20"), U = "rpm" },
+                                    new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = StandardSpec(spsStd?.SpiralPitchSetting_Asli, spsStd?.SpiralPitchSetting_Min, spsStd?.SpiralPitchSetting_Max, !string.IsNullOrEmpty(spsStd?.SpiralPitchSetting) ? spsStd!.SpiralPitchSetting : spsStd?.ToleranceSpiralPitch, "±5"), U = "mm" },
+                                    new { L = "PRESET VALVE", K = "PresetValue", S = StandardSpec(spsStd?.PresetValue_Asli, spsStd?.PresetValue_Min, spsStd?.PresetValue_Max, spsStd?.PresetValue), U = "mm" },
+                                    new { L = "CONTROL VAL.", K = "ControlValue", S = StandardSpec(spsStd?.ControlValue_Asli, spsStd?.ControlValue_Min, spsStd?.ControlValue_Max, spsStd?.ControlValue), U = "mm" },
+                                    new { L = "HOSE SPEED", K = "HoseSpeed", S = StandardSpec(spsStd?.HoseSpeed_Asli, spsStd?.HoseSpeed_Min, spsStd?.HoseSpeed_Max, spsStd?.HoseSpeed), U = "m/min" },
+                                    new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = StandardSpec(spsStd?.TakeUpConveyorSpeed_Asli, spsStd?.TakeUpConveyorSpeed_Min, spsStd?.TakeUpConveyorSpeed_Max, spsStd?.TakeUpConveyorSpeed), U = "m/min" },
+                                    new { L = "COOL SPEED", K = "CoolConveyorSpeed", S = StandardSpec(spsStd?.CoolConveyorSpeed_Asli, spsStd?.CoolConveyorSpeed_Min, spsStd?.CoolConveyorSpeed_Max, spsStd?.CoolConveyorSpeed), U = "m/min" },
+                                    new { L = "CONV. RATIO", K = "ConveyorRatio", S = StandardSpec(spsStd?.ConveyorRatio_Asli, spsStd?.ConveyorRatio_Min, spsStd?.ConveyorRatio_Max, spsStd?.ConveyorRatio, "%"), U = "%" },
+                                    new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = StandardSpecMax(spsStd?.ChillerWaterTemp_Asli, spsStd?.ChillerWaterTemp_Min, spsStd?.ChillerWaterTemp_Max, spsStd?.ChillerWaterTemp), U = "°C" },
+                                    new { L = "CATERPIL. GAP", K = "CaterpillarGap", S = StandardSpec(spsStd?.CaterpillarGap_Asli, spsStd?.CaterpillarGap_Min, spsStd?.CaterpillarGap_Max, spsStd?.CaterpillarGap), U = "mm" },
+                                    new { L = "SURFACE", K = "UnsmoothSurface", S = (!string.IsNullOrWhiteSpace(spsStd?.UnsmoothSurface) ? spsStd!.UnsmoothSurface : "OK"), U = "" }
                                 };
                             }
                             @for(int r = 0; r < otherRows.Length; r++) {

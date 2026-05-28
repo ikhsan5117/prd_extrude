@@ -94,15 +94,52 @@ namespace VelastoProductionSystem.Controllers
 
             var sanitized = hoseType.Trim().ToUpper();
             var sanitizedMachine = string.IsNullOrEmpty(machineCode) ? null : machineCode.Trim().ToUpper();
+            var sanitizedItemLookup = sanitized.Replace("-", "").Replace(" ", "");
 
-            // 1. Priority 1: Search by SpsItemList.ItemList (kode item dari planning)
+            string ResolveSpiralPitchTarget(SpsNoDoc src)
+            {
+                var target = src.SpiralPitchSetting_Asli?.ToString("F2") ?? src.SpiralPitchDisplay_Asli?.ToString("F2") ?? src.SpiralPitchSetting;
+                if (string.IsNullOrWhiteSpace(target) || target == "0") target = src.SpiralPitchDisplay;
+                if (string.IsNullOrWhiteSpace(target) || target == "0") target = src.ToleranceSpiralPitch;
+                return target ?? "";
+            }
+
+            string ResolveSpiralPitchTolerance(SpsNoDoc src)
+            {
+                var tol = src.ToleranceSpiralPitch_Asli?.ToString("F2") ?? src.ToleranceSpiralPitch;
+                if (string.IsNullOrWhiteSpace(tol)) tol = "5";
+                return tol;
+            }
+
+            string ResolveSpiralPitchDisplay(SpsNoDoc src)
+            {
+                var disp = src.SpiralPitchDisplay_Asli?.ToString("F2") ?? src.SpiralPitchDisplay;
+                if (string.IsNullOrWhiteSpace(disp) || disp == "0") disp = src.SpiralPitchSetting_Asli?.ToString("F2") ?? src.SpiralPitchSetting;
+                return disp ?? "";
+            }
+
+            // 1. Priority 1: Exact match by SpsItemList.ItemList (kode item dari planning)
             var spsByItemList = await _context.SpsNoDocs
                 .Include(s => s.ItemLists)
                 .OrderByDescending(s => s.DocumentNumber)
                 .FirstOrDefaultAsync(s =>
-                    s.ItemLists.Any(il => il.ItemList != null && il.ItemList.Replace("-", "").ToUpper().Contains(sanitized.Replace("-", ""))));
+                    s.ItemLists.Any(il =>
+                        il.ItemList != null &&
+                        il.ItemList.Replace("-", "").Replace(" ", "").ToUpper() == sanitizedItemLookup));
 
             var sps = spsByItemList;
+
+            // 1b. Fallback: partial item list match (legacy behavior) if exact match is not found
+            if (sps == null)
+            {
+                sps = await _context.SpsNoDocs
+                    .Include(s => s.ItemLists)
+                    .OrderByDescending(s => s.DocumentNumber)
+                    .FirstOrDefaultAsync(s =>
+                        s.ItemLists.Any(il =>
+                            il.ItemList != null &&
+                            il.ItemList.Replace("-", "").Replace(" ", "").ToUpper().Contains(sanitizedItemLookup)));
+            }
 
             // 2. Try SpsMasters (Master SPS Edit) FIRST - prioritized as per mentor direction
             if (sps == null)
@@ -129,6 +166,10 @@ namespace VelastoProductionSystem.Controllers
                 var finalTotal = sps.TebalTotal_Asli?.ToString("F2") ?? sps.TotalTarget;
                 if (string.IsNullOrEmpty(finalTotal) || finalTotal == "0") finalTotal = sps.TebalTotal;
 
+                var finalSpiralPitch = ResolveSpiralPitchTarget(sps);
+                var finalSpiralTolerance = ResolveSpiralPitchTolerance(sps);
+                var finalSpiralDisplay = ResolveSpiralPitchDisplay(sps);
+
                 return Json(new { 
                     success = true,
                     id = sps.DocumentNumber,
@@ -147,9 +188,9 @@ namespace VelastoProductionSystem.Controllers
                         docNo = sps.DocumentNumber,
                         revNo = sps.RevisionNumber,
                         itemList = sps.DocumentNumber,
-                        toleranceSpiralPitch = sps.ToleranceSpiralPitch,
-                        spiralPitchSetting = sps.SpiralPitchSetting,
-                        spiralPitchDisplay = sps.SpiralPitchDisplay,
+                        toleranceSpiralPitch = finalSpiralTolerance,
+                        spiralPitchSetting = finalSpiralPitch,
+                        spiralPitchDisplay = finalSpiralDisplay,
                         innerTol = sps.InnerTol,
                         thickTol = sps.ThickTol,
                         totalTol = sps.TotalTol,
@@ -191,6 +232,10 @@ namespace VelastoProductionSystem.Controllers
 
             if (standard != null)
             {
+                var finalSpiralPitch = ResolveSpiralPitchTarget(standard);
+                var finalSpiralTolerance = ResolveSpiralPitchTolerance(standard);
+                var finalSpiralDisplay = ResolveSpiralPitchDisplay(standard);
+
                 return Json(new { 
                     success = true, 
                     data = new {
@@ -209,9 +254,9 @@ namespace VelastoProductionSystem.Controllers
                         docNo = standard.DocumentNumber,
                         revNo = standard.RevisionNumber,
                         itemList = standard.DocumentNumber,
-                        toleranceSpiralPitch = standard.ToleranceSpiralPitch,
-                        spiralPitchSetting = standard.SpiralPitchSetting,
-                        spiralPitchDisplay = standard.SpiralPitchDisplay,
+                        toleranceSpiralPitch = finalSpiralTolerance,
+                        spiralPitchSetting = finalSpiralPitch,
+                        spiralPitchDisplay = finalSpiralDisplay,
                         innerTol = standard.InnerTol,
                         thickTol = standard.ThickTol,
                         totalTol = standard.TotalTol,

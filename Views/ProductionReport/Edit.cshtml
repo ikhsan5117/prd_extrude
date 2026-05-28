@@ -494,32 +494,7 @@
                             <div class="col-md-6 col-xl-4 @(isMiddleDie && string.IsNullOrEmpty(die.SpecKey) ? "d-none" : "")" id="die_card_@die.SpecKey">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
 
-                                    <!-- TOP: Standard bar with min / std / max -->
-                                    <div class="die-spec-bar mb-3 px-2 pt-2 pb-2 rounded-2" style="background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.15);">
-                                        <div class="text-center mb-1">
-                                            <span style="font-size: 0.48rem; font-weight: 900; letter-spacing: 2px; color: var(--accent-glow, #38bdf8); text-transform: uppercase;">STANDARD</span>
-                                        </div>
-                                        <div class="d-flex justify-content-center align-items-center gap-2">
-                                            <div class="text-center">
-                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">min</div>
-                                                <div id="spec_min_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
-                                            </div>
-                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
-                                            <div class="text-center">
-                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase;">std</div>
-                                                <div id="spec_std_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.95rem; color: #7dd3fc; min-width: 48px;">--</div>
-                                            </div>
-                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
-                                            <div class="text-center">
-                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">max</div>
-                                                <div id="spec_max_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Hidden full spec value for JS validation -->
-                                    <div id="spec_@die.SpecKey" style="display:none;">--</div>
-
-                                    <!-- MIDDLE: Instrument name + OK/NG -->
+                                    <!-- TOP: Instrument name + OK/NG -->
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="label-stack">
                                             <span class="label-sub">INSTRUMENT</span>
@@ -530,6 +505,29 @@
                                             <label class="hud-pill-item red">NG<input type="radio" name="@die.Field" value="false" @(die.OK == false ? "checked" : "")></label>
                                         </div>
                                     </div>
+
+                                    <!-- MIDDLE: Standard min / std / max individual boxes -->
+                                    <div class="mb-3">
+                                        <div class="text-center mb-1">
+                                            <span style="font-size: 0.48rem; font-weight: 900; letter-spacing: 2px; color: #94a3b8; text-transform: uppercase;">STANDARD</span>
+                                        </div>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <div class="text-center px-2 py-1 rounded-2" style="border: 1px solid rgba(56,189,248,0.25); min-width: 60px;">
+                                                <div style="font-size: 0.42rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">min</div>
+                                                <div id="spec_min_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8;">--</div>
+                                            </div>
+                                            <div class="text-center px-2 py-1 rounded-2" style="border: 1px solid rgba(125,211,252,0.5); min-width: 60px; background: rgba(56,189,248,0.06);">
+                                                <div style="font-size: 0.42rem; font-weight: 700; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase; margin-bottom: 2px;">std</div>
+                                                <div id="spec_std_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.9rem; color: #7dd3fc;">--</div>
+                                            </div>
+                                            <div class="text-center px-2 py-1 rounded-2" style="border: 1px solid rgba(56,189,248,0.25); min-width: 60px;">
+                                                <div style="font-size: 0.42rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">max</div>
+                                                <div id="spec_max_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8;">--</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Hidden full spec value for JS validation -->
+                                    <div id="spec_@die.SpecKey" style="display:none;">--</div>
 
                                     <!-- BOTTOM: Before + After centered -->
                                     <div class="d-flex justify-content-center gap-3 mt-auto">
@@ -1224,7 +1222,7 @@
             const spsIdEl = document.getElementById('SpsId');
             if (spsIdEl) {
                 const spsId = sps.id || sps.Id || sps.spsId;
-                spsIdEl.value = spsId != null ? spsId : '';
+                spsIdEl.value = /^\d+$/.test(String(spsId ?? '').trim()) ? String(spsId).trim() : '';
                 console.log('💾 SpsId set to:', spsIdEl.value || 'NULL');
                 
                 // Warn user if this is from Masterlist (no StandardParameterSettings record)
@@ -1280,28 +1278,37 @@
             if (yarnEl) yarnEl.value = yarnStd;
 
             // Populate parameter standards
-            const setSpec = (id, val, minVal, maxVal) => {
-                const el = document.getElementById('spec_' + id);
-                if (el) el.textContent = val || '--';
+            const setSpec = (id, val, minVal, maxVal, specId) => {
+                const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? String(v) : '--';
+                const stdStr = fmt(val);
+                const minStr = fmt(minVal);
+                const maxStr = fmt(maxVal);
                 // Populate split min/std/max display for die cards
                 const minEl = document.getElementById('spec_min_' + id);
                 const stdEl = document.getElementById('spec_std_' + id);
                 const maxEl = document.getElementById('spec_max_' + id);
-                if (minEl || stdEl || maxEl) {
-                    const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? v : '--';
-                    if (minEl) minEl.textContent = fmt(minVal);
-                    if (stdEl) stdEl.textContent = val || '--';
-                    if (maxEl) maxEl.textContent = fmt(maxVal);
+                if (minEl) minEl.textContent = minStr;
+                if (stdEl) stdEl.textContent = stdStr;
+                if (maxEl) maxEl.textContent = maxStr;
+                // Store pipe-range in hidden spec element for checkDieStatus validation
+                const specKey = specId || id;
+                const el = document.getElementById('spec_' + specKey);
+                if (el) {
+                    if (minStr !== '--' && maxStr !== '--') {
+                        el.textContent = minStr + ' | ' + stdStr + ' | ' + maxStr;
+                    } else {
+                        el.textContent = stdStr;
+                    }
                 }
             };
             
             // Dies dimension standards
-            setSpec('NippleDie',    sps.Nipple_Asli    || sps.nipple_Asli    || sps.Nipple    || sps.nipple,    sps.Nipple_Min    || sps.nipple_Min,    sps.Nipple_Max    || sps.nipple_Max);
-            setSpec('TubeDie',      sps.TubeDie_Asli   || sps.tubeDie_Asli   || sps.TubeDie   || sps.tubeDie,   sps.TubeDie_Min   || sps.tubeDie_Min,   sps.TubeDie_Max   || sps.tubeDie_Max);
-            setSpec('MiddleDie',    sps.MiddleDie_Asli  || sps.middleDie_Asli  || sps.MiddleDie  || sps.middleDie,  sps.MiddleDie_Min  || sps.middleDie_Min,  sps.MiddleDie_Max  || sps.middleDie_Max);
-            setSpec('CoverDie',     sps.CoverDie_Asli  || sps.coverDie_Asli  || sps.CoverDie  || sps.coverDie,  sps.CoverDie_Min  || sps.coverDie_Min,  sps.CoverDie_Max  || sps.coverDie_Max);
-            setSpec('SpacerDie',    sps.SpacerDie_Asli || sps.spacerDie_Asli || sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max);
-            setSpec('ToleranceDie', sps.ADistance_Asli || sps.aDistance_Asli || sps.ToleranceDie || sps.toleranceDie || '--', sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max);
+            setSpec('NippleDie',    sps.Nipple_Asli    || sps.nipple_Asli    || sps.Nipple    || sps.nipple,    sps.Nipple_Min    || sps.nipple_Min,    sps.Nipple_Max    || sps.nipple_Max,    'NippleDie');
+            setSpec('TubeDie',      sps.TubeDie_Asli   || sps.tubeDie_Asli   || sps.TubeDie   || sps.tubeDie,   sps.TubeDie_Min   || sps.tubeDie_Min,   sps.TubeDie_Max   || sps.tubeDie_Max,   'TubeDie');
+            setSpec('MiddleDie',    sps.MiddleDie_Asli  || sps.middleDie_Asli  || sps.MiddleDie  || sps.middleDie,  sps.MiddleDie_Min  || sps.middleDie_Min,  sps.MiddleDie_Max  || sps.middleDie_Max,  'MiddleDie');
+            setSpec('CoverDie',     sps.CoverDie_Asli  || sps.coverDie_Asli  || sps.CoverDie  || sps.coverDie,  sps.CoverDie_Min  || sps.coverDie_Min,  sps.CoverDie_Max  || sps.coverDie_Max,  'CoverDie');
+            setSpec('SpacerDie',    sps.SpacerDie_Asli || sps.spacerDie_Asli || sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max, 'SpacerDie');
+            setSpec('ToleranceDie', sps.ADistance_Asli || sps.aDistance_Asli || sps.ToleranceDie || sps.toleranceDie || '--', sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max, 'ToleranceDie');
 
             // AUTO-HIDE Middle Die Card if empty OR if it's a Double Layer machine
             const midVal = (sps.MiddleDie_Asli || sps.middleDie_Asli || sps.MiddleDie || sps.middleDie || '').toString().trim();

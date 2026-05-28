@@ -384,7 +384,7 @@ namespace VelastoProductionSystem.Controllers
 
                 // Group by display code and get latest
                 var grouped = dimensionItems
-                    .GroupBy(x => x.DocumentNumber)
+                    .GroupBy(x => x.ItemList)
                     .Select(g => g.OrderByDescending(item => item.CreatedDate).First())
                     .ToList();
 
@@ -392,7 +392,7 @@ namespace VelastoProductionSystem.Controllers
 
                 // Filter out placeholder values AND numeric codes (incomplete planning)
                 var filtered = grouped
-                    .Where(x => !IsPlaceholderItemCode(x.DocumentNumber))
+                    .Where(x => !IsPlaceholderItemCode(x.ItemList))
                     .ToList();
 
                 Console.WriteLine($"[SearchSpsItems] After placeholder filter: {filtered.Count} items");
@@ -426,10 +426,10 @@ namespace VelastoProductionSystem.Controllers
                 // Final results
                 var results = filtered
                     .OrderByDescending(x => x.CreatedDate)
-                    .ThenBy(x => x.DocumentNumber)
+                    .ThenBy(x => x.ItemList)
                     .Take(50)
                     .Select(x => new {
-                        itemCode = x.DocumentNumber,
+                        itemCode = x.ItemList,
                         hoseType = x.HoseType,
                         documentNumber = x.DocumentNumber
                     })
@@ -509,7 +509,9 @@ namespace VelastoProductionSystem.Controllers
             }
 
             return new {
-                Id = master.DocumentNumber,
+                // Masterlist SPS rows do not have a numeric StandardParameterSettings FK.
+                // Keep the document number separately and leave Id null so clients do not post it into SpsId.
+                Id = (string?)null,
                 Source = "Masterlist",
                 MasterlistId = master.DocumentNumber,
                 ItemList = (string?)null,
@@ -569,6 +571,95 @@ namespace VelastoProductionSystem.Controllers
                 MeshScreen3 = master.MeshScreen3,
                 MarkingStandard = master.TextMarkingMaterial
             };
+        }
+
+        private static string? SanitizeLegacySpsId(string? spsId)
+        {
+            if (string.IsNullOrWhiteSpace(spsId)) return null;
+            var trimmed = spsId.Trim();
+            return int.TryParse(trimmed, out _) ? trimmed : null;
+        }
+
+        private static string NormalizeLookupCode(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            return System.Text.RegularExpressions.Regex.Replace(value.Trim(), @"[^A-Za-z0-9]", "").ToUpperInvariant();
+        }
+
+        private async Task<SpsNoDoc?> FindSpsNoDocForReportAsync(ProductionReport report)
+        {
+            var itemNorm = NormalizeLookupCode(report.ItemCode);
+            var docNumber = report.DocumentNumber?.Trim();
+            var machineUpper = report.MachineName?.Trim().ToUpperInvariant();
+
+            async Task<SpsNoDoc?> PickBestMatch(IQueryable<SpsNoDoc> query)
+            {
+                if (!string.IsNullOrEmpty(machineUpper))
+                {
+                    var isDL = machineUpper.Contains("DL") || machineUpper.Contains("DOUBLE") || machineUpper.Contains("NON-CHS");
+                    var isCHS = machineUpper.Contains("CHS") && !isDL;
+
+                    var exactMachine = await query
+                        .Where(s =>
+                            (s.MachineCode != null && s.MachineCode.ToUpper() == machineUpper) ||
+                            (s.Machine != null && s.Machine.ToUpper() == machineUpper))
+                        .OrderByDescending(s => s.DocumentNumber)
+                        .FirstOrDefaultAsync();
+                    if (exactMachine != null) return exactMachine;
+
+                    var category = await query
+                        .Where(s =>
+                            (isDL && s.Machine != null && (s.Machine.ToUpper().Contains("DL") || s.Machine.ToUpper().Contains("NON-CHS") || s.Machine.ToUpper().Contains("DOUBLE"))) ||
+                            (isCHS && s.Machine != null && s.Machine.ToUpper().Contains("CHS") && !s.Machine.ToUpper().Contains("DL")))
+                        .OrderByDescending(s => s.DocumentNumber)
+                        .FirstOrDefaultAsync();
+                    if (category != null) return category;
+                }
+
+                return await query.OrderByDescending(s => s.DocumentNumber).FirstOrDefaultAsync();
+            }
+
+            IQueryable<SpsNoDoc> ByNormalizedCode(string normalized) =>
+                _context.SpsNoDocs
+                    .Include(s => s.ItemLists)
+                    .Where(s =>
+                        s.ItemLists.Any(il => il.ItemList != null && il.ItemList.Replace("-", "").Replace(" ", "").ToUpper().Contains(normalized)) ||
+                        (s.DocumentNumber != null && s.DocumentNumber.Replace("-", "").Replace(" ", "").ToUpper().Contains(normalized)));
+
+            // 1) Match by ItemCode through SpsItemLists (same strategy as GetSpsByItem)
+            if (!string.IsNullOrEmpty(itemNorm))
+            {
+                var byItem = await PickBestMatch(ByNormalizedCode(itemNorm));
+                if (byItem != null) return byItem;
+            }
+
+            // 2) Exact document number from report header
+            if (!string.IsNullOrWhiteSpace(docNumber))
+            {
+                var exactDoc = await _context.SpsNoDocs
+                    .Include(s => s.ItemLists)
+                    .FirstOrDefaultAsync(s => s.DocumentNumber == docNumber);
+                if (exactDoc != null) return exactDoc;
+
+                var docNorm = NormalizeLookupCode(docNumber);
+                if (!string.IsNullOrEmpty(docNorm) && docNorm != itemNorm)
+                {
+                    var byDoc = await PickBestMatch(ByNormalizedCode(docNorm));
+                    if (byDoc != null) return byDoc;
+                }
+            }
+
+            // 3) Legacy fallback (previous behavior)
+            if (!string.IsNullOrWhiteSpace(report.ItemCode))
+            {
+                return await _context.SpsNoDocs
+                    .Include(s => s.ItemLists)
+                    .Where(m => m.DocumentNumber != null && m.DocumentNumber.Contains(report.ItemCode))
+                    .OrderByDescending(m => m.DocumentNumber)
+                    .FirstOrDefaultAsync();
+            }
+
+            return null;
         }
 
         // GET: ProductionReport/GetTodaysSummary
@@ -872,7 +963,7 @@ namespace VelastoProductionSystem.Controllers
                     CreatedBy = dto.CreatedBy ?? "Operator",
                     CreatedDate = DateTime.Now,
                     Status = "COMPLETED",
-                    SpsId = dto.SpsId,
+                    SpsId = SanitizeLegacySpsId(dto.SpsId),
                     ItemCode = dto.ItemCode,
                     NippleDieOK = dto.NippleDieOK, NippleDieInitial = dto.NippleDieInitial, NippleDieFinal = dto.NippleDieFinal,
                     TubeDieOK = dto.TubeDieOK, TubeDieInitial = dto.TubeDieInitial, TubeDieFinal = dto.TubeDieFinal,
@@ -1022,7 +1113,7 @@ namespace VelastoProductionSystem.Controllers
                 report.Shift = dto.Shift;
                 report.CustomerName = dto.CustomerName;
                 report.HoseType = dto.HoseType;
-                report.SpsId = dto.SpsId;
+                report.SpsId = SanitizeLegacySpsId(dto.SpsId);
                 report.ItemCode = dto.ItemCode; // ← Pastikan ItemCode selalu tersimpan
 
                 report.InnerMaterial = dto.InnerMaterial;
@@ -1187,15 +1278,9 @@ namespace VelastoProductionSystem.Controllers
 
             if (report == null) return NotFound();
 
-            // Fetch Masterlist data as fallback standards - Match by ItemCode for better accuracy
-            ViewBag.Masterlist = await _context.SpsNoDocs
-                .OrderByDescending(m => m.DocumentNumber)
-                .FirstOrDefaultAsync(m => (m.DocumentNumber != null && m.DocumentNumber.Contains(report.ItemCode ?? "")) || m.DocumentNumber == report.DocumentNumber);
-
-            // Fetch specific SPS record. Match by DocumentNumber/ItemCode
-            ViewBag.Sps = await _context.SpsNoDocs
-                .OrderByDescending(s => s.DocumentNumber)
-                .FirstOrDefaultAsync(s => s.DocumentNumber == report.ItemCode || s.DocumentNumber == report.DocumentNumber);
+            var sps = await FindSpsNoDocForReportAsync(report);
+            ViewBag.Sps = sps;
+            ViewBag.Masterlist = sps;
 
             return View(report);
         }

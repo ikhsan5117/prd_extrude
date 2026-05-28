@@ -1099,7 +1099,7 @@
         border-top: 1px solid rgba(255,255,255,0.05);
         position: relative;
     ">
-        <button type="button" onclick="submitEntry()" class="submit-btn" style="
+        <button type="button" onclick="submitEntry()" class="submit-btn" id="submit-entry-btn" disabled style="
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white; 
             padding: 20px 100px; 
@@ -1115,6 +1115,8 @@
             transition: all 0.3s;
             text-transform: uppercase; 
             letter-spacing: 2px;
+            opacity: 0.5;
+            cursor: not-allowed;
         " onmouseover="this.style.transform='scale(1.05) translateY(-5px)';" 
           onmouseout="this.style.transform='scale(1) translateY(0)';">
             <i class="bi bi-cloud-arrow-up-fill" style="font-size: 28px;"></i>
@@ -1810,6 +1812,7 @@
             initSmartNext();
             renderTimeline();
             refreshPlanningItems();
+            refreshSubmitButtonState();
 
             const planningSearchInput = document.getElementById('planningSearch');
             if (planningSearchInput) {
@@ -2188,6 +2191,53 @@
             if (window._dimCurrentItem) dimCaptureDraft(window._dimCurrentItem);
         }
 
+        function isCardVisible(id) {
+            const el = document.getElementById(`card-${id}`);
+            if (!el) return false;
+            return el.style.display !== 'none' && getComputedStyle(el).display !== 'none';
+        }
+
+        function getRequiredDimensionInputs() {
+            const required = ['inner-dia', 'inner-tx', 'inner-ty', 'total-tx', 'total-ty'];
+            if (isCardVisible('innermid-tx')) required.push('innermid-tx');
+            if (isCardVisible('innermid-ty')) required.push('innermid-ty');
+            if (isCardVisible('spiral')) required.push('spiral');
+            return required;
+        }
+
+        function getMissingRequiredFields() {
+            return getRequiredDimensionInputs().filter(id => {
+                const input = document.getElementById(`val-${id}`);
+                return !input || !input.value || input.value.toString().trim() === '';
+            });
+        }
+
+        function refreshSubmitButtonState() {
+            const btn = document.getElementById('submit-entry-btn');
+            if (!btn) return;
+
+            const hoseType = (document.getElementById('h-hose')?.innerText || '').trim();
+            const hasMaster = hoseType && hoseType !== '---' && hoseType !== 'NOT FOUND';
+            const hasMissing = getMissingRequiredFields().length > 0;
+            const canSubmit = hasMaster && !hasMissing;
+
+            btn.disabled = !canSubmit;
+            btn.style.opacity = canSubmit ? '1' : '0.5';
+            btn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
+        }
+
+        function isChs2LayerContext(spsData) {
+            const machineText = (document.getElementById('h-line')?.innerText || '').toLowerCase();
+            const hoseText = ((spsData?.hoseType || document.getElementById('h-hose')?.innerText || '') + '').toLowerCase();
+            const layerText = ((spsData?.layerType || '') + '').toLowerCase();
+
+            const hasChs = machineText.includes('chs') || hoseText.includes('chs');
+            const has3Layer = layerText.includes('3') || layerText.includes('triple') || hoseText.includes('3 layer') || hoseText.includes('3layer');
+            const has2Layer = layerText.includes('2') || hoseText.includes('2 layer') || hoseText.includes('2layer') || machineText.includes('2 layer') || machineText.includes('chs2');
+
+            return hasChs && !has3Layer && has2Layer;
+        }
+
         function validateCard(id) {
             const cleanId = id.toLowerCase().replace(/-/g, '');
             const card = document.getElementById(`card-${id}`), std = activeStandards[cleanId], inp = document.getElementById(`val-${id}`);
@@ -2204,6 +2254,7 @@
                 const isOK = (val >= (min - 0.001) && val <= (max + 0.001)); // Tolerance buffer
                 card.classList.add(isOK ? 'status-ok' : 'status-ng');
             }
+            refreshSubmitButtonState();
         }
 
         async function loadMaster() {
@@ -2223,6 +2274,7 @@
 
                 if(data.success) {
                     const m = data.data;
+                    const shouldShowSpiral = isChs2LayerContext(m);
                     
                     // Update Refined Technical HUD Ribbon (v3 IDs)
                     const custEl = document.getElementById('h-customer');
@@ -2235,9 +2287,9 @@
                     if(docEl) docEl.innerText = m.docNo || "---";
                     if(revEl) revEl.innerText = "REV." + (m.revNo || "0");
 
-                    // Update search input to full name
+                    // Update SPS Masterlist input with SPS document number
                     const searchInput = document.getElementById('main-item-search');
-                    if(searchInput) searchInput.value = m.itemList || m.hoseType || code;
+                    if(searchInput) searchInput.value = m.docNo || m.itemList || m.hoseType || code;
 
                     // Capture specific SpsId to bind the report exactly to this specification row
                     window._dimSpsId = data.id || m.id || m.spsId || null;
@@ -2310,7 +2362,7 @@
                             { id: 'innermidty', v: m.tebalInnerMiddle, t: m.thickTol || m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
                             { id: 'totaltx', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
                             { id: 'totalty', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
-                            { id: 'spiral', v: m.spiralPitchSetting || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
+                            { id: 'spiral', v: m.spiralPitchSetting || m.spiralPitchDisplay || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                         ];
 
                         configs.forEach(p => {
@@ -2340,7 +2392,13 @@
 
                             if (cardEl) {
                                 if (target === 0) {
-                                    cardEl.style.display = (p.id.startsWith('innermid') || p.id === 'spiral') ? 'none' : 'block';
+                                    if (p.id.startsWith('innermid')) {
+                                        cardEl.style.display = 'none';
+                                    } else if (p.id === 'spiral') {
+                                        cardEl.style.display = shouldShowSpiral ? 'block' : 'none';
+                                    } else {
+                                        cardEl.style.display = 'block';
+                                    }
                                     if (inputEl) {
                                         inputEl.placeholder = "NO STD";
                                         // Removed inputEl.disabled = true to allow manual input even if std is missing
@@ -2357,6 +2415,7 @@
                                 }
                             }
                         });
+                        refreshSubmitButtonState();
                     } catch (err) {
                         console.error("Error populating cards:", err);
                     }
@@ -2451,6 +2510,7 @@
             const text = document.getElementById('scan-status-text');
             if (dot) { dot.style.background = '#ef4444'; dot.style.boxShadow = '0 0 15px #ef4444'; }
             if (text) { text.innerText = 'LOCKED: NO SPS'; text.style.color = '#ef4444'; }
+            refreshSubmitButtonState();
         }
 
         async function submitEntry() {
@@ -2464,6 +2524,20 @@
                     background: '#020617',
                     color: '#fff'
                 });
+                return;
+            }
+
+            const missingRequired = getMissingRequiredFields();
+            if (missingRequired.length > 0) {
+                Swal.fire({
+                    title: 'INPUT BELUM LENGKAP',
+                    text: 'Lengkapi seluruh card pengukuran yang wajib sebelum submit.',
+                    icon: 'warning',
+                    confirmButtonColor: '#10b981',
+                    background: '#020617',
+                    color: '#fff'
+                });
+                refreshSubmitButtonState();
                 return;
             }
 
@@ -2671,7 +2745,7 @@
                 console.error(err);
                 Swal.fire('Error', 'Sistem Gagal Menyimpan', 'error');
             } finally {
-                if(btn) btn.disabled = false;
+                refreshSubmitButtonState();
             }
         }
 
@@ -2710,6 +2784,7 @@
             // 6. UI Update
             renderTimeline();
             loadDataToUI();
+            refreshSubmitButtonState();
 
             // 7. Notification (Toast)
             Swal.fire({

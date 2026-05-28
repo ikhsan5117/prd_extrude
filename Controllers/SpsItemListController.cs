@@ -23,8 +23,11 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: SpsItemList
-        public async Task<IActionResult> Index(string search)
+        public async Task<IActionResult> Index(string search, int page = 1, int pageSize = 50)
         {
+            if (page < 1) page = 1;
+            if (pageSize <= 0) pageSize = 50;
+
             var query = _context.SpsItemLists.Include(s => s.SpsNoDoc).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -36,8 +39,83 @@ namespace VelastoProductionSystem.Controllers
                 );
             }
 
+            var totalCount = await query.CountAsync();
+            var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+            if (page > totalPages) page = totalPages;
+
             ViewBag.Search = search;
-            return View(await query.ToListAsync());
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalCount = totalCount;
+
+            var rows = await query
+                .OrderBy(s => s.ItemList)
+                .ThenBy(s => s.DocumentNumber)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return View(rows);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadExcel(string? search)
+        {
+            var query = _context.SpsItemLists
+                .Include(s => s.SpsNoDoc)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchUpper = search.ToUpper();
+                query = query.Where(s =>
+                    (s.ItemList != null && s.ItemList.ToUpper().Contains(searchUpper)) ||
+                    (s.DocumentNumber != null && s.DocumentNumber.ToUpper().Contains(searchUpper))
+                );
+            }
+
+            var rows = await query
+                .OrderBy(s => s.ItemList)
+                .ThenBy(s => s.DocumentNumber)
+                .ToListAsync();
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("SPS Item List");
+
+            var headers = new[] { "No", "ID", "Item List", "No. Document", "Machine", "Hose Type" };
+            for (var i = 0; i < headers.Length; i++)
+            {
+                worksheet.Cells[1, i + 1].Value = headers[i];
+            }
+
+            using (var range = worksheet.Cells[1, 1, 1, headers.Length])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(44, 62, 80));
+                range.Style.Font.Color.SetColor(System.Drawing.Color.White);
+            }
+
+            var rowIndex = 2;
+            var runningNo = 1;
+            foreach (var item in rows)
+            {
+                worksheet.Cells[rowIndex, 1].Value = runningNo;
+                worksheet.Cells[rowIndex, 2].Value = item.Id;
+                worksheet.Cells[rowIndex, 3].Value = item.ItemList;
+                worksheet.Cells[rowIndex, 4].Value = item.DocumentNumber;
+                worksheet.Cells[rowIndex, 5].Value = item.SpsNoDoc?.MachineCode ?? item.SpsNoDoc?.Machine;
+                worksheet.Cells[rowIndex, 6].Value = item.SpsNoDoc?.HoseType;
+                rowIndex++;
+                runningNo++;
+            }
+
+            worksheet.Cells.AutoFitColumns();
+
+            var stream = new MemoryStream(package.GetAsByteArray());
+            var fileName = $"Sps_ItemList_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
         // GET: SpsItemList/Details/5

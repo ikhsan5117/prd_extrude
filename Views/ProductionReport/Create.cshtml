@@ -683,32 +683,7 @@
                             <div class="col-md-6 col-xl-4 die-container-item" id="die_card_@die.SpecKey">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
 
-                                    <!-- TOP: Standard bar with min / std / max -->
-                                    <div class="die-spec-bar mb-3 px-2 pt-2 pb-2 rounded-2" style="background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.15);">
-                                        <div class="text-center mb-1">
-                                            <span style="font-size: 0.48rem; font-weight: 900; letter-spacing: 2px; color: var(--accent-glow, #38bdf8); text-transform: uppercase;">STANDARD</span>
-                                        </div>
-                                        <div class="d-flex justify-content-center align-items-center gap-2">
-                                            <div class="text-center">
-                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">min</div>
-                                                <div id="spec_min_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
-                                            </div>
-                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
-                                            <div class="text-center">
-                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase;">std</div>
-                                                <div id="spec_std_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.95rem; color: #7dd3fc; min-width: 48px;">--</div>
-                                            </div>
-                                            <div style="color: rgba(56,189,248,0.3); font-size: 0.8rem;">|</div>
-                                            <div class="text-center">
-                                                <div style="font-size: 0.45rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase;">max</div>
-                                                <div id="spec_max_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8; min-width: 48px;">--</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Hidden full spec value for JS validation -->
-                                    <div id="spec_@die.SpecKey" style="display:none;">@die.Std</div>
-
-                                    <!-- MIDDLE: Instrument name + OK/NG -->
+                                    <!-- TOP: Instrument name + OK/NG -->
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="label-stack">
                                             <span class="label-sub">INSTRUMENT</span>
@@ -719,6 +694,29 @@
                                             <label class="hud-pill-item red">NG<input type="radio" name="@die.Field" value="false"></label>
                                         </div>
                                     </div>
+
+                                    <!-- MIDDLE: Standard min / std / max individual boxes -->
+                                    <div class="mb-3">
+                                        <div class="text-center mb-1">
+                                            <span style="font-size: 0.48rem; font-weight: 900; letter-spacing: 2px; color: #94a3b8; text-transform: uppercase;">STANDARD</span>
+                                        </div>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <div class="text-center px-2 py-1 rounded-2" style="border: 1px solid rgba(56,189,248,0.25); min-width: 60px;">
+                                                <div style="font-size: 0.42rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">min</div>
+                                                <div id="spec_min_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8;">--</div>
+                                            </div>
+                                            <div class="text-center px-2 py-1 rounded-2" style="border: 1px solid rgba(125,211,252,0.5); min-width: 60px; background: rgba(56,189,248,0.06);">
+                                                <div style="font-size: 0.42rem; font-weight: 700; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase; margin-bottom: 2px;">std</div>
+                                                <div id="spec_std_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.9rem; color: #7dd3fc;">--</div>
+                                            </div>
+                                            <div class="text-center px-2 py-1 rounded-2" style="border: 1px solid rgba(56,189,248,0.25); min-width: 60px;">
+                                                <div style="font-size: 0.42rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">max</div>
+                                                <div id="spec_max_@die.SpecKey" class="font-monospace fw-bold" style="font-size: 0.8rem; color: #38bdf8;">--</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Hidden full spec value for JS validation -->
+                                    <div id="spec_@die.SpecKey" style="display:none;">@die.Std</div>
 
                                     <!-- BOTTOM: Before + After centered -->
                                     <div class="d-flex justify-content-center gap-3 mt-auto">
@@ -1319,23 +1317,27 @@
                 wrapper.classList.add('animate__animated', 'animate__fadeInUp');
             }
 
-            // SET THE ID TO LINK WITH HISTORY
-            document.getElementById('SpsId').value = sps.id || sps.Id || 0;
-            document.getElementById('ItemCode').value = sps.itemList || sps.itemCode || sps.productCode || '';
-
-            const itemCode = sps.itemList || sps.itemCode || sps.productCode || '';
+            // Set numeric SPS ID only when the source actually provides one.
+            const resolvedSpsId = sps.id || sps.Id || sps.spsId || '';
+            document.getElementById('SpsId').value = /^\d+$/.test(String(resolvedSpsId).trim()) ? String(resolvedSpsId).trim() : '';
+            const fallbackItemCode = document.getElementById('ItemCode').value;
+            const itemCode = sps.itemList || sps.ItemList || sps.itemCode || sps.ItemCode || sps.productCode || sps.ProductCode || fallbackItemCode || '';
+            document.getElementById('ItemCode').value = itemCode;
             document.getElementById('manualItemSearch').value = itemCode;
             document.getElementById('DocNo').value = sps.documentNumber || sps.DocumentNumber || '---';
             document.getElementById('RevNo').value = sps.revisionNumber || sps.RevisionNumber || '0';
             document.getElementById('HoseType').value = sps.hoseType || sps.HoseType || '';
             document.getElementById('CustomerName').value = sps.customerName || sps.CustomerName || '';
             
-            // Ensure ItemCode is always populated for the report
-            let itemCodeEl = document.getElementById('ItemCode');
-            if (itemCodeEl) itemCodeEl.value = sps.itemList || sps.ItemList || sps.productCode || sps.ProductCode || '';
+            // Keep resolved ItemCode; do not overwrite with empty value from partial SPS payload.
+            const itemCodeEl = document.getElementById('ItemCode');
+            if (itemCodeEl && !itemCodeEl.value) itemCodeEl.value = itemCode;
 
             let spsIdEl = document.getElementById('SpsId');
-            if (spsIdEl) spsIdEl.value = sps.id || sps.Id || '';
+            if (spsIdEl) {
+                const spsId = sps.id || sps.Id || sps.spsId || '';
+                spsIdEl.value = /^\d+$/.test(String(spsId).trim()) ? String(spsId).trim() : '';
+            }
 
             // Explicitly set material names to form inputs to ensure they save to DB
             const innerMatEl = document.getElementById('InnerMaterial');
@@ -1583,6 +1585,15 @@
 
             let isValid = true;
             try {
+                // Pipe-separated "min | std | max" format (e.g. "25,70 | 25,80 | 25,90")
+                if (specText.includes('|')) {
+                    const parts = specText.split('|').map(s => parseFloat(s.replace(',', '.').trim()));
+                    const pMin = parts[0];
+                    const pMax = parts[parts.length - 1];
+                    if (!isNaN(pMin) && !isNaN(pMax)) return (val >= pMin && val <= pMax);
+                    return true;
+                }
+
                 // Normalize specText as well (replace comma with dot)
                 let workingText = specText.replace(',', '.').replace(/max\.?/i, '').replace(/min\.?/i, '').replace(/[A-Za-z°%]/g, '').trim();
 
@@ -2564,6 +2575,10 @@
                     document.getElementById('Shift').value = 'III';
                 }
             }
+
+            // Pre-fill ItemCode immediately as safety net (async fetchSpsByItem may override via applySpsToForm)
+            const itemCodeEl = document.getElementById('ItemCode');
+            if (itemCodeEl && item.itemCode) itemCodeEl.value = item.itemCode;
 
             fetchSpsByItem(item.itemCode, item.machineName || item.machineCode);
         }
