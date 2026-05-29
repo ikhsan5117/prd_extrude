@@ -8,6 +8,7 @@ using System.Text;
 using System.Reflection;
 using System.ComponentModel.DataAnnotations;
 using VelastoProductionSystem.Services;
+using System.Text.Json;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -299,10 +300,15 @@ namespace VelastoProductionSystem.Controllers
                     var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsDocumentCreate, targetKey);
                     if (!allowed)
                     {
-                        return RedirectToApprovalRequest(
+                        await _approvalService.CreateOrReusePendingRequestAsync(
                             ApprovalActionType.SpsDocumentCreate,
                             targetKey,
-                            Url.Action(nameof(Create), "SpsMaster") ?? "/SpsMaster/Create");
+                            $"Request create SPS Document {model.DocumentNumber}",
+                            Url.Action(nameof(Create), "SpsMaster") ?? "/SpsMaster/Create",
+                            JsonSerializer.Serialize(model));
+
+                        TempData["SuccessMessage"] = $"Request data SPS Document '{model.DocumentNumber}' terkirim ke SUPERADMIN. Setelah disetujui, data akan otomatis dibuat.";
+                        return RedirectToAction("MyRequests", "Approval");
                     }
                 }
 

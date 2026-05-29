@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using OfficeOpenXml;
 using VelastoProductionSystem.Services;
+using System.Text.Json;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -171,10 +172,15 @@ namespace VelastoProductionSystem.Controllers
                     var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemCreate, targetKey);
                     if (!allowed)
                     {
-                        return RedirectToApprovalRequest(
+                        await _approvalService.CreateOrReusePendingRequestAsync(
                             ApprovalActionType.SpsItemCreate,
                             targetKey,
-                            Url.Action(nameof(Create), "SpsItemList") ?? "/SpsItemList/Create");
+                            $"Request create SPS ItemList {spsItemList.ItemList}",
+                            Url.Action(nameof(Create), "SpsItemList") ?? "/SpsItemList/Create",
+                            JsonSerializer.Serialize(spsItemList));
+
+                        TempData["SuccessMessage"] = $"Request data Item List '{spsItemList.ItemList}' terkirim ke SUPERADMIN. Setelah disetujui, data akan otomatis dibuat.";
+                        return RedirectToAction("MyRequests", "Approval");
                     }
                 }
 

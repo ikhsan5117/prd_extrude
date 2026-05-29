@@ -1328,9 +1328,18 @@
                         <!-- Form Actions -->
                         <div class="row mt-4">
                             <div class="col-12 d-flex gap-3 justify-content-center">
-                                <button type="submit" class="btn btn-success btn-lg px-5">
-                                    <i class="bi bi-check-circle me-2"></i>SIMPAN DATA
-                                </button>
+                                @if (Context.Session.GetString("IsAdmin") == "true" && Context.Session.GetString("UserRole") != "ADMIN_ENG")
+                                {
+                                    <button type="submit" class="btn btn-success btn-lg px-5">
+                                        <i class="bi bi-check-circle me-2"></i>SIMPAN DATA
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-success btn-lg px-5">
+                                        <i class="bi bi-send me-2"></i>REQUEST DATA
+                                    </button>
+                                }
                                 <a asp-action="Index" class="btn btn-secondary btn-lg px-5">
                                     <i class="bi bi-x-circle me-2"></i>BATAL
                                 </a>

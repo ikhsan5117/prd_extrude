@@ -22,6 +22,8 @@ namespace VelastoProductionSystem.Models
         [MaxLength(256)]
         public string? ReturnUrl { get; set; }
 
+        public string? PayloadJson { get; set; }
+
         [Required]
         [MaxLength(150)]
         public string RequesterUserName { get; set; } = string.Empty;

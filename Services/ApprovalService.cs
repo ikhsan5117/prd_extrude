@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
+using VelastoProductionSystem.Helpers;
 using VelastoProductionSystem.Models;
+using System.Text.Json;
 
 namespace VelastoProductionSystem.Services
 {
@@ -95,7 +97,7 @@ namespace VelastoProductionSystem.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null)
+        public async Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null, string? payloadJson = null)
         {
             targetKey = NormalizeTargetKey(targetKey);
             requestComment = (requestComment ?? string.Empty).Trim();
@@ -114,6 +116,10 @@ namespace VelastoProductionSystem.Services
                     existingPending.RequestComment = requestComment;
                     existingPending.UpdatedAt = now;
                     existingPending.ReturnUrl = returnUrl;
+                    if (!string.IsNullOrWhiteSpace(payloadJson))
+                    {
+                        existingPending.PayloadJson = payloadJson;
+                    }
                     _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
                     {
                         ApprovalRequestId = existingPending.Id,
@@ -137,6 +143,7 @@ namespace VelastoProductionSystem.Services
                 TargetKey = targetKey,
                 RequestComment = requestComment,
                 ReturnUrl = returnUrl,
+                PayloadJson = payloadJson,
                 RequesterUserName = CurrentUserName,
                 RequesterRole = CurrentUserRole,
                 Status = ApprovalRequestStatus.Pending,
@@ -247,6 +254,14 @@ namespace VelastoProductionSystem.Services
             request.ApprovalToken = Guid.NewGuid().ToString("N");
             request.TokenExpiresAt = now.AddHours(24);
 
+            var executionMessage = await TryExecuteApprovedRequestAsync(request);
+            if (!string.IsNullOrWhiteSpace(executionMessage))
+            {
+                request.ApproverComment = string.IsNullOrWhiteSpace(request.ApproverComment)
+                    ? executionMessage
+                    : $"{request.ApproverComment}\n{executionMessage}";
+            }
+
             _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
             {
                 ApprovalRequestId = request.Id,
@@ -260,6 +275,57 @@ namespace VelastoProductionSystem.Services
 
             await _context.SaveChangesAsync();
             return (true, "Request berhasil di-approve.");
+        }
+
+        private async Task<string?> TryExecuteApprovedRequestAsync(ApprovalRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.PayloadJson))
+            {
+                return null;
+            }
+
+            switch (request.ActionType)
+            {
+                case ApprovalActionType.SpsDocumentCreate:
+                    {
+                        var model = JsonSerializer.Deserialize<SpsMaster>(request.PayloadJson);
+                        if (model == null || string.IsNullOrWhiteSpace(model.DocumentNumber))
+                        {
+                            return "Payload SPS document tidak valid.";
+                        }
+
+                        if (await _context.SpsNoDocs.AnyAsync(s => s.DocumentNumber == model.DocumentNumber))
+                        {
+                            return $"Dokumen '{model.DocumentNumber}' sudah ada, create dilewati.";
+                        }
+
+                        _context.SpsNoDocs.Add(SpsMapper.ToSpsNoDoc(model));
+                        return $"Dokumen '{model.DocumentNumber}' berhasil dibuat otomatis dari request.";
+                    }
+                case ApprovalActionType.SpsItemCreate:
+                    {
+                        var model = JsonSerializer.Deserialize<SpsItemList>(request.PayloadJson);
+                        if (model == null || string.IsNullOrWhiteSpace(model.ItemList) || string.IsNullOrWhiteSpace(model.DocumentNumber))
+                        {
+                            return "Payload Item List tidak valid.";
+                        }
+
+                        var existing = await _context.SpsItemLists.FirstOrDefaultAsync(i => i.DocumentNumber == model.DocumentNumber && i.ItemList == model.ItemList);
+                        if (existing != null)
+                        {
+                            return $"Item '{model.ItemList}' pada doc '{model.DocumentNumber}' sudah ada, create dilewati.";
+                        }
+
+                        _context.SpsItemLists.Add(new SpsItemList
+                        {
+                            DocumentNumber = model.DocumentNumber,
+                            ItemList = model.ItemList
+                        });
+                        return $"Item List '{model.ItemList}' berhasil dibuat otomatis dari request.";
+                    }
+                default:
+                    return null;
+            }
         }
 
         public async Task<(bool ok, string message)> RejectAsync(int id, string? comment)

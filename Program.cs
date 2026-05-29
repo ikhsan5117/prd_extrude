@@ -97,6 +97,7 @@ BEGIN
         [TargetKey] NVARCHAR(256) NOT NULL,
         [RequestComment] NVARCHAR(1024) NULL,
         [ReturnUrl] NVARCHAR(256) NULL,
+        [PayloadJson] NVARCHAR(MAX) NULL,
         [RequesterUserName] NVARCHAR(150) NOT NULL,
         [RequesterRole] NVARCHAR(50) NOT NULL,
         [ApproverUserName] NVARCHAR(150) NULL,
@@ -110,6 +111,12 @@ BEGIN
         [ReviewedAt] DATETIME2 NULL,
         [ConsumedAt] DATETIME2 NULL
     );
+END;
+
+IF COL_LENGTH(N'[dbo].[ApprovalRequests]', N'PayloadJson') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[ApprovalRequests]
+    ADD [PayloadJson] NVARCHAR(MAX) NULL;
 END;
 
 IF OBJECT_ID(N'[dbo].[ApprovalRequestLogs]', N'U') IS NULL
@@ -163,6 +170,7 @@ CREATE TABLE IF NOT EXISTS ApprovalRequests (
     TargetKey TEXT NOT NULL,
     RequestComment TEXT NULL,
     ReturnUrl TEXT NULL,
+    PayloadJson TEXT NULL,
     RequesterUserName TEXT NOT NULL,
     RequesterRole TEXT NOT NULL,
     ApproverUserName TEXT NULL,

@@ -38,9 +38,18 @@
                 
                 <div class="d-flex justify-content-between mt-4">
                     <a asp-action="Index" class="btn btn-outline-secondary">Kembali</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-1"></i> Simpan
-                    </button>
+                    @if (Context.Session.GetString("IsAdmin") == "true" && Context.Session.GetString("UserRole") != "ADMIN_ENG")
+                    {
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Simpan Data
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i> Request Data
+                        </button>
+                    }
                 </div>
             </form>
         </div>

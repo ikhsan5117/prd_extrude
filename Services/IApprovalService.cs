@@ -8,7 +8,7 @@ namespace VelastoProductionSystem.Services
         bool IsApproverRole();
         Task<bool> HasConsumableApprovalAsync(ApprovalActionType actionType, string targetKey);
         Task ConsumeApprovalAsync(ApprovalActionType actionType, string targetKey);
-        Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null);
+        Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null, string? payloadJson = null);
         Task<List<ApprovalRequest>> GetMyRequestsAsync();
         Task<List<ApprovalRequest>> GetInboxAsync(string? status = null);
         Task<int> CountInboxPendingAsync();

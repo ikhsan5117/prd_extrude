@@ -8,7 +8,10 @@
     <div class="card shadow-sm border-0">
         <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Approval Request Saya</h5>
-            <a asp-controller="SpsMaster" asp-action="Index" class="btn btn-sm btn-outline-dark">Kembali ke SPS</a>
+            <div class="d-flex gap-2">
+                <a asp-action="Request" asp-route-actionType="SpsDocumentCreate" class="btn btn-sm btn-success">Tambah Request</a>
+                <a asp-controller="SpsMaster" asp-action="Index" class="btn btn-sm btn-outline-dark">Kembali ke SPS</a>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
