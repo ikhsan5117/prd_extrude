@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Approval Flow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    </script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --accent: #22c55e;
+            --accent-2: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Segoe UI, Arial, sans-serif;
+            background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 55%);
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 20px 48px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            margin: 8px 0 0;
+            color: var(--muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: 0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: var(--accent);
+            color: #052e16;
+        }
+
+        .secondary {
+            background: var(--accent-2);
+            color: #082f49;
+        }
+
+        .panel {
+            background: rgba(17, 24, 39, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 20px;
+            overflow: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        .note {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        @media print {
+            .actions, .note {
+                display: none;
+            }
+
+            body {
+                background: #fff;
+                color: #000;
+            }
+
+            .panel {
+                box-shadow: none;
+                border: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="header">
+            <div>
+                <h1>Approval Flow</h1>
+                <p class="subtitle">Alur pengajuan approval SPS Master dan Item List</p>
+            </div>
+            <div class="actions">
+                <button class="primary" onclick="window.print()">Download / Save PDF</button>
+                <button class="secondary" onclick="copySource()">Copy Mermaid</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <pre class="mermaid" id="chartSource">flowchart TD
+    A[Requester buka form SPS Master / Item List] --> B{Pilih aksi}
+    B -->|Simpan Draft| C[Status: Draft]
+    B -->|Kirim Approval Request| D[Status: Pending]
+
+    C --> E[Masuk ke My Requests]
+    E --> F[User klik Lanjut Draft / Draft Revision]
+    F --> G[Edit data]
+    G --> H{Aksi berikutnya}
+    H -->|Simpan lagi| C
+    H -->|Kirim Ulang / Submit| D
+
+    D --> I[Masuk ke Inbox Super Admin]
+    I --> J[Super Admin buka Detail Request]
+    J --> K[Review data diajukan + tandai field X]
+    K --> L{Keputusan}
+
+    L -->|Approve| M[Status: Approved]
+    L -->|Revision Required| N[Status: Revision Required]
+    L -->|Rejected Final| O[Status: Rejected]
+
+    N --> P[Requester buka Detail Request]
+    P --> Q[Field yang ditandai X tetap terlihat]
+    Q --> R[Requester edit data dari tabel Data Diajukan]
+    R --> S{Aksi requester}
+    S -->|Simpan perubahan dulu| T[Data revisi tersimpan pada request yang sama]
+    S -->|Kirim Ulang Request| U[Status kembali: Pending]
+
+    T --> P
+    U --> I
+
+    M --> V[Eksekusi otomatis sesuai Action Type]
+    V --> W{Jenis request}
+    W -->|SPS Create| X[Buat dokumen SPS baru]
+    W -->|SPS Edit| Y[Buat revisi dokumen aktif baru]
+    W -->|Item List Create| Z[Buat Item List baru]
+    W -->|Item List Edit| AA[Update Item List setelah approval]
+
+    X --> AB[Status akhir: Consumed / selesai dipakai]
+    Y --> AB
+    Z --> AB
+    AA --> AB
+
+    O --> AC[Request selesai dan tidak bisa dilanjutkan]</pre>
+        </div>
+
+        <p class="note">Buka file ini di browser, lalu klik Download / Save PDF untuk menyimpannya.</p>
+    </div>
+
+    <script>
+        function copySource() {
+            const text = document.getElementById('chartSource').textContent || '';
+            navigator.clipboard.writeText(text);
+        }
+    </script>
+</body>
+</html>

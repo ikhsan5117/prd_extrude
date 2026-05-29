@@ -2,22 +2,93 @@
 @using VelastoProductionSystem.Models
 @{
     ViewData["Title"] = "My Approval Requests";
+    var displayedItems = Model
+        .Where(x => x.Status != ApprovalRequestStatus.Draft
+            || x.ActionType == ApprovalActionType.SpsItemCreate
+            || x.ActionType == ApprovalActionType.SpsDocumentEdit
+            || x.ActionType == ApprovalActionType.SpsItemEdit)
+        .ToList();
 }
 
+<style>
+    .approval-request-card {
+        overflow: visible !important;
+    }
+
+    .approval-request-card .card-header {
+        position: relative;
+        z-index: 30;
+        overflow: visible !important;
+    }
+
+    .approval-request-card .card-body,
+    .approval-request-card .table-responsive {
+        position: relative;
+        z-index: 1;
+    }
+
+    .approval-table-scroll {
+        max-height: 70vh;
+        overflow: auto;
+    }
+
+    .approval-table-scroll thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: #1f2937;
+    }
+
+    .approval-request-actions {
+        position: relative;
+        z-index: 40;
+    }
+
+    .approval-request-actions .dropdown-menu {
+        z-index: 3000;
+    }
+</style>
+
 <div class="container-fluid py-3">
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 approval-request-card">
         <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Approval Request Saya</h5>
-            <div class="d-flex gap-2">
-                <a asp-action="Request" asp-route-actionType="SpsDocumentCreate" class="btn btn-sm btn-success">Tambah Request</a>
-                <a asp-controller="SpsMaster" asp-action="Index" class="btn btn-sm btn-outline-dark">Kembali ke SPS</a>
+            <div class="d-flex gap-2 approval-request-actions">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        No.DOCUMENT
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" asp-controller="SpsMaster" asp-action="Create" asp-route-returnUrl="@Url.Action("MyRequests", "Approval")">Create</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-controller="SpsMaster" asp-action="Index">Revisi</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Item List
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" asp-controller="SpsItemList" asp-action="Create" asp-route-returnUrl="@Url.Action("MyRequests", "Approval")">Create</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-controller="SpsItemList" asp-action="Index">Revisi</a>
+                        </li>
+                    </ul>
+                </div>
+                <a href="javascript:history.back()" class="btn btn-sm btn-outline-dark">Kembali</a>
             </div>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
+            <div class="table-responsive approval-table-scroll">
+                <table class="table table-striped table-hover mb-0" id="myRequestsTable">
                     <thead>
                         <tr>
+                            <th>No</th>
                             <th>Code</th>
                             <th>Status</th>
                             <th>Aksi</th>
@@ -25,24 +96,80 @@
                             <th>Komentar Request</th>
                             <th>Komentar Admin</th>
                             <th>Dibuat</th>
-                            <th></th>
+                            <th>Draft</th>
+                            <th>Detail</th>
                         </tr>
                     </thead>
                     <tbody>
-                    @if (!Model.Any())
+                    @if (!displayedItems.Any())
                     {
-                        <tr><td colspan="8" class="text-center text-muted py-4">Belum ada request approval.</td></tr>
+                        <tr><td colspan="10" class="text-center text-muted py-4">Belum ada request approval.</td></tr>
                     }
                     else
                     {
-                        foreach (var item in Model)
+                        var rowNumber = 1;
+                        foreach (var item in displayedItems)
                         {
-                            <tr>
+                            var detailReturnUrl = Url.Action("Details", "Approval", new { id = item.Id });
+                            var isDraftCreate = item.Status == ApprovalRequestStatus.Draft
+                                && (item.ActionType == ApprovalActionType.SpsItemCreate || item.ActionType == ApprovalActionType.SpsDocumentCreate);
+                            var isDraftRevision = item.Status == ApprovalRequestStatus.Draft
+                                && (item.ActionType == ApprovalActionType.SpsDocumentEdit || item.ActionType == ApprovalActionType.SpsItemEdit);
+                            var canContinue = item.Status == ApprovalRequestStatus.RevisionRequired || isDraftRevision || isDraftCreate;
+                            var continueLabel = isDraftRevision ? "Draft Revision" : isDraftCreate ? "Lanjut Draft" : "Revisi";
+                            var hasRevisionDraft = item.Status == ApprovalRequestStatus.RevisionRequired
+                                && item.UpdatedAt.HasValue
+                                && item.ReviewedAt.HasValue
+                                && item.UpdatedAt.Value > item.ReviewedAt.Value;
+
+                            if (hasRevisionDraft)
+                            {
+                                continueLabel = "Draft Revision";
+                            }
+
+                            string? continueUrl = null;
+
+                            if (canContinue)
+                            {
+                                switch (item.ActionType)
+                                {
+                                    case ApprovalActionType.SpsDocumentCreate:
+                                        continueUrl = Url.Action("Create", "SpsMaster", new { requestId = item.Id, returnUrl = detailReturnUrl });
+                                        break;
+                                    case ApprovalActionType.SpsDocumentEdit:
+                                        continueUrl = Url.Action("Edit", "SpsMaster", new { documentNumber = item.TargetKey, requestId = item.Id, returnUrl = detailReturnUrl });
+                                        break;
+                                    case ApprovalActionType.SpsItemCreate:
+                                        continueUrl = Url.Action("Create", "SpsItemList", new { requestId = item.Id, returnUrl = detailReturnUrl });
+                                        break;
+                                    case ApprovalActionType.SpsItemEdit:
+                                        if (int.TryParse(item.TargetKey, out var itemId))
+                                        {
+                                            continueUrl = Url.Action("Edit", "SpsItemList", new { id = itemId, requestId = item.Id, returnUrl = detailReturnUrl });
+                                        }
+                                        break;
+                                }
+                            }
+
+                            <tr class="approval-row">
+                                <td>@rowNumber</td>
                                 <td>@item.RequestCode</td>
                                 <td>
                                     @if (item.Status == ApprovalRequestStatus.Pending)
                                     {
                                         <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                    else if (item.Status == ApprovalRequestStatus.Draft && isDraftCreate)
+                                    {
+                                        <span class="badge bg-secondary">Draft</span>
+                                    }
+                                    else if (item.Status == ApprovalRequestStatus.Draft && isDraftRevision)
+                                    {
+                                        <span class="badge bg-secondary">Draft Revision</span>
+                                    }
+                                    else if (item.Status == ApprovalRequestStatus.RevisionRequired)
+                                    {
+                                        <span class="badge bg-warning text-dark">Revision Required</span>
                                     }
                                     else if (item.Status == ApprovalRequestStatus.Approved)
                                     {
@@ -66,13 +193,84 @@
                                 <td>@item.RequestComment</td>
                                 <td>@item.ApproverComment</td>
                                 <td>@item.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                                <td><a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Detail</a></td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(continueUrl))
+                                    {
+                                        <a href="@continueUrl" class="btn btn-sm btn-outline-warning">@continueLabel</a>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Detail</a>
+                                </td>
                             </tr>
+
+                            rowNumber++;
                         }
                     }
                     </tbody>
                 </table>
             </div>
         </div>
+        <div class="card-footer d-flex justify-content-between align-items-center" id="myRequestsPaginationBar">
+            <span id="myRequestsPageInfo" class="text-muted small"></span>
+            <div class="d-flex gap-2">
+                <button type="button" id="myRequestsPrevBtn" class="btn btn-sm btn-outline-secondary">Prev</button>
+                <button type="button" id="myRequestsNextBtn" class="btn btn-sm btn-outline-secondary">Next</button>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        const rowsPerPage = 50;
+        const rows = Array.from(document.querySelectorAll('#myRequestsTable tbody tr.approval-row'));
+        const paginationBar = document.getElementById('myRequestsPaginationBar');
+        const pageInfo = document.getElementById('myRequestsPageInfo');
+        const prevBtn = document.getElementById('myRequestsPrevBtn');
+        const nextBtn = document.getElementById('myRequestsNextBtn');
+
+        if (!rows.length || !paginationBar || !pageInfo || !prevBtn || !nextBtn) {
+            if (paginationBar) {
+                paginationBar.classList.add('d-none');
+            }
+            return;
+        }
+
+        let currentPage = 1;
+        const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+
+        const renderPage = function () {
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            rows.forEach(function (row, index) {
+                row.style.display = index >= start && index < end ? '' : 'none';
+            });
+
+            pageInfo.textContent = 'Page ' + currentPage + ' / ' + totalPages + ' (' + rows.length + ' rows)';
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        };
+
+        prevBtn.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        });
+
+        nextBtn.addEventListener('click', function () {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage();
+            }
+        });
+
+        if (totalPages <= 1) {
+            paginationBar.classList.add('d-none');
+        }
+
+        renderPage();
+    })();
+</script>

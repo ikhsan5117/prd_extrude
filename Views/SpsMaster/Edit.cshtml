@@ -95,6 +95,7 @@
                     </div>
 
                     <form asp-action="Edit" asp-route-documentNumber="@Model.DocumentNumber" method="post" id="editForm">
+                        <input type="hidden" name="sourceRequestId" value="@ViewBag.SourceRequestId" />
                         <input type="hidden" name="originalDocumentNumber" value="@Model.DocumentNumber" />
                         <!-- HIDDEN FIELDS FOR PRESERVING DATA NOT IN FORM -->
                         <input type="hidden" asp-for="ADistance" />
@@ -1445,8 +1446,11 @@
                                 }
                                 else
                                 {
+                                    <button type="submit" class="btn btn-outline-warning btn-lg px-5" name="saveAsDraft" value="true">
+                                        <i class="bi bi-save2 me-2"></i>SIMPAN DRAFT
+                                    </button>
                                     <button type="submit" class="btn btn-success btn-lg px-5">
-                                        <i class="bi bi-send me-2"></i>REQUEST DATA
+                                        <i class="bi bi-send me-2"></i>APPROVAL REQUEST
                                     </button>
                                 }
                                 <a asp-action="Index" class="btn btn-secondary btn-lg px-5">
@@ -1467,6 +1471,11 @@
     <script>
         // Form validation
         $('#editForm').on('submit', function(e) {
+            const submitter = e.originalEvent?.submitter;
+            if (submitter?.name === 'saveAsDraft' && submitter?.value === 'true') {
+                return true;
+            }
+
             const machine = $('[name="Machine"]').val();
             
             if (!machine) {

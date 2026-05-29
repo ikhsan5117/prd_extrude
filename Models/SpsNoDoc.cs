@@ -18,6 +18,9 @@ namespace VelastoProductionSystem.Models
         [Display(Name = "No. Rev.")]
         public string? RevisionNumber { get; set; }
 
+        [Display(Name = "Status Aktif")]
+        public bool IsActive { get; set; } = true;
+
         [Display(Name = "Customer")]
         public string? Customer { get; set; }
 

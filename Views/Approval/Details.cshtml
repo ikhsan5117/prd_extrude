@@ -1,18 +1,401 @@
 @model VelastoProductionSystem.Models.ApprovalRequest
 @using VelastoProductionSystem.Models
+@using System.Text.Json
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
 @{
     ViewData["Title"] = "Approval Details";
     var role = Context.Session.GetString("UserRole") ?? string.Empty;
-    var canReview = role == "ADMIN_ENG" || role == "SUPERADMIN";
+    var canReview = role == "SUPERADMIN";
     var isOwner = string.Equals(Context.Session.GetString("UserName"), Model.RequesterUserName, StringComparison.OrdinalIgnoreCase);
+
+    SpsMaster? spsPayload = null;
+    SpsItemList? itemPayload = null;
+    var payloadKind = string.Empty;
+    var payloadError = string.Empty;
+
+    string Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    var propMap = typeof(SpsMaster)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
+
+    string GetDisplayLabel(string propertyName)
+    {
+        if (!propMap.TryGetValue(propertyName, out var prop))
+        {
+            return propertyName;
+        }
+
+        var display = prop.GetCustomAttribute<DisplayAttribute>();
+        return string.IsNullOrWhiteSpace(display?.Name) ? propertyName : display!.Name!;
+    }
+
+    string GetValue(SpsMaster model, string propertyName)
+    {
+        if (!propMap.TryGetValue(propertyName, out var prop))
+        {
+            return string.Empty;
+        }
+
+        var raw = prop.GetValue(model);
+        if (raw == null)
+        {
+            return string.Empty;
+        }
+
+        if (raw is bool boolValue)
+        {
+            return boolValue ? "Active" : "Inactive";
+        }
+
+        return raw.ToString() ?? string.Empty;
+    }
+
+    string GetTripletParameterLabel(string propertyBase)
+    {
+        if (propMap.ContainsKey(propertyBase))
+        {
+            return GetDisplayLabel(propertyBase);
+        }
+
+        foreach (var suffix in new[] { "_Asli", "_Min", "_Max" })
+        {
+            var propName = propertyBase + suffix;
+            if (propMap.TryGetValue(propName, out var prop))
+            {
+                var display = prop.GetCustomAttribute<DisplayAttribute>()?.Name ?? propName;
+                return display
+                    .Replace(" Asli", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Replace(" Min", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Replace(" Max", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Trim();
+            }
+        }
+
+        return propertyBase;
+    }
+
+    var requiredSpsFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "DocumentNumber", "Machine", "MachineCode", "Customer", "HoseType", "Dimensi", "Material"
+    };
+
+    List<(string PropertyName, string Label, string Value, bool Required, bool Missing)> BuildRows(SpsMaster model, IEnumerable<string> propertyNames)
+    {
+        var rows = new List<(string PropertyName, string Label, string Value, bool Required, bool Missing)>();
+        foreach (var propertyName in propertyNames.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!propMap.ContainsKey(propertyName))
+            {
+                continue;
+            }
+
+            var value = Normalize(GetValue(model, propertyName));
+            var required = requiredSpsFields.Contains(propertyName);
+            var missing = required && string.IsNullOrWhiteSpace(value);
+            rows.Add((propertyName, GetDisplayLabel(propertyName), value, required, missing));
+        }
+
+        return rows;
+    }
+
+    if (!string.IsNullOrWhiteSpace(Model.PayloadJson))
+    {
+        try
+        {
+            switch (Model.ActionType)
+            {
+                case ApprovalActionType.SpsDocumentCreate:
+                case ApprovalActionType.SpsDocumentEdit:
+                    {
+                        payloadKind = Model.ActionType == ApprovalActionType.SpsDocumentCreate ? "No.Document - Create" : "No.Document - Revisi";
+                        spsPayload = JsonSerializer.Deserialize<SpsMaster>(Model.PayloadJson);
+                    }
+                    break;
+
+                case ApprovalActionType.SpsItemCreate:
+                case ApprovalActionType.SpsItemEdit:
+                    {
+                        payloadKind = Model.ActionType == ApprovalActionType.SpsItemCreate ? "Item List - Create" : "Item List - Revisi";
+                        itemPayload = JsonSerializer.Deserialize<SpsItemList>(Model.PayloadJson);
+                    }
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            payloadError = ex.Message;
+        }
+    }
+
+    var headerInfoFields = new List<string>
+    {
+        "No", "DocumentNumber", "RevisionNumber", "RevisionDate", "Machine", "MachineCode", "Customer", "HoseType", "Formulasi", "IsActive"
+    };
+
+    var productSpecFields = new List<string>
+    {
+        "Dimensi", "Material", "InnerTube", "MiddleTube", "OuterCover", "UseLimitsInner", "UseLimitsMiddle", "UseLimitsOuter",
+        "Yarn", "TensionYarnInner", "TensionYarnOuter", "Nipple", "TubeDie", "MiddleDie", "CoverDie", "SpacerDie", "ADistance",
+        "MeshDim1", "MeshScreen1", "MeshDim2", "MeshScreen2", "MeshDim3", "MeshScreen3"
+    };
+
+    var machineSettingFields = new List<string>
+    {
+        "MarkingSort", "TextMarkingMaterial", "MarkingColour", "OdSensor", "AmMeter", "AmMeter2", "AmMeter3",
+        "TakeUpConveyorSpeed", "CoolConveyorSpeed", "CoolConveyorSpeed2", "ConveyorRatio", "CaterpillarGap", "DancerPosition"
+    };
+
+    var processParameterFields = new List<string>
+    {
+        "HeadTemp1", "HeadTemp2", "HeadTemp3", "Cylinder1_1", "Cylinder1_2", "Cylinder1_3",
+        "Cylinder2_1", "Cylinder2_2", "Cylinder2_3", "Cylinder3_1", "Cylinder3_2", "Cylinder3_3",
+        "ScrewTemp1", "ScrewTemp2", "ScrewTemp3", "Feed1", "Feed2", "Feed3",
+        "ScrewSpeed1", "ScrewSpeed2", "ScrewSpeed3", "Pressure1", "Pressure2", "Pressure3",
+        "ChillerWaterTemp", "CuttingSpeed", "PitchYarn", "FeedRollRatio1", "FeedRollRatio2", "FeedRollRatio3",
+        "CurrentValue", "PresetValue", "ControlValue", "SpiralPitchSetting", "SpiralPitchDisplay", "SpiralSpeed", "HoseSpeed", "UnsmoothSurface"
+    };
+
+    // Legacy single-value fields with triplet counterparts.
+    var tripletBackedLegacyFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "OdSensor", "AmMeter", "AmMeter2", "AmMeter3",
+        "TakeUpConveyorSpeed", "ChillerWaterTemp", "CuttingSpeed",
+        "CaterpillarGap", "CoolConveyorSpeed", "CoolConveyorSpeed2", "ConveyorRatio", "DancerPosition",
+        "CurrentValue", "PresetValue", "ControlValue",
+        "SpiralPitchSetting", "SpiralPitchDisplay", "SpiralSpeed", "HoseSpeed",
+        "PitchYarn", "FeedRollRatio1", "FeedRollRatio2", "FeedRollRatio3"
+    };
+
+    var toleranceFields = propMap.Keys
+        .Where(k => k.EndsWith("_Min", StringComparison.OrdinalIgnoreCase)
+            || k.EndsWith("_Asli", StringComparison.OrdinalIgnoreCase)
+            || k.EndsWith("_Max", StringComparison.OrdinalIgnoreCase)
+            || k is "ToleranceInner" or "ToleranceOuter" or "ToleranceSpiralPitch"
+            || k is "TebalInner" or "TebalInnerMiddle" or "TebalOuter" or "TebalTotal" or "SelisihTebal"
+            || k is "InnerTarget" or "InnerTol" or "InnerLCL" or "InnerMin" or "InnerUCL" or "InnerMax"
+            || k is "InnerMidTarget" or "InnerMidTol" or "InnerMidLCL" or "InnerMidMin" or "InnerMidUCL" or "InnerMidMax"
+            || k is "ThickTarget" or "ThickTol" or "ThickLCL" or "ThickMin" or "ThickUCL" or "ThickMax"
+            || k is "TotalTarget" or "TotalTol" or "TotalLCL" or "TotalMin" or "TotalUCL" or "TotalMax")
+        .OrderBy(k => k)
+        .ToList();
+
+    // Any base field that already has _Min/_Asli/_Max should be shown only in Standard Toleransi.
+    var tripletBackedFields = new HashSet<string>(tripletBackedLegacyFields, StringComparer.OrdinalIgnoreCase);
+    foreach (var baseField in toleranceFields
+        .Where(f => f.EndsWith("_Min", StringComparison.OrdinalIgnoreCase))
+        .Select(f => f.Substring(0, f.Length - 4)))
+    {
+        tripletBackedFields.Add(baseField);
+    }
+
+    productSpecFields = productSpecFields
+        .Where(f => !tripletBackedFields.Contains(f))
+        .ToList();
+
+    machineSettingFields = machineSettingFields
+        .Where(f => !tripletBackedFields.Contains(f))
+        .ToList();
+
+    processParameterFields = processParameterFields
+        .Where(f => !tripletBackedFields.Contains(f))
+        .ToList();
+
+    var allSectionFields = headerInfoFields
+        .Concat(productSpecFields)
+        .Concat(machineSettingFields)
+        .Concat(processParameterFields)
+        .Concat(toleranceFields)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    var remainingFields = propMap.Keys
+        .Where(k => !allSectionFields.Contains(k)
+            && !string.Equals(k, "ItemList", StringComparison.OrdinalIgnoreCase)
+            && !tripletBackedFields.Contains(k))
+        .OrderBy(k => k)
+        .ToList();
+
+    processParameterFields.AddRange(remainingFields);
+
+    var spsHeaderRows = spsPayload == null ? new List<(string PropertyName, string Label, string Value, bool Required, bool Missing)>() : BuildRows(spsPayload, headerInfoFields);
+    var spsProductRows = spsPayload == null ? new List<(string PropertyName, string Label, string Value, bool Required, bool Missing)>() : BuildRows(spsPayload, productSpecFields);
+    var spsMachineRows = spsPayload == null ? new List<(string PropertyName, string Label, string Value, bool Required, bool Missing)>() : BuildRows(spsPayload, machineSettingFields);
+    var spsProcessRows = spsPayload == null ? new List<(string PropertyName, string Label, string Value, bool Required, bool Missing)>() : BuildRows(spsPayload, processParameterFields);
+    var spsToleranceRows = spsPayload == null ? new List<(string PropertyName, string Label, string Value, bool Required, bool Missing)>() : BuildRows(spsPayload, toleranceFields);
+
+    var toleranceTripletRows = new List<(string PropertyBase, string Label, string Min, string Actual, string Max)>();
+    var toleranceSingleRows = new List<(string PropertyName, string Label, string Value)>();
+
+    if (spsPayload != null)
+    {
+        var tripletBases = toleranceFields
+            .Where(f => f.EndsWith("_Min", StringComparison.OrdinalIgnoreCase))
+            .Select(f => f.Substring(0, f.Length - 4))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(f => f)
+            .ToList();
+
+        foreach (var propertyBase in tripletBases)
+        {
+            var minValue = Normalize(GetValue(spsPayload, propertyBase + "_Min"));
+            var actualValue = Normalize(GetValue(spsPayload, propertyBase + "_Asli"));
+            var maxValue = Normalize(GetValue(spsPayload, propertyBase + "_Max"));
+
+            toleranceTripletRows.Add((
+                propertyBase,
+                GetTripletParameterLabel(propertyBase),
+                minValue,
+                actualValue,
+                maxValue));
+        }
+
+        var singleToleranceFields = toleranceFields
+            .Where(f => !f.EndsWith("_Min", StringComparison.OrdinalIgnoreCase)
+                && !f.EndsWith("_Asli", StringComparison.OrdinalIgnoreCase)
+                && !f.EndsWith("_Max", StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(f => f)
+            .ToList();
+
+        foreach (var propertyName in singleToleranceFields)
+        {
+            var value = Normalize(GetValue(spsPayload, propertyName));
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            toleranceSingleRows.Add((propertyName, GetDisplayLabel(propertyName), value));
+        }
+    }
+
+    var allSpsRows = spsHeaderRows
+        .Concat(spsProductRows)
+        .Concat(spsMachineRows)
+        .Concat(spsProcessRows)
+        .Concat(spsToleranceRows)
+        .ToList();
+
+    var missingRequired = allSpsRows.Where(r => r.Required && r.Missing).ToList();
+    var filledCount = allSpsRows.Count(r => !string.IsNullOrWhiteSpace(r.Value));
+
+    var approvalDetailsReturnUrl = Url.Action("Details", "Approval", new { id = Model.Id });
+    string? editRequestUrl = null;
+    var supervisorMarkedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    string NormalizeFieldKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var chars = value
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant)
+            .ToArray();
+
+        return new string(chars);
+    }
+
+    if (!string.IsNullOrWhiteSpace(Model.ApproverComment))
+    {
+        var lines = Model.ApproverComment
+            .Replace("\r", string.Empty)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.Trim();
+            if (!line.StartsWith("-"))
+            {
+                continue;
+            }
+
+            var field = line.TrimStart('-').Trim();
+            if (!string.IsNullOrWhiteSpace(field))
+            {
+                supervisorMarkedFields.Add(NormalizeFieldKey(field));
+            }
+        }
+    }
+
+    var supervisorMarkedFieldListJson = JsonSerializer.Serialize(supervisorMarkedFields.ToList());
+
+    bool IsSupervisorMarked(params string[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            var normalized = NormalizeFieldKey(candidate);
+            if (!string.IsNullOrWhiteSpace(normalized) && supervisorMarkedFields.Contains(normalized))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    if (isOwner && (Model.Status == ApprovalRequestStatus.Draft || Model.Status == ApprovalRequestStatus.RevisionRequired))
+    {
+        switch (Model.ActionType)
+        {
+            case ApprovalActionType.SpsDocumentCreate:
+                editRequestUrl = Url.Action("Create", "SpsMaster", new { requestId = Model.Id, returnUrl = approvalDetailsReturnUrl });
+                break;
+            case ApprovalActionType.SpsDocumentEdit:
+                editRequestUrl = Url.Action("Edit", "SpsMaster", new { documentNumber = Model.TargetKey, requestId = Model.Id, returnUrl = approvalDetailsReturnUrl });
+                break;
+            case ApprovalActionType.SpsItemCreate:
+                editRequestUrl = Url.Action("Create", "SpsItemList", new { requestId = Model.Id, returnUrl = approvalDetailsReturnUrl });
+                break;
+            case ApprovalActionType.SpsItemEdit:
+                if (int.TryParse(Model.TargetKey, out var itemId))
+                {
+                    editRequestUrl = Url.Action("Edit", "SpsItemList", new { id = itemId, requestId = Model.Id, returnUrl = approvalDetailsReturnUrl });
+                }
+                break;
+        }
+    }
+
+    var canEditPayload = isOwner
+        && (Model.Status == ApprovalRequestStatus.Draft || Model.Status == ApprovalRequestStatus.RevisionRequired)
+        && (spsPayload != null || itemPayload != null);
 }
+
+<style>
+    .manual-validation-mark {
+        background-color: #26303b;
+        color: #f8fafc;
+        border-color: #4b5563;
+        color-scheme: dark;
+        min-width: 88px;
+    }
+
+    .manual-validation-mark:focus {
+        background-color: #26303b;
+        color: #f8fafc;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .manual-validation-mark option {
+        background-color: #1f2937;
+        color: #f8fafc;
+    }
+</style>
 
 <div class="container-fluid py-3">
     <div class="row g-3">
-        <div class="col-lg-7">
+        <div class="col-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Detail Request @Model.RequestCode</h5>
+                    @if (spsPayload != null || itemPayload != null)
+                    {
+                        <button type="button" id="toggleDetailPengajuanBtn" class="btn btn-sm btn-outline-light">@(Model.Status == ApprovalRequestStatus.RevisionRequired ? "Revision Required" : "Detail Pengajuan")</button>
+                    }
                 </div>
                 <div class="card-body">
                     <dl class="row mb-0">
@@ -41,10 +424,561 @@
             </div>
         </div>
 
-        <div class="col-lg-5">
-            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+        @if (isOwner && Model.Status == ApprovalRequestStatus.Draft)
+        {
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-secondary text-white">Draft Tersimpan</div>
+                    <div class="card-body">
+                        <p class="mb-3 text-muted">Dokumen masih draft. Anda bisa lanjut edit kapan saja sebelum dikirim ke admin.</p>
+                        @if (!string.IsNullOrWhiteSpace(editRequestUrl))
+                        {
+                            <a href="@editRequestUrl" class="btn btn-outline-secondary">
+                                <i class="bi bi-pencil-square me-1"></i>Lanjutkan Draft
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (isOwner && Model.Status == ApprovalRequestStatus.RevisionRequired)
+        {
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-warning text-dark">Revision Required</div>
+                    <div class="card-body">
+                        <p class="mb-3 text-muted">Admin meminta revisi. Silakan edit data pengajuan lalu kirim ulang.</p>
+                        <form asp-action="Resubmit" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label">Catatan Perbaikan (wajib)</label>
+                                <textarea name="requestComment" class="form-control" rows="3" maxlength="1024" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-warning text-dark">Kirim Ulang Request</button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card shadow-sm border-0 mt-3 d-none" id="detail-pengajuan">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <strong>Data Diajukan</strong>
+            @if (!string.IsNullOrWhiteSpace(payloadKind))
             {
-                <div class="card shadow-sm border-0 mb-3">
+                <span class="badge bg-info text-dark">@payloadKind</span>
+            }
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(payloadError))
+            {
+                <div class="alert alert-danger mb-0">Payload tidak bisa dibaca: @payloadError</div>
+            }
+            else if (spsPayload == null && itemPayload == null)
+            {
+                <div class="text-muted">Tidak ada payload detail pada request ini.</div>
+            }
+            else
+            {
+                <form asp-action="SavePayloadDraftData" method="post" id="payloadEditForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    @if (canEditPayload)
+                    {
+                        <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="mb-0">Anda bisa edit langsung data di tabel berikut, lalu klik Simpan.</span>
+                            <button type="submit" name="saveMode" value="update" class="btn btn-primary btn-sm">Simpan Perubahan Data Diajukan</button>
+                        </div>
+                    }
+
+                    @if (itemPayload != null)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 30%;">Field</th>
+                                        <th>Value</th>
+                                        <th style="width: 12%;">Wajib</th>
+                                        <th style="width: 12%;">Validasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Document Number</td>
+                                        <td>
+                                            @if (canEditPayload)
+                                            {
+                                                <input type="text" name="payload_DocumentNumber" class="form-control form-control-sm" value="@itemPayload.DocumentNumber" />
+                                            }
+                                            else
+                                            {
+                                                @(string.IsNullOrWhiteSpace(Normalize(itemPayload.DocumentNumber)) ? "-" : itemPayload.DocumentNumber)
+                                            }
+                                        </td>
+                                        <td><span class="badge bg-warning text-dark">Ya</span></td>
+                                        <td>
+                                            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                            {
+                                                <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                    <option value="">-</option>
+                                                    <option value="x">X</option>
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked("Document Number", "Document Number (DocumentNumber)"))
+                                                {
+                                                    <span class="badge bg-danger">X</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Item List</td>
+                                        <td>
+                                            @if (canEditPayload)
+                                            {
+                                                <input type="text" name="payload_ItemList" class="form-control form-control-sm" value="@itemPayload.ItemList" />
+                                            }
+                                            else
+                                            {
+                                                @(string.IsNullOrWhiteSpace(Normalize(itemPayload.ItemList)) ? "-" : itemPayload.ItemList)
+                                            }
+                                        </td>
+                                        <td><span class="badge bg-warning text-dark">Ya</span></td>
+                                        <td>
+                                            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                            {
+                                                <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                    <option value="">-</option>
+                                                    <option value="x">X</option>
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked("Item List", "Item List (ItemList)"))
+                                                {
+                                                    <span class="badge bg-danger">X</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                @if (canReview)
+                {
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                        <span class="badge bg-secondary">Validasi manual: pilih X untuk yang perlu revisi</span>
+                    </div>
+                }
+
+                @if (Model.Status == ApprovalRequestStatus.RevisionRequired && !string.IsNullOrWhiteSpace(Model.ApproverComment))
+                {
+                    <div class="alert alert-warning mb-3">
+                        <strong>Validasi Atasan:</strong>
+                        <pre class="mb-0 mt-2" style="white-space: pre-wrap; font-family: inherit;">@Model.ApproverComment</pre>
+                    </div>
+                }
+
+                <div class="card shadow-sm border-0 mt-3">
+                    <div class="card-header bg-dark text-white"><strong>1. Header Informasi Dokumen</strong></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                                <tbody>
+                                @foreach (var row in spsHeaderRows)
+                                {
+                                    <tr>
+                                        <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
+                                        <td>
+                                            @if (canEditPayload)
+                                            {
+                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                            }
+                                            else
+                                            {
+                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                            {
+                                                <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                    <option value="">-</option>
+                                                    <option value="x">X</option>
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked(row.Label, row.PropertyName, $"{row.Label} ({row.PropertyName})"))
+                                                {
+                                                    <span class="badge bg-danger">X</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mt-3">
+                    <div class="card-header bg-dark text-white"><strong>2. Data Spesifikasi Produk</strong></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                                <tbody>
+                                @foreach (var row in spsProductRows)
+                                {
+                                    <tr>
+                                        <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
+                                        <td>
+                                            @if (canEditPayload)
+                                            {
+                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                            }
+                                            else
+                                            {
+                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                            {
+                                                <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                    <option value="">-</option>
+                                                    <option value="x">X</option>
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked(row.Label, row.PropertyName, $"{row.Label} ({row.PropertyName})"))
+                                                {
+                                                    <span class="badge bg-danger">X</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mt-3">
+                    <div class="card-header bg-dark text-white"><strong>3. Setting Mesin</strong></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                                <tbody>
+                                @foreach (var row in spsMachineRows)
+                                {
+                                    <tr>
+                                        <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
+                                        <td>
+                                            @if (canEditPayload)
+                                            {
+                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                            }
+                                            else
+                                            {
+                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                            {
+                                                <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                    <option value="">-</option>
+                                                    <option value="x">X</option>
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked(row.Label, row.PropertyName, $"{row.Label} ({row.PropertyName})"))
+                                                {
+                                                    <span class="badge bg-danger">X</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mt-3">
+                    <div class="card-header bg-dark text-white"><strong>4. Parameter Proses</strong></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 420px; overflow:auto;">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                                <tbody>
+                                @foreach (var row in spsProcessRows)
+                                {
+                                    <tr>
+                                        <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
+                                        <td>
+                                            @if (canEditPayload)
+                                            {
+                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                            }
+                                            else
+                                            {
+                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                            {
+                                                <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                    <option value="">-</option>
+                                                    <option value="x">X</option>
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked(row.Label, row.PropertyName, $"{row.Label} ({row.PropertyName})"))
+                                                {
+                                                    <span class="badge bg-danger">X</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mt-3">
+                    <div class="card-header bg-dark text-white"><strong>5. Standard Toleransi (Min / Actual / Max)</strong></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 500px; overflow:auto;">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 34%;">Parameter</th>
+                                        <th style="width: 16%;">Min</th>
+                                        <th style="width: 16%;">Actual</th>
+                                        <th style="width: 16%;">Max</th>
+                                        <th style="width: 10%;">Status</th>
+                                        <th style="width: 8%;">Validasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @if (!toleranceTripletRows.Any())
+                                {
+                                    <tr><td colspan="6" class="text-muted text-center">Belum ada struktur parameter Min / Actual / Max.</td></tr>
+                                }
+                                else
+                                {
+                                    @foreach (var row in toleranceTripletRows)
+                                    {
+                                        var minFilled = !string.IsNullOrWhiteSpace(row.Min);
+                                        var actualFilled = !string.IsNullOrWhiteSpace(row.Actual);
+                                        var maxFilled = !string.IsNullOrWhiteSpace(row.Max);
+                                        var filledCountRow = (minFilled ? 1 : 0) + (actualFilled ? 1 : 0) + (maxFilled ? 1 : 0);
+                                        var statusText = filledCountRow == 3 ? "Terisi" : filledCountRow == 0 ? "Kosong" : "Sebagian";
+                                        var statusClass = filledCountRow == 3 ? "bg-success" : filledCountRow == 0 ? "bg-secondary" : "bg-warning text-dark";
+
+                                        <tr class="@(filledCountRow == 0 ? "table-secondary" : string.Empty)">
+                                            <td>@row.Label <small class="text-muted">(@row.PropertyBase)</small></td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@(row.PropertyBase)_Min" class="form-control form-control-sm" value="@row.Min" />
+                                                }
+                                                else
+                                                {
+                                                    @if (minFilled) { @row.Min } else { <span class="text-muted">-</span> }
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@(row.PropertyBase)_Asli" class="form-control form-control-sm" value="@row.Actual" />
+                                                }
+                                                else
+                                                {
+                                                    @if (actualFilled) { @row.Actual } else { <span class="text-muted">-</span> }
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@(row.PropertyBase)_Max" class="form-control form-control-sm" value="@row.Max" />
+                                                }
+                                                else
+                                                {
+                                                    @if (maxFilled) { @row.Max } else { <span class="text-muted">-</span> }
+                                                }
+                                            </td>
+                                            <td><span class="badge @statusClass">@statusText</span></td>
+                                            <td>
+                                                @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                                {
+                                                    <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                        <option value="">-</option>
+                                                        <option value="x">X</option>
+                                                    </select>
+                                                }
+                                                else
+                                                {
+                                                    @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked(row.Label, row.PropertyBase, $"{row.Label} ({row.PropertyBase})"))
+                                                    {
+                                                        <span class="badge bg-danger">X</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (toleranceSingleRows.Any())
+                        {
+                            <div class="table-responsive border-top" style="max-height: 220px; overflow:auto;">
+                                <table class="table table-sm table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40%;">Parameter Tambahan</th>
+                                            <th>Value</th>
+                                            <th style="width: 12%;">Validasi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var row in toleranceSingleRows)
+                                    {
+                                        <tr>
+                                            <td>@row.Label</td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @row.Value
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+                                                {
+                                                    <select class="form-select form-select-sm manual-validation-mark" aria-label="Validasi admin">
+                                                        <option value="">-</option>
+                                                        <option value="x">X</option>
+                                                    </select>
+                                                }
+                                                else
+                                                {
+                                                    @if (Model.Status == ApprovalRequestStatus.RevisionRequired && IsSupervisorMarked(row.Label))
+                                                    {
+                                                        <span class="badge bg-danger">X</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mt-3">
+                    <div class="card-header bg-dark text-white"><strong>6. Approval & Revision History</strong></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <tbody>
+                                    <tr><td style="width:35%;">Request Code</td><td>@Model.RequestCode</td></tr>
+                                    <tr><td>Action Type</td><td>@Model.ActionType</td></tr>
+                                    <tr><td>Status Request</td><td>@Model.Status</td></tr>
+                                    <tr><td>Dokumen Aktif Saat Ini</td><td>@(spsPayload.IsActive ? "Active" : "Inactive")</td></tr>
+                                    <tr><td>Revision Number</td><td>@(string.IsNullOrWhiteSpace(spsPayload.RevisionNumber) ? "-" : spsPayload.RevisionNumber)</td></tr>
+                                    <tr><td>Revision Date</td><td>@(string.IsNullOrWhiteSpace(spsPayload.RevisionDate) ? "-" : spsPayload.RevisionDate)</td></tr>
+                                    <tr><td>Dibuat</td><td>@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td></tr>
+                                    <tr><td>Direview</td><td>@(Model.ReviewedAt.HasValue ? Model.ReviewedAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "-")</td></tr>
+                                    <tr><td>Approver</td><td>@(string.IsNullOrWhiteSpace(Model.ApproverUserName) ? "-" : $"{Model.ApproverUserName} ({Model.ApproverRole})")</td></tr>
+                                    <tr><td>Komentar Approver</td><td>@(string.IsNullOrWhiteSpace(Model.ApproverComment) ? "-" : Model.ApproverComment)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                    }
+
+                    @if (canEditPayload)
+                    {
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" name="saveMode" value="update" class="btn btn-primary">Simpan Perubahan Data Diajukan</button>
+                        </div>
+                    }
+                </form>
+            }
+        </div>
+    </div>
+
+    @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
+    {
+        <div class="row g-3 mt-1">
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-success text-white">Approve</div>
                     <div class="card-body">
                         <form asp-action="Approve" method="post">
@@ -58,42 +992,43 @@
                         </form>
                     </div>
                 </div>
+            </div>
 
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-danger text-white">Reject</div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-warning text-dark">Revision Required</div>
                     <div class="card-body">
-                        <form asp-action="Reject" method="post">
+                        <form asp-action="Reject" method="post" id="revisionRequiredForm">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.Id" />
                             <div class="mb-2">
-                                <label class="form-label">Alasan Reject (wajib)</label>
-                                <textarea name="approverComment" class="form-control" rows="3" maxlength="1024" required></textarea>
+                                <label class="form-label">Catatan Revisi (wajib)</label>
+                                <textarea id="revisionRequiredComment" name="approverComment" class="form-control" rows="3" maxlength="1024" required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-danger">Reject Request</button>
+                            <button type="submit" class="btn btn-warning text-dark">Set Revision Required</button>
                         </form>
                     </div>
                 </div>
-            }
+            </div>
 
-            @if (isOwner && Model.Status == ApprovalRequestStatus.Rejected)
-            {
-                <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-header bg-warning text-dark">Submit Ulang Setelah Perbaikan</div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-danger text-white">Rejected (Final)</div>
                     <div class="card-body">
-                        <form asp-action="Resubmit" method="post">
+                        <form asp-action="FinalReject" method="post" id="finalRejectForm">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.Id" />
                             <div class="mb-2">
-                                <label class="form-label">Catatan Perbaikan (wajib)</label>
-                                <textarea name="requestComment" class="form-control" rows="3" maxlength="1024" required></textarea>
+                                <label class="form-label">Alasan Reject Final (wajib)</label>
+                                <textarea id="finalRejectComment" name="approverComment" class="form-control" rows="3" maxlength="1024" required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-warning text-dark">Kirim Ulang Request</button>
+                            <button type="submit" class="btn btn-danger">Set Rejected Final</button>
                         </form>
                     </div>
                 </div>
-            }
+            </div>
         </div>
-    </div>
+    }
 
     <div class="card shadow-sm border-0 mt-3">
         <div class="card-header bg-light">
@@ -133,3 +1068,124 @@
         </div>
     </div>
 </div>
+
+@if (spsPayload != null || itemPayload != null)
+{
+    <script>
+        (function () {
+            const toggleBtn = document.getElementById('toggleDetailPengajuanBtn');
+            const detailSection = document.getElementById('detail-pengajuan');
+            const baseLabel = '@(Model.Status == ApprovalRequestStatus.RevisionRequired ? "Revision Required" : "Detail Pengajuan")';
+            const supervisorMarkedFields = @Html.Raw(supervisorMarkedFieldListJson);
+
+            if (!toggleBtn || !detailSection) {
+                return;
+            }
+
+            toggleBtn.addEventListener('click', function () {
+                const isHidden = detailSection.classList.contains('d-none');
+                detailSection.classList.toggle('d-none');
+                toggleBtn.textContent = isHidden ? 'Sembunyikan ' + baseLabel : baseLabel;
+
+                if (isHidden) {
+                    detailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+
+            const buildManualValidationNotes = function () {
+                const failedFields = [];
+                const marks = document.querySelectorAll('.manual-validation-mark');
+
+                marks.forEach(function (mark) {
+                    if (mark.value !== 'x') {
+                        return;
+                    }
+
+                    const row = mark.closest('tr');
+                    const fieldCell = row ? row.querySelector('td') : null;
+                    const fieldName = fieldCell ? (fieldCell.innerText || '').trim() : '';
+                    if (fieldName) {
+                        failedFields.push(fieldName);
+                    }
+                });
+
+                return failedFields;
+            };
+
+            const normalizeFieldKey = function (value) {
+                return (value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            };
+
+            const normalizedSupervisorMarks = Array.isArray(supervisorMarkedFields)
+                ? supervisorMarkedFields.map(normalizeFieldKey).filter(function (item) { return item.length > 0; })
+                : [];
+
+            const shouldMarkField = function (fieldName) {
+                const normalizedField = normalizeFieldKey(fieldName);
+                if (!normalizedField) {
+                    return false;
+                }
+
+                return normalizedSupervisorMarks.some(function (marker) {
+                    return marker === normalizedField
+                        || marker.includes(normalizedField)
+                        || normalizedField.includes(marker);
+                });
+            };
+
+            const restoreManualValidationMarks = function () {
+                if (!normalizedSupervisorMarks.length) {
+                    return;
+                }
+
+                const marks = document.querySelectorAll('.manual-validation-mark');
+                marks.forEach(function (mark) {
+                    const row = mark.closest('tr');
+                    const fieldCell = row ? row.querySelector('td') : null;
+                    const fieldName = fieldCell ? (fieldCell.innerText || '').trim() : '';
+                    if (shouldMarkField(fieldName)) {
+                        mark.value = 'x';
+                    }
+                });
+            };
+
+            const wireDecisionForm = function (formId, textareaId) {
+                const form = document.getElementById(formId);
+                const textarea = document.getElementById(textareaId);
+
+                if (!form || !textarea) {
+                    return;
+                }
+
+                form.addEventListener('submit', function () {
+                    const failedFields = buildManualValidationNotes();
+                    if (failedFields.length === 0) {
+                        return;
+                    }
+
+                    const autoNotes = 'Perlu perbaikan pada field berikut:\n' + failedFields.map(function (field) {
+                        return '- ' + field;
+                    }).join('\n');
+
+                    const currentText = (textarea.value || '').trim();
+                    if (!currentText) {
+                        textarea.value = autoNotes;
+                        return;
+                    }
+
+                    if (currentText.toLowerCase().includes('perlu perbaikan pada field berikut')) {
+                        return;
+                    }
+
+                    textarea.value = currentText + '\n\n' + autoNotes;
+                });
+            };
+
+            wireDecisionForm('revisionRequiredForm', 'revisionRequiredComment');
+            wireDecisionForm('finalRejectForm', 'finalRejectComment');
+            restoreManualValidationMarks();
+        })();
+    </script>
+}
+
+

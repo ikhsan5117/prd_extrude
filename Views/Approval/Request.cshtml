@@ -22,12 +22,13 @@
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
 
                 <div class="mb-3">
-                    <label class="form-label">Pesan ke Admin (wajib)</label>
-                    <textarea class="form-control" name="requestComment" rows="4" maxlength="1024" required placeholder="Jelaskan perubahan yang diajukan dan alasan revisi..."></textarea>
+                    <label class="form-label">Pesan ke Admin (wajib saat kirim request)</label>
+                    <textarea class="form-control" name="requestComment" rows="4" maxlength="1024" placeholder="Jelaskan perubahan yang diajukan dan alasan revisi..."></textarea>
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success">Tambah Request</button>
+                    <button type="submit" class="btn btn-outline-warning" name="submitMode" value="draft">Simpan Draft</button>
+                    <button type="submit" class="btn btn-success" name="submitMode" value="submit">Tambah Request</button>
                     <a asp-action="MyRequests" class="btn btn-outline-secondary">Lihat Request Saya</a>
                 </div>
             </form>

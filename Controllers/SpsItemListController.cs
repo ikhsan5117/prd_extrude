@@ -9,6 +9,7 @@ using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Models;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using System.Security.Cryptography;
 using OfficeOpenXml;
 using VelastoProductionSystem.Services;
 using System.Text.Json;
@@ -48,8 +49,10 @@ namespace VelastoProductionSystem.Controllers
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var searchUpper = search.ToUpper();
+                var searchNormalized = NormalizeItemListCode(search).ToUpperInvariant();
                 query = query.Where(s => 
                     (s.ItemList != null && s.ItemList.ToUpper().Contains(searchUpper)) ||
+                    (s.ItemList != null && s.ItemList.Replace("-", "").ToUpper().Contains(searchNormalized)) ||
                     (s.DocumentNumber != null && s.DocumentNumber.ToUpper().Contains(searchUpper))
                 );
             }
@@ -153,22 +156,91 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: SpsItemList/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create(int? requestId)
         {
-            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs, "DocumentNumber", "DocumentNumber");
+            if (requestId.HasValue)
+            {
+                var currentUser = HttpContext.Session.GetString("UserName") ?? string.Empty;
+                var request = await _context.ApprovalRequests
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.Id == requestId.Value
+                        && r.ActionType == ApprovalActionType.SpsItemCreate
+                        && r.RequesterUserName.ToUpper() == currentUser.ToUpper()
+                        && !string.IsNullOrWhiteSpace(r.PayloadJson));
+
+                if (request != null)
+                {
+                    try
+                    {
+                        var modelFromRequest = JsonSerializer.Deserialize<SpsItemList>(request.PayloadJson!);
+                        if (modelFromRequest != null)
+                        {
+                            ViewBag.SourceRequestId = request.Id;
+                            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs.Where(s => s.IsActive || s.DocumentNumber == modelFromRequest.DocumentNumber), "DocumentNumber", "DocumentNumber", modelFromRequest.DocumentNumber);
+                            return View(modelFromRequest);
+                        }
+                    }
+                    catch
+                    {
+                        // fallback to empty form
+                    }
+                }
+            }
+
+            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs.Where(s => s.IsActive), "DocumentNumber", "DocumentNumber");
             return View();
         }
 
         // POST: SpsItemList/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,ItemList,DocumentNumber")] SpsItemList spsItemList)
+        public async Task<IActionResult> Create([Bind("Id,ItemList,DocumentNumber")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
         {
+            spsItemList.ItemList = NormalizeItemListCode(spsItemList.ItemList);
+
+            if (_approvalService.IsRequesterRole() && saveAsDraft)
+            {
+                var itemCode = spsItemList.ItemList?.Trim() ?? string.Empty;
+                var docNo = spsItemList.DocumentNumber?.Trim() ?? string.Empty;
+                var targetKey = $"{docNo}|{itemCode}";
+
+                await _approvalService.SaveDraftRequestAsync(
+                    ApprovalActionType.SpsItemCreate,
+                    targetKey,
+                    string.IsNullOrWhiteSpace(itemCode) ? "Draft create SPS ItemList" : $"Draft create SPS ItemList {itemCode}",
+                    Url.Action(nameof(Create), "SpsItemList") ?? "/SpsItemList/Create",
+                    JsonSerializer.Serialize(spsItemList),
+                    sourceRequestId);
+
+                TempData["SuccessMessage"] = "Draft Item List tersimpan. Bisa dilanjutkan kapan saja dari Approval Request Saya.";
+                return RedirectToAction("MyRequests", "Approval");
+            }
+
+            if (string.IsNullOrWhiteSpace(spsItemList.ItemList))
+            {
+                ModelState.AddModelError("ItemList", "Item List tidak boleh kosong.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(spsItemList.DocumentNumber) && !string.IsNullOrWhiteSpace(spsItemList.ItemList))
+            {
+                var normalizedInput = spsItemList.ItemList.ToUpper();
+                var duplicateExists = await _context.SpsItemLists.AnyAsync(i =>
+                    i.DocumentNumber == spsItemList.DocumentNumber &&
+                    i.ItemList != null &&
+                    i.ItemList.Replace("-", "").ToUpper() == normalizedInput);
+
+                if (duplicateExists)
+                {
+                    ModelState.AddModelError("ItemList", "Item List sudah ada pada No. Document ini.");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 if (_approvalService.IsRequesterRole())
                 {
                     var targetKey = $"{spsItemList.DocumentNumber}|{spsItemList.ItemList}";
+
                     var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemCreate, targetKey);
                     if (!allowed)
                     {
@@ -190,12 +262,12 @@ namespace VelastoProductionSystem.Controllers
                 await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsItemCreate, $"{spsItemList.DocumentNumber}|{spsItemList.ItemList}");
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs, "DocumentNumber", "DocumentNumber", spsItemList.DocumentNumber);
+            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs.Where(s => s.IsActive || s.DocumentNumber == spsItemList.DocumentNumber), "DocumentNumber", "DocumentNumber", spsItemList.DocumentNumber);
             return View(spsItemList);
         }
 
         // GET: SpsItemList/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int? id, int? requestId)
         {
             if (id == null)
             {
@@ -207,18 +279,86 @@ namespace VelastoProductionSystem.Controllers
             {
                 return NotFound();
             }
-            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs, "DocumentNumber", "DocumentNumber", spsItemList.DocumentNumber);
+
+            if (requestId.HasValue)
+            {
+                var currentUser = HttpContext.Session.GetString("UserName") ?? string.Empty;
+                var request = await _context.ApprovalRequests
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.Id == requestId.Value
+                        && r.ActionType == ApprovalActionType.SpsItemEdit
+                        && r.RequesterUserName.ToUpper() == currentUser.ToUpper()
+                        && !string.IsNullOrWhiteSpace(r.PayloadJson));
+
+                if (request != null)
+                {
+                    try
+                    {
+                        var modelFromRequest = JsonSerializer.Deserialize<SpsItemList>(request.PayloadJson!);
+                        if (modelFromRequest != null)
+                        {
+                            spsItemList.ItemList = modelFromRequest.ItemList;
+                            spsItemList.DocumentNumber = modelFromRequest.DocumentNumber;
+                            ViewBag.SourceRequestId = request.Id;
+                        }
+                    }
+                    catch
+                    {
+                        // keep original row
+                    }
+                }
+            }
+
+            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs.Where(s => s.IsActive || s.DocumentNumber == spsItemList.DocumentNumber), "DocumentNumber", "DocumentNumber", spsItemList.DocumentNumber);
             return View(spsItemList);
         }
 
         // POST: SpsItemList/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ItemList,DocumentNumber")] SpsItemList spsItemList)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ItemList,DocumentNumber")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
         {
             if (id != spsItemList.Id)
             {
                 return NotFound();
+            }
+
+            spsItemList.ItemList = NormalizeItemListCode(spsItemList.ItemList);
+
+            if (_approvalService.IsRequesterRole() && saveAsDraft)
+            {
+                var itemCode = spsItemList.ItemList?.Trim() ?? string.Empty;
+
+                await _approvalService.SaveDraftRequestAsync(
+                    ApprovalActionType.SpsItemEdit,
+                    spsItemList.Id.ToString(),
+                    string.IsNullOrWhiteSpace(itemCode) ? "Draft revisi SPS ItemList" : $"Draft revisi SPS ItemList {itemCode}",
+                    Url.Action(nameof(Edit), "SpsItemList", new { id = spsItemList.Id }) ?? $"/SpsItemList/Edit/{spsItemList.Id}",
+                    JsonSerializer.Serialize(spsItemList),
+                    sourceRequestId);
+
+                TempData["SuccessMessage"] = "Draft revisi Item List tersimpan. Bisa dilanjutkan kapan saja dari Approval Request Saya.";
+                return RedirectToAction("MyRequests", "Approval");
+            }
+
+            if (string.IsNullOrWhiteSpace(spsItemList.ItemList))
+            {
+                ModelState.AddModelError("ItemList", "Item List tidak boleh kosong.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(spsItemList.DocumentNumber) && !string.IsNullOrWhiteSpace(spsItemList.ItemList))
+            {
+                var normalizedInput = spsItemList.ItemList.ToUpper();
+                var duplicateExists = await _context.SpsItemLists.AnyAsync(i =>
+                    i.Id != spsItemList.Id &&
+                    i.DocumentNumber == spsItemList.DocumentNumber &&
+                    i.ItemList != null &&
+                    i.ItemList.Replace("-", "").ToUpper() == normalizedInput);
+
+                if (duplicateExists)
+                {
+                    ModelState.AddModelError("ItemList", "Item List sudah ada pada No. Document ini.");
+                }
             }
 
             if (ModelState.IsValid)
@@ -228,13 +368,19 @@ namespace VelastoProductionSystem.Controllers
                     if (_approvalService.IsRequesterRole())
                     {
                         var targetKey = spsItemList.Id.ToString();
+
                         var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemEdit, targetKey);
                         if (!allowed)
                         {
-                            return RedirectToApprovalRequest(
+                            await _approvalService.CreateOrReusePendingRequestAsync(
                                 ApprovalActionType.SpsItemEdit,
                                 targetKey,
-                                Url.Action(nameof(Edit), "SpsItemList", new { id = spsItemList.Id }) ?? $"/SpsItemList/Edit/{spsItemList.Id}");
+                                $"Request revisi SPS ItemList {spsItemList.ItemList}",
+                                Url.Action(nameof(Edit), "SpsItemList", new { id = spsItemList.Id }) ?? $"/SpsItemList/Edit/{spsItemList.Id}",
+                                JsonSerializer.Serialize(spsItemList));
+
+                            TempData["SuccessMessage"] = $"Request revisi Item List '{spsItemList.ItemList}' terkirim ke SUPERADMIN. Setelah disetujui, perubahan akan diterapkan.";
+                            return RedirectToAction("MyRequests", "Approval");
                         }
                     }
 
@@ -256,7 +402,7 @@ namespace VelastoProductionSystem.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs, "DocumentNumber", "DocumentNumber", spsItemList.DocumentNumber);
+            ViewData["DocumentNumber"] = new SelectList(_context.SpsNoDocs.Where(s => s.IsActive || s.DocumentNumber == spsItemList.DocumentNumber), "DocumentNumber", "DocumentNumber", spsItemList.DocumentNumber);
             return View(spsItemList);
         }
 
@@ -385,31 +531,33 @@ namespace VelastoProductionSystem.Controllers
                 return Json(new { success = false, message = "File tidak valid" });
             }
 
-            if (_approvalService.IsRequesterRole())
-            {
-                var targetKey = file.FileName;
-                var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemImportTemplate, targetKey);
-                if (!allowed)
-                {
-                    var requestUrl = Url.Action("Request", "Approval", new
-                    {
-                        actionType = ApprovalActionType.SpsItemImportTemplate,
-                        targetKey,
-                        returnUrl = Url.Action(nameof(Index), "SpsItemList")
-                    }) ?? "/Approval/Request";
-
-                    return Json(new
-                    {
-                        success = false,
-                        message = $"Import template Item List membutuhkan approval admin. <a href='{requestUrl}'>Klik di sini untuk kirim request approval</a>."
-                    });
-                }
-            }
-
             try
             {
                 using var stream = new MemoryStream();
                 await file.CopyToAsync(stream);
+                var fileApprovalKey = BuildImportApprovalKey(stream);
+
+                if (_approvalService.IsRequesterRole())
+                {
+                    var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsItemImportTemplate, fileApprovalKey);
+                    if (!allowed)
+                    {
+                        await _approvalService.CreateOrReusePendingRequestAsync(
+                            ApprovalActionType.SpsItemImportTemplate,
+                            fileApprovalKey,
+                            $"Request import Item List file '{file.FileName}'",
+                            Url.Action(nameof(Index), "SpsItemList") ?? "/SpsItemList");
+
+                        return Json(new
+                        {
+                            success = false,
+                            status = "approval_required",
+                            message = "Import ditahan. Request approval sudah dikirim ke inbox SUPERADMIN. Silakan tunggu approval sebelum import ulang file yang sama."
+                        });
+                    }
+                }
+
+                stream.Position = 0;
                 
                 using var package = new ExcelPackage(stream);
                 var worksheet = package.Workbook.Worksheets.FirstOrDefault();
@@ -422,7 +570,11 @@ namespace VelastoProductionSystem.Controllers
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
                 int importedCount = 0;
                 int errorCount = 0;
+                int duplicateCount = 0;
+                int missingDocumentCount = 0;
+                int emptyRowCount = 0;
                 var errors = new List<string>();
+                var missingDocuments = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 var header1 = worksheet.Cells[1, 1].Text?.Trim().ToUpper() ?? "";
                 var header2 = worksheet.Cells[1, 2].Text?.Trim().ToUpper() ?? "";
@@ -437,16 +589,28 @@ namespace VelastoProductionSystem.Controllers
                         var col1Value = worksheet.Cells[row, 1].Text?.Trim();
                         var col2Value = worksheet.Cells[row, 2].Text?.Trim();
 
-                        if (string.IsNullOrWhiteSpace(col1Value) || string.IsNullOrWhiteSpace(col2Value)) continue;
+                        if (string.IsNullOrWhiteSpace(col1Value) || string.IsNullOrWhiteSpace(col2Value))
+                        {
+                            emptyRowCount++;
+                            continue;
+                        }
 
-                        string itemList = isNewFormat ? col1Value : col2Value;
+                        string itemList = NormalizeItemListCode(isNewFormat ? col1Value : col2Value);
                         string documentNumber = isNewFormat ? col2Value : col1Value;
+
+                        if (string.IsNullOrWhiteSpace(itemList))
+                        {
+                            errors.Add($"Row {row}: Item List tidak valid setelah normalisasi");
+                            errorCount++;
+                            continue;
+                        }
 
                         var spsNoDoc = await _context.SpsNoDocs.FirstOrDefaultAsync(s => s.DocumentNumber == documentNumber);
                         if (spsNoDoc != null)
                         {
+                            var normalizedItem = itemList.ToUpper();
                             var existingItem = await _context.SpsItemLists
-                                .FirstOrDefaultAsync(i => i.DocumentNumber == spsNoDoc.DocumentNumber && i.ItemList == itemList);
+                                .FirstOrDefaultAsync(i => i.DocumentNumber == spsNoDoc.DocumentNumber && i.ItemList != null && i.ItemList.Replace("-", "").ToUpper() == normalizedItem);
                             
                             if (existingItem == null)
                             {
@@ -457,11 +621,17 @@ namespace VelastoProductionSystem.Controllers
                                 });
                                 importedCount++;
                             }
+                            else
+                            {
+                                duplicateCount++;
+                            }
                         }
                         else
                         {
                             errors.Add($"Row {row}: Document '{documentNumber}' tidak ditemukan");
+                            missingDocuments.Add(documentNumber);
                             errorCount++;
+                            missingDocumentCount++;
                         }
                     }
                     catch (Exception ex)
@@ -476,26 +646,69 @@ namespace VelastoProductionSystem.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsItemImportTemplate, file.FileName);
+                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsItemImportTemplate, fileApprovalKey);
+
+                if (importedCount > 0 && errorCount == 0)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        status = "success",
+                        message = $"Berhasil import {importedCount} Item List baru." +
+                                  (duplicateCount > 0 ? $" {duplicateCount} data duplikat dilewati." : "") +
+                                  (emptyRowCount > 0 ? $" {emptyRowCount} baris kosong diabaikan." : ""),
+                        imported = importedCount,
+                        duplicates = duplicateCount,
+                        errors = errorCount,
+                        emptyRows = emptyRowCount
+                    });
+                }
+
+                if (importedCount > 0 && errorCount > 0)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        status = "partial",
+                        message = $"Import selesai sebagian. Berhasil: {importedCount}, Gagal: {errorCount}." +
+                                  (missingDocumentCount > 0 ? $" {missingDocumentCount} baris gagal karena No.Doc belum terdaftar." : "") +
+                                  (duplicateCount > 0 ? $" {duplicateCount} data duplikat dilewati." : "") +
+                                  (emptyRowCount > 0 ? $" {emptyRowCount} baris kosong diabaikan." : ""),
+                        imported = importedCount,
+                        duplicates = duplicateCount,
+                        errors = errorCount,
+                        missingDocuments = missingDocuments.Take(10).ToList(),
+                        errorDetails = errors.Take(10).ToList(),
+                        emptyRows = emptyRowCount
+                    });
+                }
 
                 if (errorCount > 0)
                 {
                     return Json(new
                     {
-                        success = true,
-                        message = $"Berhasil import {importedCount} data, namun ada {errorCount} error.",
+                        success = false,
+                        status = "warning",
+                        message = $"Tidak ada data yang tersimpan. {errorCount} baris gagal diproses." +
+                                  (missingDocumentCount > 0 ? $" Penyebab utama: No.Doc belum dibuat ({missingDocumentCount} baris)." : ""),
                         imported = importedCount,
+                        duplicates = duplicateCount,
                         errors = errorCount,
-                        errorDetails = errors.Take(10).ToList()
+                        missingDocuments = missingDocuments.Take(10).ToList(),
+                        errorDetails = errors.Take(10).ToList(),
+                        emptyRows = emptyRowCount
                     });
                 }
 
                 return Json(new
                 {
-                    success = true,
-                    message = $"Berhasil import {importedCount} Item List baru!",
-                    imported = importedCount,
-                    errors = 0
+                    success = false,
+                    status = "warning",
+                    message = "Tidak ada data valid untuk diimport. Periksa kembali isi file (Item List dan No.Doc).",
+                    imported = 0,
+                    duplicates = duplicateCount,
+                    errors = 0,
+                    emptyRows = emptyRowCount
                 });
             }
             catch (Exception ex)
@@ -507,6 +720,23 @@ namespace VelastoProductionSystem.Controllers
         private bool SpsItemListExists(int id)
         {
             return _context.SpsItemLists.Any(e => e.Id == id);
+        }
+
+        private static string BuildImportApprovalKey(MemoryStream stream)
+        {
+            var bytes = stream.ToArray();
+            var hash = SHA256.HashData(bytes);
+            return $"SPS_ITEM_IMPORT:{Convert.ToHexString(hash)}";
+        }
+
+        private static string NormalizeItemListCode(string? rawItemList)
+        {
+            if (string.IsNullOrWhiteSpace(rawItemList))
+            {
+                return string.Empty;
+            }
+
+            return rawItemList.Trim().Replace("-", string.Empty);
         }
     }
 }

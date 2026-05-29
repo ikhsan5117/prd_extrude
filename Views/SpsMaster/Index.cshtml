@@ -86,6 +86,16 @@
         border-left: 4px solid #17a2b8 !important; 
         padding-left: 8px !important;
     }
+
+    .row-inactive td {
+        opacity: 0.65;
+    }
+
+    .doc-status-badge {
+        font-size: 0.65rem;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
     
     /* Strong visual separator for group start */
     .group-start {
@@ -507,6 +517,7 @@
                         <th>NO</th>
                         <th>Machine</th>
                         <th>NO. DOC</th>
+                        <th>STATUS</th>
                         <th>NO. REV</th>
                         <th>REV. DATE</th>
                         <th>FORMULASI</th>
@@ -753,21 +764,40 @@
                 <tbody>
                     @foreach (var item in Model)
                     {
-                        <tr>
-                            <td class="sticky-check"><input type="checkbox" class="row-check form-check-input" value="@item.DocumentNumber" /></td>
+                        <tr class="@(item.IsActive ? string.Empty : "row-inactive")">
+                            <td class="sticky-check"><input type="checkbox" class="row-check form-check-input" value="@item.DocumentNumber" @(item.IsActive ? null : "disabled") /></td>
                             <td class="sticky-id">
                                 <div class="d-flex gap-1">
                                     <a asp-action="Details" asp-route-documentNumber="@item.DocumentNumber" class="btn btn-info btn-xs p-1 rounded text-white" title="Lihat Detail">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-documentNumber="@item.DocumentNumber" class="btn btn-warning btn-xs p-1 rounded text-dark" title="Edit Item Ini">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
+                                    @if (item.IsActive)
+                                    {
+                                        <a asp-action="Edit" asp-route-documentNumber="@item.DocumentNumber" class="btn btn-warning btn-xs p-1 rounded text-dark" title="Edit Item Ini">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-xs p-1 rounded" title="Dokumen nonaktif tidak bisa diedit" disabled>
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                    }
                                 </div>
                             </td>
                             <td>@item.No</td>
                             <td>@item.Machine</td>
                             <td class="x-small text-white-50">@item.DocumentNumber</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success doc-status-badge">ACTIVE</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary doc-status-badge">INACTIVE</span>
+                                }
+                            </td>
                             <td>@item.RevisionNumber</td>
                             <td>@item.RevisionDate</td>
                             <td>@item.Formulasi</td>
@@ -1429,8 +1459,13 @@
                 success: function(response) {
                     $('#importItemListModal').modal('hide');
                     
+                    var status = (response.status || '').toLowerCase();
                     var iconType = response.success ? 'success' : 'error';
                     var titleText = response.success ? 'Import Berhasil!' : 'Import Gagal';
+                    if (status === 'approval_required') {
+                        iconType = 'info';
+                        titleText = 'Approval Diperlukan';
+                    }
                     
                     var errorHtml = '';
                     if (response.errorDetails && response.errorDetails.length > 0) {
@@ -1502,8 +1537,13 @@
                 contentType: false,
                 timeout: 300000, // 5 minutes timeout
                 success: function(response) {
+                    var status = (response.status || '').toLowerCase();
                     var iconType = response.success ? 'success' : 'error';
                     var titleText = response.success ? 'Upload Sps Berhasil!' : 'Upload Gagal';
+                    if (status === 'approval_required') {
+                        iconType = 'info';
+                        titleText = 'Approval Diperlukan';
+                    }
                     
                     var errorHtml = '';
                     if (response.errorDetails && response.errorDetails.length > 0) {

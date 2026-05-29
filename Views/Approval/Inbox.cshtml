@@ -13,6 +13,7 @@
                 <select class="form-select form-select-sm" name="status">
                     <option value="">Semua Status</option>
                     <option value="Pending" selected="@(filter == "Pending")">Pending</option>
+                    <option value="RevisionRequired" selected="@(filter == "RevisionRequired")">Revision Required</option>
                     <option value="Approved" selected="@(filter == "Approved")">Approved</option>
                     <option value="Rejected" selected="@(filter == "Rejected")">Rejected</option>
                     <option value="Consumed" selected="@(filter == "Consumed")">Consumed</option>
@@ -50,6 +51,10 @@
                                     @if (item.Status == ApprovalRequestStatus.Pending)
                                     {
                                         <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                    else if (item.Status == ApprovalRequestStatus.RevisionRequired)
+                                    {
+                                        <span class="badge bg-warning text-dark">Revision Required</span>
                                     }
                                     else if (item.Status == ApprovalRequestStatus.Approved)
                                     {

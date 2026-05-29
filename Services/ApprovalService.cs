@@ -3,6 +3,7 @@ using VelastoProductionSystem.Data;
 using VelastoProductionSystem.Helpers;
 using VelastoProductionSystem.Models;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace VelastoProductionSystem.Services
 {
@@ -97,6 +98,143 @@ namespace VelastoProductionSystem.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task<ApprovalRequest> SaveDraftRequestAsync(ApprovalActionType actionType, string targetKey, string? requestComment, string? returnUrl = null, string? payloadJson = null, int? sourceRequestId = null)
+        {
+            targetKey = NormalizeTargetKey(targetKey);
+            requestComment = (requestComment ?? string.Empty).Trim();
+            var now = DateTime.UtcNow;
+
+            if (sourceRequestId.HasValue)
+            {
+                var sourceRequest = await _context.ApprovalRequests
+                    .FirstOrDefaultAsync(r => r.Id == sourceRequestId.Value
+                                              && r.RequesterUserName == CurrentUserName
+                                              && r.ActionType == actionType);
+
+                if (sourceRequest != null)
+                {
+                    sourceRequest.TargetKey = targetKey;
+                    sourceRequest.RequestComment = requestComment;
+                    sourceRequest.ReturnUrl = returnUrl;
+                    if (!string.IsNullOrWhiteSpace(payloadJson))
+                    {
+                        sourceRequest.PayloadJson = payloadJson;
+                    }
+                    sourceRequest.UpdatedAt = now;
+
+                    _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
+                    {
+                        ApprovalRequestId = sourceRequest.Id,
+                        FromStatus = sourceRequest.Status,
+                        ToStatus = sourceRequest.Status,
+                        Comment = sourceRequest.Status == ApprovalRequestStatus.RevisionRequired
+                            ? "Requester updated draft revision"
+                            : "Requester updated draft",
+                        ActorUserName = CurrentUserName,
+                        ActorRole = CurrentUserRole,
+                        CreatedAt = now
+                    });
+
+                    await _context.SaveChangesAsync();
+                    return sourceRequest;
+                }
+            }
+
+            var existingDraft = await _context.ApprovalRequests
+                .FirstOrDefaultAsync(r => r.RequesterUserName == CurrentUserName
+                                          && r.ActionType == actionType
+                                          && r.TargetKey == targetKey
+                                          && r.Status == ApprovalRequestStatus.Draft);
+
+            if (existingDraft != null)
+            {
+                existingDraft.RequestComment = requestComment;
+                existingDraft.ReturnUrl = returnUrl;
+                if (!string.IsNullOrWhiteSpace(payloadJson))
+                {
+                    existingDraft.PayloadJson = payloadJson;
+                }
+                existingDraft.UpdatedAt = now;
+
+                _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
+                {
+                    ApprovalRequestId = existingDraft.Id,
+                    FromStatus = ApprovalRequestStatus.Draft,
+                    ToStatus = ApprovalRequestStatus.Draft,
+                    Comment = "Requester updated draft",
+                    ActorUserName = CurrentUserName,
+                    ActorRole = CurrentUserRole,
+                    CreatedAt = now
+                });
+
+                await _context.SaveChangesAsync();
+                return existingDraft;
+            }
+
+            var existingRevisionRequired = await _context.ApprovalRequests
+                .FirstOrDefaultAsync(r => r.RequesterUserName == CurrentUserName
+                                          && r.ActionType == actionType
+                                          && r.TargetKey == targetKey
+                                          && r.Status == ApprovalRequestStatus.RevisionRequired);
+
+            if (existingRevisionRequired != null)
+            {
+                existingRevisionRequired.RequestComment = requestComment;
+                existingRevisionRequired.ReturnUrl = returnUrl;
+                if (!string.IsNullOrWhiteSpace(payloadJson))
+                {
+                    existingRevisionRequired.PayloadJson = payloadJson;
+                }
+                existingRevisionRequired.UpdatedAt = now;
+
+                _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
+                {
+                    ApprovalRequestId = existingRevisionRequired.Id,
+                    FromStatus = ApprovalRequestStatus.RevisionRequired,
+                    ToStatus = ApprovalRequestStatus.RevisionRequired,
+                    Comment = "Requester updated revision draft",
+                    ActorUserName = CurrentUserName,
+                    ActorRole = CurrentUserRole,
+                    CreatedAt = now
+                });
+
+                await _context.SaveChangesAsync();
+                return existingRevisionRequired;
+            }
+
+            var request = new ApprovalRequest
+            {
+                RequestCode = $"APR-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
+                ActionType = actionType,
+                TargetKey = targetKey,
+                RequestComment = requestComment,
+                ReturnUrl = returnUrl,
+                PayloadJson = payloadJson,
+                RequesterUserName = CurrentUserName,
+                RequesterRole = CurrentUserRole,
+                Status = ApprovalRequestStatus.Draft,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            _context.ApprovalRequests.Add(request);
+            await _context.SaveChangesAsync();
+
+            _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
+            {
+                ApprovalRequestId = request.Id,
+                FromStatus = null,
+                ToStatus = ApprovalRequestStatus.Draft,
+                Comment = string.IsNullOrWhiteSpace(requestComment) ? "Draft disimpan" : requestComment,
+                ActorUserName = CurrentUserName,
+                ActorRole = CurrentUserRole,
+                CreatedAt = now
+            });
+
+            await _context.SaveChangesAsync();
+            return request;
+        }
+
         public async Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null, string? payloadJson = null)
         {
             targetKey = NormalizeTargetKey(targetKey);
@@ -134,6 +272,45 @@ namespace VelastoProductionSystem.Services
                 }
 
                 return existingPending;
+            }
+
+            var existingDraft = await _context.ApprovalRequests
+                .FirstOrDefaultAsync(r => r.RequesterUserName == CurrentUserName
+                                          && r.ActionType == actionType
+                                          && r.TargetKey == targetKey
+                                          && r.Status == ApprovalRequestStatus.Draft);
+
+            if (existingDraft != null)
+            {
+                var previousStatus = existingDraft.Status;
+                existingDraft.Status = ApprovalRequestStatus.Pending;
+                existingDraft.RequestComment = requestComment;
+                existingDraft.ReturnUrl = returnUrl;
+                if (!string.IsNullOrWhiteSpace(payloadJson))
+                {
+                    existingDraft.PayloadJson = payloadJson;
+                }
+                existingDraft.UpdatedAt = now;
+                existingDraft.ApproverComment = null;
+                existingDraft.ApproverRole = null;
+                existingDraft.ApproverUserName = null;
+                existingDraft.ReviewedAt = null;
+                existingDraft.ApprovalToken = null;
+                existingDraft.TokenExpiresAt = null;
+
+                _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
+                {
+                    ApprovalRequestId = existingDraft.Id,
+                    FromStatus = previousStatus,
+                    ToStatus = ApprovalRequestStatus.Pending,
+                    Comment = string.IsNullOrWhiteSpace(requestComment) ? "Requester submit draft" : requestComment,
+                    ActorUserName = CurrentUserName,
+                    ActorRole = CurrentUserRole,
+                    CreatedAt = now
+                });
+
+                await _context.SaveChangesAsync();
+                return existingDraft;
             }
 
             var request = new ApprovalRequest
@@ -180,7 +357,9 @@ namespace VelastoProductionSystem.Services
 
         public async Task<List<ApprovalRequest>> GetInboxAsync(string? status = null)
         {
-            var query = _context.ApprovalRequests.AsNoTracking();
+            var query = _context.ApprovalRequests
+                .AsNoTracking()
+                .Where(x => x.Status != ApprovalRequestStatus.Draft);
 
             if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ApprovalRequestStatus>(status, true, out var parsedStatus))
             {
@@ -215,7 +394,7 @@ namespace VelastoProductionSystem.Services
             return await _context.ApprovalRequests
                 .AsNoTracking()
                 .CountAsync(r => r.RequesterUserName == CurrentUserName &&
-                                 (r.Status == ApprovalRequestStatus.Pending || r.Status == ApprovalRequestStatus.Rejected));
+                                 (r.Status == ApprovalRequestStatus.Draft || r.Status == ApprovalRequestStatus.Pending || r.Status == ApprovalRequestStatus.RevisionRequired));
         }
 
         public async Task<ApprovalRequest?> GetByIdAsync(int id)
@@ -299,8 +478,69 @@ namespace VelastoProductionSystem.Services
                             return $"Dokumen '{model.DocumentNumber}' sudah ada, create dilewati.";
                         }
 
-                        _context.SpsNoDocs.Add(SpsMapper.ToSpsNoDoc(model));
+                        var createdDoc = SpsMapper.ToSpsNoDoc(model);
+                        createdDoc.IsActive = true;
+                        _context.SpsNoDocs.Add(createdDoc);
                         return $"Dokumen '{model.DocumentNumber}' berhasil dibuat otomatis dari request.";
+                    }
+                case ApprovalActionType.SpsDocumentEdit:
+                    {
+                        var model = JsonSerializer.Deserialize<SpsMaster>(request.PayloadJson);
+                        if (model == null || string.IsNullOrWhiteSpace(model.DocumentNumber))
+                        {
+                            return "Payload revisi SPS document tidak valid.";
+                        }
+
+                        var targetKey = (request.TargetKey ?? model.DocumentNumber).Trim();
+                        if (string.IsNullOrWhiteSpace(targetKey))
+                        {
+                            return "Target dokumen revisi tidak valid.";
+                        }
+
+                        var sourceDoc = await _context.SpsNoDocs
+                            .Include(s => s.ItemLists)
+                            .FirstOrDefaultAsync(s => s.DocumentNumber.ToUpper() == targetKey.ToUpper());
+
+                        if (sourceDoc == null)
+                        {
+                            return $"Dokumen sumber '{targetKey}' tidak ditemukan, revisi dilewati.";
+                        }
+
+                        var nextDocumentNumber = await GenerateNextRevisionDocumentNumberAsync(sourceDoc.DocumentNumber);
+                        if (await _context.SpsNoDocs.AnyAsync(s => s.DocumentNumber == nextDocumentNumber))
+                        {
+                            return $"Dokumen revisi '{nextDocumentNumber}' sudah ada, revisi dilewati.";
+                        }
+
+                        var revisedDoc = SpsMapper.ToSpsNoDoc(model);
+                        revisedDoc.DocumentNumber = nextDocumentNumber;
+                        revisedDoc.IsActive = true;
+
+                        var revisionNo = ExtractRevisionNumber(nextDocumentNumber);
+                        if (revisionNo.HasValue)
+                        {
+                            revisedDoc.RevisionNumber = revisionNo.Value.ToString();
+                        }
+
+                        sourceDoc.IsActive = false;
+                        _context.SpsNoDocs.Add(revisedDoc);
+
+                        var itemLists = sourceDoc.ItemLists
+                            .Where(i => !string.IsNullOrWhiteSpace(i.ItemList))
+                            .Select(i => i.ItemList!.Trim())
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .ToList();
+
+                        foreach (var itemList in itemLists)
+                        {
+                            _context.SpsItemLists.Add(new SpsItemList
+                            {
+                                DocumentNumber = nextDocumentNumber,
+                                ItemList = itemList
+                            });
+                        }
+
+                        return $"Revisi berhasil: '{sourceDoc.DocumentNumber}' dinonaktifkan, dokumen aktif baru '{nextDocumentNumber}' dibuat otomatis.";
                     }
                 case ApprovalActionType.SpsItemCreate:
                     {
@@ -332,12 +572,12 @@ namespace VelastoProductionSystem.Services
         {
             if (!IsApproverRole())
             {
-                return (false, "Anda tidak memiliki akses untuk reject.");
+                return (false, "Anda tidak memiliki akses untuk meminta revisi.");
             }
 
             if (string.IsNullOrWhiteSpace(comment))
             {
-                return (false, "Komentar reject wajib diisi.");
+                return (false, "Catatan revisi wajib diisi.");
             }
 
             var request = await _context.ApprovalRequests.FirstOrDefaultAsync(r => r.Id == id);
@@ -348,7 +588,56 @@ namespace VelastoProductionSystem.Services
 
             if (request.Status != ApprovalRequestStatus.Pending)
             {
-                return (false, "Hanya request Pending yang bisa di-reject.");
+                return (false, "Hanya request Pending yang bisa diberi status Revision Required.");
+            }
+
+            var now = DateTime.UtcNow;
+            var previousStatus = request.Status;
+            request.Status = ApprovalRequestStatus.RevisionRequired;
+            request.ApproverUserName = CurrentUserName;
+            request.ApproverRole = CurrentUserRole;
+            request.ApproverComment = comment.Trim();
+            request.ReviewedAt = now;
+            request.UpdatedAt = now;
+            request.ApprovalToken = null;
+            request.TokenExpiresAt = null;
+
+            _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
+            {
+                ApprovalRequestId = request.Id,
+                FromStatus = previousStatus,
+                ToStatus = ApprovalRequestStatus.RevisionRequired,
+                Comment = request.ApproverComment,
+                ActorUserName = CurrentUserName,
+                ActorRole = CurrentUserRole,
+                CreatedAt = now
+            });
+
+            await _context.SaveChangesAsync();
+            return (true, "Request ditandai Revision Required.");
+        }
+
+        public async Task<(bool ok, string message)> FinalRejectAsync(int id, string? comment)
+        {
+            if (!IsApproverRole())
+            {
+                return (false, "Anda tidak memiliki akses untuk reject final.");
+            }
+
+            if (string.IsNullOrWhiteSpace(comment))
+            {
+                return (false, "Alasan reject wajib diisi.");
+            }
+
+            var request = await _context.ApprovalRequests.FirstOrDefaultAsync(r => r.Id == id);
+            if (request == null)
+            {
+                return (false, "Request approval tidak ditemukan.");
+            }
+
+            if (request.Status != ApprovalRequestStatus.Pending)
+            {
+                return (false, "Hanya request Pending yang bisa di-reject final.");
             }
 
             var now = DateTime.UtcNow;
@@ -374,19 +663,19 @@ namespace VelastoProductionSystem.Services
             });
 
             await _context.SaveChangesAsync();
-            return (true, "Request berhasil di-reject.");
+            return (true, "Request berhasil di-reject final.");
         }
 
         public async Task<(bool ok, string message)> ResubmitAsync(int id, string comment)
         {
             if (!IsRequesterRole())
             {
-                return (false, "Hanya requester yang bisa submit ulang.");
+                return (false, "Hanya requester yang bisa kirim ulang request revisi.");
             }
 
             if (string.IsNullOrWhiteSpace(comment))
             {
-                return (false, "Komentar perbaikan wajib diisi.");
+                return (false, "Catatan perbaikan wajib diisi.");
             }
 
             var request = await _context.ApprovalRequests.FirstOrDefaultAsync(r => r.Id == id);
@@ -397,21 +686,18 @@ namespace VelastoProductionSystem.Services
 
             if (!string.Equals(request.RequesterUserName, CurrentUserName, StringComparison.OrdinalIgnoreCase))
             {
-                return (false, "Anda tidak bisa submit ulang request milik user lain.");
+                return (false, "Anda tidak bisa kirim ulang request milik user lain.");
             }
 
-            if (request.Status != ApprovalRequestStatus.Rejected)
+            if (request.Status != ApprovalRequestStatus.RevisionRequired)
             {
-                return (false, "Hanya request Rejected yang bisa submit ulang.");
+                return (false, "Hanya request dengan status Revision Required yang bisa dikirim ulang.");
             }
 
             var now = DateTime.UtcNow;
             var previousStatus = request.Status;
             request.Status = ApprovalRequestStatus.Pending;
             request.RequestComment = comment.Trim();
-            request.ApproverComment = null;
-            request.ApproverRole = null;
-            request.ApproverUserName = null;
             request.ReviewedAt = null;
             request.UpdatedAt = now;
             request.ApprovalToken = null;
@@ -429,7 +715,7 @@ namespace VelastoProductionSystem.Services
             });
 
             await _context.SaveChangesAsync();
-            return (true, "Request berhasil dikirim ulang ke admin.");
+            return (true, "Perbaikan berhasil dikirim ulang ke admin.");
         }
 
         private static string NormalizeTargetKey(string targetKey)
@@ -440,6 +726,60 @@ namespace VelastoProductionSystem.Services
             }
 
             return targetKey.Trim().ToUpperInvariant();
+        }
+
+        private async Task<string> GenerateNextRevisionDocumentNumberAsync(string sourceDocumentNumber)
+        {
+            var baseDocument = ExtractBaseDocumentNumber(sourceDocumentNumber);
+            var basePrefix = baseDocument + "/";
+
+            var candidates = await _context.SpsNoDocs
+                .AsNoTracking()
+                .Where(s => s.DocumentNumber == baseDocument || s.DocumentNumber.StartsWith(basePrefix))
+                .Select(s => s.DocumentNumber)
+                .ToListAsync();
+
+            var maxRevision = 0;
+            foreach (var candidate in candidates)
+            {
+                var parsedRevision = ExtractRevisionNumber(candidate);
+                if (parsedRevision.HasValue && parsedRevision.Value > maxRevision)
+                {
+                    maxRevision = parsedRevision.Value;
+                }
+            }
+
+            return $"{baseDocument}/{maxRevision + 1}";
+        }
+
+        private static string ExtractBaseDocumentNumber(string documentNumber)
+        {
+            if (string.IsNullOrWhiteSpace(documentNumber))
+            {
+                return string.Empty;
+            }
+
+            var trimmed = documentNumber.Trim();
+            var match = Regex.Match(trimmed, @"^(.*?)/(\d+)$");
+            return match.Success ? match.Groups[1].Value : trimmed;
+        }
+
+        private static int? ExtractRevisionNumber(string documentNumber)
+        {
+            if (string.IsNullOrWhiteSpace(documentNumber))
+            {
+                return null;
+            }
+
+            var match = Regex.Match(documentNumber.Trim(), @"/(\d+)$");
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            return int.TryParse(match.Groups[1].Value, out var revisionNumber)
+                ? revisionNumber
+                : null;
         }
     }
 }

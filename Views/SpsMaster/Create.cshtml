@@ -2,6 +2,11 @@
 
 @{
     ViewData["Title"] = "Tambah Master SPS";
+    var returnUrl = Context.Request.Query["returnUrl"].ToString();
+    if (string.IsNullOrWhiteSpace(returnUrl) || !Url.IsLocalUrl(returnUrl))
+    {
+        returnUrl = Url.Action("Index", "SpsMaster") ?? "/SpsMaster";
+    }
 }
 
 <style>
@@ -58,7 +63,7 @@
                         <h4 class="mb-0">
                             <i class="bi bi-plus-circle-fill me-2"></i>Tambah Master SPS Baru
                         </h4>
-                        <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                        <a href="@returnUrl" class="btn btn-sm btn-outline-light">
                             <i class="bi bi-arrow-left me-1"></i>Kembali
                         </a>
                     </div>
@@ -81,6 +86,7 @@
                     </div>
 
                     <form asp-action="Create" method="post" id="createForm">
+                        <input type="hidden" name="sourceRequestId" value="@ViewBag.SourceRequestId" />
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
                         
                         <!-- ACCORDION SECTIONS -->
@@ -1336,8 +1342,11 @@
                                 }
                                 else
                                 {
+                                    <button type="submit" class="btn btn-outline-warning btn-lg px-5" name="saveAsDraft" value="true">
+                                        <i class="bi bi-save2 me-2"></i>SIMPAN DRAFT
+                                    </button>
                                     <button type="submit" class="btn btn-success btn-lg px-5">
-                                        <i class="bi bi-send me-2"></i>REQUEST DATA
+                                        <i class="bi bi-send me-2"></i>APPROVAL REQUEST
                                     </button>
                                 }
                                 <a asp-action="Index" class="btn btn-secondary btn-lg px-5">
@@ -1376,6 +1385,11 @@
 
         // Form validation
         $('#createForm').on('submit', function(e) {
+            const submitter = e.originalEvent?.submitter;
+            if (submitter?.name === 'saveAsDraft' && submitter?.value === 'true') {
+                return true;
+            }
+
             const machine = $('[name="Machine"]').val();
             
             if (!machine) {

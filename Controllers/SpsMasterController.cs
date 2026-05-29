@@ -9,6 +9,7 @@ using System.Reflection;
 using System.ComponentModel.DataAnnotations;
 using VelastoProductionSystem.Services;
 using System.Text.Json;
+using System.Security.Cryptography;
 
 namespace VelastoProductionSystem.Controllers
 {
@@ -25,17 +26,6 @@ namespace VelastoProductionSystem.Controllers
             _approvalService = approvalService;
             
             // EPPlus license sudah di-set secara global di Program.cs
-        }
-
-        private IActionResult RedirectToApprovalRequest(ApprovalActionType actionType, string targetKey, string returnUrl)
-        {
-            TempData["ErrorMessage"] = "Aksi ini membutuhkan approval admin. Kirim request approval terlebih dahulu.";
-            return RedirectToAction("Request", "Approval", new
-            {
-                actionType,
-                targetKey,
-                returnUrl
-            });
         }
 
         // ==================== HELPER METHOD: PARSE ± FORMAT ====================
@@ -213,7 +203,8 @@ namespace VelastoProductionSystem.Controllers
             }
 
             var spsNoDocs = await query
-                .OrderBy(s => s.DocumentNumber)
+                .OrderByDescending(s => s.IsActive)
+                .ThenBy(s => s.DocumentNumber)
                 .ToListAsync();
 
             var expandedData = new List<SpsMaster>();
@@ -276,14 +267,42 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(int? requestId)
         {
+            if (requestId.HasValue)
+            {
+                var currentUser = HttpContext.Session.GetString("UserName") ?? string.Empty;
+                var request = await _context.ApprovalRequests
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.Id == requestId.Value
+                        && r.ActionType == ApprovalActionType.SpsDocumentCreate
+                        && r.RequesterUserName.ToUpper() == currentUser.ToUpper()
+                        && !string.IsNullOrWhiteSpace(r.PayloadJson));
+
+                if (request != null)
+                {
+                    try
+                    {
+                        var modelFromRequest = JsonSerializer.Deserialize<SpsMaster>(request.PayloadJson!);
+                        if (modelFromRequest != null)
+                        {
+                            ViewBag.SourceRequestId = request.Id;
+                            return View(modelFromRequest);
+                        }
+                    }
+                    catch
+                    {
+                        // Fallback to empty model if payload is not readable.
+                    }
+                }
+            }
+
             return View(new SpsMaster());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(SpsMaster model)
+        public async Task<IActionResult> Create(SpsMaster model, bool saveAsDraft = false, int? sourceRequestId = null)
         {
             try
             {
@@ -297,6 +316,21 @@ namespace VelastoProductionSystem.Controllers
                 if (_approvalService.IsRequesterRole())
                 {
                     var targetKey = model.DocumentNumber;
+
+                    if (saveAsDraft)
+                    {
+                        await _approvalService.SaveDraftRequestAsync(
+                            ApprovalActionType.SpsDocumentCreate,
+                            targetKey,
+                            $"Draft create SPS Document {model.DocumentNumber}",
+                            Url.Action(nameof(Create), "SpsMaster") ?? "/SpsMaster/Create",
+                            JsonSerializer.Serialize(model),
+                            sourceRequestId);
+
+                        TempData["SuccessMessage"] = $"Draft SPS Document '{model.DocumentNumber}' tersimpan. Bisa dilanjutkan kapan saja dari Approval Request Saya.";
+                        return RedirectToAction("MyRequests", "Approval");
+                    }
+
                     var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsDocumentCreate, targetKey);
                     if (!allowed)
                     {
@@ -339,7 +373,7 @@ namespace VelastoProductionSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(string? documentNumber)
+        public async Task<IActionResult> Edit(string? documentNumber, int? requestId)
         {
             if (string.IsNullOrWhiteSpace(documentNumber)) return NotFound();
 
@@ -352,12 +386,41 @@ namespace VelastoProductionSystem.Controllers
             // Convert to SpsMaster view model
             var model = SpsMapper.ToSpsMaster(spsNoDoc);
 
+            if (requestId.HasValue)
+            {
+                var currentUser = HttpContext.Session.GetString("UserName") ?? string.Empty;
+                var request = await _context.ApprovalRequests
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.Id == requestId.Value
+                        && r.ActionType == ApprovalActionType.SpsDocumentEdit
+                        && r.RequesterUserName.ToUpper() == currentUser.ToUpper()
+                        && !string.IsNullOrWhiteSpace(r.PayloadJson));
+
+                if (request != null)
+                {
+                    try
+                    {
+                        var modelFromRequest = JsonSerializer.Deserialize<SpsMaster>(request.PayloadJson!);
+                        if (modelFromRequest != null)
+                        {
+                            model = modelFromRequest;
+                            model.DocumentNumber = documentNumber;
+                            ViewBag.SourceRequestId = request.Id;
+                        }
+                    }
+                    catch
+                    {
+                        // Keep existing DB model if payload is not readable.
+                    }
+                }
+            }
+
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string documentNumber, SpsMaster model, bool UpdateAllWithSameDocNumber = false)
+        public async Task<IActionResult> Edit(string documentNumber, SpsMaster model, bool UpdateAllWithSameDocNumber = false, bool saveAsDraft = false, int? sourceRequestId = null)
         {
             if (documentNumber != model.DocumentNumber)
             {
@@ -368,14 +431,29 @@ namespace VelastoProductionSystem.Controllers
             {
                 if (_approvalService.IsRequesterRole())
                 {
-                    var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsDocumentEdit, documentNumber);
-                    if (!allowed)
+                    if (saveAsDraft)
                     {
-                        return RedirectToApprovalRequest(
+                        await _approvalService.SaveDraftRequestAsync(
                             ApprovalActionType.SpsDocumentEdit,
                             documentNumber,
-                            Url.Action(nameof(Edit), "SpsMaster", new { documentNumber }) ?? $"/SpsMaster/Edit/{documentNumber}");
+                            $"Draft revisi SPS Document {documentNumber}",
+                            Url.Action(nameof(Edit), "SpsMaster", new { documentNumber }) ?? $"/SpsMaster/Edit/{documentNumber}",
+                            JsonSerializer.Serialize(model),
+                            sourceRequestId);
+
+                        TempData["SuccessMessage"] = $"Draft revisi dokumen '{documentNumber}' tersimpan. Bisa dilanjutkan kapan saja dari Approval Request Saya.";
+                        return RedirectToAction("MyRequests", "Approval");
                     }
+
+                    await _approvalService.CreateOrReusePendingRequestAsync(
+                        ApprovalActionType.SpsDocumentEdit,
+                        documentNumber,
+                        $"Request revisi SPS Document {documentNumber}",
+                        Url.Action(nameof(Edit), "SpsMaster", new { documentNumber }) ?? $"/SpsMaster/Edit/{documentNumber}",
+                        JsonSerializer.Serialize(model));
+
+                    TempData["SuccessMessage"] = $"Request revisi dokumen '{documentNumber}' terkirim ke SUPERADMIN. Setelah disetujui, versi baru akan dibuat otomatis.";
+                    return RedirectToAction("MyRequests", "Approval");
                 }
 
                 var spsNoDoc = await _context.SpsNoDocs
@@ -445,7 +523,7 @@ namespace VelastoProductionSystem.Controllers
 
             var termUpper = term.ToUpper();
             var docs = await _context.SpsNoDocs
-                .Where(s => s.DocumentNumber != null && s.DocumentNumber.ToUpper().Contains(termUpper))
+                .Where(s => s.IsActive && s.DocumentNumber != null && s.DocumentNumber.ToUpper().Contains(termUpper))
                 .Select(s => s.DocumentNumber)
                 .Distinct()
                 .Take(20)
@@ -896,31 +974,33 @@ namespace VelastoProductionSystem.Controllers
                 return Json(new { success = false, message = "File tidak valid" });
             }
 
-            if (_approvalService.IsRequesterRole())
-            {
-                var targetKey = file.FileName;
-                var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsImportTemplate, targetKey);
-                if (!allowed)
-                {
-                    var requestUrl = Url.Action("Request", "Approval", new
-                    {
-                        actionType = ApprovalActionType.SpsImportTemplate,
-                        targetKey,
-                        returnUrl = Url.Action(nameof(Index), "SpsMaster")
-                    }) ?? "/Approval/Request";
-
-                    return Json(new
-                    {
-                        success = false,
-                        message = $"Import template SPS membutuhkan approval admin. <a href='{requestUrl}'>Klik di sini untuk kirim request approval</a>."
-                    });
-                }
-            }
-
             try
             {
                 using var stream = new MemoryStream();
                 await file.CopyToAsync(stream);
+                var fileApprovalKey = BuildImportApprovalKey(stream);
+
+                if (_approvalService.IsRequesterRole())
+                {
+                    var allowed = await _approvalService.HasConsumableApprovalAsync(ApprovalActionType.SpsImportTemplate, fileApprovalKey);
+                    if (!allowed)
+                    {
+                        await _approvalService.CreateOrReusePendingRequestAsync(
+                            ApprovalActionType.SpsImportTemplate,
+                            fileApprovalKey,
+                            $"Request import SPS template file '{file.FileName}'",
+                            Url.Action(nameof(Index), "SpsMaster") ?? "/SpsMaster");
+
+                        return Json(new
+                        {
+                            success = false,
+                            status = "approval_required",
+                            message = "Import ditahan. Request approval sudah dikirim ke inbox SUPERADMIN. Silakan tunggu approval sebelum import ulang file yang sama."
+                        });
+                    }
+                }
+
+                stream.Position = 0;
                 
                 using var package = new ExcelPackage(stream);
                 
@@ -2444,7 +2524,7 @@ namespace VelastoProductionSystem.Controllers
                     TempData["WarningMessage"] = $"⚠ {errorCount} error: {string.Join(", ", errors.Take(3))}";
                 }
 
-                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsImportTemplate, file.FileName);
+                await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsImportTemplate, fileApprovalKey);
                 
                 return Json(new
                 {
@@ -2521,6 +2601,13 @@ namespace VelastoProductionSystem.Controllers
                 _logger.LogError(ex, "Error generating empty template");
                 return BadRequest($"Error: {ex.Message}");
             }
+        }
+
+        private static string BuildImportApprovalKey(MemoryStream stream)
+        {
+            var bytes = stream.ToArray();
+            var hash = SHA256.HashData(bytes);
+            return $"SPS_DOC_IMPORT:{Convert.ToHexString(hash)}";
         }
 
         /// <summary>

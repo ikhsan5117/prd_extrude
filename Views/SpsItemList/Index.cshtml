@@ -78,7 +78,7 @@
                             </td>
                             <td>@rowNo</td>
                             <td>
-                                <span class="badge bg-info text-dark fw-bold fs-6">@item.ItemList</span>
+                                <span class="badge bg-info text-dark fw-bold fs-6">@(item.ItemList?.Replace("-", "") ?? "")</span>
                             </td>
                             <td>
                                 @Html.DisplayFor(modelItem => item.DocumentNumber)
@@ -150,7 +150,7 @@
                                 <strong class="text-warning d-block mb-2">Logika Import:</strong>
                                 <ul class="mb-0 text-white" style="font-size: 0.85rem;">
                                     <li><strong>Jika NO.DOC SUDAH ADA:</strong> Item akan ditambahkan ke dokumen tersebut</li>
-                                    <li><strong>Jika NO.DOC BELUM ADA:</strong> Dokumen baru akan dibuat dengan parameter default</li>
+                                    <li><strong>Jika NO.DOC BELUM ADA:</strong> Baris akan gagal diimport dan ditampilkan di detail popup hasil</li>
                                 </ul>
                             </div>
                         </div>
@@ -183,8 +183,8 @@
                              <span class="badge bg-warning bg-opacity-75 text-dark">
                                  <i class="bi bi-lightning-fill me-1"></i>Import Cepat
                              </span>
-                             <span class="badge bg-success bg-opacity-75">
-                                 <i class="bi bi-check-circle me-1"></i>Auto-create dokumen
+                             <span class="badge bg-danger bg-opacity-75">
+                                 <i class="bi bi-exclamation-triangle me-1"></i>No.Doc wajib terdaftar
                              </span>
                              <span class="badge bg-info bg-opacity-75">
                                  <i class="bi bi-shield-check me-1"></i>Skip duplikat
@@ -403,25 +403,55 @@
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            html: response.message,
-                            background: '#1a1d21',
-                            color: '#fff'
-                        }).then((result) => {
-                            window.location.reload();
-                        });
+                    const status = (response.status || '').toLowerCase();
+                    let icon = 'info';
+                    let title = 'Informasi';
+
+                    if (status === 'success') {
+                        icon = 'success';
+                        title = 'Berhasil!';
+                    } else if (status === 'partial') {
+                        icon = 'warning';
+                        title = 'Sebagian Berhasil';
+                    } else if (status === 'approval_required') {
+                        icon = 'info';
+                        title = 'Approval Diperlukan';
+                    } else if (status === 'warning') {
+                        icon = 'warning';
+                        title = 'Tidak Ada Data Tersimpan';
+                    } else if (response.success) {
+                        icon = 'success';
+                        title = 'Berhasil!';
                     } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Oops...',
-                            html: response.message,
-                            background: '#1a1d21',
-                            color: '#fff'
-                        });
+                        icon = 'error';
+                        title = 'Gagal Import';
                     }
+
+                    let detailHtml = '';
+
+                    if (response.missingDocuments && response.missingDocuments.length > 0) {
+                        detailHtml += '<div class="mt-2 text-start"><strong>No.Doc belum dibuat:</strong><ul class="mb-0">' +
+                            response.missingDocuments.map(doc => '<li>' + doc + '</li>').join('') +
+                            '</ul></div>';
+                    }
+
+                    if (response.errorDetails && response.errorDetails.length > 0) {
+                        detailHtml += '<div class="mt-2 text-start"><strong>Detail error (maks 10):</strong><ul class="mb-0">' +
+                            response.errorDetails.map(err => '<li>' + err + '</li>').join('') +
+                            '</ul></div>';
+                    }
+
+                    Swal.fire({
+                        icon: icon,
+                        title: title,
+                        html: '<div class="text-start">' + (response.message || 'Proses selesai.') + '</div>' + detailHtml,
+                        background: '#1a1d21',
+                        color: '#fff'
+                    }).then(() => {
+                        if (response.success) {
+                            window.location.reload();
+                        }
+                    });
                 },
                 error: function() {
                     Swal.fire({

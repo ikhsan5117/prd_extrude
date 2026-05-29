@@ -71,6 +71,7 @@ using (var scope = app.Services.CreateScope())
         }
 
         EnsureApprovalWorkflowObjects(context);
+        EnsureSpsDocumentActivationColumn(context);
 
         DataSeeder.SeedData(context, elwpContext);
     }
@@ -203,6 +204,36 @@ CREATE INDEX IF NOT EXISTS IX_ApprovalRequests_RequesterUserName_Status ON Appro
 CREATE INDEX IF NOT EXISTS IX_ApprovalRequests_ActionType_TargetKey_RequesterUserName_Status ON ApprovalRequests(ActionType, TargetKey, RequesterUserName, Status);
 CREATE INDEX IF NOT EXISTS IX_ApprovalRequestLogs_ApprovalRequestId ON ApprovalRequestLogs(ApprovalRequestId);
 ");
+    }
+}
+
+static void EnsureSpsDocumentActivationColumn(ApplicationDbContext context)
+{
+    var provider = context.Database.ProviderName ?? string.Empty;
+
+    if (provider.Contains("SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Database.ExecuteSqlRaw(@"
+IF COL_LENGTH(N'[dbo].[SpsNoDocs]', N'IsActive') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[SpsNoDocs]
+    ADD [IsActive] BIT NOT NULL CONSTRAINT [DF_SpsNoDocs_IsActive] DEFAULT(1) WITH VALUES;
+END;
+");
+
+        return;
+    }
+
+    if (provider.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        try
+        {
+            context.Database.ExecuteSqlRaw("ALTER TABLE SpsNoDocs ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;");
+        }
+        catch (Exception ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+        {
+            // Column already exists; no action needed.
+        }
     }
 }
 
