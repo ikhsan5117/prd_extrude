@@ -10,7 +10,9 @@
     var isOwner = string.Equals(Context.Session.GetString("UserName"), Model.RequesterUserName, StringComparison.OrdinalIgnoreCase);
 
     SpsMaster? spsPayload = null;
+    SpsMaster? beforeSpsPayload = null;
     SpsItemList? itemPayload = null;
+    SpsItemList? beforeItemPayload = null;
     var payloadKind = string.Empty;
     var payloadError = string.Empty;
 
@@ -128,6 +130,35 @@
             payloadError = ex.Message;
         }
     }
+
+    var beforeSpsPayloadJson = ViewBag.BeforeSpsPayloadJson as string;
+    if (!string.IsNullOrWhiteSpace(beforeSpsPayloadJson))
+    {
+        try
+        {
+            beforeSpsPayload = JsonSerializer.Deserialize<SpsMaster>(beforeSpsPayloadJson);
+        }
+        catch
+        {
+            beforeSpsPayload = null;
+        }
+    }
+
+    var beforeItemPayloadJson = ViewBag.BeforeItemPayloadJson as string;
+    if (!string.IsNullOrWhiteSpace(beforeItemPayloadJson))
+    {
+        try
+        {
+            beforeItemPayload = JsonSerializer.Deserialize<SpsItemList>(beforeItemPayloadJson);
+        }
+        catch
+        {
+            beforeItemPayload = null;
+        }
+    }
+
+    var compareSpsMode = Model.ActionType == ApprovalActionType.SpsDocumentEdit && spsPayload != null && beforeSpsPayload != null;
+    var compareItemMode = Model.ActionType == ApprovalActionType.SpsItemEdit && itemPayload != null && beforeItemPayload != null;
 
     var headerInfoFields = new List<string>
     {
@@ -283,6 +314,7 @@
     var approvalDetailsReturnUrl = Url.Action("Details", "Approval", new { id = Model.Id });
     string? editRequestUrl = null;
     var supervisorMarkedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    var supervisorMarkedFieldComments = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
     string NormalizeFieldKey(string? value)
     {
@@ -314,14 +346,32 @@
             }
 
             var field = line.TrimStart('-').Trim();
+            string? fieldComment = null;
+
+            var separatorIndex = field.IndexOf(':');
+            if (separatorIndex > 0)
+            {
+                fieldComment = field[(separatorIndex + 1)..].Trim();
+                field = field[..separatorIndex].Trim();
+            }
+
             if (!string.IsNullOrWhiteSpace(field))
             {
-                supervisorMarkedFields.Add(NormalizeFieldKey(field));
+                var normalizedField = NormalizeFieldKey(field);
+                if (!string.IsNullOrWhiteSpace(normalizedField))
+                {
+                    supervisorMarkedFields.Add(normalizedField);
+                    if (!string.IsNullOrWhiteSpace(fieldComment))
+                    {
+                        supervisorMarkedFieldComments[normalizedField] = fieldComment;
+                    }
+                }
             }
         }
     }
 
     var supervisorMarkedFieldListJson = JsonSerializer.Serialize(supervisorMarkedFields.ToList());
+    var supervisorMarkedFieldCommentsJson = JsonSerializer.Serialize(supervisorMarkedFieldComments);
 
     bool IsSupervisorMarked(params string[] candidates)
     {
@@ -362,72 +412,574 @@
     var canEditPayload = isOwner
         && (Model.Status == ApprovalRequestStatus.Draft || Model.Status == ApprovalRequestStatus.RevisionRequired)
         && (spsPayload != null || itemPayload != null);
+
+    var statusBadgeClass = Model.Status switch
+    {
+        ApprovalRequestStatus.Pending => "bg-warning text-dark",
+        ApprovalRequestStatus.RevisionRequired => "bg-warning text-dark",
+        ApprovalRequestStatus.Approved => "bg-success",
+        ApprovalRequestStatus.Rejected => "bg-danger",
+        ApprovalRequestStatus.Draft => "bg-secondary",
+        ApprovalRequestStatus.Consumed => "bg-secondary",
+        _ => "bg-dark"
+    };
 }
 
 <style>
-    .manual-validation-mark {
-        background-color: #26303b;
-        color: #f8fafc;
-        border-color: #4b5563;
-        color-scheme: dark;
-        min-width: 88px;
+    .request-overview-card .card-header {
+        padding: 0.85rem 1rem;
     }
 
-    .manual-validation-mark:focus {
-        background-color: #26303b;
-        color: #f8fafc;
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    .request-overview-card .card-body {
+        padding: 1rem;
     }
 
-    .manual-validation-mark option {
+    .request-overview-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .request-overview-code {
+        font-size: 0.8rem;
+        opacity: 0.85;
+        font-weight: 500;
+    }
+
+    .request-summary-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    .request-summary-item {
+        flex: 1 1 210px;
+        min-width: 190px;
+        padding: 0.65rem 0.8rem;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.28);
+    }
+
+    .request-summary-item.compact {
+        flex-basis: 170px;
+        min-width: 170px;
+    }
+
+    .request-summary-item .label {
+        color: #9ca3af;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .request-summary-item .value {
+        color: #e5e7eb;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+
+    .compact-action-card .card-header {
+        padding: 0.65rem 0.95rem;
+        font-weight: 600;
+    }
+
+    .compact-action-card .card-body {
+        padding: 0.9rem 0.95rem;
+    }
+
+    .compact-action-card p {
+        margin-bottom: 0.7rem;
+    }
+
+    .compact-action-card .form-label {
+        margin-bottom: 0.35rem;
+    }
+
+    .compact-action-card textarea {
+        min-height: 88px;
+    }
+
+    @@media (max-width: 576px) {
+        .request-summary-item,
+        .request-summary-item.compact {
+            min-width: 100%;
+            flex-basis: 100%;
+        }
+    }
+
+    #detail-pengajuan .card-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    #detail-pengajuan .submission-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+    }
+
+    #detail-pengajuan .submission-section {
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        overflow: hidden;
+    }
+
+    #detail-pengajuan .submission-section .card-header {
+        background: linear-gradient(90deg, rgba(17, 24, 39, 0.92), rgba(30, 41, 59, 0.92));
+        color: #e5e7eb;
+        padding: 0.6rem 0.8rem;
+    }
+
+    #detail-pengajuan .submission-section .card-body {
+        padding: 0;
+    }
+
+    #detail-pengajuan .submission-section .table-responsive {
+        overflow: auto;
+    }
+
+    #detail-pengajuan .submission-section .table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 3;
         background-color: #1f2937;
+    }
+
+    #detail-pengajuan .submission-section .table tbody td:first-child,
+    #detail-pengajuan .submission-section .table thead th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background-color: #1b2432;
+    }
+
+    #detail-pengajuan .submission-section .table thead th:first-child {
+        z-index: 4;
+    }
+
+    #detail-pengajuan .submission-section .table tbody tr.table-secondary td:first-child {
+        background-color: #2a3140;
+    }
+
+    #detail-pengajuan .submission-section .table tbody tr:hover td:first-child {
+        background-color: #243244;
+    }
+
+    #detail-pengajuan .submission-section .table tbody td:first-child {
+        box-shadow: 8px 0 12px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    #detail-pengajuan .compare-row-changed td {
+        background-image: linear-gradient(90deg, rgba(245, 158, 11, 0.06), rgba(59, 130, 246, 0.03));
+    }
+
+    #detail-pengajuan .compare-label {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.35px;
+        text-transform: uppercase;
+        color: #93c5fd;
+        margin-bottom: 0.18rem;
+    }
+
+    #detail-pengajuan .compare-value-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    #detail-pengajuan .compare-before,
+    #detail-pengajuan .compare-after {
+        display: block;
+        line-height: 1.2;
+        word-break: break-word;
+    }
+
+    #detail-pengajuan .compare-before {
+        color: #94a3b8;
+    }
+
+    #detail-pengajuan .compare-after {
+        color: #e5e7eb;
+        font-weight: 600;
+    }
+
+    #detail-pengajuan .compare-before-inline {
+        display: block;
+        color: #94a3b8;
+        font-size: 0.73rem;
+        margin-bottom: 0.22rem;
+    }
+
+    .history-table-wrap {
+        max-height: 330px;
+        overflow: auto;
+    }
+
+    .history-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #1f2937;
+    }
+
+    #detail-pengajuan .table th,
+    #detail-pengajuan .table td {
+        padding: 0.34rem 0.5rem;
+        font-size: 0.86rem;
+        vertical-align: middle;
+        line-height: 1.18;
+    }
+
+    #detail-pengajuan .table thead th {
+        letter-spacing: 0.35px;
+        font-size: 0.77rem;
+        padding-top: 0.42rem;
+        padding-bottom: 0.42rem;
+    }
+
+    .history-table-wrap .table th,
+    .history-table-wrap .table td {
+        padding: 0.34rem 0.5rem;
+        font-size: 0.86rem;
+        line-height: 1.18;
+    }
+
+    #detail-pengajuan .submission-pair .submission-section {
+        height: 100%;
+    }
+
+    #detail-pengajuan .submission-pair .table-responsive {
+        max-height: 360px;
+        overflow: auto;
+    }
+
+    #detail-pengajuan .tolerance-note {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin: 0.25rem 0 0;
+    }
+
+    #detail-pengajuan .tolerance-primary-wrap {
+        max-height: 500px;
+        overflow: auto;
+    }
+
+    #detail-pengajuan .tolerance-primary-table {
+        min-width: 1020px;
+        table-layout: fixed;
+        background: transparent;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #detail-pengajuan .tolerance-primary-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: linear-gradient(180deg, #1f2937 0%, #18212f 100%);
+        color: #60a5fa;
+        border-bottom-color: rgba(148, 163, 184, 0.2);
+        box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.16);
+    }
+
+    #detail-pengajuan .tolerance-primary-table th:first-child,
+    #detail-pengajuan .tolerance-primary-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background-color: #182130;
+    }
+
+    #detail-pengajuan .tolerance-primary-table thead th:first-child {
+        z-index: 4;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody td {
+        background: #222c3b;
+        color: #dbe4f0;
+        border-color: rgba(148, 163, 184, 0.14);
+        vertical-align: middle;
+        padding-top: 0.32rem;
+        padding-bottom: 0.32rem;
+        line-height: 1.18;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody tr:nth-of-type(odd) td {
+        background: #1f2937;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody tr.table-secondary td {
+        background: #2a3342 !important;
+        color: #cbd5e1;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody td small.text-muted {
+        color: #94a3b8 !important;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody td:last-child,
+    #detail-pengajuan .tolerance-primary-table thead th:last-child {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+        background-color: #182130;
+    }
+
+    #detail-pengajuan .tolerance-primary-table thead th:last-child {
+        z-index: 4;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody tr:nth-of-type(odd) td:last-child,
+    #detail-pengajuan .tolerance-primary-table tbody tr:nth-of-type(odd) td:first-child {
+        background: #1f2937;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody tr.table-secondary td:last-child,
+    #detail-pengajuan .tolerance-primary-table tbody tr.table-secondary td:first-child {
+        background: #2a3342 !important;
+    }
+
+    #detail-pengajuan .tolerance-primary-table tbody td:nth-child(2),
+    #detail-pengajuan .tolerance-primary-table tbody td:nth-child(3),
+    #detail-pengajuan .tolerance-primary-table tbody td:nth-child(4) {
+        font-variant-numeric: tabular-nums;
+    }
+
+    #detail-pengajuan .tolerance-input {
+        width: 100%;
+        min-width: 120px;
+        background: rgba(51, 65, 85, 0.8);
+        border-color: rgba(148, 163, 184, 0.42);
         color: #f8fafc;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        padding-top: 0.28rem;
+        padding-bottom: 0.28rem;
+        min-height: 2rem;
+    }
+
+    #detail-pengajuan .tolerance-input::placeholder {
+        color: #94a3b8;
+    }
+
+    #detail-pengajuan .tolerance-single-table {
+        background: transparent;
+    }
+
+    #detail-pengajuan .tolerance-single-table thead th {
+        background: #1f2937;
+        color: #60a5fa;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    #detail-pengajuan .tolerance-single-table td {
+        background: #202938;
+        color: #dbe4f0;
+        border-color: rgba(148, 163, 184, 0.14);
+        padding-top: 0.32rem;
+        padding-bottom: 0.32rem;
+        line-height: 1.18;
+    }
+
+    #detail-pengajuan .tolerance-single-table th {
+        padding-top: 0.42rem;
+        padding-bottom: 0.42rem;
+    }
+
+    #detail-pengajuan .tolerance-single-table tr:nth-of-type(odd) td {
+        background: #1f2937;
+    }
+
+    #detail-pengajuan .tolerance-single-table td:first-child {
+        font-weight: 600;
+    }
+
+    .manual-validation-mark-hidden {
+        display: none !important;
+    }
+
+    .manual-validation-box {
+        position: relative;
+        width: 48px;
+        height: 36px;
+        border: 1px solid #4b5563;
+        border-radius: 10px;
+        background: #26303b;
+        color: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+    .manual-validation-box:hover,
+    .manual-validation-box:focus-visible {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 0.16rem rgba(96, 165, 250, 0.25);
+        outline: none;
+    }
+
+    .manual-validation-box[data-checked="true"] {
+        background: #dc3545;
+        border-color: #dc3545;
+        color: #f8fafc;
+    }
+
+    .manual-validation-static {
+        cursor: pointer;
+    }
+
+    .manual-popover {
+        position: fixed;
+        width: min(320px, calc(100vw - 24px));
+        background: rgba(15, 23, 42, 0.98);
+        border: 1px solid rgba(96, 165, 250, 0.42);
+        border-radius: 10px;
+        box-shadow: 0 14px 32px rgba(2, 6, 23, 0.42);
+        padding: 0.55rem;
+        z-index: 5000;
+    }
+
+    .manual-popover::before {
+        content: "";
+        position: absolute;
+        top: 14px;
+        width: 10px;
+        height: 10px;
+        background: rgba(15, 23, 42, 0.98);
+        border-top: 1px solid rgba(96, 165, 250, 0.42);
+        border-left: 1px solid rgba(96, 165, 250, 0.42);
+        transform: rotate(45deg);
+    }
+
+    .manual-popover[data-side="left"]::before {
+        right: -6px;
+        border-top: none;
+        border-left: none;
+        border-bottom: 1px solid rgba(96, 165, 250, 0.42);
+        border-right: 1px solid rgba(96, 165, 250, 0.42);
+    }
+
+    .manual-popover[data-side="right"]::before {
+        left: -6px;
+    }
+
+    .manual-popover-title {
+        font-size: 0.76rem;
+        color: #93c5fd;
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+    }
+
+    .manual-popover-message {
+        font-size: 0.78rem;
+        color: #e5e7eb;
+        white-space: pre-wrap;
+        line-height: 1.3;
+    }
+
+    .manual-popover-textarea {
+        width: 100%;
+        min-height: 74px;
+        resize: vertical;
+        background: #1f2937;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        color: #f8fafc;
+        border-radius: 8px;
+        padding: 0.42rem 0.5rem;
+        font-size: 0.78rem;
+    }
+
+    .manual-popover-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        margin-top: 0.45rem;
+    }
+
+    .manual-popover-btn {
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: #1f2937;
+        color: #f8fafc;
+        border-radius: 7px;
+        font-size: 0.74rem;
+        padding: 0.2rem 0.42rem;
+        line-height: 1.25;
+    }
+
+    .manual-popover-btn.primary {
+        background: #2563eb;
+        border-color: #2563eb;
+    }
+
+    .manual-popover-btn.danger {
+        background: #dc3545;
+        border-color: #dc3545;
     }
 </style>
 
 <div class="container-fluid py-3">
     <div class="row g-3">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0 request-overview-card">
                 <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Detail Request @Model.RequestCode</h5>
+                    <div class="request-overview-title">
+                        <h5 class="mb-0">Detail Request</h5>
+                        <span class="request-overview-code">@Model.RequestCode</span>
+                    </div>
                     @if (spsPayload != null || itemPayload != null)
                     {
-                        <button type="button" id="toggleDetailPengajuanBtn" class="btn btn-sm btn-outline-light">@(Model.Status == ApprovalRequestStatus.RevisionRequired ? "Revision Required" : "Detail Pengajuan")</button>
+                        <button type="button" id="toggleDetailPengajuanBtn" class="btn btn-sm btn-outline-light">Sembunyikan Detail Pengajuan</button>
                     }
                 </div>
                 <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Status</dt>
-                        <dd class="col-sm-8"><span class="badge bg-dark">@Model.Status</span></dd>
-
-                        <dt class="col-sm-4">Requester</dt>
-                        <dd class="col-sm-8">@Model.RequesterUserName (@Model.RequesterRole)</dd>
-
-                        <dt class="col-sm-4">Action Type</dt>
-                        <dd class="col-sm-8">@Model.ActionType</dd>
-
-                        <dt class="col-sm-4">Target</dt>
-                        <dd class="col-sm-8">@Model.TargetKey</dd>
-
-                        <dt class="col-sm-4">Pesan Request</dt>
-                        <dd class="col-sm-8">@Model.RequestComment</dd>
-
-                        <dt class="col-sm-4">Komentar Admin</dt>
-                        <dd class="col-sm-8">@Model.ApproverComment</dd>
-
-                        <dt class="col-sm-4">Created</dt>
-                        <dd class="col-sm-8">@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</dd>
-                    </dl>
+                    <div class="request-summary-strip">
+                        <div class="request-summary-item compact">
+                            <div class="label">Status</div>
+                            <div class="value"><span class="badge @statusBadgeClass">@Model.Status</span></div>
+                        </div>
+                        <div class="request-summary-item compact">
+                            <div class="label">Requester</div>
+                            <div class="value">@Model.RequesterUserName (@Model.RequesterRole)</div>
+                        </div>
+                        <div class="request-summary-item compact">
+                            <div class="label">Action Type</div>
+                            <div class="value">@Model.ActionType</div>
+                        </div>
+                        <div class="request-summary-item compact">
+                            <div class="label">Dibuat</div>
+                            <div class="value">@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                        </div>
+                        <div class="request-summary-item">
+                            <div class="label">Target</div>
+                            <div class="value">@Model.TargetKey</div>
+                        </div>
+                        <div class="request-summary-item">
+                            <div class="label">Pesan Request</div>
+                            <div class="value">@(string.IsNullOrWhiteSpace(Model.RequestComment) ? "-" : Model.RequestComment)</div>
+                        </div>
+                        <div class="request-summary-item">
+                            <div class="label">Komentar Admin</div>
+                            <div class="value">@(string.IsNullOrWhiteSpace(Model.ApproverComment) ? "-" : Model.ApproverComment)</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         @if (isOwner && Model.Status == ApprovalRequestStatus.Draft)
         {
-            <div class="col-12 col-lg-6">
-                <div class="card shadow-sm border-0">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 compact-action-card">
                     <div class="card-header bg-secondary text-white">Draft Tersimpan</div>
                     <div class="card-body">
                         <p class="mb-3 text-muted">Dokumen masih draft. Anda bisa lanjut edit kapan saja sebelum dikirim ke admin.</p>
@@ -442,36 +994,24 @@
             </div>
         }
 
-        @if (isOwner && Model.Status == ApprovalRequestStatus.RevisionRequired)
-        {
-            <div class="col-12 col-lg-6">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-warning text-dark">Revision Required</div>
-                    <div class="card-body">
-                        <p class="mb-3 text-muted">Admin meminta revisi. Silakan edit data pengajuan lalu kirim ulang.</p>
-                        <form asp-action="Resubmit" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <div class="mb-2">
-                                <label class="form-label">Catatan Perbaikan (wajib)</label>
-                                <textarea name="requestComment" class="form-control" rows="3" maxlength="1024" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-warning text-dark">Kirim Ulang Request</button>
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-        }
     </div>
 
-    <div class="card shadow-sm border-0 mt-3 d-none" id="detail-pengajuan">
+    <div class="card shadow-sm border-0 mt-3" id="detail-pengajuan">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <strong>Data Diajukan</strong>
-            @if (!string.IsNullOrWhiteSpace(payloadKind))
-            {
-                <span class="badge bg-info text-dark">@payloadKind</span>
-            }
+            <div>
+                <strong>Data Diajukan</strong>
+                <div class="small text-muted">Ringkasan data untuk review dan perbaikan.</div>
+            </div>
+            <div class="submission-meta">
+                @if (!string.IsNullOrWhiteSpace(payloadKind))
+                {
+                    <span class="badge bg-info text-dark">@payloadKind</span>
+                }
+                @if (spsPayload != null)
+                {
+                    <span class="badge bg-success">Terisi @filledCount</span>
+                }
+            </div>
         </div>
         <div class="card-body">
             @if (!string.IsNullOrWhiteSpace(payloadError))
@@ -503,24 +1043,50 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th style="width: 30%;">Field</th>
-                                        <th>Value</th>
+                                        @if (compareItemMode)
+                                        {
+                                            <th>Before</th>
+                                            <th>After</th>
+                                        }
+                                        else
+                                        {
+                                            <th>Value</th>
+                                        }
                                         <th style="width: 12%;">Wajib</th>
                                         <th style="width: 12%;">Validasi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
+                                    @{ var beforeDocumentNumber = compareItemMode ? Normalize(beforeItemPayload!.DocumentNumber) : string.Empty; }
+                                    <tr class="@(compareItemMode && !string.Equals(beforeDocumentNumber, Normalize(itemPayload.DocumentNumber), StringComparison.Ordinal) ? "compare-row-changed" : string.Empty)">
                                         <td>Document Number</td>
-                                        <td>
-                                            @if (canEditPayload)
-                                            {
-                                                <input type="text" name="payload_DocumentNumber" class="form-control form-control-sm" value="@itemPayload.DocumentNumber" />
-                                            }
-                                            else
-                                            {
-                                                @(string.IsNullOrWhiteSpace(Normalize(itemPayload.DocumentNumber)) ? "-" : itemPayload.DocumentNumber)
-                                            }
-                                        </td>
+                                        @if (compareItemMode)
+                                        {
+                                            <td><span class="compare-before">@(string.IsNullOrWhiteSpace(beforeDocumentNumber) ? "-" : beforeDocumentNumber)</span></td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_DocumentNumber" class="form-control form-control-sm" value="@itemPayload.DocumentNumber" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(Normalize(itemPayload.DocumentNumber)) ? "-" : itemPayload.DocumentNumber)
+                                                }
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_DocumentNumber" class="form-control form-control-sm" value="@itemPayload.DocumentNumber" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(Normalize(itemPayload.DocumentNumber)) ? "-" : itemPayload.DocumentNumber)
+                                                }
+                                            </td>
+                                        }
                                         <td><span class="badge bg-warning text-dark">Ya</span></td>
                                         <td>
                                             @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
@@ -543,18 +1109,36 @@
                                             }
                                         </td>
                                     </tr>
-                                    <tr>
+                                    @{ var beforeItemListValue = compareItemMode ? Normalize(beforeItemPayload!.ItemList) : string.Empty; }
+                                    <tr class="@(compareItemMode && !string.Equals(beforeItemListValue, Normalize(itemPayload.ItemList), StringComparison.Ordinal) ? "compare-row-changed" : string.Empty)">
                                         <td>Item List</td>
-                                        <td>
-                                            @if (canEditPayload)
-                                            {
-                                                <input type="text" name="payload_ItemList" class="form-control form-control-sm" value="@itemPayload.ItemList" />
-                                            }
-                                            else
-                                            {
-                                                @(string.IsNullOrWhiteSpace(Normalize(itemPayload.ItemList)) ? "-" : itemPayload.ItemList)
-                                            }
-                                        </td>
+                                        @if (compareItemMode)
+                                        {
+                                            <td><span class="compare-before">@(string.IsNullOrWhiteSpace(beforeItemListValue) ? "-" : beforeItemListValue)</span></td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_ItemList" class="form-control form-control-sm" value="@itemPayload.ItemList" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(Normalize(itemPayload.ItemList)) ? "-" : itemPayload.ItemList)
+                                                }
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_ItemList" class="form-control form-control-sm" value="@itemPayload.ItemList" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(Normalize(itemPayload.ItemList)) ? "-" : itemPayload.ItemList)
+                                                }
+                                            </td>
+                                        }
                                         <td><span class="badge bg-warning text-dark">Ya</span></td>
                                         <td>
                                             @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
@@ -598,27 +1182,48 @@
                     </div>
                 }
 
-                <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-header bg-dark text-white"><strong>1. Header Informasi Dokumen</strong></div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped mb-0">
-                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                <div class="row g-3 mt-1 submission-pair">
+                    <div class="col-12 col-xl-6">
+                        <div class="card shadow-sm border-0 submission-section">
+                            <div class="card-header bg-dark text-white"><strong>1. Header Informasi Dokumen</strong></div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th>@if (compareSpsMode) { <th>Before</th><th>After</th> } else { <th>Value</th> }<th style="width: 12%;">Validasi</th></tr></thead>
                                 <tbody>
                                 @foreach (var row in spsHeaderRows)
                                 {
-                                    <tr>
+                                    var beforeValue = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyName)) : string.Empty;
+                                    var afterValue = Normalize(row.Value);
+                                    <tr class="@(compareSpsMode && !string.Equals(beforeValue, afterValue, StringComparison.Ordinal) ? "compare-row-changed" : string.Empty)">
                                         <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
-                                        <td>
-                                            @if (canEditPayload)
-                                            {
-                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
-                                            }
-                                            else
-                                            {
-                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
-                                            }
-                                        </td>
+                                        @if (compareSpsMode)
+                                        {
+                                            <td><span class="compare-before">@(string.IsNullOrWhiteSpace(beforeValue) ? "-" : beforeValue)</span></td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
                                         <td>
                                             @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
                                             {
@@ -642,32 +1247,52 @@
                                     </tr>
                                 }
                                 </tbody>
-                            </table>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-header bg-dark text-white"><strong>2. Data Spesifikasi Produk</strong></div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped mb-0">
-                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                    <div class="col-12 col-xl-6">
+                        <div class="card shadow-sm border-0 submission-section">
+                            <div class="card-header bg-dark text-white"><strong>2. Data Spesifikasi Produk</strong></div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th>@if (compareSpsMode) { <th>Before</th><th>After</th> } else { <th>Value</th> }<th style="width: 12%;">Validasi</th></tr></thead>
                                 <tbody>
                                 @foreach (var row in spsProductRows)
                                 {
-                                    <tr>
+                                    var beforeValue = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyName)) : string.Empty;
+                                    var afterValue = Normalize(row.Value);
+                                    <tr class="@(compareSpsMode && !string.Equals(beforeValue, afterValue, StringComparison.Ordinal) ? "compare-row-changed" : string.Empty)">
                                         <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
-                                        <td>
-                                            @if (canEditPayload)
-                                            {
-                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
-                                            }
-                                            else
-                                            {
-                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
-                                            }
-                                        </td>
+                                        @if (compareSpsMode)
+                                        {
+                                            <td><span class="compare-before">@(string.IsNullOrWhiteSpace(beforeValue) ? "-" : beforeValue)</span></td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
                                         <td>
                                             @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
                                             {
@@ -691,32 +1316,55 @@
                                     </tr>
                                 }
                                 </tbody>
-                            </table>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-header bg-dark text-white"><strong>3. Setting Mesin</strong></div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped mb-0">
-                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                <div class="row g-3 mt-1 submission-pair">
+                    <div class="col-12 col-xl-6">
+                        <div class="card shadow-sm border-0 submission-section">
+                            <div class="card-header bg-dark text-white"><strong>3. Setting Mesin</strong></div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th>@if (compareSpsMode) { <th>Before</th><th>After</th> } else { <th>Value</th> }<th style="width: 12%;">Validasi</th></tr></thead>
                                 <tbody>
                                 @foreach (var row in spsMachineRows)
                                 {
-                                    <tr>
+                                    var beforeValue = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyName)) : string.Empty;
+                                    var afterValue = Normalize(row.Value);
+                                    <tr class="@(compareSpsMode && !string.Equals(beforeValue, afterValue, StringComparison.Ordinal) ? "compare-row-changed" : string.Empty)">
                                         <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
-                                        <td>
-                                            @if (canEditPayload)
-                                            {
-                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
-                                            }
-                                            else
-                                            {
-                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
-                                            }
-                                        </td>
+                                        @if (compareSpsMode)
+                                        {
+                                            <td><span class="compare-before">@(string.IsNullOrWhiteSpace(beforeValue) ? "-" : beforeValue)</span></td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
                                         <td>
                                             @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
                                             {
@@ -740,32 +1388,52 @@
                                     </tr>
                                 }
                                 </tbody>
-                            </table>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-header bg-dark text-white"><strong>4. Parameter Proses</strong></div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive" style="max-height: 420px; overflow:auto;">
-                            <table class="table table-sm table-striped mb-0">
-                                <thead><tr><th style="width: 32%;">Field</th><th>Value</th><th style="width: 12%;">Validasi</th></tr></thead>
+                    <div class="col-12 col-xl-6">
+                        <div class="card shadow-sm border-0 submission-section">
+                            <div class="card-header bg-dark text-white"><strong>4. Parameter Proses</strong></div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 420px; overflow:auto;">
+                                    <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th style="width: 32%;">Field</th>@if (compareSpsMode) { <th>Before</th><th>After</th> } else { <th>Value</th> }<th style="width: 12%;">Validasi</th></tr></thead>
                                 <tbody>
                                 @foreach (var row in spsProcessRows)
                                 {
-                                    <tr>
+                                    var beforeValue = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyName)) : string.Empty;
+                                    var afterValue = Normalize(row.Value);
+                                    <tr class="@(compareSpsMode && !string.Equals(beforeValue, afterValue, StringComparison.Ordinal) ? "compare-row-changed" : string.Empty)">
                                         <td>@row.Label <small class="text-muted">(@row.PropertyName)</small></td>
-                                        <td>
-                                            @if (canEditPayload)
-                                            {
-                                                <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
-                                            }
-                                            else
-                                            {
-                                                @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
-                                            }
-                                        </td>
+                                        @if (compareSpsMode)
+                                        {
+                                            <td><span class="compare-before">@(string.IsNullOrWhiteSpace(beforeValue) ? "-" : beforeValue)</span></td>
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td>
+                                                @if (canEditPayload)
+                                                {
+                                                    <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(row.Value) ? "-" : row.Value)
+                                                }
+                                            </td>
+                                        }
                                         <td>
                                             @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
                                             {
@@ -789,16 +1457,21 @@
                                     </tr>
                                 }
                                 </tbody>
-                            </table>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-header bg-dark text-white"><strong>5. Standard Toleransi (Min / Actual / Max)</strong></div>
+                <div class="card shadow-sm border-0 mt-3 submission-section">
+                    <div class="card-header bg-dark text-white">
+                        <strong>5. Standard Toleransi (Min / Actual / Max)</strong>
+                        <p class="tolerance-note">Geser horizontal untuk melihat semua kolom Min/Actual/Max dengan jelas.</p>
+                    </div>
                     <div class="card-body p-0">
-                        <div class="table-responsive" style="max-height: 500px; overflow:auto;">
-                            <table class="table table-sm table-striped mb-0">
+                        <div class="table-responsive tolerance-primary-wrap">
+                            <table class="table table-sm table-striped mb-0 tolerance-primary-table">
                                 <thead>
                                     <tr>
                                         <th style="width: 34%;">Parameter</th>
@@ -818,6 +1491,9 @@
                                 {
                                     @foreach (var row in toleranceTripletRows)
                                     {
+                                        var beforeMin = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyBase + "_Min")) : string.Empty;
+                                        var beforeActual = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyBase + "_Asli")) : string.Empty;
+                                        var beforeMax = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyBase + "_Max")) : string.Empty;
                                         var minFilled = !string.IsNullOrWhiteSpace(row.Min);
                                         var actualFilled = !string.IsNullOrWhiteSpace(row.Actual);
                                         var maxFilled = !string.IsNullOrWhiteSpace(row.Max);
@@ -825,12 +1501,16 @@
                                         var statusText = filledCountRow == 3 ? "Terisi" : filledCountRow == 0 ? "Kosong" : "Sebagian";
                                         var statusClass = filledCountRow == 3 ? "bg-success" : filledCountRow == 0 ? "bg-secondary" : "bg-warning text-dark";
 
-                                        <tr class="@(filledCountRow == 0 ? "table-secondary" : string.Empty)">
+                                        <tr class="@((filledCountRow == 0 ? "table-secondary " : string.Empty) + (compareSpsMode && (!string.Equals(beforeMin, Normalize(row.Min), StringComparison.Ordinal) || !string.Equals(beforeActual, Normalize(row.Actual), StringComparison.Ordinal) || !string.Equals(beforeMax, Normalize(row.Max), StringComparison.Ordinal)) ? "compare-row-changed" : string.Empty))">
                                             <td>@row.Label <small class="text-muted">(@row.PropertyBase)</small></td>
                                             <td>
+                                                @if (compareSpsMode)
+                                                {
+                                                    <span class="compare-before-inline">Before: @(string.IsNullOrWhiteSpace(beforeMin) ? "-" : beforeMin)</span>
+                                                }
                                                 @if (canEditPayload)
                                                 {
-                                                    <input type="text" name="payload_@(row.PropertyBase)_Min" class="form-control form-control-sm" value="@row.Min" />
+                                                    <input type="text" name="payload_@(row.PropertyBase)_Min" class="form-control form-control-sm tolerance-input" value="@row.Min" />
                                                 }
                                                 else
                                                 {
@@ -838,9 +1518,13 @@
                                                 }
                                             </td>
                                             <td>
+                                                @if (compareSpsMode)
+                                                {
+                                                    <span class="compare-before-inline">Before: @(string.IsNullOrWhiteSpace(beforeActual) ? "-" : beforeActual)</span>
+                                                }
                                                 @if (canEditPayload)
                                                 {
-                                                    <input type="text" name="payload_@(row.PropertyBase)_Asli" class="form-control form-control-sm" value="@row.Actual" />
+                                                    <input type="text" name="payload_@(row.PropertyBase)_Asli" class="form-control form-control-sm tolerance-input" value="@row.Actual" />
                                                 }
                                                 else
                                                 {
@@ -848,9 +1532,13 @@
                                                 }
                                             </td>
                                             <td>
+                                                @if (compareSpsMode)
+                                                {
+                                                    <span class="compare-before-inline">Before: @(string.IsNullOrWhiteSpace(beforeMax) ? "-" : beforeMax)</span>
+                                                }
                                                 @if (canEditPayload)
                                                 {
-                                                    <input type="text" name="payload_@(row.PropertyBase)_Max" class="form-control form-control-sm" value="@row.Max" />
+                                                    <input type="text" name="payload_@(row.PropertyBase)_Max" class="form-control form-control-sm tolerance-input" value="@row.Max" />
                                                 }
                                                 else
                                                 {
@@ -888,7 +1576,7 @@
                         @if (toleranceSingleRows.Any())
                         {
                             <div class="table-responsive border-top" style="max-height: 220px; overflow:auto;">
-                                <table class="table table-sm table-striped mb-0">
+                                <table class="table table-sm table-striped mb-0 tolerance-single-table">
                                     <thead>
                                         <tr>
                                             <th style="width: 40%;">Parameter Tambahan</th>
@@ -899,9 +1587,14 @@
                                     <tbody>
                                     @foreach (var row in toleranceSingleRows)
                                     {
+                                        var beforeValue = compareSpsMode ? Normalize(GetValue(beforeSpsPayload!, row.PropertyName)) : string.Empty;
                                         <tr>
                                             <td>@row.Label</td>
                                             <td>
+                                                @if (compareSpsMode)
+                                                {
+                                                    <span class="compare-before-inline">Before: @(string.IsNullOrWhiteSpace(beforeValue) ? "-" : beforeValue)</span>
+                                                }
                                                 @if (canEditPayload)
                                                 {
                                                     <input type="text" name="payload_@row.PropertyName" class="form-control form-control-sm" value="@row.Value" />
@@ -940,7 +1633,7 @@
                     </div>
                 </div>
 
-                <div class="card shadow-sm border-0 mt-3">
+                <div class="card shadow-sm border-0 mt-3 submission-section">
                     <div class="card-header bg-dark text-white"><strong>6. Approval & Revision History</strong></div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -976,53 +1669,76 @@
 
     @if (canReview && Model.Status == ApprovalRequestStatus.Pending)
     {
-        <div class="row g-3 mt-1">
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-success text-white">Approve</div>
-                    <div class="card-body">
-                        <form asp-action="Approve" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <div class="mb-2">
-                                <label class="form-label">Komentar (opsional)</label>
-                                <textarea name="approverComment" class="form-control" rows="3" maxlength="1024"></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-success">Approve Request</button>
-                        </form>
+        <div class="row g-3 mt-1 align-items-stretch">
+            <div class="col-12 col-xl-8">
+                <div class="card shadow-sm border-0 h-100 approval-history-card">
+                    <div class="card-header bg-light">
+                        <strong>Riwayat Approval</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive history-table-wrap">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu</th>
+                                        <th>Actor</th>
+                                        <th>Transisi</th>
+                                        <th>Komentar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @if (!Model.Logs.Any())
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted">Belum ada log.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var log in Model.Logs.OrderByDescending(x => x.CreatedAt))
+                                    {
+                                        <tr>
+                                            <td>@log.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                            <td>@log.ActorUserName (@log.ActorRole)</td>
+                                            <td>@(log.FromStatus?.ToString() ?? "-") → @log.ToStatus</td>
+                                            <td>@log.Comment</td>
+                                        </tr>
+                                    }
+                                }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-4">
+            <div class="col-12 col-xl-4">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-warning text-dark">Revision Required</div>
-                    <div class="card-body">
-                        <form asp-action="Reject" method="post" id="revisionRequiredForm">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <div class="mb-2">
-                                <label class="form-label">Catatan Revisi (wajib)</label>
-                                <textarea id="revisionRequiredComment" name="approverComment" class="form-control" rows="3" maxlength="1024" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-warning text-dark">Set Revision Required</button>
-                        </form>
+                    <div class="card-header bg-success text-white">
+                        <strong>Keputusan Super Admin</strong>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-danger text-white">Rejected (Final)</div>
                     <div class="card-body">
-                        <form asp-action="FinalReject" method="post" id="finalRejectForm">
+                        <form id="decisionForm" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.Id" />
-                            <div class="mb-2">
-                                <label class="form-label">Alasan Reject Final (wajib)</label>
-                                <textarea id="finalRejectComment" name="approverComment" class="form-control" rows="3" maxlength="1024" required></textarea>
+                            <div class="mb-3">
+                                <label class="form-label">Komentar / Catatan Keputusan</label>
+                                <textarea id="decisionComment" name="approverComment" class="form-control" rows="3" maxlength="1024" placeholder="Approve bisa dikosongkan, revisi/reject isi alasannya di sini."></textarea>
                             </div>
-                            <button type="submit" class="btn btn-danger">Set Rejected Final</button>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-success w-100" formaction="@Url.Action("Approve", "Approval")" data-decision-mode="approve">
+                                        Approve Request
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-warning text-dark w-100" formaction="@Url.Action("Reject", "Approval")" data-decision-mode="revision">
+                                        Set Revision Required
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-danger w-100" formaction="@Url.Action("FinalReject", "Approval")" data-decision-mode="reject">
+                                        Set Rejected Final
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -1030,43 +1746,107 @@
         </div>
     }
 
-    <div class="card shadow-sm border-0 mt-3">
-        <div class="card-header bg-light">
-            <strong>Riwayat Approval</strong>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0">
-                    <thead>
-                        <tr>
-                            <th>Waktu</th>
-                            <th>Actor</th>
-                            <th>Transisi</th>
-                            <th>Komentar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @if (!Model.Logs.Any())
-                    {
-                        <tr><td colspan="4" class="text-center text-muted">Belum ada log.</td></tr>
-                    }
-                    else
-                    {
-                        foreach (var log in Model.Logs.OrderByDescending(x => x.CreatedAt))
-                        {
-                            <tr>
-                                <td>@log.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                                <td>@log.ActorUserName (@log.ActorRole)</td>
-                                <td>@(log.FromStatus?.ToString() ?? "-") → @log.ToStatus</td>
-                                <td>@log.Comment</td>
-                            </tr>
-                        }
-                    }
-                    </tbody>
-                </table>
+    @if (isOwner && Model.Status == ApprovalRequestStatus.RevisionRequired)
+    {
+        <div class="row g-3 mt-1">
+            <div class="col-12 col-xl-8">
+                <div class="card shadow-sm border-0 h-100 approval-history-card">
+                    <div class="card-header bg-light">
+                        <strong>Riwayat Approval</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive history-table-wrap">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu</th>
+                                        <th>Actor</th>
+                                        <th>Transisi</th>
+                                        <th>Komentar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @if (!Model.Logs.Any())
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted">Belum ada log.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var log in Model.Logs.OrderByDescending(x => x.CreatedAt))
+                                    {
+                                        <tr>
+                                            <td>@log.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                            <td>@log.ActorUserName (@log.ActorRole)</td>
+                                            <td>@(log.FromStatus?.ToString() ?? "-") → @log.ToStatus</td>
+                                            <td>@log.Comment</td>
+                                        </tr>
+                                    }
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card shadow-sm border-0 compact-action-card h-100">
+                    <div class="card-header bg-warning text-dark">Kirim Ulang Request</div>
+                    <div class="card-body">
+                        <p class="text-muted">Admin meminta revisi. Silakan edit data pengajuan lalu kirim ulang.</p>
+                        <form asp-action="Resubmit" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label">Catatan Perbaikan (wajib)</label>
+                                <textarea name="requestComment" class="form-control" rows="2" maxlength="1024" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-warning text-dark">Kirim Ulang Request</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    }
+    else if (!(canReview && Model.Status == ApprovalRequestStatus.Pending))
+    {
+        <div class="card shadow-sm border-0 mt-3">
+            <div class="card-header bg-light">
+                <strong>Riwayat Approval</strong>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive history-table-wrap">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Waktu</th>
+                                <th>Actor</th>
+                                <th>Transisi</th>
+                                <th>Komentar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @if (!Model.Logs.Any())
+                        {
+                            <tr><td colspan="4" class="text-center text-muted">Belum ada log.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var log in Model.Logs.OrderByDescending(x => x.CreatedAt))
+                            {
+                                <tr>
+                                    <td>@log.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                    <td>@log.ActorUserName (@log.ActorRole)</td>
+                                    <td>@(log.FromStatus?.ToString() ?? "-") → @log.ToStatus</td>
+                                    <td>@log.Comment</td>
+                                </tr>
+                            }
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @if (spsPayload != null || itemPayload != null)
@@ -1075,12 +1855,17 @@
         (function () {
             const toggleBtn = document.getElementById('toggleDetailPengajuanBtn');
             const detailSection = document.getElementById('detail-pengajuan');
-            const baseLabel = '@(Model.Status == ApprovalRequestStatus.RevisionRequired ? "Revision Required" : "Detail Pengajuan")';
+            const baseLabel = 'Detail Pengajuan';
             const supervisorMarkedFields = @Html.Raw(supervisorMarkedFieldListJson);
+            const supervisorMarkedFieldComments = @Html.Raw(supervisorMarkedFieldCommentsJson);
 
             if (!toggleBtn || !detailSection) {
                 return;
             }
+
+            toggleBtn.textContent = detailSection.classList.contains('d-none')
+                ? baseLabel
+                : 'Sembunyikan ' + baseLabel;
 
             toggleBtn.addEventListener('click', function () {
                 const isHidden = detailSection.classList.contains('d-none');
@@ -1091,6 +1876,10 @@
                     detailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
+
+            const normalizeCommentText = function (value) {
+                return (value || '').replace(/\s+/g, ' ').trim();
+            };
 
             const buildManualValidationNotes = function () {
                 const failedFields = [];
@@ -1105,7 +1894,10 @@
                     const fieldCell = row ? row.querySelector('td') : null;
                     const fieldName = fieldCell ? (fieldCell.innerText || '').trim() : '';
                     if (fieldName) {
-                        failedFields.push(fieldName);
+                        failedFields.push({
+                            fieldName: fieldName,
+                            comment: normalizeCommentText(mark.dataset.comment || '')
+                        });
                     }
                 });
 
@@ -1119,6 +1911,36 @@
             const normalizedSupervisorMarks = Array.isArray(supervisorMarkedFields)
                 ? supervisorMarkedFields.map(normalizeFieldKey).filter(function (item) { return item.length > 0; })
                 : [];
+
+            const normalizedSupervisorFieldComments = (function () {
+                const map = {};
+                if (!supervisorMarkedFieldComments || typeof supervisorMarkedFieldComments !== 'object') {
+                    return map;
+                }
+
+                Object.keys(supervisorMarkedFieldComments).forEach(function (key) {
+                    const normalizedKey = normalizeFieldKey(key);
+                    if (!normalizedKey) {
+                        return;
+                    }
+
+                    const value = normalizeCommentText(supervisorMarkedFieldComments[key]);
+                    if (value) {
+                        map[normalizedKey] = value;
+                    }
+                });
+
+                return map;
+            })();
+
+            const getFieldComment = function (fieldName) {
+                const normalizedField = normalizeFieldKey(fieldName);
+                if (!normalizedField) {
+                    return '';
+                }
+
+                return normalizedSupervisorFieldComments[normalizedField] || '';
+            };
 
             const shouldMarkField = function (fieldName) {
                 const normalizedField = normalizeFieldKey(fieldName);
@@ -1145,31 +1967,300 @@
                     const fieldName = fieldCell ? (fieldCell.innerText || '').trim() : '';
                     if (shouldMarkField(fieldName)) {
                         mark.value = 'x';
+                        mark.dataset.comment = getFieldComment(fieldName);
                     }
                 });
             };
 
-            const wireDecisionForm = function (formId, textareaId) {
-                const form = document.getElementById(formId);
-                const textarea = document.getElementById(textareaId);
+            const initializeManualValidationBoxes = function () {
+                let activePopover = null;
+                let activeAnchor = null;
 
-                if (!form || !textarea) {
-                    return;
-                }
+                const closePopover = function () {
+                    if (!activePopover) {
+                        return;
+                    }
 
-                form.addEventListener('submit', function () {
+                    activePopover.remove();
+                    activePopover = null;
+                    activeAnchor = null;
+                };
+
+                const positionPopover = function (anchor, popover) {
+                    const anchorRect = anchor.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const popoverRect = popover.getBoundingClientRect();
+
+                    let left = anchorRect.left - popoverRect.width - 12;
+                    let side = 'left';
+                    if (left < 8) {
+                        left = anchorRect.right + 12;
+                        side = 'right';
+                    }
+
+                    let top = anchorRect.top - 6;
+                    if (top + popoverRect.height > viewportHeight - 8) {
+                        top = viewportHeight - popoverRect.height - 8;
+                    }
+                    if (top < 8) {
+                        top = 8;
+                    }
+
+                    popover.dataset.side = side;
+                    popover.style.left = left + 'px';
+                    popover.style.top = top + 'px';
+                };
+
+                const openInfoPopover = function (anchor, fieldName, message) {
+                    closePopover();
+
+                    const popover = document.createElement('div');
+                    popover.className = 'manual-popover';
+                    popover.innerHTML =
+                        '<div class="manual-popover-title">' + fieldName + '</div>' +
+                        '<div class="manual-popover-message"></div>';
+
+                    const messageNode = popover.querySelector('.manual-popover-message');
+                    if (messageNode) {
+                        messageNode.textContent = message || 'Perlu revisi pada field ini';
+                    }
+
+                    document.body.appendChild(popover);
+                    positionPopover(anchor, popover);
+                    activePopover = popover;
+                    activeAnchor = anchor;
+                };
+
+                const openEditorPopover = function (anchor, mark, fieldName, syncVisual) {
+                    closePopover();
+
+                    const popover = document.createElement('div');
+                    popover.className = 'manual-popover';
+                    popover.innerHTML =
+                        '<div class="manual-popover-title">Komentar Revisi: ' + fieldName + '</div>' +
+                        '<textarea class="manual-popover-textarea" maxlength="1024" placeholder="Tulis catatan revisi untuk field ini"></textarea>' +
+                        '<div class="manual-popover-actions">' +
+                        '<button type="button" class="manual-popover-btn danger" data-action="clear">Kosongkan X</button>' +
+                        '<button type="button" class="manual-popover-btn" data-action="close">Tutup</button>' +
+                        '<button type="button" class="manual-popover-btn primary" data-action="save">Simpan</button>' +
+                        '</div>';
+
+                    document.body.appendChild(popover);
+                    positionPopover(anchor, popover);
+
+                    const textarea = popover.querySelector('.manual-popover-textarea');
+                    if (textarea) {
+                        textarea.value = normalizeCommentText(mark.dataset.comment || '');
+                        textarea.focus();
+                    }
+
+                    popover.addEventListener('click', function (event) {
+                        const actionButton = event.target.closest('button[data-action]');
+                        if (!actionButton) {
+                            return;
+                        }
+
+                        const action = actionButton.getAttribute('data-action');
+                        if (action === 'save') {
+                            const nextComment = textarea ? normalizeCommentText(textarea.value) : '';
+                            mark.dataset.comment = nextComment;
+                            syncVisual();
+                            closePopover();
+                            return;
+                        }
+
+                        if (action === 'clear') {
+                            mark.value = '';
+                            mark.dataset.comment = '';
+                            syncVisual();
+                            closePopover();
+                            return;
+                        }
+
+                        closePopover();
+                    });
+
+                    activePopover = popover;
+                    activeAnchor = anchor;
+                };
+
+                document.addEventListener('click', function (event) {
+                    if (!activePopover) {
+                        return;
+                    }
+
+                    if (activePopover.contains(event.target)) {
+                        return;
+                    }
+
+                    if (activeAnchor && activeAnchor.contains(event.target)) {
+                        return;
+                    }
+
+                    closePopover();
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        closePopover();
+                    }
+                });
+
+                window.addEventListener('resize', closePopover);
+                window.addEventListener('scroll', closePopover, true);
+
+                const marks = document.querySelectorAll('select.manual-validation-mark');
+                marks.forEach(function (mark) {
+                    if (mark.dataset.enhanced === 'true') {
+                        return;
+                    }
+
+                    const box = document.createElement('button');
+                    box.type = 'button';
+                    box.className = 'manual-validation-box';
+                    box.setAttribute('aria-label', 'Tandai perlu revisi');
+
+                    const row = mark.closest('tr');
+                    const fieldCell = row ? row.querySelector('td') : null;
+                    const fieldName = fieldCell ? (fieldCell.innerText || '').trim() : '';
+                    const presetComment = normalizeCommentText(mark.dataset.comment || getFieldComment(fieldName));
+                    if (presetComment) {
+                        mark.dataset.comment = presetComment;
+                    }
+
+                    const syncVisual = function () {
+                        const checked = (mark.value || '').toLowerCase() === 'x';
+                        box.dataset.checked = checked ? 'true' : 'false';
+                        box.textContent = checked ? 'X' : '';
+                    };
+
+                    box.addEventListener('click', function () {
+                        const isChecked = (mark.value || '').toLowerCase() === 'x';
+                        if (!isChecked) {
+                            mark.value = 'x';
+                            syncVisual();
+                        }
+
+                        openEditorPopover(box, mark, fieldName || 'Field', syncVisual);
+                    });
+
+                    mark.classList.add('manual-validation-mark-hidden');
+                    mark.dataset.enhanced = 'true';
+                    mark.insertAdjacentElement('afterend', box);
+                    syncVisual();
+                });
+            };
+
+            const initializeStaticValidationTooltips = function () {
+                const badges = detailSection.querySelectorAll('span.badge.bg-danger');
+                badges.forEach(function (badge) {
+                    const text = (badge.textContent || '').trim().toUpperCase();
+                    if (text !== 'X') {
+                        return;
+                    }
+
+                    const row = badge.closest('tr');
+                    const fieldCell = row ? row.querySelector('td') : null;
+                    const fieldName = fieldCell ? (fieldCell.innerText || '').trim() : '';
+                    const comment = getFieldComment(fieldName);
+                    if (!comment) {
+                        return;
+                    }
+
+                    badge.classList.add('manual-validation-static');
+                    badge.setAttribute('tabindex', '0');
+                    badge.setAttribute('title', 'Klik untuk lihat komentar');
+                    badge.addEventListener('click', function () {
+                        const localFieldName = fieldName || 'Field';
+                        const containerRect = badge.getBoundingClientRect();
+
+                        const popover = document.createElement('div');
+                        popover.className = 'manual-popover';
+                        popover.innerHTML =
+                            '<div class="manual-popover-title">Komentar Revisi: ' + localFieldName + '</div>' +
+                            '<div class="manual-popover-message"></div>';
+
+                        const messageNode = popover.querySelector('.manual-popover-message');
+                        if (messageNode) {
+                            messageNode.textContent = comment;
+                        }
+
+                        document.body.appendChild(popover);
+
+                        const popRect = popover.getBoundingClientRect();
+                        let left = containerRect.left - popRect.width - 12;
+                        let side = 'left';
+                        if (left < 8) {
+                            left = containerRect.right + 12;
+                            side = 'right';
+                        }
+
+                        let top = containerRect.top - 6;
+                        if (top + popRect.height > window.innerHeight - 8) {
+                            top = window.innerHeight - popRect.height - 8;
+                        }
+                        if (top < 8) {
+                            top = 8;
+                        }
+
+                        popover.dataset.side = side;
+                        popover.style.left = left + 'px';
+                        popover.style.top = top + 'px';
+
+                        const close = function (event) {
+                            if (event && (popover.contains(event.target) || badge.contains(event.target))) {
+                                return;
+                            }
+
+                            popover.remove();
+                            document.removeEventListener('click', close);
+                            window.removeEventListener('resize', close);
+                            window.removeEventListener('scroll', close, true);
+                        };
+
+                        setTimeout(function () {
+                            document.addEventListener('click', close);
+                        }, 0);
+                        window.addEventListener('resize', close);
+                        window.addEventListener('scroll', close, true);
+                    });
+                });
+            };
+
+            const decisionForm = document.getElementById('decisionForm');
+            const decisionComment = document.getElementById('decisionComment');
+
+            if (decisionForm && decisionComment) {
+                decisionForm.addEventListener('click', function (event) {
+                    const button = event.target.closest('button[data-decision-mode]');
+                    if (!button) {
+                        return;
+                    }
+
+                    decisionForm.dataset.decisionMode = button.dataset.decisionMode || 'approve';
+                });
+
+                decisionForm.addEventListener('submit', function () {
+                    const mode = (decisionForm.dataset.decisionMode || 'approve').toLowerCase();
+                    if (mode === 'approve') {
+                        return;
+                    }
+
                     const failedFields = buildManualValidationNotes();
                     if (failedFields.length === 0) {
                         return;
                     }
 
-                    const autoNotes = 'Perlu perbaikan pada field berikut:\n' + failedFields.map(function (field) {
-                        return '- ' + field;
+                    const autoNotes = 'Perlu perbaikan pada field berikut:\n' + failedFields.map(function (item) {
+                        return item.comment
+                            ? '- ' + item.fieldName + ': ' + item.comment
+                            : '- ' + item.fieldName;
                     }).join('\n');
 
-                    const currentText = (textarea.value || '').trim();
+                    const currentText = (decisionComment.value || '').trim();
                     if (!currentText) {
-                        textarea.value = autoNotes;
+                        decisionComment.value = autoNotes;
                         return;
                     }
 
@@ -1177,13 +2268,13 @@
                         return;
                     }
 
-                    textarea.value = currentText + '\n\n' + autoNotes;
+                    decisionComment.value = currentText + '\n\n' + autoNotes;
                 });
-            };
+            }
 
-            wireDecisionForm('revisionRequiredForm', 'revisionRequiredComment');
-            wireDecisionForm('finalRejectForm', 'finalRejectComment');
             restoreManualValidationMarks();
+            initializeManualValidationBoxes();
+            initializeStaticValidationTooltips();
         })();
     </script>
 }

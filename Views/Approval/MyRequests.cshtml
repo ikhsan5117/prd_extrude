@@ -2,12 +2,7 @@
 @using VelastoProductionSystem.Models
 @{
     ViewData["Title"] = "My Approval Requests";
-    var displayedItems = Model
-        .Where(x => x.Status != ApprovalRequestStatus.Draft
-            || x.ActionType == ApprovalActionType.SpsItemCreate
-            || x.ActionType == ApprovalActionType.SpsDocumentEdit
-            || x.ActionType == ApprovalActionType.SpsItemEdit)
-        .ToList();
+    var displayedItems = Model.ToList();
 }
 
 <style>

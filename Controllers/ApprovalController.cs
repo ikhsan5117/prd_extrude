@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using VelastoProductionSystem.Data;
+using VelastoProductionSystem.Helpers;
 using VelastoProductionSystem.Models;
 using VelastoProductionSystem.Services;
 using System.Reflection;
@@ -10,10 +13,12 @@ namespace VelastoProductionSystem.Controllers
     public class ApprovalController : Controller
     {
         private readonly IApprovalService _approvalService;
+        private readonly ApplicationDbContext _context;
 
-        public ApprovalController(IApprovalService approvalService)
+        public ApprovalController(IApprovalService approvalService, ApplicationDbContext context)
         {
             _approvalService = approvalService;
+            _context = context;
         }
 
         [HttpGet]
@@ -115,6 +120,32 @@ namespace VelastoProductionSystem.Controllers
             {
                 TempData["ErrorMessage"] = "Anda tidak punya akses ke request ini.";
                 return RedirectToAction("Index", "Home");
+            }
+
+            switch (row.ActionType)
+            {
+                case ApprovalActionType.SpsDocumentEdit:
+                    var currentDocument = await _context.SpsNoDocs
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.DocumentNumber == row.TargetKey);
+                    if (currentDocument != null)
+                    {
+                        ViewBag.BeforeSpsPayloadJson = JsonSerializer.Serialize(SpsMapper.ToSpsMaster(currentDocument));
+                    }
+                    break;
+
+                case ApprovalActionType.SpsItemEdit:
+                    if (int.TryParse(row.TargetKey, out var itemId))
+                    {
+                        var currentItem = await _context.SpsItemLists
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(x => x.Id == itemId);
+                        if (currentItem != null)
+                        {
+                            ViewBag.BeforeItemPayloadJson = JsonSerializer.Serialize(currentItem);
+                        }
+                    }
+                    break;
             }
 
             return View(row);

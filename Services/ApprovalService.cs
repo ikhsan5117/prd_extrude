@@ -506,7 +506,23 @@ namespace VelastoProductionSystem.Services
                             return $"Dokumen sumber '{targetKey}' tidak ditemukan, revisi dilewati.";
                         }
 
-                        var nextDocumentNumber = await GenerateNextRevisionDocumentNumberAsync(sourceDoc.DocumentNumber);
+                        string nextDocumentNumber;
+                        string? nextRevisionNumber = null;
+
+                        if (!string.Equals(model.DocumentNumber, targetKey, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(model.DocumentNumber))
+                        {
+                            // Isi manual oleh user
+                            nextDocumentNumber = model.DocumentNumber.Trim();
+                            nextRevisionNumber = model.RevisionNumber?.Trim();
+                        }
+                        else 
+                        {
+                            // Generate otomatis format /01, /02
+                            var revisionInfo = await GenerateNextRevisionDocumentNumberAsync(sourceDoc.DocumentNumber);
+                            nextDocumentNumber = revisionInfo.DocNumber;
+                            nextRevisionNumber = revisionInfo.RevNumber.ToString();
+                        }
+
                         if (await _context.SpsNoDocs.AnyAsync(s => s.DocumentNumber == nextDocumentNumber))
                         {
                             return $"Dokumen revisi '{nextDocumentNumber}' sudah ada, revisi dilewati.";
@@ -515,12 +531,7 @@ namespace VelastoProductionSystem.Services
                         var revisedDoc = SpsMapper.ToSpsNoDoc(model);
                         revisedDoc.DocumentNumber = nextDocumentNumber;
                         revisedDoc.IsActive = true;
-
-                        var revisionNo = ExtractRevisionNumber(nextDocumentNumber);
-                        if (revisionNo.HasValue)
-                        {
-                            revisedDoc.RevisionNumber = revisionNo.Value.ToString();
-                        }
+                        revisedDoc.RevisionNumber = nextRevisionNumber;
 
                         sourceDoc.IsActive = false;
                         _context.SpsNoDocs.Add(revisedDoc);
@@ -728,58 +739,43 @@ namespace VelastoProductionSystem.Services
             return targetKey.Trim().ToUpperInvariant();
         }
 
-        private async Task<string> GenerateNextRevisionDocumentNumberAsync(string sourceDocumentNumber)
+        private async Task<(string DocNumber, int RevNumber)> GenerateNextRevisionDocumentNumberAsync(string sourceDocumentNumber)
         {
-            var baseDocument = ExtractBaseDocumentNumber(sourceDocumentNumber);
+            var sourceDoc = await _context.SpsNoDocs.AsNoTracking().FirstOrDefaultAsync(s => s.DocumentNumber == sourceDocumentNumber);
+            string baseDocument = sourceDocumentNumber;
+            
+            // Jika dokumen asal sudah memiliki nomor revisi, berarti ini adalah turunan dari base document.
+            // Kita potong bagian '/XX' di belakangnya untuk mendapatkan base document aslinya.
+            if (sourceDoc != null && !string.IsNullOrWhiteSpace(sourceDoc.RevisionNumber))
+            {
+                int slashIndex = sourceDocumentNumber.LastIndexOf('/');
+                if (slashIndex > 0)
+                {
+                    baseDocument = sourceDocumentNumber.Substring(0, slashIndex);
+                }
+            }
+
             var basePrefix = baseDocument + "/";
 
+            // Cari semua dokumen yang sama persis dengan base (revisi 0) atau berawalan base/
             var candidates = await _context.SpsNoDocs
                 .AsNoTracking()
                 .Where(s => s.DocumentNumber == baseDocument || s.DocumentNumber.StartsWith(basePrefix))
-                .Select(s => s.DocumentNumber)
+                .Select(s => new { s.DocumentNumber, s.RevisionNumber })
                 .ToListAsync();
 
             var maxRevision = 0;
             foreach (var candidate in candidates)
             {
-                var parsedRevision = ExtractRevisionNumber(candidate);
-                if (parsedRevision.HasValue && parsedRevision.Value > maxRevision)
+                if (int.TryParse(candidate.RevisionNumber, out var revNum))
                 {
-                    maxRevision = parsedRevision.Value;
+                    if (revNum > maxRevision) maxRevision = revNum;
                 }
             }
 
-            return $"{baseDocument}/{maxRevision + 1}";
-        }
-
-        private static string ExtractBaseDocumentNumber(string documentNumber)
-        {
-            if (string.IsNullOrWhiteSpace(documentNumber))
-            {
-                return string.Empty;
-            }
-
-            var trimmed = documentNumber.Trim();
-            var match = Regex.Match(trimmed, @"^(.*?)/(\d+)$");
-            return match.Success ? match.Groups[1].Value : trimmed;
-        }
-
-        private static int? ExtractRevisionNumber(string documentNumber)
-        {
-            if (string.IsNullOrWhiteSpace(documentNumber))
-            {
-                return null;
-            }
-
-            var match = Regex.Match(documentNumber.Trim(), @"/(\d+)$");
-            if (!match.Success)
-            {
-                return null;
-            }
-
-            return int.TryParse(match.Groups[1].Value, out var revisionNumber)
-                ? revisionNumber
-                : null;
+            int nextRev = maxRevision + 1;
+            // Format angka revisi jadi 2 digit (01, 02, dst)
+            return ($"{baseDocument}/{nextRev:D2}", nextRev);
         }
     }
 }
