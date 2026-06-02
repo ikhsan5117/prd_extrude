@@ -949,9 +949,9 @@
                                     <tr><td style="width:35%;">Request Code</td><td>@Model.RequestCode</td></tr>
                                     <tr><td>Action Type</td><td>@Model.ActionType</td></tr>
                                     <tr><td>Status Request</td><td>@Model.Status</td></tr>
-                                    <tr><td>Dokumen Aktif Saat Ini</td><td>@(spsPayload.IsActive ? "Active" : "Inactive")</td></tr>
-                                    <tr><td>Revision Number</td><td>@(string.IsNullOrWhiteSpace(spsPayload.RevisionNumber) ? "-" : spsPayload.RevisionNumber)</td></tr>
-                                    <tr><td>Revision Date</td><td>@(string.IsNullOrWhiteSpace(spsPayload.RevisionDate) ? "-" : spsPayload.RevisionDate)</td></tr>
+                                    <tr><td>Dokumen Aktif Saat Ini</td><td>@(spsPayload?.IsActive == true ? "Active" : "Inactive")</td></tr>
+                                    <tr><td>Revision Number</td><td>@(string.IsNullOrWhiteSpace(spsPayload?.RevisionNumber) ? "-" : spsPayload.RevisionNumber)</td></tr>
+                                    <tr><td>Revision Date</td><td>@(string.IsNullOrWhiteSpace(spsPayload?.RevisionDate) ? "-" : spsPayload.RevisionDate)</td></tr>
                                     <tr><td>Dibuat</td><td>@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td></tr>
                                     <tr><td>Direview</td><td>@(Model.ReviewedAt.HasValue ? Model.ReviewedAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "-")</td></tr>
                                     <tr><td>Approver</td><td>@(string.IsNullOrWhiteSpace(Model.ApproverUserName) ? "-" : $"{Model.ApproverUserName} ({Model.ApproverRole})")</td></tr>

@@ -428,24 +428,16 @@
             </button>
         </form>
 
-        <!-- CREDENTIALS GUIDE -->
         <div id="credentialsGuide" style="margin-top: 25px; display: none;">
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <div class="role-btn" onclick="autoFillAdmin('admin', 'admin123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s;">
-                    <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Super Admin</span>
-                    <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
-                        <span style="color: var(--accent-cyan);">admin</span>
-                        <span style="color: #fff; opacity: 0.5;">admin123!</span>
-                    </div>
-                </div>
-                <div class="role-btn" onclick="autoFillAdmin('adm_prod', 'produksi123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                     <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Admin Prod</span>
                     <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
                         <span style="color: var(--accent-cyan);">adm_prod</span>
                         <span style="color: #fff; opacity: 0.5;">produksi123!</span>
                     </div>
                 </div>
-                <div class="role-btn" onclick="autoFillAdmin('adm_eng', 'engineering123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                     <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Admin Eng</span>
                     <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
                         <span style="color: var(--accent-cyan);">adm_eng</span>
@@ -481,8 +473,8 @@
                 $('label[for="machineId"], label:contains("MESIN PRODUKSI")').hide();
                 
                 $('#userId').removeAttr('required');
-                $('#password').val('admin123!');
-                $('#adminUsernameInput').val('admin');
+                $('#password').val('');
+                $('#adminUsernameInput').val('');
                 $('#credentialsGuide').fadeIn();
                 $(this).html('<i class="bi bi-person"></i> Login Operator').css('color', 'var(--accent-cyan)');
                 $('#adminUsernameInput').focus();
@@ -543,28 +535,6 @@
         });
     });
 
-    function autoFillAdmin(user, pass) {
-        $('#adminUsernameInput').val(user).css('border-color', 'var(--accent-cyan)');
-        $('#password').val(pass).css('border-color', 'var(--accent-cyan)');
-        
-        // Flash effect
-        setTimeout(() => {
-            $('#adminUsernameInput, #password').css('border-color', '');
-        }, 600);
-        
-        // Show notification
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 1500,
-            timerProgressBar: true
-        });
-        Toast.fire({
-            icon: 'success',
-            title: 'Kredensial ' + user + ' diterapkan'
-        });
-    }
 </script>
 
 </body>

@@ -242,14 +242,6 @@
                             <span class="fw-bold">SPS Item List</span>
                         </a>
                     }
-                    <a asp-controller="Approval" asp-action="MyRequests" class="nav-item sub">
-                        <i class="bi bi-envelope-paper"></i>
-                        <span class="fw-bold">Approval Requests</span>
-                        @if (myOpenRequestCount > 0)
-                        {
-                            <span class="badge bg-warning text-dark ms-2">@myOpenRequestCount</span>
-                        }
-                    </a>
                 </div>
             }
 
