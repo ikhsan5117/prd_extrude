@@ -2,7 +2,7 @@
 :: Berpindah ke directory tempat file .bat ini berada
 cd /d "%~dp0"
 
-set "FOLDER_NAME=EXTRUDE"
+set "FOLDER_NAME=EXTRUDE_Hose"
 
 echo Mengambil file project di %cd%...
 dotnet publish "VelastoProductionSystem.csproj" -c Release -o "./%FOLDER_NAME%"

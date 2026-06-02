@@ -577,6 +577,12 @@ textarea.form-control:focus {
     color: var(--text-secondary);
 }
 
+/* Keep native dropdown option list readable on Windows browsers. */
+.form-select option {
+    color: #111827;
+    background-color: #ffffff;
+}
+
 .form-label {
     color: var(--text-primary);
     font-weight: 600;
