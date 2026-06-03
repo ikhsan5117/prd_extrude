@@ -427,6 +427,9 @@ namespace VelastoProductionSystem.Controllers
                 return NotFound();
             }
 
+            // Auto-fill Revision Date (Format: dd-MM-yy)
+            model.RevisionDate = DateTime.Now.ToString("dd-MM-yy");
+
             try
             {
                 if (_approvalService.IsRequesterRole())
