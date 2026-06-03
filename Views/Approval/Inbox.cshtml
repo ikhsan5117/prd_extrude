@@ -5,8 +5,25 @@
     var filter = (string?)ViewBag.StatusFilter;
 }
 
+<style>
+    .approval-inbox-card {
+        overflow: visible !important;
+    }
+    .approval-table-scroll {
+        max-height: 70vh;
+        overflow: auto;
+    }
+    .approval-table-scroll thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: #212529; /* bg-dark equivalent */
+        color: white;
+    }
+</style>
+
 <div class="container-fluid py-3">
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 approval-inbox-card">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Admin Approval Inbox</h5>
             <form method="get" class="d-flex gap-2">
@@ -22,8 +39,8 @@
             </form>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
+            <div class="table-responsive approval-table-scroll">
+                <table class="table table-striped table-hover mb-0" id="inboxTable">
                     <thead>
                         <tr>
                             <th>Code</th>
@@ -45,7 +62,7 @@
                     {
                         foreach (var item in Model)
                         {
-                            <tr>
+                            <tr class="inbox-row">
                                 <td>@item.RequestCode</td>
                                 <td>
                                     @if (item.Status == ApprovalRequestStatus.Pending)
@@ -86,5 +103,66 @@
                 </table>
             </div>
         </div>
+        <div class="card-footer d-flex justify-content-between align-items-center bg-white" id="inboxPaginationBar">
+            <span id="inboxPageInfo" class="text-muted small"></span>
+            <div class="d-flex gap-2">
+                <button type="button" id="inboxPrevBtn" class="btn btn-sm btn-outline-secondary">Prev</button>
+                <button type="button" id="inboxNextBtn" class="btn btn-sm btn-outline-secondary">Next</button>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        const rowsPerPage = 50;
+        const rows = Array.from(document.querySelectorAll('#inboxTable tbody tr.inbox-row'));
+        const paginationBar = document.getElementById('inboxPaginationBar');
+        const pageInfo = document.getElementById('inboxPageInfo');
+        const prevBtn = document.getElementById('inboxPrevBtn');
+        const nextBtn = document.getElementById('inboxNextBtn');
+
+        if (!rows.length || !paginationBar || !pageInfo || !prevBtn || !nextBtn) {
+            if (paginationBar) {
+                paginationBar.classList.add('d-none');
+            }
+            return;
+        }
+
+        let currentPage = 1;
+        const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+
+        const renderPage = function () {
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            rows.forEach(function (row, index) {
+                row.style.display = index >= start && index < end ? '' : 'none';
+            });
+
+            pageInfo.textContent = 'Page ' + currentPage + ' / ' + totalPages + ' (' + rows.length + ' rows)';
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        };
+
+        prevBtn.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        });
+
+        nextBtn.addEventListener('click', function () {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage();
+            }
+        });
+
+        if (totalPages <= 1) {
+            paginationBar.classList.add('d-none');
+        }
+
+        renderPage();
+    })();
+</script>
