@@ -178,7 +178,7 @@
                         <input type="hidden" asp-for="ThickUCL" />
                         <input type="hidden" asp-for="ToleranceInner" />
                         <input type="hidden" asp-for="ToleranceOuter" />
-                        <input type="hidden" asp-for="ToleranceSpiralPitch" />
+
                         <input type="hidden" asp-for="TotalLCL" />
                         <input type="hidden" asp-for="TotalMax" />
                         <input type="hidden" asp-for="TotalMin" />
@@ -186,7 +186,7 @@
                         <input type="hidden" asp-for="TotalTol" />
                         <input type="hidden" asp-for="TotalUCL" />
                         <input type="hidden" asp-for="TubeDie" />
-                        <input type="hidden" asp-for="UnsmoothSurface" />
+
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                         <div class="alert alert-info" role="alert">
@@ -1427,6 +1427,39 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     <input asp-for="CuttingSpeed_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tolerance Spiral Pitch (Min/Asli/Max) -->
+                                        <div class="tolerance-group">
+                                            <div class="tolerance-label">Tolerance Spiral Pitch (mm)</div>
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <input asp-for="ToleranceSpiralPitch_Min" type="number" step="0.01" class="form-control min-input" placeholder="MIN" />
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input asp-for="ToleranceSpiralPitch_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input asp-for="ToleranceSpiralPitch_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                </div>
+                                            </div>
+                                            <div class="row g-2 mt-1">
+                                                <div class="col-md-12">
+                                                    <label class="form-label text-white-50 small">Keterangan Spiral Pitch (teks)</label>
+                                                    <input asp-for="ToleranceSpiralPitch" class="form-control" placeholder="Contoh: 10±1 mm" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Unsmooth Surface -->
+                                        <div class="tolerance-group">
+                                            <div class="tolerance-label">Unsmooth Surface</div>
+                                            <div class="row g-2">
+                                                <div class="col-md-12">
+                                                    <label class="form-label text-white-50 small">Standar kondisi permukaan (teks/nilai)</label>
+                                                    <input asp-for="UnsmoothSurface" class="form-control" placeholder="Contoh: OK / Max 3 titik / ≤ 2 mm" />
                                                 </div>
                                             </div>
                                         </div>
