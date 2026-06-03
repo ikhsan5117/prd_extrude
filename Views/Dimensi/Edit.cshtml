@@ -2977,7 +2977,7 @@
                     documentNumber: document.getElementById('h-doc')?.innerText || '---',
                     machineName: document.getElementById('h-line')?.innerText || '',
                     itemCode: document.getElementById('h-itemcode')?.innerText || '',
-                    SpsId: spsIdInt,
+                    SpsId: spsIdStr ? parseInt(spsIdStr) : null,
                     hoseType: document.getElementById('h-hose')?.innerText || '',
                     customerName: "@(Model?.CustomerName ?? "")",
                     dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',

@@ -1572,7 +1572,9 @@ namespace VelastoProductionSystem.Controllers
 
         [HttpPost]
         public async Task<IActionResult> FinishProduction(int id, int qtyOk, int ngDim, int ngVis, 
-            decimal? WasteInnerAwal, decimal? WasteInnerAkhir, decimal? WasteCoverAwal, decimal? WasteCoverAkhir)
+            decimal? WasteInnerAwal, decimal? WasteInnerAkhir, decimal? WasteCoverAwal, decimal? WasteCoverAkhir,
+            string? DAI_Awal, string? DAI_Akhir, string? DAC_Awal, string? DAC_Akhir,
+            string? DRAI_Awal, string? DRAI_Akhir, string? DRAC_Awal, string? DRAC_Akhir)
         {
             var report = await _context.ProductionReports.FindAsync(id);
             if (report != null)
@@ -1584,6 +1586,15 @@ namespace VelastoProductionSystem.Controllers
                 report.WasteInnerAkhir = WasteInnerAkhir;
                 report.WasteCoverAwal = WasteCoverAwal;
                 report.WasteCoverAkhir = WasteCoverAkhir;
+
+                report.DAI_Awal = DAI_Awal;
+                report.DAI_Akhir = DAI_Akhir;
+                report.DAC_Awal = DAC_Awal;
+                report.DAC_Akhir = DAC_Akhir;
+                report.DRAI_Awal = DRAI_Awal;
+                report.DRAI_Akhir = DRAI_Akhir;
+                report.DRAC_Awal = DRAC_Awal;
+                report.DRAC_Akhir = DRAC_Akhir;
 
                 report.Status = "COMPLETED";
                 report.ProductionEndTime = DateTime.Now;

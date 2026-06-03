@@ -873,8 +873,21 @@
                                                 </div>
                                                 
                                                 <div class="std-zone py-2 mb-2 rounded-2" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
-                                                    <div class="super-small opacity-40 text-uppercase mb-1" style="font-size: 0.55rem;">Standard Target</div>
-                                                    <div class="font-monospace fw-black" id="spec_@key" style="font-size: 1.1rem; color: @mSec.Color; filter: drop-shadow(0 0 5px @(mSec.Color)44);">--</div>
+                                                    <div class="d-flex justify-content-center gap-1">
+                                                        <div class="text-center px-1" style="border-right: 1px solid rgba(255,255,255,0.1); width: 33%;">
+                                                            <div style="font-size: 0.4rem; color: #94a3b8; text-transform: uppercase;">min</div>
+                                                            <div id="spec_min_@key" class="font-monospace fw-bold" style="font-size: 0.75rem; color: @mSec.Color;">--</div>
+                                                        </div>
+                                                        <div class="text-center px-1" style="border-right: 1px solid rgba(255,255,255,0.1); width: 33%;">
+                                                            <div style="font-size: 0.45rem; color: #fff; text-transform: uppercase;">std</div>
+                                                            <div id="spec_std_@key" class="font-monospace fw-bold" style="font-size: 0.85rem; color: @mSec.Color;">--</div>
+                                                        </div>
+                                                        <div class="text-center px-1" style="width: 33%;">
+                                                            <div style="font-size: 0.4rem; color: #94a3b8; text-transform: uppercase;">max</div>
+                                                            <div id="spec_max_@key" class="font-monospace fw-bold" style="font-size: 0.75rem; color: @mSec.Color;">--</div>
+                                                        </div>
+                                                    </div>
+                                                    <div id="spec_@key" style="display:none;">--</div>
                                                 </div>
                                                 
                                                 <div class="input-zone">
@@ -1366,51 +1379,60 @@
                 middleCard.style.display = is3Layer ? '' : 'none';
             }
 
-            // formatVal: server now returns "Min | Asli | Max" ranges directly
-            const formatVal = (val) => {
-                if (val === undefined || val === null || val === '') return '---';
-                const strVal = String(val).trim();
-                return (strVal === '' || strVal === '-') ? '---' : strVal;
+            // formatVal: server now returns Min | Asli | Max ranges directly
+            const formatVal = (val, min, max) => {
+                const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? String(v).trim() : '--';
+                const strVal = fmt(val);
+                const strMin = fmt(min);
+                const strMax = fmt(max);
+                
+                if (strVal === '--' && strMin === '--' && strMax === '--') return '---';
+                
+                if (strMin !== '--' || strMax !== '--') {
+                    return `${strMin} | ${strVal} | ${strMax}`;
+                }
+                return strVal === '--' ? '---' : strVal;
             };
 
             const specMappings = {
-                'HeadTempInner':      formatVal(sps.headTempInner      || sps.HeadTempInner),
-                'Cylinder1TempInner': formatVal(sps.cylinder1TempInner || sps.Cylinder1TempInner),
-                'Cylinder2TempInner': formatVal(sps.cylinder2TempInner || sps.Cylinder2TempInner),
-                'Cylinder3TempInner': formatVal(sps.cylinder3TempInner || sps.Cylinder3TempInner),
-                'ScrewTempInner':     formatVal(sps.screwTempInner     || sps.ScrewTempInner),
-                'ScrewSpeedInner':    formatVal(sps.screwSpeedInner    || sps.ScrewSpeedInner),
-                'FeedRollRatioInner': formatVal(sps.feedRollRatioInner || sps.FeedRollRatioInner),
-                'PressureInner':      formatVal(sps.pressureInner      || sps.PressureInner),
+                'HeadTempInner':      formatVal(sps.HeadTemp1_Asli || sps.headTemp1_Asli || sps.HeadTemp1 || sps.headTemp1, sps.HeadTemp1_Min || sps.headTemp1_Min, sps.HeadTemp1_Max || sps.headTemp1_Max),
+                'Cylinder1TempInner': formatVal(sps.Cylinder1_1_Asli || sps.cylinder1_1_Asli || sps.Cylinder1_1 || sps.cylinder1_1, sps.Cylinder1_1_Min || sps.cylinder1_1_Min, sps.Cylinder1_1_Max || sps.cylinder1_1_Max),
+                'Cylinder2TempInner': formatVal(sps.Cylinder2_1_Asli || sps.cylinder2_1_Asli || sps.Cylinder2_1 || sps.cylinder2_1, sps.Cylinder2_1_Min || sps.cylinder2_1_Min, sps.Cylinder2_1_Max || sps.cylinder2_1_Max),
+                'Cylinder3TempInner': formatVal(sps.Cylinder3_1_Asli || sps.cylinder3_1_Asli || sps.Cylinder3_1 || sps.cylinder3_1, sps.Cylinder3_1_Min || sps.cylinder3_1_Min, sps.Cylinder3_1_Max || sps.cylinder3_1_Max),
+                'ScrewTempInner':     formatVal(sps.ScrewTemp1_Asli || sps.screwTemp1_Asli || sps.ScrewTemp1 || sps.screwTemp1, sps.ScrewTemp1_Min || sps.screwTemp1_Min, sps.ScrewTemp1_Max || sps.screwTemp1_Max),
+                'ScrewSpeedInner':    formatVal(sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1, sps.ScrewSpeed1_Min || sps.screwSpeed1_Min, sps.ScrewSpeed1_Max || sps.screwSpeed1_Max),
+                'FeedRollRatioInner': formatVal(sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1, sps.FeedRollRatio1_Min || sps.feedRollRatio1_Min || sps.Feed1_Min || sps.feed1_Min, sps.FeedRollRatio1_Max || sps.feedRollRatio1_Max || sps.Feed1_Max || sps.feed1_Max),
+                'PressureInner':      formatVal(sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1, sps.Pressure1_Min || sps.pressure1_Min, sps.Pressure1_Max || sps.pressure1_Max),
 
-                'HeadTempOuter':      formatVal(sps.headTempOuter      || sps.HeadTempOuter),
-                'Cylinder1TempOuter': formatVal(sps.cylinder1TempOuter || sps.Cylinder1TempOuter),
-                'Cylinder2TempOuter': formatVal(sps.cylinder2TempOuter || sps.Cylinder2TempOuter),
-                'Cylinder3TempOuter': formatVal(sps.cylinder3TempOuter || sps.Cylinder3TempOuter),
-                'ScrewTempOuter':     formatVal(sps.screwTempOuter     || sps.ScrewTempOuter),
-                'ScrewSpeedOuter':    formatVal(sps.screwSpeedOuter    || sps.ScrewSpeedOuter),
-                'FeedRollRatioOuter': formatVal(sps.feedRollRatioOuter || sps.FeedRollRatioOuter),
-                'PressureOuter':      formatVal(sps.pressureOuter      || sps.PressureOuter),
+                'HeadTempOuter':      formatVal(sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2, sps.HeadTemp2_Min || sps.headTemp2_Min, sps.HeadTemp2_Max || sps.headTemp2_Max),
+                'Cylinder1TempOuter': formatVal(sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2, sps.Cylinder1_2_Min || sps.cylinder1_2_Min, sps.Cylinder1_2_Max || sps.cylinder1_2_Max),
+                'Cylinder2TempOuter': formatVal(sps.Cylinder2_2_Asli || sps.cylinder2_2_Asli || sps.Cylinder2_2 || sps.cylinder2_2, sps.Cylinder2_2_Min || sps.cylinder2_2_Min, sps.Cylinder2_2_Max || sps.cylinder2_2_Max),
+                'Cylinder3TempOuter': formatVal(sps.Cylinder3_2_Asli || sps.cylinder3_2_Asli || sps.Cylinder3_2 || sps.cylinder3_2, sps.Cylinder3_2_Min || sps.cylinder3_2_Min, sps.Cylinder3_2_Max || sps.cylinder3_2_Max),
+                'ScrewTempOuter':     formatVal(sps.ScrewTemp2_Asli || sps.screwTemp2_Asli || sps.ScrewTemp2 || sps.screwTemp2, sps.ScrewTemp2_Min || sps.screwTemp2_Min, sps.ScrewTemp2_Max || sps.screwTemp2_Max),
+                'ScrewSpeedOuter':    formatVal(sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2, sps.ScrewSpeed2_Min || sps.screwSpeed2_Min, sps.ScrewSpeed2_Max || sps.screwSpeed2_Max),
+                'FeedRollRatioOuter': formatVal(sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2, sps.FeedRollRatio2_Min || sps.feedRollRatio2_Min || sps.Feed2_Min || sps.feed2_Min, sps.FeedRollRatio2_Max || sps.feedRollRatio2_Max || sps.Feed2_Max || sps.feed2_Max),
+                'PressureOuter':      formatVal(sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2, sps.Pressure2_Min || sps.pressure2_Min, sps.Pressure2_Max || sps.pressure2_Max),
 
-                'SpiralSpeed':         formatVal(sps.spiralSpeed         || sps.SpiralSpeed),
-                'SpiralPitchSetting':  formatVal(sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch),
-                'SpiralPitchDisplay':  formatVal(sps.spiralPitchDisplay   || sps.SpiralPitchDisplay || sps.toleranceSpiralPitch || sps.ToleranceSpiralPitch),
-                'PresetValue':         formatVal(sps.presetValue         || sps.PresetValue),
-                'ControlValue':        formatVal(sps.controlValue        || sps.ControlValue),
-                'HoseSpeed':           formatVal(sps.hoseSpeed           || sps.HoseSpeed),
-                'TakeupConveyorSpeed': formatVal(sps.takeupConveyorSpeed || sps.TakeupConveyorSpeed || sps.TakeUpConveyorSpeed),
-                'CoolConveyorSpeed':   formatVal(sps.coolConveyorSpeed   || sps.CoolConveyorSpeed),
-                'ConveyorRatio':       formatVal(sps.conveyorRatio       || sps.ConveyorRatio),
-                'ChillerWaterTemp':    formatVal(sps.chillerWaterTemp    || sps.ChillerWaterTemp),
-                'CaterpillarGap':      formatVal(sps.caterpillarGap      || sps.CaterpillarGap),
-                'UnsmoothSurface':     formatVal(sps.unsmoothSurface     || sps.UnsmoothSurface || 'OK'),
+                'SpiralSpeed':         formatVal(sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Min || sps.spiralSpeed_Min, sps.SpiralSpeed_Max || sps.spiralSpeed_Max),
+                'SpiralPitchSetting':  formatVal(sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max),
+                'SpiralPitchDisplay':  formatVal(sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max),
+                
+                'PresetValue':         formatVal(sps.PresetValue || sps.presetValue),
+                'ControlValue':        formatVal(sps.ControlValue || sps.controlValue),
+                'HoseSpeed':           formatVal(sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Min || sps.hoseSpeed_Min, sps.HoseSpeed_Max || sps.hoseSpeed_Max),
+                'TakeupConveyorSpeed': formatVal(sps.TakeupConveyorSpeed || sps.takeupConveyorSpeed || sps.TakeUpConveyorSpeed),
+                'CoolConveyorSpeed':   formatVal(sps.CoolConveyorSpeed || sps.coolConveyorSpeed),
+                'ConveyorRatio':       formatVal(sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max),
+                'ChillerWaterTemp':    formatVal(sps.ChillerWaterTemp || sps.chillerWaterTemp),
+                'CaterpillarGap':      formatVal(sps.CaterpillarGap || sps.caterpillarGap),
+                'UnsmoothSurface':     formatVal(sps.UnsmoothSurface || sps.unsmoothSurface || 'OK'),
 
-                'NippleDie':    formatVal(sps.innerDie    || sps.InnerDie   || sps.Nipple),
-                'TubeDie':      formatVal(sps.tubeDie     || sps.TubeDie),
-                'MiddleDie':    formatVal(sps.middleDie   || sps.MiddleDie),
-                'CoverDie':     formatVal(sps.coverDie    || sps.CoverDie),
-                'SpacerDie':    formatVal(sps.spacerDie   || sps.SpacerDie),
-                'ToleranceDie': formatVal(sps.toleranceDie || sps.ToleranceDie)
+                'NippleDie':    formatVal(sps.Nipple_Asli || sps.nipple_Asli || sps.Nipple || sps.nipple, sps.Nipple_Min || sps.nipple_Min, sps.Nipple_Max || sps.nipple_Max),
+                'TubeDie':      formatVal(sps.TubeDie_Asli || sps.tubeDie_Asli || sps.TubeDie || sps.tubeDie, sps.TubeDie_Min || sps.tubeDie_Min, sps.TubeDie_Max || sps.tubeDie_Max),
+                'MiddleDie':    formatVal(sps.MiddleDie_Asli || sps.middleDie_Asli || sps.MiddleDie || sps.middleDie, sps.MiddleDie_Min || sps.middleDie_Min, sps.MiddleDie_Max || sps.middleDie_Max),
+                'CoverDie':     formatVal(sps.CoverDie_Asli || sps.coverDie_Asli || sps.CoverDie || sps.coverDie, sps.CoverDie_Min || sps.coverDie_Min, sps.CoverDie_Max || sps.coverDie_Max),
+                'SpacerDie':    formatVal(sps.SpacerDie_Asli || sps.spacerDie_Asli || sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max),
+                'ToleranceDie': formatVal(sps.ADistance_Asli || sps.aDistance_Asli || sps.ToleranceDie || sps.toleranceDie, sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max)
             };
 
             for (const [key, val] of Object.entries(specMappings)) {

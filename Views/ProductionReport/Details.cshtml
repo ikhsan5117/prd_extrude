@@ -447,7 +447,9 @@
                                 <td colspan="2" class="text-start ps-2 py-1 lh-1 text-white-50" style="font-size: 9px; opacity: 0.7;">No Burry, No Line, No Bubble, No Scratch</td>
                                 @for(int h=0; h<6; h++) {
                                     var r = h < readings.Count ? readings[h] : null;
-                                    <td class="border-start border-primary border-opacity-25 @(r?.VisualCheck == "NG" ? "text-danger" : "text-success") fw-black">@r?.VisualCheck</td>
+                                    var vc = r?.VisualCheck?.ToUpper();
+                                    var vcClass = vc == "NG" ? "text-danger" : (vc == "OK" ? "text-success" : "");
+                                    <td class="border-start border-primary border-opacity-25 @vcClass fw-black">@r?.VisualCheck</td>
                                 }
                             </tr>
                         </tbody>
@@ -1070,12 +1072,17 @@
                     <div class="row g-4">
                         <!-- WASTE SECTION -->
                         <div class="col-12">
-                            <h6 class="text-white-50 border-bottom border-white border-opacity-10 pb-2 mb-3 fw-bold">DANDORY & WASTE (KG)</h6>
-                            <div class="row g-3">
-                                <div class="col-md-3"><label class="hud-label">INNER AWAL</label><input name="WasteInnerAwal" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteInnerAwal" /></div>
-                                <div class="col-md-3"><label class="hud-label">INNER AKHIR</label><input name="WasteInnerAkhir" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteInnerAkhir" /></div>
-                                <div class="col-md-3"><label class="hud-label">COVER AWAL</label><input name="WasteCoverAwal" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteCoverAwal" /></div>
-                                <div class="col-md-3"><label class="hud-label">COVER AKHIR</label><input name="WasteCoverAkhir" type="number" step="0.01" class="hud-input-lg w-100" value="@Model.WasteCoverAkhir" /></div>
+                            <h6 class="text-white-50 border-bottom border-white border-opacity-10 pb-2 mb-3 fw-bold">DANDORY & WASTE SUMMARY</h6>
+                            <div class="row g-2">
+                                <div class="col-md-3"><label class="hud-label text-info">DA INNER AWAL</label><input name="DAI_Awal" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@(Model.DAI_Awal ?? Model.WasteInnerAwal?.ToString())" /></div>
+                                <div class="col-md-3"><label class="hud-label text-info">DA INNER AKHIR</label><input name="DAI_Akhir" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@(Model.DAI_Akhir ?? Model.WasteInnerAkhir?.ToString())" /></div>
+                                <div class="col-md-3"><label class="hud-label text-info">DA COVER AWAL</label><input name="DAC_Awal" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@(Model.DAC_Awal ?? Model.WasteCoverAwal?.ToString())" /></div>
+                                <div class="col-md-3"><label class="hud-label text-info">DA COVER AKHIR</label><input name="DAC_Akhir" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@(Model.DAC_Akhir ?? Model.WasteCoverAkhir?.ToString())" /></div>
+                                
+                                <div class="col-md-3 mt-2"><label class="hud-label text-warning">DR INNER AWAL</label><input name="DRAI_Awal" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@Model.DRAI_Awal" /></div>
+                                <div class="col-md-3 mt-2"><label class="hud-label text-warning">DR INNER AKHIR</label><input name="DRAI_Akhir" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@Model.DRAI_Akhir" /></div>
+                                <div class="col-md-3 mt-2"><label class="hud-label text-warning">DR COVER AWAL</label><input name="DRAC_Awal" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@Model.DRAC_Awal" /></div>
+                                <div class="col-md-3 mt-2"><label class="hud-label text-warning">DR COVER AKHIR</label><input name="DRAC_Akhir" type="text" class="hud-input-lg w-100" style="font-size: 15px;" value="@Model.DRAC_Akhir" /></div>
                             </div>
                         </div>
 

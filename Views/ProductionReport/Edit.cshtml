@@ -615,8 +615,21 @@
                                                 </div>
                                                 
                                                 <div class="std-zone py-2 mb-2 rounded-2" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
-                                                    <div class="super-small opacity-40 text-uppercase mb-1" style="font-size: 0.55rem;">Standard Target</div>
-                                                    <div class="font-monospace fw-black" id="spec_@key" style="font-size: 1.1rem; color: @mSec.Color; filter: drop-shadow(0 0 5px @(mSec.Color)44);">--</div>
+                                                    <div class="d-flex justify-content-center gap-1">
+                                                        <div class="text-center px-1" style="border-right: 1px solid rgba(255,255,255,0.1); width: 33%;">
+                                                            <div style="font-size: 0.4rem; color: #94a3b8; text-transform: uppercase;">min</div>
+                                                            <div id="spec_min_@key" class="font-monospace fw-bold" style="font-size: 0.75rem; color: @mSec.Color;">--</div>
+                                                        </div>
+                                                        <div class="text-center px-1" style="border-right: 1px solid rgba(255,255,255,0.1); width: 33%;">
+                                                            <div style="font-size: 0.45rem; color: #fff; text-transform: uppercase;">std</div>
+                                                            <div id="spec_std_@key" class="font-monospace fw-bold" style="font-size: 0.85rem; color: @mSec.Color;">--</div>
+                                                        </div>
+                                                        <div class="text-center px-1" style="width: 33%;">
+                                                            <div style="font-size: 0.4rem; color: #94a3b8; text-transform: uppercase;">max</div>
+                                                            <div id="spec_max_@key" class="font-monospace fw-bold" style="font-size: 0.75rem; color: @mSec.Color;">--</div>
+                                                        </div>
+                                                    </div>
+                                                    <div id="spec_@key" style="display:none;">--</div>
                                                 </div>
                                                 
                                                 <div class="input-zone">
@@ -1334,30 +1347,32 @@
                     console.log('✅ SHOW Middle Die. Value:', midVal);
                 }
             }
-            
+
             // Map SPS fields to spec labels
-            setSpec('HeadTempInner', sps.HeadTemp1_Asli || sps.headTemp1_Asli || sps.HeadTemp1 || sps.headTemp1);
-            setSpec('Cylinder1TempInner', sps.Cylinder1_1_Asli || sps.cylinder1_1_Asli || sps.Cylinder1_1 || sps.cylinder1_1);
-            setSpec('Cylinder2TempInner', sps.Cylinder2_1_Asli || sps.cylinder2_1_Asli || sps.Cylinder2_1 || sps.cylinder2_1);
-            setSpec('Cylinder3TempInner', sps.Cylinder3_1_Asli || sps.cylinder3_1_Asli || sps.Cylinder3_1 || sps.cylinder3_1);
-            setSpec('ScrewTempInner', sps.ScrewTemp1_Asli || sps.screwTemp1_Asli || sps.ScrewTemp1 || sps.screwTemp1);
-            setSpec('ScrewSpeedInner', sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1);
-            setSpec('FeedRollRatioInner', sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1);
-            setSpec('PressureInner', sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1);
+            setSpec('HeadTempInner', sps.HeadTemp1_Asli || sps.headTemp1_Asli || sps.HeadTemp1 || sps.headTemp1, sps.HeadTemp1_Min || sps.headTemp1_Min, sps.HeadTemp1_Max || sps.headTemp1_Max);
+            setSpec('Cylinder1TempInner', sps.Cylinder1_1_Asli || sps.cylinder1_1_Asli || sps.Cylinder1_1 || sps.cylinder1_1, sps.Cylinder1_1_Min || sps.cylinder1_1_Min, sps.Cylinder1_1_Max || sps.cylinder1_1_Max);
+            setSpec('Cylinder2TempInner', sps.Cylinder2_1_Asli || sps.cylinder2_1_Asli || sps.Cylinder2_1 || sps.cylinder2_1, sps.Cylinder2_1_Min || sps.cylinder2_1_Min, sps.Cylinder2_1_Max || sps.cylinder2_1_Max);
+            setSpec('Cylinder3TempInner', sps.Cylinder3_1_Asli || sps.cylinder3_1_Asli || sps.Cylinder3_1 || sps.cylinder3_1, sps.Cylinder3_1_Min || sps.cylinder3_1_Min, sps.Cylinder3_1_Max || sps.cylinder3_1_Max);
+            setSpec('ScrewTempInner', sps.ScrewTemp1_Asli || sps.screwTemp1_Asli || sps.ScrewTemp1 || sps.screwTemp1, sps.ScrewTemp1_Min || sps.screwTemp1_Min, sps.ScrewTemp1_Max || sps.screwTemp1_Max);
+            setSpec('ScrewSpeedInner', sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1, sps.ScrewSpeed1_Min || sps.screwSpeed1_Min, sps.ScrewSpeed1_Max || sps.screwSpeed1_Max);
+            setSpec('FeedRollRatioInner', sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1, sps.FeedRollRatio1_Min || sps.feedRollRatio1_Min || sps.Feed1_Min || sps.feed1_Min, sps.FeedRollRatio1_Max || sps.feedRollRatio1_Max || sps.Feed1_Max || sps.feed1_Max);
+            setSpec('PressureInner', sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1, sps.Pressure1_Min || sps.pressure1_Min, sps.Pressure1_Max || sps.pressure1_Max);
 
-            setSpec('HeadTempOuter', sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2);
-            setSpec('Cylinder1TempOuter', sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2);
-            setSpec('Cylinder2TempOuter', sps.Cylinder2_2_Asli || sps.cylinder2_2_Asli || sps.Cylinder2_2 || sps.cylinder2_2);
-            setSpec('Cylinder3TempOuter', sps.Cylinder3_2_Asli || sps.cylinder3_2_Asli || sps.Cylinder3_2 || sps.cylinder3_2);
-            setSpec('ScrewTempOuter', sps.ScrewTemp2_Asli || sps.screwTemp2_Asli || sps.ScrewTemp2 || sps.screwTemp2);
-            setSpec('ScrewSpeedOuter', sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2);
-            setSpec('FeedRollRatioOuter', sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2);
-            setSpec('PressureOuter', sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2);
+            setSpec('HeadTempOuter', sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2, sps.HeadTemp2_Min || sps.headTemp2_Min, sps.HeadTemp2_Max || sps.headTemp2_Max);
+            setSpec('Cylinder1TempOuter', sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2, sps.Cylinder1_2_Min || sps.cylinder1_2_Min, sps.Cylinder1_2_Max || sps.cylinder1_2_Max);
+            setSpec('Cylinder2TempOuter', sps.Cylinder2_2_Asli || sps.cylinder2_2_Asli || sps.Cylinder2_2 || sps.cylinder2_2, sps.Cylinder2_2_Min || sps.cylinder2_2_Min, sps.Cylinder2_2_Max || sps.cylinder2_2_Max);
+            setSpec('Cylinder3TempOuter', sps.Cylinder3_2_Asli || sps.cylinder3_2_Asli || sps.Cylinder3_2 || sps.cylinder3_2, sps.Cylinder3_2_Min || sps.cylinder3_2_Min, sps.Cylinder3_2_Max || sps.cylinder3_2_Max);
+            setSpec('ScrewTempOuter', sps.ScrewTemp2_Asli || sps.screwTemp2_Asli || sps.ScrewTemp2 || sps.screwTemp2, sps.ScrewTemp2_Min || sps.screwTemp2_Min, sps.ScrewTemp2_Max || sps.screwTemp2_Max);
+            setSpec('ScrewSpeedOuter', sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2, sps.ScrewSpeed2_Min || sps.screwSpeed2_Min, sps.ScrewSpeed2_Max || sps.screwSpeed2_Max);
+            setSpec('FeedRollRatioOuter', sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2, sps.FeedRollRatio2_Min || sps.feedRollRatio2_Min || sps.Feed2_Min || sps.feed2_Min, sps.FeedRollRatio2_Max || sps.feedRollRatio2_Max || sps.Feed2_Max || sps.feed2_Max);
+            setSpec('PressureOuter', sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2, sps.Pressure2_Min || sps.pressure2_Min, sps.Pressure2_Max || sps.pressure2_Max);
 
-            setSpec('SpiralSpeed', sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed);
-            setSpec('SpiralPitchSetting', sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting);
-            setSpec('HoseSpeed', sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed);
-            setSpec('ConveyorRatio', sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio);
+            setSpec('SpiralSpeed', sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Min || sps.spiralSpeed_Min, sps.SpiralSpeed_Max || sps.spiralSpeed_Max);
+            setSpec('SpiralPitchSetting', sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max);
+            setSpec('SpiralPitchDisplay', sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max);
+
+            setSpec('HoseSpeed', sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Min || sps.hoseSpeed_Min, sps.HoseSpeed_Max || sps.hoseSpeed_Max);
+            setSpec('ConveyorRatio', sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max);
 
             // Populate Emboss Marking Date if empty
             const dateEl = document.getElementById('EmbossMarkDate');
