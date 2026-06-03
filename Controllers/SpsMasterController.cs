@@ -355,6 +355,24 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 var spsNoDoc = SpsMapper.ToSpsNoDoc(model);
+                
+                if (!string.IsNullOrWhiteSpace(model.ItemList))
+                {
+                    var items = model.ItemList.Split(new[] { ',', '\n', '\r', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                              .Select(i => i.Trim())
+                                              .Where(i => !string.IsNullOrEmpty(i))
+                                              .Distinct();
+                    
+                    foreach (var item in items)
+                    {
+                        spsNoDoc.ItemLists.Add(new SpsItemList 
+                        { 
+                            DocumentNumber = model.DocumentNumber, 
+                            ItemList = item 
+                        });
+                    }
+                }
+
                 _context.SpsNoDocs.Add(spsNoDoc);
                 await _context.SaveChangesAsync();
 
@@ -467,6 +485,32 @@ namespace VelastoProductionSystem.Controllers
 
                 // Update SpsNoDoc properties
                 SpsMapper.UpdateSpsNoDoc(spsNoDoc, model);
+
+                // Update ItemLists
+                if (spsNoDoc.ItemLists == null)
+                {
+                    spsNoDoc.ItemLists = new List<SpsItemList>();
+                }
+                
+                spsNoDoc.ItemLists.Clear();
+                
+                if (!string.IsNullOrWhiteSpace(model.ItemList))
+                {
+                    var items = model.ItemList.Split(new[] { ',', '\n', '\r', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                              .Select(i => i.Trim())
+                                              .Where(i => !string.IsNullOrEmpty(i))
+                                              .Distinct();
+                    
+                    foreach (var item in items)
+                    {
+                        spsNoDoc.ItemLists.Add(new SpsItemList 
+                        { 
+                            DocumentNumber = spsNoDoc.DocumentNumber, 
+                            ItemList = item 
+                        });
+                    }
+                }
+
                 await _context.SaveChangesAsync();
 
                 await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsDocumentEdit, documentNumber);

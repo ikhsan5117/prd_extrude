@@ -574,6 +574,31 @@ namespace VelastoProductionSystem.Services
                         });
                         return $"Item List '{model.ItemList}' berhasil dibuat otomatis dari request.";
                     }
+                case ApprovalActionType.SpsItemEdit:
+                    {
+                        var model = JsonSerializer.Deserialize<SpsItemList>(request.PayloadJson);
+                        if (model == null || string.IsNullOrWhiteSpace(model.ItemList) || string.IsNullOrWhiteSpace(model.DocumentNumber))
+                        {
+                            return "Payload revisi Item List tidak valid.";
+                        }
+
+                        if (!int.TryParse(request.TargetKey, out var id))
+                        {
+                            return "Target ID revisi Item List tidak valid.";
+                        }
+
+                        var existingItem = await _context.SpsItemLists.FirstOrDefaultAsync(i => i.Id == id);
+                        if (existingItem == null)
+                        {
+                            return $"Item List dengan ID '{id}' tidak ditemukan, revisi dilewati.";
+                        }
+
+                        var oldItemList = existingItem.ItemList;
+                        existingItem.ItemList = model.ItemList;
+                        existingItem.DocumentNumber = model.DocumentNumber;
+
+                        return $"Revisi Item List berhasil: '{oldItemList}' diubah menjadi '{model.ItemList}'.";
+                    }
                 default:
                     return null;
             }
