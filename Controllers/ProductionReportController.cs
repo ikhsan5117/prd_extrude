@@ -545,7 +545,7 @@ namespace VelastoProductionSystem.Controllers
                 FeedRollRatioOuter = R(master.FeedRollRatio2_Asli, master.FeedRollRatio2_Min, master.FeedRollRatio2_Max,
                     !string.IsNullOrEmpty(master.FeedRollRatio2) ? master.FeedRollRatio2 : master.Feed2),
                 
-                InnerDie     = R(master.Nipple_Asli, master.Nipple_Min, master.Nipple_Max, master.Nipple),
+                NippleDie    = R(master.Nipple_Asli, master.Nipple_Min, master.Nipple_Max, master.Nipple),
                 TubeDie      = R(master.TubeDie_Asli, master.TubeDie_Min, master.TubeDie_Max, master.TubeDie),
                 MiddleDie    = R(master.MiddleDie_Asli, master.MiddleDie_Min, master.MiddleDie_Max, master.MiddleDie),
                 CoverDie     = R(master.CoverDie_Asli, master.CoverDie_Min, master.CoverDie_Max, master.CoverDie),

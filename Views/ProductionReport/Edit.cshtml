@@ -1315,16 +1315,34 @@
                 }
             };
             
-            // Dies dimension standards
-            setSpec('NippleDie',    sps.Nipple_Asli    || sps.nipple_Asli    || sps.Nipple    || sps.nipple,    sps.Nipple_Min    || sps.nipple_Min,    sps.Nipple_Max    || sps.nipple_Max,    'NippleDie');
-            setSpec('TubeDie',      sps.TubeDie_Asli   || sps.tubeDie_Asli   || sps.TubeDie   || sps.tubeDie,   sps.TubeDie_Min   || sps.tubeDie_Min,   sps.TubeDie_Max   || sps.tubeDie_Max,   'TubeDie');
-            setSpec('MiddleDie',    sps.MiddleDie_Asli  || sps.middleDie_Asli  || sps.MiddleDie  || sps.middleDie,  sps.MiddleDie_Min  || sps.middleDie_Min,  sps.MiddleDie_Max  || sps.middleDie_Max,  'MiddleDie');
-            setSpec('CoverDie',     sps.CoverDie_Asli  || sps.coverDie_Asli  || sps.CoverDie  || sps.coverDie,  sps.CoverDie_Min  || sps.coverDie_Min,  sps.CoverDie_Max  || sps.coverDie_Max,  'CoverDie');
-            setSpec('SpacerDie',    sps.SpacerDie_Asli || sps.spacerDie_Asli || sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max, 'SpacerDie');
-            setSpec('ToleranceDie', sps.ADistance_Asli || sps.aDistance_Asli || sps.ToleranceDie || sps.toleranceDie || '--', sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max, 'ToleranceDie');
+            // Helper to parse pre-formatted "min | std | max" string from backend
+            const parsePipe = (formatted, fallbackVal, fallbackMin, fallbackMax) => {
+                if (formatted && formatted !== '--' && formatted !== '---' && formatted !== '') {
+                    const parts = String(formatted).split('|').map(s => s.trim());
+                    if (parts.length === 3) return { val: parts[1], min: parts[0], max: parts[2] };
+                    if (parts.length === 1) return { val: parts[0], min: '--', max: '--' };
+                }
+                const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? String(v) : '--';
+                return { val: fmt(fallbackVal), min: fmt(fallbackMin), max: fmt(fallbackMax) };
+            };
 
-            // AUTO-HIDE Middle Die Card if empty OR if it's a Double Layer machine
-            const midVal = (sps.MiddleDie_Asli || sps.middleDie_Asli || sps.MiddleDie || sps.middleDie || '').toString().trim();
+            // Dies dimension standards — backend pre-formats as "min | std | max"
+            const nd = parsePipe(sps.NippleDie || sps.nippleDie, sps.Nipple_Asli || sps.nipple_Asli || sps.Nipple || sps.nipple, sps.Nipple_Min || sps.nipple_Min, sps.Nipple_Max || sps.nipple_Max);
+            setSpec('NippleDie', nd.val, nd.min, nd.max, 'NippleDie');
+            const td = parsePipe(sps.TubeDie || sps.tubeDie, sps.TubeDie_Asli || sps.tubeDie_Asli || sps.TubeDie || sps.tubeDie, sps.TubeDie_Min || sps.tubeDie_Min, sps.TubeDie_Max || sps.tubeDie_Max);
+            setSpec('TubeDie', td.val, td.min, td.max, 'TubeDie');
+            const md = parsePipe(sps.MiddleDie || sps.middleDie, sps.MiddleDie_Asli || sps.middleDie_Asli || sps.MiddleDie || sps.middleDie, sps.MiddleDie_Min || sps.middleDie_Min, sps.MiddleDie_Max || sps.middleDie_Max);
+            setSpec('MiddleDie', md.val, md.min, md.max, 'MiddleDie');
+            const cd = parsePipe(sps.CoverDie || sps.coverDie, sps.CoverDie_Asli || sps.coverDie_Asli || sps.CoverDie || sps.coverDie, sps.CoverDie_Min || sps.coverDie_Min, sps.CoverDie_Max || sps.coverDie_Max);
+            setSpec('CoverDie', cd.val, cd.min, cd.max, 'CoverDie');
+            const sd = parsePipe(sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Asli || sps.spacerDie_Asli || sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max);
+            setSpec('SpacerDie', sd.val, sd.min, sd.max, 'SpacerDie');
+            const tld = parsePipe(sps.ToleranceDie || sps.toleranceDie, sps.ADistance_Asli || sps.aDistance_Asli, sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max);
+            setSpec('ToleranceDie', tld.val, tld.min, tld.max, 'ToleranceDie');
+
+            // AUTO-HIDE Die Cards if empty OR if it's a Double Layer machine
+            const nippleVal = String(sps.NippleDie || sps.nippleDie || sps.Nipple_Asli || sps.nipple_Asli || sps.Nipple || sps.nipple || '').trim();
+            const midVal = String(sps.MiddleDie || sps.middleDie || sps.MiddleDie_Asli || sps.middleDie_Asli || '').trim();
             
             // SUPER ROBUST Machine Detection
             const machineHidden = document.getElementById('MachineName')?.value || '';
@@ -1334,7 +1352,21 @@
                                      .find(txt => txt.length > 0) || '';
             
             const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
+            
+            const nippleCard = document.getElementById('die_card_NippleDie');
             const midCard = document.getElementById('die_card_MiddleDie');
+
+            if (nippleCard) {
+                if (isDoubleLayer || !nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
+                    nippleCard.classList.add('d-none');
+                    nippleCard.style.setProperty('display', 'none', 'important');
+                    console.log('🚫 FORCE HIDE Nipple Die. Detected:', (machineHidden || navbarMachine), 'Value:', nippleVal);
+                } else {
+                    nippleCard.classList.remove('d-none');
+                    nippleCard.style.display = 'block';
+                    console.log('✅ SHOW Nipple Die. Value:', nippleVal);
+                }
+            }
 
             if (midCard) {
                 if (isDoubleLayer || !midVal || midVal === '--' || midVal === '0' || midVal === '') {
@@ -1349,30 +1381,35 @@
             }
 
             // Map SPS fields to spec labels
-            setSpec('HeadTempInner', sps.HeadTemp1_Asli || sps.headTemp1_Asli || sps.HeadTemp1 || sps.headTemp1, sps.HeadTemp1_Min || sps.headTemp1_Min, sps.HeadTemp1_Max || sps.headTemp1_Max);
-            setSpec('Cylinder1TempInner', sps.Cylinder1_1_Asli || sps.cylinder1_1_Asli || sps.Cylinder1_1 || sps.cylinder1_1, sps.Cylinder1_1_Min || sps.cylinder1_1_Min, sps.Cylinder1_1_Max || sps.cylinder1_1_Max);
-            setSpec('Cylinder2TempInner', sps.Cylinder2_1_Asli || sps.cylinder2_1_Asli || sps.Cylinder2_1 || sps.cylinder2_1, sps.Cylinder2_1_Min || sps.cylinder2_1_Min, sps.Cylinder2_1_Max || sps.cylinder2_1_Max);
-            setSpec('Cylinder3TempInner', sps.Cylinder3_1_Asli || sps.cylinder3_1_Asli || sps.Cylinder3_1 || sps.cylinder3_1, sps.Cylinder3_1_Min || sps.cylinder3_1_Min, sps.Cylinder3_1_Max || sps.cylinder3_1_Max);
-            setSpec('ScrewTempInner', sps.ScrewTemp1_Asli || sps.screwTemp1_Asli || sps.ScrewTemp1 || sps.screwTemp1, sps.ScrewTemp1_Min || sps.screwTemp1_Min, sps.ScrewTemp1_Max || sps.screwTemp1_Max);
-            setSpec('ScrewSpeedInner', sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1, sps.ScrewSpeed1_Min || sps.screwSpeed1_Min, sps.ScrewSpeed1_Max || sps.screwSpeed1_Max);
-            setSpec('FeedRollRatioInner', sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1, sps.FeedRollRatio1_Min || sps.feedRollRatio1_Min || sps.Feed1_Min || sps.feed1_Min, sps.FeedRollRatio1_Max || sps.feedRollRatio1_Max || sps.Feed1_Max || sps.feed1_Max);
-            setSpec('PressureInner', sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1, sps.Pressure1_Min || sps.pressure1_Min, sps.Pressure1_Max || sps.pressure1_Max);
+            const parseAndSet = (key, formatted, fallbackVal, fallbackMin, fallbackMax) => {
+                const p = parsePipe(formatted, fallbackVal, fallbackMin, fallbackMax);
+                setSpec(key, p.val, p.min, p.max, key);
+            };
 
-            setSpec('HeadTempOuter', sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2, sps.HeadTemp2_Min || sps.headTemp2_Min, sps.HeadTemp2_Max || sps.headTemp2_Max);
-            setSpec('Cylinder1TempOuter', sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2, sps.Cylinder1_2_Min || sps.cylinder1_2_Min, sps.Cylinder1_2_Max || sps.cylinder1_2_Max);
-            setSpec('Cylinder2TempOuter', sps.Cylinder2_2_Asli || sps.cylinder2_2_Asli || sps.Cylinder2_2 || sps.cylinder2_2, sps.Cylinder2_2_Min || sps.cylinder2_2_Min, sps.Cylinder2_2_Max || sps.cylinder2_2_Max);
-            setSpec('Cylinder3TempOuter', sps.Cylinder3_2_Asli || sps.cylinder3_2_Asli || sps.Cylinder3_2 || sps.cylinder3_2, sps.Cylinder3_2_Min || sps.cylinder3_2_Min, sps.Cylinder3_2_Max || sps.cylinder3_2_Max);
-            setSpec('ScrewTempOuter', sps.ScrewTemp2_Asli || sps.screwTemp2_Asli || sps.ScrewTemp2 || sps.screwTemp2, sps.ScrewTemp2_Min || sps.screwTemp2_Min, sps.ScrewTemp2_Max || sps.screwTemp2_Max);
-            setSpec('ScrewSpeedOuter', sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2, sps.ScrewSpeed2_Min || sps.screwSpeed2_Min, sps.ScrewSpeed2_Max || sps.screwSpeed2_Max);
-            setSpec('FeedRollRatioOuter', sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2, sps.FeedRollRatio2_Min || sps.feedRollRatio2_Min || sps.Feed2_Min || sps.feed2_Min, sps.FeedRollRatio2_Max || sps.feedRollRatio2_Max || sps.Feed2_Max || sps.feed2_Max);
-            setSpec('PressureOuter', sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2, sps.Pressure2_Min || sps.pressure2_Min, sps.Pressure2_Max || sps.pressure2_Max);
+            parseAndSet('HeadTempInner', sps.HeadTempInner || sps.headTempInner, sps.HeadTemp1_Asli || sps.headTemp1_Asli || sps.HeadTemp1 || sps.headTemp1, sps.HeadTemp1_Min || sps.headTemp1_Min, sps.HeadTemp1_Max || sps.headTemp1_Max);
+            parseAndSet('Cylinder1TempInner', sps.Cylinder1TempInner || sps.cylinder1TempInner, sps.Cylinder1_1_Asli || sps.cylinder1_1_Asli || sps.Cylinder1_1 || sps.cylinder1_1, sps.Cylinder1_1_Min || sps.cylinder1_1_Min, sps.Cylinder1_1_Max || sps.cylinder1_1_Max);
+            parseAndSet('Cylinder2TempInner', sps.Cylinder2TempInner || sps.cylinder2TempInner, sps.Cylinder2_1_Asli || sps.cylinder2_1_Asli || sps.Cylinder2_1 || sps.cylinder2_1, sps.Cylinder2_1_Min || sps.cylinder2_1_Min, sps.Cylinder2_1_Max || sps.cylinder2_1_Max);
+            parseAndSet('Cylinder3TempInner', sps.Cylinder3TempInner || sps.cylinder3TempInner, sps.Cylinder3_1_Asli || sps.cylinder3_1_Asli || sps.Cylinder3_1 || sps.cylinder3_1, sps.Cylinder3_1_Min || sps.cylinder3_1_Min, sps.Cylinder3_1_Max || sps.cylinder3_1_Max);
+            parseAndSet('ScrewTempInner', sps.ScrewTempInner || sps.screwTempInner, sps.ScrewTemp1_Asli || sps.screwTemp1_Asli || sps.ScrewTemp1 || sps.screwTemp1, sps.ScrewTemp1_Min || sps.screwTemp1_Min, sps.ScrewTemp1_Max || sps.screwTemp1_Max);
+            parseAndSet('ScrewSpeedInner', sps.ScrewSpeedInner || sps.screwSpeedInner, sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1, sps.ScrewSpeed1_Min || sps.screwSpeed1_Min, sps.ScrewSpeed1_Max || sps.screwSpeed1_Max);
+            parseAndSet('FeedRollRatioInner', sps.FeedRollRatioInner || sps.feedRollRatioInner, sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1, sps.FeedRollRatio1_Min || sps.feedRollRatio1_Min || sps.Feed1_Min || sps.feed1_Min, sps.FeedRollRatio1_Max || sps.feedRollRatio1_Max || sps.Feed1_Max || sps.feed1_Max);
+            parseAndSet('PressureInner', sps.PressureInner || sps.pressureInner, sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1, sps.Pressure1_Min || sps.pressure1_Min, sps.Pressure1_Max || sps.pressure1_Max);
 
-            setSpec('SpiralSpeed', sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Min || sps.spiralSpeed_Min, sps.SpiralSpeed_Max || sps.spiralSpeed_Max);
-            setSpec('SpiralPitchSetting', sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max);
-            setSpec('SpiralPitchDisplay', sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max);
+            parseAndSet('HeadTempOuter', sps.HeadTempOuter || sps.headTempOuter, sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2, sps.HeadTemp2_Min || sps.headTemp2_Min, sps.HeadTemp2_Max || sps.headTemp2_Max);
+            parseAndSet('Cylinder1TempOuter', sps.Cylinder1TempOuter || sps.cylinder1TempOuter, sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2, sps.Cylinder1_2_Min || sps.cylinder1_2_Min, sps.Cylinder1_2_Max || sps.cylinder1_2_Max);
+            parseAndSet('Cylinder2TempOuter', sps.Cylinder2TempOuter || sps.cylinder2TempOuter, sps.Cylinder2_2_Asli || sps.cylinder2_2_Asli || sps.Cylinder2_2 || sps.cylinder2_2, sps.Cylinder2_2_Min || sps.cylinder2_2_Min, sps.Cylinder2_2_Max || sps.cylinder2_2_Max);
+            parseAndSet('Cylinder3TempOuter', sps.Cylinder3TempOuter || sps.cylinder3TempOuter, sps.Cylinder3_2_Asli || sps.cylinder3_2_Asli || sps.Cylinder3_2 || sps.cylinder3_2, sps.Cylinder3_2_Min || sps.cylinder3_2_Min, sps.Cylinder3_2_Max || sps.cylinder3_2_Max);
+            parseAndSet('ScrewTempOuter', sps.ScrewTempOuter || sps.screwTempOuter, sps.ScrewTemp2_Asli || sps.screwTemp2_Asli || sps.ScrewTemp2 || sps.screwTemp2, sps.ScrewTemp2_Min || sps.screwTemp2_Min, sps.ScrewTemp2_Max || sps.screwTemp2_Max);
+            parseAndSet('ScrewSpeedOuter', sps.ScrewSpeedOuter || sps.screwSpeedOuter, sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2, sps.ScrewSpeed2_Min || sps.screwSpeed2_Min, sps.ScrewSpeed2_Max || sps.screwSpeed2_Max);
+            parseAndSet('FeedRollRatioOuter', sps.FeedRollRatioOuter || sps.feedRollRatioOuter, sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2, sps.FeedRollRatio2_Min || sps.feedRollRatio2_Min || sps.Feed2_Min || sps.feed2_Min, sps.FeedRollRatio2_Max || sps.feedRollRatio2_Max || sps.Feed2_Max || sps.feed2_Max);
+            parseAndSet('PressureOuter', sps.PressureOuter || sps.pressureOuter, sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2, sps.Pressure2_Min || sps.pressure2_Min, sps.Pressure2_Max || sps.pressure2_Max);
 
-            setSpec('HoseSpeed', sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Min || sps.hoseSpeed_Min, sps.HoseSpeed_Max || sps.hoseSpeed_Max);
-            setSpec('ConveyorRatio', sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max);
+            parseAndSet('SpiralSpeed', sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Min || sps.spiralSpeed_Min, sps.SpiralSpeed_Max || sps.spiralSpeed_Max);
+            parseAndSet('SpiralPitchSetting', sps.ToleranceSpiralPitch || sps.toleranceSpiralPitch || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max);
+            parseAndSet('SpiralPitchDisplay', sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max);
+
+            parseAndSet('HoseSpeed', sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Min || sps.hoseSpeed_Min, sps.HoseSpeed_Max || sps.hoseSpeed_Max);
+            parseAndSet('ConveyorRatio', sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max);
 
             // Populate Emboss Marking Date if empty
             const dateEl = document.getElementById('EmbossMarkDate');
