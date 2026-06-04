@@ -9,7 +9,7 @@ namespace VelastoProductionSystem.Services
         Task<bool> HasConsumableApprovalAsync(ApprovalActionType actionType, string targetKey);
         Task ConsumeApprovalAsync(ApprovalActionType actionType, string targetKey);
         Task<ApprovalRequest> SaveDraftRequestAsync(ApprovalActionType actionType, string targetKey, string? requestComment, string? returnUrl = null, string? payloadJson = null, int? sourceRequestId = null);
-        Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null, string? payloadJson = null);
+        Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null, string? payloadJson = null, int? sourceRequestId = null);
         Task<List<ApprovalRequest>> GetMyRequestsAsync();
         Task<List<ApprovalRequest>> GetInboxAsync(string? status = null);
         Task<int> CountInboxPendingAsync();

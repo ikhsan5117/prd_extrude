@@ -235,11 +235,66 @@ namespace VelastoProductionSystem.Services
             return request;
         }
 
-        public async Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null, string? payloadJson = null)
+        public async Task<ApprovalRequest> CreateOrReusePendingRequestAsync(ApprovalActionType actionType, string targetKey, string requestComment, string? returnUrl = null, string? payloadJson = null, int? sourceRequestId = null)
         {
             targetKey = NormalizeTargetKey(targetKey);
             requestComment = (requestComment ?? string.Empty).Trim();
             var now = DateTime.UtcNow;
+
+            // --- PRIORITY: if sourceRequestId is given, find that exact Draft record and promote it ---
+            if (sourceRequestId.HasValue)
+            {
+                var sourceRequest = await _context.ApprovalRequests
+                    .FirstOrDefaultAsync(r => r.Id == sourceRequestId.Value
+                                              && r.RequesterUserName == CurrentUserName
+                                              && r.ActionType == actionType
+                                              && (r.Status == ApprovalRequestStatus.Draft || r.Status == ApprovalRequestStatus.RevisionRequired));
+
+                if (sourceRequest != null)
+                {
+                    // If already Pending, just update comment & payload then return it
+                    if (sourceRequest.Status == ApprovalRequestStatus.Pending)
+                    {
+                        if (!string.IsNullOrWhiteSpace(requestComment))
+                        {
+                            sourceRequest.RequestComment = requestComment;
+                            sourceRequest.UpdatedAt = now;
+                            sourceRequest.ReturnUrl = returnUrl;
+                            if (!string.IsNullOrWhiteSpace(payloadJson)) sourceRequest.PayloadJson = payloadJson;
+                            await _context.SaveChangesAsync();
+                        }
+                        return sourceRequest;
+                    }
+
+                    var previousStatus = sourceRequest.Status;
+                    sourceRequest.Status = ApprovalRequestStatus.Pending;
+                    sourceRequest.TargetKey = targetKey;  // update in case key changed
+                    sourceRequest.RequestComment = requestComment;
+                    sourceRequest.ReturnUrl = returnUrl;
+                    if (!string.IsNullOrWhiteSpace(payloadJson)) sourceRequest.PayloadJson = payloadJson;
+                    sourceRequest.UpdatedAt = now;
+                    sourceRequest.ApproverComment = null;
+                    sourceRequest.ApproverRole = null;
+                    sourceRequest.ApproverUserName = null;
+                    sourceRequest.ReviewedAt = null;
+                    sourceRequest.ApprovalToken = null;
+                    sourceRequest.TokenExpiresAt = null;
+
+                    _context.ApprovalRequestLogs.Add(new ApprovalRequestLog
+                    {
+                        ApprovalRequestId = sourceRequest.Id,
+                        FromStatus = previousStatus,
+                        ToStatus = ApprovalRequestStatus.Pending,
+                        Comment = string.IsNullOrWhiteSpace(requestComment) ? "Requester submit draft" : requestComment,
+                        ActorUserName = CurrentUserName,
+                        ActorRole = CurrentUserRole,
+                        CreatedAt = now
+                    });
+
+                    await _context.SaveChangesAsync();
+                    return sourceRequest;
+                }
+            }
 
             var existingPending = await _context.ApprovalRequests
                 .FirstOrDefaultAsync(r => r.RequesterUserName == CurrentUserName

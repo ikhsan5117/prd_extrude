@@ -339,7 +339,8 @@ namespace VelastoProductionSystem.Controllers
                             targetKey,
                             $"Request create SPS Document {model.DocumentNumber}",
                             Url.Action(nameof(Create), "SpsMaster") ?? "/SpsMaster/Create",
-                            JsonSerializer.Serialize(model));
+                            JsonSerializer.Serialize(model),
+                            sourceRequestId);
 
                         TempData["SuccessMessage"] = $"Request data SPS Document '{model.DocumentNumber}' terkirim ke SUPERADMIN. Setelah disetujui, data akan otomatis dibuat.";
                         return RedirectToAction("MyRequests", "Approval");
@@ -471,7 +472,8 @@ namespace VelastoProductionSystem.Controllers
                         documentNumber,
                         $"Request revisi SPS Document {documentNumber}",
                         Url.Action(nameof(Edit), "SpsMaster", new { documentNumber }) ?? $"/SpsMaster/Edit/{documentNumber}",
-                        JsonSerializer.Serialize(model));
+                        JsonSerializer.Serialize(model),
+                        sourceRequestId);
 
                     TempData["SuccessMessage"] = $"Request revisi dokumen '{documentNumber}' terkirim ke SUPERADMIN. Setelah disetujui, versi baru akan dibuat otomatis.";
                     return RedirectToAction("MyRequests", "Approval");

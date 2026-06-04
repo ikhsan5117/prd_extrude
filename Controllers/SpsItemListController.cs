@@ -249,7 +249,8 @@ namespace VelastoProductionSystem.Controllers
                             targetKey,
                             $"Request create SPS ItemList {spsItemList.ItemList}",
                             Url.Action(nameof(Create), "SpsItemList") ?? "/SpsItemList/Create",
-                            JsonSerializer.Serialize(spsItemList));
+                            JsonSerializer.Serialize(spsItemList),
+                            sourceRequestId);
 
                         TempData["SuccessMessage"] = $"Request data Item List '{spsItemList.ItemList}' terkirim ke SUPERADMIN. Setelah disetujui, data akan otomatis dibuat.";
                         return RedirectToAction("MyRequests", "Approval");
@@ -377,7 +378,8 @@ namespace VelastoProductionSystem.Controllers
                                 targetKey,
                                 $"Request revisi SPS ItemList {spsItemList.ItemList}",
                                 Url.Action(nameof(Edit), "SpsItemList", new { id = spsItemList.Id }) ?? $"/SpsItemList/Edit/{spsItemList.Id}",
-                                JsonSerializer.Serialize(spsItemList));
+                                JsonSerializer.Serialize(spsItemList),
+                                sourceRequestId);
 
                             TempData["SuccessMessage"] = $"Request revisi Item List '{spsItemList.ItemList}' terkirim ke SUPERADMIN. Setelah disetujui, perubahan akan diterapkan.";
                             return RedirectToAction("MyRequests", "Approval");
