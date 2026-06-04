@@ -703,7 +703,7 @@ namespace VelastoProductionSystem.Controllers
                 {
                     report = new DimensionReport
                     {
-                        DocumentNumber = "DIM-" + DateTime.Now.ToString("yyyyMMdd-HHmm"),
+                        DocumentNumber = !string.IsNullOrEmpty(data.SpsId) ? data.SpsId : ("DIM-" + DateTime.Now.ToString("yyyyMMdd-HHmm")),
                         ProductionDate = DateTime.Now,
                         Status = "ACTIVE",
                         CreatedDate = DateTime.Now,
