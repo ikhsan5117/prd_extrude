@@ -1322,7 +1322,7 @@
 
                 planningInput.disabled = false;
                 if (planningItemsCache.length > 0) {
-                    planningInput.placeholder = `SEARCH PLANNING (${planningItemsCache.length} ITEM${planningItemsCache.length > 1 ? 'S' : ''}${machineCtx})`;
+                    planningInput.placeholder = `KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA${machineCtx})`;
                 } else {
                     planningInput.placeholder = 'NO ITEMS IN PLAN FOR THIS MACHINE/DAY';
                 }
@@ -1458,8 +1458,12 @@
             if (!planningInput) return;
             planningInput.value = '';
             planningInput.readOnly = false;
+            
+            const isFiltered = planningItemsCache.length > 0 && planningItemsCache[0].isFiltered;
+            const machineCtx = isFiltered && planningItemsCache[0].machineName ? ` [${planningItemsCache[0].machineName}]` : '';
+            
             planningInput.placeholder = planningItemsCache.length > 0
-                ? `KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA)`
+                ? `KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA${machineCtx})`
                 : 'LOADING...';
             filterPlanningResults('');
             document.getElementById('planningResults')?.classList.remove('d-none');

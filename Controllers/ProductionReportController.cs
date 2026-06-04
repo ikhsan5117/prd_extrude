@@ -746,12 +746,8 @@ namespace VelastoProductionSystem.Controllers
 
             if (elwpRows.Any())
             {
-                var shiftRaw = (shift ?? "").Trim().ToUpper();
-                if (shiftRaw.StartsWith("SHIFT ")) shiftRaw = shiftRaw.Substring(6).Trim();
-                
-                // Filter berdasarkan shift
-                var matchedShift = elwpRows.Where(x => (x.p.Shift ?? "").ToUpper().Contains(shiftRaw)).ToList();
-                if (matchedShift.Any()) elwpRows = matchedShift;
+                // Permintaan user: "buka semuanya jangan 1 shift aja harus 20"
+                // Jadi filter shift dihilangkan agar semua planning dalam 1 hari muncul.
 
                 // Filter berdasarkan mesin - SELALU diapply untuk non-admin
                 // jika operator memiliki session mesin, hanya tampilkan planning untuk mesin tersebut

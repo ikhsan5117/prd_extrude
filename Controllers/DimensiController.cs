@@ -32,11 +32,29 @@ namespace VelastoProductionSystem.Controllers
 
             // Ambil Kode Item dari ELWP langsung (hari ini), agar selalu up-to-date
             var today = DateTime.Today;
-            ViewBag.ItemCodes = _elwpContext.ElwpPlannings
-                .Where(p => !string.IsNullOrEmpty(p.KodeItem)
-                         && p.TanggalPlanning >= today
-                         && p.TanggalPlanning < today.AddDays(1))
-                .Select(p => p.KodeItem)
+            var sessionMachine = HttpContext.Session.GetString("MachineName");
+            var isAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
+
+            var elwpQuery = from p in _elwpContext.ElwpPlannings
+                            join m in _elwpContext.ElwpMachines on p.MesinId equals m.Id into machineJoin
+                            from m in machineJoin.DefaultIfEmpty()
+                            where !string.IsNullOrEmpty(p.KodeItem)
+                               && p.TanggalPlanning >= today
+                               && p.TanggalPlanning < today.AddDays(1)
+                            select new { p.KodeItem, MachineName = m != null ? m.NamaMesin : "", MachineCode = m != null ? m.KodeMesin : "" };
+
+            var elwpRows = elwpQuery.ToList();
+
+            if (!isAdmin && !string.IsNullOrEmpty(sessionMachine))
+            {
+                var normalizedFilter = new string(sessionMachine.Where(char.IsLetterOrDigit).ToArray()).ToUpper();
+                elwpRows = elwpRows.Where(x =>
+                    (x.MachineName != null && new string(x.MachineName.Where(char.IsLetterOrDigit).ToArray()).ToUpper().Contains(normalizedFilter)) ||
+                    (x.MachineCode != null && new string(x.MachineCode.Where(char.IsLetterOrDigit).ToArray()).ToUpper().Contains(normalizedFilter))
+                ).ToList();
+            }
+
+            ViewBag.ItemCodes = elwpRows.Select(x => x.KodeItem)
                 .Distinct()
                 .OrderBy(p => p)
                 .ToList();
