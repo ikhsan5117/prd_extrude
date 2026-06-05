@@ -802,7 +802,16 @@
                                                     <input asp-for="ChillerWaterTemp_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <input asp-for="ChillerWaterTemp_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                    @if (Model.ChillerWaterTemp_Asli == null && !string.IsNullOrEmpty(Model.ChillerWaterTemp))
+                                                    {
+                                                        <small class="text-warning d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Data lama: <strong>@Model.ChillerWaterTemp</strong></small>
+                                                        <input asp-for="ChillerWaterTemp" class="form-control max-input" placeholder="MAX (teks lama)" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input asp-for="ChillerWaterTemp_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                        <input asp-for="ChillerWaterTemp" type="hidden" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -933,7 +942,16 @@
                                                     <input asp-for="Pressure1_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <input asp-for="Pressure1_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                    @if (Model.Pressure1_Asli == null && !string.IsNullOrEmpty(Model.Pressure1))
+                                                    {
+                                                        <small class="text-warning d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Data lama: <strong>@Model.Pressure1</strong></small>
+                                                        <input asp-for="Pressure1" class="form-control max-input" placeholder="MAX (teks lama)" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input asp-for="Pressure1_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                        <input asp-for="Pressure1" type="hidden" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -948,7 +966,16 @@
                                                     <input asp-for="Pressure2_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <input asp-for="Pressure2_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                    @if (Model.Pressure2_Asli == null && !string.IsNullOrEmpty(Model.Pressure2))
+                                                    {
+                                                        <small class="text-warning d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Data lama: <strong>@Model.Pressure2</strong></small>
+                                                        <input asp-for="Pressure2" class="form-control max-input" placeholder="MAX (teks lama)" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input asp-for="Pressure2_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                        <input asp-for="Pressure2" type="hidden" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -963,7 +990,16 @@
                                                     <input asp-for="Pressure3_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <input asp-for="Pressure3_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                    @if (Model.Pressure3_Asli == null && !string.IsNullOrEmpty(Model.Pressure3))
+                                                    {
+                                                        <small class="text-warning d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Data lama: <strong>@Model.Pressure3</strong></small>
+                                                        <input asp-for="Pressure3" class="form-control max-input" placeholder="MAX (teks lama)" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input asp-for="Pressure3_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                        <input asp-for="Pressure3" type="hidden" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -983,7 +1019,16 @@
                                                     <input asp-for="FeedRollRatio1_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <input asp-for="FeedRollRatio1_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                    @if (Model.FeedRollRatio1_Asli == null && !string.IsNullOrEmpty(Model.FeedRollRatio1))
+                                                    {
+                                                        <small class="text-warning d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Data lama: <strong>@Model.FeedRollRatio1</strong></small>
+                                                        <input asp-for="FeedRollRatio1" class="form-control max-input" placeholder="MAX (teks lama)" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input asp-for="FeedRollRatio1_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                        <input asp-for="FeedRollRatio1" type="hidden" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -998,7 +1043,16 @@
                                                     <input asp-for="FeedRollRatio2_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <input asp-for="FeedRollRatio2_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                    @if (Model.FeedRollRatio2_Asli == null && !string.IsNullOrEmpty(Model.FeedRollRatio2))
+                                                    {
+                                                        <small class="text-warning d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Data lama: <strong>@Model.FeedRollRatio2</strong></small>
+                                                        <input asp-for="FeedRollRatio2" class="form-control max-input" placeholder="MAX (teks lama)" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input asp-for="FeedRollRatio2_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                        <input asp-for="FeedRollRatio2" type="hidden" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -1013,7 +1067,16 @@
                                                     <input asp-for="FeedRollRatio3_Asli" type="number" step="0.01" class="form-control asli-input" placeholder="ASLI" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <input asp-for="FeedRollRatio3_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                    @if (Model.FeedRollRatio3_Asli == null && !string.IsNullOrEmpty(Model.FeedRollRatio3))
+                                                    {
+                                                        <small class="text-warning d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Data lama: <strong>@Model.FeedRollRatio3</strong></small>
+                                                        <input asp-for="FeedRollRatio3" class="form-control max-input" placeholder="MAX (teks lama)" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input asp-for="FeedRollRatio3_Max" type="number" step="0.01" class="form-control max-input" placeholder="MAX" />
+                                                        <input asp-for="FeedRollRatio3" type="hidden" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>

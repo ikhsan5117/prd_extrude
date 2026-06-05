@@ -28,12 +28,12 @@ namespace VelastoProductionSystem.Controllers
             // EPPlus license sudah di-set secara global di Program.cs
         }
 
-        // ==================== HELPER METHOD: PARSE ± FORMAT ====================
+        // ==================== HELPER METHOD: PARSE Â± FORMAT ====================
         /// <summary>
-        /// Parse nilai dengan format "X±Y", "Max X", "Min X", atau single value
-        /// Contoh: "4.3±0.1" → Min=4.2, Asli=4.3, Max=4.4
-        ///         "Max 120" → Min=null, Asli=null, Max=120
-        ///         "73" → Min=null, Asli=73, Max=null
+        /// Parse nilai dengan format "XÂ±Y", "Max X", "Min X", atau single value
+        /// Contoh: "4.3Â±0.1" â†’ Min=4.2, Asli=4.3, Max=4.4
+        ///         "Max 120" â†’ Min=null, Asli=null, Max=120
+        ///         "73" â†’ Min=null, Asli=73, Max=null
         /// </summary>
         private (decimal? min, decimal? asli, decimal? max) ParsePlusMinusValue(string input)
         {
@@ -70,7 +70,7 @@ namespace VelastoProductionSystem.Controllers
                         if (decimal.TryParse(numPart, System.Globalization.NumberStyles.Any, 
                             System.Globalization.CultureInfo.InvariantCulture, out decimal maxValue))
                         {
-                            _logger.LogInformation($"Parsed '{input}' as Max format → Max={maxValue}");
+                            _logger.LogInformation($"Parsed '{input}' as Max format â†’ Max={maxValue}");
                             return (null, null, maxValue);
                         }
                     }
@@ -96,14 +96,14 @@ namespace VelastoProductionSystem.Controllers
                         if (decimal.TryParse(numPart, System.Globalization.NumberStyles.Any, 
                             System.Globalization.CultureInfo.InvariantCulture, out decimal minValue))
                         {
-                            _logger.LogInformation($"Parsed '{input}' as Min format → Min={minValue}");
+                            _logger.LogInformation($"Parsed '{input}' as Min format â†’ Min={minValue}");
                             return (minValue, null, null);
                         }
                     }
                 }
                 
-                // Check for ± symbol (or alternative: +/-, +-,  etc.)
-                var plusMinusSymbols = new[] { "±", "+/-", "+-", "~" };
+                // Check for Â± symbol (or alternative: +/-, +-,  etc.)
+                var plusMinusSymbols = new[] { "Â±", "+/-", "+-", "~" };
                 
                 foreach (var symbol in plusMinusSymbols)
                 {
@@ -123,12 +123,12 @@ namespace VelastoProductionSystem.Controllers
                                 var min = standard - tolerance;
                                 var max = standard + tolerance;
                                 
-                                _logger.LogInformation($"✅ Parsed '{input}' → Min={min}, Asli={standard}, Max={max}");
+                                _logger.LogInformation($"âœ… Parsed '{input}' â†’ Min={min}, Asli={standard}, Max={max}");
                                 return (min, standard, max);
                             }
                             else
                             {
-                                _logger.LogWarning($"❌ Failed to parse parts as decimals: [{parts[0]}] and [{parts[1]}]");
+                                _logger.LogWarning($"âŒ Failed to parse parts as decimals: [{parts[0]}] and [{parts[1]}]");
                             }
                         }
                     }
@@ -138,22 +138,22 @@ namespace VelastoProductionSystem.Controllers
                 if (decimal.TryParse(cleaned, System.Globalization.NumberStyles.Any, 
                     System.Globalization.CultureInfo.InvariantCulture, out decimal singleValue))
                 {
-                    _logger.LogInformation($"Parsed '{input}' as single value → Asli={singleValue}");
+                    _logger.LogInformation($"Parsed '{input}' as single value â†’ Asli={singleValue}");
                     return (null, singleValue, null);
                 }
                 
-                _logger.LogWarning($"⚠️ Could not parse '{input}' in any format");
+                _logger.LogWarning($"âš ï¸ Could not parse '{input}' in any format");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"❌ Exception parsing '{input}': {ex.Message}");
+                _logger.LogWarning($"âŒ Exception parsing '{input}': {ex.Message}");
             }
             
             return (null, null, null);
         }
 
         /// <summary>
-        /// Helper untuk assign parsed ± values ke properties
+        /// Helper untuk assign parsed Â± values ke properties
         /// </summary>
         private void AssignParsedValue(string cellValue, 
             Action<decimal?> setMin, 
@@ -379,7 +379,7 @@ namespace VelastoProductionSystem.Controllers
 
                 await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsDocumentCreate, model.DocumentNumber);
 
-                TempData["SuccessMessage"] = $"✅ Berhasil menambahkan Dokumen SPS '{model.DocumentNumber}'!";
+                TempData["SuccessMessage"] = $"âœ… Berhasil menambahkan Dokumen SPS '{model.DocumentNumber}'!";
                 _logger.LogInformation($"Create Success: DocumentNumber '{model.DocumentNumber}' created");
                 return RedirectToAction(nameof(Index));
             }
@@ -517,7 +517,7 @@ namespace VelastoProductionSystem.Controllers
 
                 await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsDocumentEdit, documentNumber);
 
-                TempData["SuccessMessage"] = $"✅ Update Berhasil: Dokumen '{documentNumber}' telah diperbarui.";
+                TempData["SuccessMessage"] = $"âœ… Update Berhasil: Dokumen '{documentNumber}' telah diperbarui.";
                 _logger.LogInformation($"Edit SUCCESS: DocumentNumber '{documentNumber}' updated");
 
                 return RedirectToAction(nameof(Index));
@@ -537,7 +537,7 @@ namespace VelastoProductionSystem.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error updating SPS Master '{documentNumber}'");
-                ModelState.AddModelError("", $"❌ Error: {ex.Message}");
+                ModelState.AddModelError("", $"âŒ Error: {ex.Message}");
                 return View(model);
             }
         }
@@ -704,7 +704,7 @@ namespace VelastoProductionSystem.Controllers
                     // 2 MATERIAL
                     ("MATERIAL TSM",2),("INNER | #tube",2),("OUTER | #cover",2),
                     ("MIDDLE | #tube2",2),("USE LIMITS INNER",2),("USE LIMITS OUTER",2),("USE LIMITS MIDDLE",2),
-                    // 3 DIES & TOOLS — setiap dies: Raw | MIN | STD | MAX
+                    // 3 DIES & TOOLS â€” setiap dies: Raw | MIN | STD | MAX
                     ("NIPPLE",3),("NIPPLE MIN",3),("NIPPLE STD",3),("NIPPLE MAX",3),
                     ("TUBE DIE",3),("TUBE DIE MIN",3),("TUBE DIE STD",3),("TUBE DIE MAX",3),
                     ("COVER DIE",3),("COVER DIE MIN",3),("COVER DIE STD",3),("COVER DIE MAX",3),
@@ -717,7 +717,7 @@ namespace VelastoProductionSystem.Controllers
                     ("MESH SCREEN 2",4),("MESH DIM 2",4),("MESH DIM 2 MIN",4),("MESH DIM 2 STD",4),("MESH DIM 2 MAX",4),
                     ("MESH SCREEN 3",4),("MESH DIM 3",4),("MESH DIM 3 MIN",4),("MESH DIM 3 STD",4),("MESH DIM 3 MAX",4),
                     ("PITCH YARN",4),("PITCH YARN MIN",4),("PITCH YARN STD",4),("PITCH YARN MAX",4),
-                    // 5 SUHU & TEKANAN — Mat1
+                    // 5 SUHU & TEKANAN â€” Mat1
                     ("HEAD TEMP 1",5),("HEAD TEMP 1 MIN",5),("HEAD TEMP 1 STD",5),("HEAD TEMP 1 MAX",5),
                     ("CYL 1-1",5),("CYL 1-1 MIN",5),("CYL 1-1 STD",5),("CYL 1-1 MAX",5),
                     ("CYL 2-1",5),("CYL 2-1 MIN",5),("CYL 2-1 STD",5),("CYL 2-1 MAX",5),
@@ -769,8 +769,8 @@ namespace VelastoProductionSystem.Controllers
                     ("OD SENSOR",6),("OD MIN",6),("OD STD",6),("OD MAX",6),
                     ("MARKING SORT",6),("TEXT MARKING MT'L",6),("MARKING COLOUR",6),("UNSMOOTH SURFACE",6),
                     // 7 TOLERANSI & TEBAL
-                    ("± INNER",7),("TOL INNER MIN",7),("TOL INNER STD",7),("TOL INNER MAX",7),
-                    ("± OUTER",7),("TOL OUTER MIN",7),("TOL OUTER STD",7),("TOL OUTER MAX",7),
+                    ("Â± INNER",7),("TOL INNER MIN",7),("TOL INNER STD",7),("TOL INNER MAX",7),
+                    ("Â± OUTER",7),("TOL OUTER MIN",7),("TOL OUTER STD",7),("TOL OUTER MAX",7),
                     ("TEBAL INNER",7),("TB INNER MIN",7),("TB INNER STD",7),("TB INNER MAX",7),
                     ("TEBAL OUTER",7),("TB OUTER MIN",7),("TB OUTER STD",7),("TB OUTER MAX",7),
                     ("TEBAL INNER+MID",7),("TB I+M MIN",7),("TB I+M STD",7),("TB I+M MAX",7),
@@ -804,13 +804,13 @@ namespace VelastoProductionSystem.Controllers
                     "IDENTIFIKASI",
                     "DOKUMEN & PRODUK",
                     "MATERIAL",
-                    "DIES & TOOLS (format X±Y, atau isi MIN/STD/MAX manual)",
+                    "DIES & TOOLS (format XÂ±Y, atau isi MIN/STD/MAX manual)",
                     "YARN & MESH",
-                    "SUHU, SCREW & TEKANAN (format X±Y, atau isi MIN/STD/MAX manual)",
-                    "SPEED, FEED & OUTPUT MESIN (format X±Y, atau isi MIN/STD/MAX manual)",
-                    "TOLERANSI & TEBAL (format X±Y, atau isi MIN/STD/MAX manual)",
+                    "SUHU, SCREW & TEKANAN (format XÂ±Y, atau isi MIN/STD/MAX manual)",
+                    "SPEED, FEED & OUTPUT MESIN (format XÂ±Y, atau isi MIN/STD/MAX manual)",
+                    "TOLERANSI & TEBAL (format XÂ±Y, atau isi MIN/STD/MAX manual)",
                     "QUALITY MATRIX",
-                    "ITEM LIST (Opsional — bisa upload terpisah)",
+                    "ITEM LIST (Opsional â€” bisa upload terpisah)",
                 };
 
                 // Tulis header kolom (Row 2)
@@ -829,7 +829,7 @@ namespace VelastoProductionSystem.Controllers
                     cell.Style.Border.Bottom.Color.SetColor(System.Drawing.Color.White);
                 }
 
-                // Tulis group label Row 1 — deteksi batas grup
+                // Tulis group label Row 1 â€” deteksi batas grup
                 int gStart = 1;
                 int curG   = colDefs[0].G;
                 for (int i = 1; i <= totalCols; i++)
@@ -843,27 +843,30 @@ namespace VelastoProductionSystem.Controllers
                     }
                 }
 
-                // Petunjuk pengisian (tanpa contoh data)
+                                // Bikin sheet terpisah untuk petunjuk
+                var wsPetunjuk = package.Workbook.Worksheets.Add("📋 Petunjuk");
                 var notes = new string[] {
                     "PETUNJUK PENGISIAN TEMPLATE SPS:",
                     "1. Kolom MIN/STD/MAX: isi nilai numerik langsung (MIN=batas bawah, STD=standar, MAX=batas atas).",
                     "2. Kolom ± (contoh: ± INNER): isi format X±Y (contoh: 37.0±0.2). Sistem otomatis hitung MIN & MAX.",
                     "3. Jika keduanya diisi, sistem menyimpan keduanya — nilai manual & hitungan otomatis sebagai pembanding.",
                     "4. Kolom ITEM LIST di ujung kanan OPSIONAL. Item List bisa diupload terpisah via Import Item List.",
-                    "5. Sheet name harus: 'SPS', 'Digitalisasi', 'Parameter Setting', atau 'Master'.",
-                    "6. Data diisi mulai BARIS 10 ke bawah.",
+                    "5. Sheet name untuk data utama harus: 'SPS', 'Digitalisasi', 'Parameter Setting', atau 'Master'.",
+                    "6. Data diisi di sheet SPS mulai BARIS 3 ke bawah (langsung di bawah header tabel)."
                 };
                 for (int n = 0; n < notes.Length; n++)
                 {
-                    var nc = ws.Cells[3 + n, 1];
+                    var nc = wsPetunjuk.Cells[2 + n, 2]; // B2 ke bawah
                     nc.Value = notes[n];
                     nc.Style.Font.Bold   = (n == 0);
-                    nc.Style.Font.Size   = (n == 0) ? 10 : 9;
+                    nc.Style.Font.Size   = (n == 0) ? 12 : 11;
                     nc.Style.Font.Italic = (n > 0);
                     nc.Style.Font.Color.SetColor(n == 0
                         ? System.Drawing.Color.Red
                         : System.Drawing.Color.FromArgb(50, 50, 50));
                 }
+                wsPetunjuk.Cells.AutoFitColumns();
+                ws.View.TabSelected = true;
 
                 // Freeze & sizing
                 ws.View.FreezePanes(3, 1);
@@ -921,6 +924,7 @@ namespace VelastoProductionSystem.Controllers
                 var colDefs = new List<(string H, Func<SpsMaster, object?> Value, int G, string Color)> {
                     ("ID Excel", x => x.No, 0, ""),
                     ("NO", x => x.No, 0, ""),
+                    ("Item List", x => x.ItemList, 0, ""),
                     ("Machine", x => x.Machine, 0, ""),
                     ("NO. DOC", x => x.DocumentNumber, 0, ""),
                     ("STATUS", x => x.IsActive ? "ACTIVE" : "INACTIVE", 0, ""),
@@ -941,210 +945,210 @@ namespace VelastoProductionSystem.Controllers
                     ("Use Limits Out", x => x.UseLimitsOuter, 1, ""),
                     ("Yarn", x => x.Yarn, 1, ""),
                     ("MIN Pitch Yarn", x => x.PitchYarn_Min?.ToString("F2"), 1, "success"),
-                    ("STN Pitch Yarn", x => x.PitchYarn_Asli?.ToString("F2"), 1, "primary"),
+                    ("STD Pitch Yarn", x => x.PitchYarn_Asli?.ToString("F2"), 1, "primary"),
                     ("MAX Pitch Yarn", x => x.PitchYarn_Max?.ToString("F2"), 1, "danger"),
                     ("Tension In", x => x.TensionYarnInner, 1, ""),
                     ("Tension Out", x => x.TensionYarnOuter, 1, ""),
                     ("MIN Nipple", x => x.Nipple_Min?.ToString("F2"), 1, "success"),
-                    ("STN Nipple", x => x.Nipple_Asli?.ToString("F2"), 1, "primary"),
+                    ("STD Nipple", x => x.Nipple_Asli?.ToString("F2"), 1, "primary"),
                     ("MAX Nipple", x => x.Nipple_Max?.ToString("F2"), 1, "danger"),
                     ("MIN Tube Die", x => x.TubeDie_Min?.ToString("F2"), 1, "success"),
-                    ("STN Tube Die", x => x.TubeDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("STD Tube Die", x => x.TubeDie_Asli?.ToString("F2"), 1, "primary"),
                     ("MAX Tube Die", x => x.TubeDie_Max?.ToString("F2"), 1, "danger"),
                     ("MIN Middle Die", x => x.MiddleDie_Min?.ToString("F2"), 1, "success"),
-                    ("STN Middle Die", x => x.MiddleDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("STD Middle Die", x => x.MiddleDie_Asli?.ToString("F2"), 1, "primary"),
                     ("MAX Middle Die", x => x.MiddleDie_Max?.ToString("F2"), 1, "danger"),
                     ("MIN Cover Die", x => x.CoverDie_Min?.ToString("F2"), 1, "success"),
-                    ("STN Cover Die", x => x.CoverDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("STD Cover Die", x => x.CoverDie_Asli?.ToString("F2"), 1, "primary"),
                     ("MAX Cover Die", x => x.CoverDie_Max?.ToString("F2"), 1, "danger"),
                     ("MIN Spacer", x => x.SpacerDie_Min?.ToString("F2"), 1, "success"),
-                    ("STN Spacer", x => x.SpacerDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("STD Spacer", x => x.SpacerDie_Asli?.ToString("F2"), 1, "primary"),
                     ("MAX Spacer", x => x.SpacerDie_Max?.ToString("F2"), 1, "danger"),
                     ("MIN A Distance", x => x.ADistance_Min?.ToString("F2"), 1, "success"),
-                    ("STN A Distance", x => x.ADistance_Asli?.ToString("F2"), 1, "primary"),
+                    ("STD A Distance", x => x.ADistance_Asli?.ToString("F2"), 1, "primary"),
                     ("MAX A Distance", x => x.ADistance_Max?.ToString("F2"), 1, "danger"),
 
                     ("Mesh Screen 1", x => x.MeshScreen1, 2, ""),
                     ("MIN Mesh Dim 1", x => x.MeshDim1_Min?.ToString("F2"), 2, "success"),
-                    ("STN Mesh Dim 1", x => x.MeshDim1_Asli?.ToString("F2"), 2, "primary"),
+                    ("STD Mesh Dim 1", x => x.MeshDim1_Asli?.ToString("F2"), 2, "primary"),
                     ("MAX Mesh Dim 1", x => x.MeshDim1_Max?.ToString("F2"), 2, "danger"),
                     ("Mesh Screen 2", x => x.MeshScreen2, 2, ""),
                     ("MIN Mesh Dim 2", x => x.MeshDim2_Min?.ToString("F2"), 2, "success"),
-                    ("STN Mesh Dim 2", x => x.MeshDim2_Asli?.ToString("F2"), 2, "primary"),
+                    ("STD Mesh Dim 2", x => x.MeshDim2_Asli?.ToString("F2"), 2, "primary"),
                     ("MAX Mesh Dim 2", x => x.MeshDim2_Max?.ToString("F2"), 2, "danger"),
                     ("Mesh Screen 3", x => x.MeshScreen3, 2, ""),
                     ("MIN Mesh Dim 3", x => x.MeshDim3_Min?.ToString("F2"), 2, "success"),
-                    ("STN Mesh Dim 3", x => x.MeshDim3_Asli?.ToString("F2"), 2, "primary"),
+                    ("STD Mesh Dim 3", x => x.MeshDim3_Asli?.ToString("F2"), 2, "primary"),
                     ("MAX Mesh Dim 3", x => x.MeshDim3_Max?.ToString("F2"), 2, "danger"),
 
                     ("MIN Head 1", x => x.HeadTemp1_Min?.ToString("F2"), 3, "success"),
-                    ("STN Head 1", x => x.HeadTemp1_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Head 1", x => x.HeadTemp1_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Head 1", x => x.HeadTemp1_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 1-1", x => x.Cylinder1_1_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 1-1", x => x.Cylinder1_1_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 1-1", x => x.Cylinder1_1_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 1-1", x => x.Cylinder1_1_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 2-1", x => x.Cylinder2_1_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 2-1", x => x.Cylinder2_1_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 2-1", x => x.Cylinder2_1_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 2-1", x => x.Cylinder2_1_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 3-1", x => x.Cylinder3_1_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 3-1", x => x.Cylinder3_1_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 3-1", x => x.Cylinder3_1_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 3-1", x => x.Cylinder3_1_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Screw 1", x => x.ScrewTemp1_Min?.ToString("F2"), 3, "success"),
-                    ("STN Screw 1", x => x.ScrewTemp1_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Screw 1", x => x.ScrewTemp1_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Screw 1", x => x.ScrewTemp1_Max?.ToString("F2"), 3, "danger"),
 
                     ("MIN Head 2", x => x.HeadTemp2_Min?.ToString("F2"), 3, "success"),
-                    ("STN Head 2", x => x.HeadTemp2_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Head 2", x => x.HeadTemp2_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Head 2", x => x.HeadTemp2_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 1-2", x => x.Cylinder1_2_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 1-2", x => x.Cylinder1_2_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 1-2", x => x.Cylinder1_2_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 1-2", x => x.Cylinder1_2_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 2-2", x => x.Cylinder2_2_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 2-2", x => x.Cylinder2_2_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 2-2", x => x.Cylinder2_2_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 2-2", x => x.Cylinder2_2_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 3-2", x => x.Cylinder3_2_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 3-2", x => x.Cylinder3_2_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 3-2", x => x.Cylinder3_2_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 3-2", x => x.Cylinder3_2_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Screw 2", x => x.ScrewTemp2_Min?.ToString("F2"), 3, "success"),
-                    ("STN Screw 2", x => x.ScrewTemp2_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Screw 2", x => x.ScrewTemp2_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Screw 2", x => x.ScrewTemp2_Max?.ToString("F2"), 3, "danger"),
 
                     ("MIN Head 3", x => x.HeadTemp3_Min?.ToString("F2"), 3, "success"),
-                    ("STN Head 3", x => x.HeadTemp3_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Head 3", x => x.HeadTemp3_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Head 3", x => x.HeadTemp3_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 1-3", x => x.Cylinder1_3_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 1-3", x => x.Cylinder1_3_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 1-3", x => x.Cylinder1_3_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 1-3", x => x.Cylinder1_3_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 2-3", x => x.Cylinder2_3_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 2-3", x => x.Cylinder2_3_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 2-3", x => x.Cylinder2_3_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 2-3", x => x.Cylinder2_3_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Cyl 3-3", x => x.Cylinder3_3_Min?.ToString("F2"), 3, "success"),
-                    ("STN Cyl 3-3", x => x.Cylinder3_3_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Cyl 3-3", x => x.Cylinder3_3_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Cyl 3-3", x => x.Cylinder3_3_Max?.ToString("F2"), 3, "danger"),
                     ("MIN Screw 3", x => x.ScrewTemp3_Min?.ToString("F2"), 3, "success"),
-                    ("STN Screw 3", x => x.ScrewTemp3_Asli?.ToString("F2"), 3, "primary"),
+                    ("STD Screw 3", x => x.ScrewTemp3_Asli?.ToString("F2"), 3, "primary"),
                     ("MAX Screw 3", x => x.ScrewTemp3_Max?.ToString("F2"), 3, "danger"),
 
                     ("MIN Feed 1", x => x.Feed1_Min?.ToString("F2"), 4, "success"),
-                    ("STN Feed 1", x => x.Feed1_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Feed 1", x => x.Feed1_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Feed 1", x => x.Feed1_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Feed 2", x => x.Feed2_Min?.ToString("F2"), 4, "success"),
-                    ("STN Feed 2", x => x.Feed2_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Feed 2", x => x.Feed2_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Feed 2", x => x.Feed2_Max?.ToString("F2"), 4, "danger"),
 
                     ("MIN Screw V1", x => x.ScrewSpeed1_Min?.ToString("F2"), 4, "success"),
-                    ("STN Screw V1", x => x.ScrewSpeed1_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Screw V1", x => x.ScrewSpeed1_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Screw V1", x => x.ScrewSpeed1_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Screw V2", x => x.ScrewSpeed2_Min?.ToString("F2"), 4, "success"),
-                    ("STN Screw V2", x => x.ScrewSpeed2_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Screw V2", x => x.ScrewSpeed2_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Screw V2", x => x.ScrewSpeed2_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Screw V3", x => x.ScrewSpeed3_Min?.ToString("F2"), 4, "success"),
-                    ("STN Screw V3", x => x.ScrewSpeed3_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Screw V3", x => x.ScrewSpeed3_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Screw V3", x => x.ScrewSpeed3_Max?.ToString("F2"), 4, "danger"),
 
                     ("MIN Feed Roll 1", x => x.FeedRollRatio1_Min?.ToString("F2"), 4, "success"),
-                    ("STN Feed Roll 1", x => x.FeedRollRatio1_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Feed Roll 1", x => x.FeedRollRatio1_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Feed Roll 1", x => x.FeedRollRatio1_Asli == null && !string.IsNullOrEmpty(x.FeedRollRatio1) ? x.FeedRollRatio1 : x.FeedRollRatio1_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Feed Roll 2", x => x.FeedRollRatio2_Min?.ToString("F2"), 4, "success"),
-                    ("STN Feed Roll 2", x => x.FeedRollRatio2_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Feed Roll 2", x => x.FeedRollRatio2_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Feed Roll 2", x => x.FeedRollRatio2_Asli == null && !string.IsNullOrEmpty(x.FeedRollRatio2) ? x.FeedRollRatio2 : x.FeedRollRatio2_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Feed 3", x => x.Feed3_Min?.ToString("F2"), 4, "success"),
-                    ("STN Feed 3", x => x.Feed3_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Feed 3", x => x.Feed3_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Feed 3", x => x.Feed3_Asli == null && !string.IsNullOrEmpty(x.FeedRollRatio3) ? x.FeedRollRatio3 : x.Feed3_Max?.ToString("F2"), 4, "danger"),
 
                     ("MIN Press 1", x => x.Pressure1_Min?.ToString("F2"), 4, "success"),
-                    ("STN Press 1", x => x.Pressure1_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Press 1", x => x.Pressure1_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Press 1", x => x.Pressure1_Asli == null && !string.IsNullOrEmpty(x.Pressure1) ? x.Pressure1 : x.Pressure1_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Press 2", x => x.Pressure2_Min?.ToString("F2"), 4, "success"),
-                    ("STN Press 2", x => x.Pressure2_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Press 2", x => x.Pressure2_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Press 2", x => x.Pressure2_Asli == null && !string.IsNullOrEmpty(x.Pressure2) ? x.Pressure2 : x.Pressure2_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Press 3", x => x.Pressure3_Min?.ToString("F2"), 4, "success"),
-                    ("STN Press 3", x => x.Pressure3_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Press 3", x => x.Pressure3_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Press 3", x => x.Pressure3_Asli == null && !string.IsNullOrEmpty(x.Pressure3) ? x.Pressure3 : x.Pressure3_Max?.ToString("F2"), 4, "danger"),
 
                     ("Curr Val", x => x.CurrentValue, 4, ""),
                     ("MIN Am 1", x => x.AmMeter_Min?.ToString("F2"), 4, "success"),
-                    ("STN Am 1", x => x.AmMeter_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Am 1", x => x.AmMeter_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Am 1", x => x.AmMeter_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Am 2", x => x.AmMeter2_Min?.ToString("F2"), 4, "success"),
-                    ("STN Am 2", x => x.AmMeter2_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Am 2", x => x.AmMeter2_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Am 2", x => x.AmMeter2_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Am 3", x => x.AmMeter3_Min?.ToString("F2"), 4, "success"),
-                    ("STN Am 3", x => x.AmMeter3_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Am 3", x => x.AmMeter3_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Am 3", x => x.AmMeter3_Max?.ToString("F2"), 4, "danger"),
 
                     ("MIN Preset", x => x.PresetValue_Min?.ToString("F2"), 4, "success"),
-                    ("STN Preset", x => x.PresetValue_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Preset", x => x.PresetValue_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Preset", x => x.PresetValue_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Control", x => x.ControlValue_Min?.ToString("F2"), 4, "success"),
-                    ("STN Control", x => x.ControlValue_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Control", x => x.ControlValue_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Control", x => x.ControlValue_Max?.ToString("F2"), 4, "danger"),
 
                     ("MIN Sp-Set", x => x.SpiralPitchSetting_Min?.ToString("F2"), 4, "success"),
-                    ("STN Sp-Set", x => x.SpiralPitchSetting_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Sp-Set", x => x.SpiralPitchSetting_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Sp-Set", x => x.SpiralPitchSetting_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Sp-Disp", x => x.SpiralPitchDisplay_Min?.ToString("F2"), 4, "success"),
-                    ("STN Sp-Disp", x => x.SpiralPitchDisplay_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Sp-Disp", x => x.SpiralPitchDisplay_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Sp-Disp", x => x.SpiralPitchDisplay_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Spiral Speed", x => x.SpiralSpeed_Min?.ToString("F2"), 4, "success"),
-                    ("STN Spiral Speed", x => x.SpiralSpeed_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Spiral Speed", x => x.SpiralSpeed_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Spiral Speed", x => x.SpiralSpeed_Max?.ToString("F2"), 4, "danger"),
                     ("MIN Hose Speed", x => x.HoseSpeed_Min?.ToString("F2"), 4, "success"),
-                    ("STN Hose Speed", x => x.HoseSpeed_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD Hose Speed", x => x.HoseSpeed_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX Hose Speed", x => x.HoseSpeed_Max?.ToString("F2"), 4, "danger"),
                     ("Unsmooth", x => x.UnsmoothSurface, 4, ""),
                     ("MIN OD Sensor", x => x.OdSensor_Min?.ToString("F2"), 4, "success"),
-                    ("STN OD Sensor", x => x.OdSensor_Asli?.ToString("F2"), 4, "primary"),
+                    ("STD OD Sensor", x => x.OdSensor_Asli?.ToString("F2"), 4, "primary"),
                     ("MAX OD Sensor", x => x.OdSensor_Max?.ToString("F2"), 4, "danger"),
 
                     ("MIN Chiller", x => x.ChillerWaterTemp_Min?.ToString("F2"), 5, "success"),
-                    ("STN Chiller", x => x.ChillerWaterTemp_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Chiller", x => x.ChillerWaterTemp_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Chiller", x => x.ChillerWaterTemp_Asli == null && !string.IsNullOrEmpty(x.ChillerWaterTemp) ? x.ChillerWaterTemp : x.ChillerWaterTemp_Max?.ToString("F2"), 5, "danger"),
                     ("MIN Dancer", x => x.DancerPosition_Min?.ToString("F2"), 5, "success"),
-                    ("STN Dancer", x => x.DancerPosition_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Dancer", x => x.DancerPosition_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Dancer", x => x.DancerPosition_Max?.ToString("F2"), 5, "danger"),
                     ("MIN Caterpillar Gap", x => x.CaterpillarGap_Min?.ToString("F2"), 5, "success"),
-                    ("STN Caterpillar Gap", x => x.CaterpillarGap_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Caterpillar Gap", x => x.CaterpillarGap_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Caterpillar Gap", x => x.CaterpillarGap_Max?.ToString("F2"), 5, "danger"),
                     ("MIN Cutting", x => x.CuttingSpeed_Min?.ToString("F2"), 5, "success"),
-                    ("STN Cutting", x => x.CuttingSpeed_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Cutting", x => x.CuttingSpeed_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Cutting", x => x.CuttingSpeed_Max?.ToString("F2"), 5, "danger"),
                     ("MIN Take-up Speed", x => x.TakeUpConveyorSpeed_Min?.ToString("F2"), 5, "success"),
-                    ("STN Take-up Speed", x => x.TakeUpConveyorSpeed_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Take-up Speed", x => x.TakeUpConveyorSpeed_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Take-up Speed", x => x.TakeUpConveyorSpeed_Max?.ToString("F2"), 5, "danger"),
                     ("MIN Cool-S 1", x => x.CoolConveyorSpeed_Min?.ToString("F2"), 5, "success"),
-                    ("STN Cool-S 1", x => x.CoolConveyorSpeed_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Cool-S 1", x => x.CoolConveyorSpeed_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Cool-S 1", x => x.CoolConveyorSpeed_Max?.ToString("F2"), 5, "danger"),
                     ("MIN Cool-S 2", x => x.CoolConveyorSpeed2_Min?.ToString("F2"), 5, "success"),
-                    ("STN Cool-S 2", x => x.CoolConveyorSpeed2_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Cool-S 2", x => x.CoolConveyorSpeed2_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Cool-S 2", x => x.CoolConveyorSpeed2_Max?.ToString("F2"), 5, "danger"),
                     ("MIN Conv-R", x => x.ConveyorRatio_Min?.ToString("F2"), 5, "success"),
-                    ("STN Conv-R", x => x.ConveyorRatio_Asli?.ToString("F2"), 5, "primary"),
+                    ("STD Conv-R", x => x.ConveyorRatio_Asli?.ToString("F2"), 5, "primary"),
                     ("MAX Conv-R", x => x.ConveyorRatio_Max?.ToString("F2"), 5, "danger"),
                     ("Mark Sort", x => x.MarkingSort, 5, ""),
                     ("Text Material", x => x.TextMarkingMaterial, 5, ""),
                     ("Mark Colour", x => x.MarkingColour, 5, ""),
 
-                    ("MIN � Inner", x => x.ToleranceInner_Min?.ToString("F2"), 6, "success"),
-                    ("STN � Inner", x => x.ToleranceInner_Asli?.ToString("F2"), 6, "primary"),
-                    ("MAX � Inner", x => x.ToleranceInner_Max?.ToString("F2"), 6, "danger"),
-                    ("MIN � Outer", x => x.ToleranceOuter_Min?.ToString("F2"), 6, "success"),
-                    ("STN � Outer", x => x.ToleranceOuter_Asli?.ToString("F2"), 6, "primary"),
-                    ("MAX � Outer", x => x.ToleranceOuter_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN ± Inner", x => x.ToleranceInner_Min?.ToString("F2"), 6, "success"),
+                    ("STD ± Inner", x => x.ToleranceInner_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX ± Inner", x => x.ToleranceInner_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN ± Outer", x => x.ToleranceOuter_Min?.ToString("F2"), 6, "success"),
+                    ("STD ± Outer", x => x.ToleranceOuter_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX ± Outer", x => x.ToleranceOuter_Max?.ToString("F2"), 6, "danger"),
                     ("MIN Tebal Inner", x => x.TebalInner_Min?.ToString("F2"), 6, "success"),
-                    ("STN Tebal Inner", x => x.TebalInner_Asli?.ToString("F2"), 6, "primary"),
+                    ("STD Tebal Inner", x => x.TebalInner_Asli?.ToString("F2"), 6, "primary"),
                     ("MAX Tebal Inner", x => x.TebalInner_Max?.ToString("F2"), 6, "danger"),
                     ("MIN Inner+Middle", x => x.TebalInnerMiddle_Min?.ToString("F2"), 6, "success"),
-                    ("STN Inner+Middle", x => x.TebalInnerMiddle_Asli?.ToString("F2"), 6, "primary"),
+                    ("STD Inner+Middle", x => x.TebalInnerMiddle_Asli?.ToString("F2"), 6, "primary"),
                     ("MAX Inner+Middle", x => x.TebalInnerMiddle_Max?.ToString("F2"), 6, "danger"),
                     ("MIN Tebal Outer", x => x.TebalOuter_Min?.ToString("F2"), 6, "success"),
-                    ("STN Tebal Outer", x => x.TebalOuter_Asli?.ToString("F2"), 6, "primary"),
+                    ("STD Tebal Outer", x => x.TebalOuter_Asli?.ToString("F2"), 6, "primary"),
                     ("MAX Tebal Outer", x => x.TebalOuter_Max?.ToString("F2"), 6, "danger"),
                     ("MIN Total Thickness", x => x.TebalTotal_Min?.ToString("F2"), 6, "success"),
-                    ("STN Total Thickness", x => x.TebalTotal_Asli?.ToString("F2"), 6, "primary"),
+                    ("STD Total Thickness", x => x.TebalTotal_Asli?.ToString("F2"), 6, "primary"),
                     ("MAX Total Thickness", x => x.TebalTotal_Max?.ToString("F2"), 6, "danger"),
                     ("MIN Selisih", x => x.SelisihTebal_Min?.ToString("F2"), 6, "success"),
-                    ("STN Selisih", x => x.SelisihTebal_Asli?.ToString("F2"), 6, "primary"),
+                    ("STD Selisih", x => x.SelisihTebal_Asli?.ToString("F2"), 6, "primary"),
                     ("MAX Selisih", x => x.SelisihTebal_Max?.ToString("F2"), 6, "danger"),
 
                     ("In Target", x => x.InnerTarget, 6, ""),
@@ -1173,16 +1177,14 @@ namespace VelastoProductionSystem.Controllers
                     ("Tot LCL", x => x.TotalLCL, 6, ""),
                     ("Tot Min", x => x.TotalMin, 6, ""),
                     ("Tot UCL", x => x.TotalUCL, 6, ""),
-                    ("Tot Max", x => x.TotalMax, 6, ""),
-
-                    ("Item List", x => x.ItemList, 6, "")
+                    ("Tot Max", x => x.TotalMax, 6, "")
                 };
 
                 var groups = new[] {
                     (Name: "Identifikasi Utama", Color: System.Drawing.Color.FromArgb(13, 110, 253)),
                     (Name: "Spesifikasi Hose & Dies", Color: System.Drawing.Color.FromArgb(230, 126, 34)),
                     (Name: "Mesh", Color: System.Drawing.Color.FromArgb(13, 110, 253)),
-                    (Name: "Suhu Pengerjaan (�C)", Color: System.Drawing.Color.FromArgb(230, 126, 34)),
+                    (Name: "Suhu Pengerjaan (°C)", Color: System.Drawing.Color.FromArgb(230, 126, 34)),
                     (Name: "Output Mesin", Color: System.Drawing.Color.FromArgb(13, 110, 253)),
                     (Name: "Proses Akhir", Color: System.Drawing.Color.FromArgb(230, 126, 34)),
                     (Name: "Final Quality Matrix", Color: System.Drawing.Color.FromArgb(13, 110, 253))
@@ -1317,7 +1319,7 @@ namespace VelastoProductionSystem.Controllers
                         if (ws.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                         {
                             worksheet = ws;
-                            log.AppendLine($"✓ Selected sheet: {ws.Name} (matched: {keyword})");
+                            log.AppendLine($"âœ“ Selected sheet: {ws.Name} (matched: {keyword})");
                             _logger.LogInformation(log.ToString());
                             break;
                         }
@@ -1331,7 +1333,7 @@ namespace VelastoProductionSystem.Controllers
                     worksheet = package.Workbook.Worksheets
                         .OrderByDescending(w => w.Dimension?.Rows ?? 0)
                         .FirstOrDefault();
-                    log.AppendLine($"✓ Selected largest sheet: {worksheet?.Name}");
+                    log.AppendLine($"âœ“ Selected largest sheet: {worksheet?.Name}");
                     _logger.LogInformation(log.ToString());
                 }
                 
@@ -1446,9 +1448,9 @@ namespace VelastoProductionSystem.Controllers
                 if (isDig3L)
                 {
                     _logger.LogInformation("Using CHS 3 Layer HARDCODED indices");
-                    idxDimensi = 12; // Backup col 11 → EPPlus col 12
+                    idxDimensi = 12; // Backup col 11 â†’ EPPlus col 12
                     idxItem = 108; // Col 108
-                    idxRev = 7; idxRevDate = 9; idxCustomer = 8; idxFormulasi = 10; // Backup: 6,8,7,9 → EPPlus: 7,9,8,10
+                    idxRev = 7; idxRevDate = 9; idxCustomer = 8; idxFormulasi = 10; // Backup: 6,8,7,9 â†’ EPPlus: 7,9,8,10
                     idxInner = 14; idxMiddle = 15; idxOuter = 16;
                     idxUseLimitsInner = 17; idxUseLimitsMiddle = 18; idxUseLimitsOuter = 19;
                     idxYarn = 20; idxTensionIn = 21; idxTensionOut = 22;
@@ -1465,17 +1467,17 @@ namespace VelastoProductionSystem.Controllers
                     idxScrewSpeed1 = 50; idxScrewSpeed2 = 51; idxScrewSpeed3 = 52;
                     idxFeedRoll1 = 53; idxFeedRoll2 = 54; idxFeedRoll3 = 55;
                     idxPressure1 = 56; idxPressure2 = 57; idxPressure3 = 58;
-                    // Machine parameters (Backup: 58-67 → EPPlus: 59-68)
+                    // Machine parameters (Backup: 58-67 â†’ EPPlus: 59-68)
                     idxAmMeter = 59; idxAmMeter2 = 60; idxAmMeter3 = 61;
                     idxPresetValue = 62; idxControlValue = 63;
                     idxSpiralPitchSetting = 64; idxSpiralPitchDisplay = 65;
                     idxSpiralSpeed = 66; idxHoseSpeed = 67; idxUnsmoothSurface = 68;
-                    // Marking/Conveyor parameters (Backup: 68-76 → EPPlus: 69-77)
+                    // Marking/Conveyor parameters (Backup: 68-76 â†’ EPPlus: 69-77)
                     idxMarkingSort = 69; idxTextMarkingMaterial = 70; idxMarkingColour = 71;
                     idxChillerWaterTemp = 72; idxCaterpillarGap = 73;
                     idxTakeUpConveyorSpeed = 74; idxCoolConveyorSpeed = 75; idxCoolConveyorSpeed2 = 76;
                     idxConveyorRatio = 77;
-                    // Tolerance/Thickness (Backup: 77-82 → EPPlus: 78-83)
+                    // Tolerance/Thickness (Backup: 77-82 â†’ EPPlus: 78-83)
                     idxToleranceInner = 78; idxToleranceOuter = 79;
                     idxTebalInner = 80; idxTebalInnerMiddle = 81; idxTebalTotal = 82; idxSelisihTebal = 83;
                     // Quality Matrix (FIXED: Col 84-107)
@@ -1495,9 +1497,9 @@ namespace VelastoProductionSystem.Controllers
                 else if (isDig2L)
                 {
                     _logger.LogInformation("Using CHS 2 Layer HARDCODED indices");
-                    idxDimensi = 12; // Backup col 11 → EPPlus col 12
+                    idxDimensi = 12; // Backup col 11 â†’ EPPlus col 12
                     idxItem = 90; // Col 90
-                    idxRev = 7; idxRevDate = 9; idxCustomer = 8; idxFormulasi = 10; // Backup: 6,8,7,9 → EPPlus: 7,9,8,10
+                    idxRev = 7; idxRevDate = 9; idxCustomer = 8; idxFormulasi = 10; // Backup: 6,8,7,9 â†’ EPPlus: 7,9,8,10
                     idxInner = 14; idxOuter = 15; // NO MIDDLE!
                     idxUseLimitsInner = 16; idxUseLimitsOuter = 17;
                     idxYarn = 18; idxPitchYarn = 19;
@@ -1513,16 +1515,16 @@ namespace VelastoProductionSystem.Controllers
                     idxScrewSpeed1 = 42; idxScrewSpeed2 = 43;
                     idxFeedRoll1 = 44; idxFeedRoll2 = 45;
                     idxPressure1 = 46; idxPressure2 = 47;
-                    // Machine parameters (Backup: 47-56 → EPPlus: 48-57)
+                    // Machine parameters (Backup: 47-56 â†’ EPPlus: 48-57)
                     idxCurrentValue = 48; idxAmMeter = 49; idxAmMeter2 = 50;
                     idxPresetValue = 51; idxControlValue = 52;
                     idxSpiralPitchSetting = 53; idxSpiralPitchDisplay = 54;
                     idxSpiralSpeed = 55; idxHoseSpeed = 56; idxUnsmoothSurface = 57;
-                    // Marking/Conveyor parameters (Backup: 57-65 → EPPlus: 58-66)
+                    // Marking/Conveyor parameters (Backup: 57-65 â†’ EPPlus: 58-66)
                     idxMarkingSort = 58; idxTextMarkingMaterial = 59; idxMarkingColour = 60;
                     idxChillerWaterTemp = 61; idxDancerPosition = 62; idxCaterpillarGap = 63;
                     idxTakeUpConveyorSpeed = 64; idxCoolConveyorSpeed = 65; idxConveyorRatio = 66;
-                    // Tolerance/Thickness (Backup: 66-70 → EPPlus: 67-71)
+                    // Tolerance/Thickness (Backup: 66-70 â†’ EPPlus: 67-71)
                     idxToleranceInner = 67; idxToleranceOuter = 68;
                     idxTebalInner = 69; idxTebalTotal = 70; idxSelisihTebal = 71;
                     // Quality Matrix CHS 2L (FIXED: Col 72-89)
@@ -1585,10 +1587,10 @@ namespace VelastoProductionSystem.Controllers
                     idxTotalTarget = 296; idxTotalTol = 297; idxTotalLCL = 298;
                     idxTotalMin = 299; idxTotalUCL = 300; idxTotalMax = 301;
                 }
-                else if (isLegacy || (headerRow == 3 && worksheet.Cells[3, 43].Text?.Trim().Contains("± Inner") == true))
+                else if (isLegacy || (headerRow == 3 && worksheet.Cells[3, 43].Text?.Trim().Contains("Â± Inner") == true))
                 {
                     // Double Layer_Digitalisasi or NON-CHS format
-                    _logger.LogWarning("🔍 FORMAT DETECTED: Double Layer_Digitalisasi/Non-CHS");
+                    _logger.LogWarning("ðŸ” FORMAT DETECTED: Double Layer_Digitalisasi/Non-CHS");
                     _logger.LogWarning($"   headerRow={headerRow}, Cell[3,43]='{worksheet.Cells[3, 43].Text}'");
                     idxDimensi = 10; // Col 10: Dimensi
                     idxItem = 51; // Assuming item list around col 51-52
@@ -1616,20 +1618,20 @@ namespace VelastoProductionSystem.Controllers
                     idxChillerWaterTemp = 40; idxDancerPosition = 0; idxCaterpillarGap = 0;
                     idxTakeUpConveyorSpeed = 42; idxCoolConveyorSpeed = 0; idxCoolConveyorSpeed2 = 0; idxConveyorRatio = 0;
                     // TOLERANCE/THICKNESS FOR DOUBLE LAYER DIGITALISASI (Col 43-48)
-                    idxToleranceInner = 43; // ± Inner
-                    idxToleranceOuter = 44;  // ± Outer
+                    idxToleranceInner = 43; // Â± Inner
+                    idxToleranceOuter = 44;  // Â± Outer
                     idxTebalInner = 45;      // Tebal Inner
                     idxTebalTotal = 47;      // Tebal Total
                     idxSelisihTebal = 48;    // Selisih tebal
                     idxTebalInnerMiddle = 0; // No middle in Double Layer
-                    _logger.LogWarning($"   🎯 TOLERANCE COLUMNS: Inner={idxToleranceInner}, Outer={idxToleranceOuter}, TebalInner={idxTebalInner}, TebalTotal={idxTebalTotal}");
+                    _logger.LogWarning($"   ðŸŽ¯ TOLERANCE COLUMNS: Inner={idxToleranceInner}, Outer={idxToleranceOuter}, TebalInner={idxTebalInner}, TebalTotal={idxTebalTotal}");
                 }
                 else
                 {
                     _logger.LogInformation("Using Legacy/Simple format indices");
-                    idxDimensi = 10; // Backup col 9 → EPPlus col 10
+                    idxDimensi = 10; // Backup col 9 â†’ EPPlus col 10
                     idxItem = 51; // Assuming legacy format
-                    idxRev = 5; idxRevDate = 7; idxCustomer = 6; idxFormulasi = 8; // Backup: 4,6,5,7 → EPPlus: 5,7,6,8
+                    idxRev = 5; idxRevDate = 7; idxCustomer = 6; idxFormulasi = 8; // Backup: 4,6,5,7 â†’ EPPlus: 5,7,6,8
                     idxInner = 12; idxOuter = 13;
                     idxUseLimitsInner = 14; idxUseLimitsOuter = 15;
                     idxNipple = 16; idxTubeDie = 17; idxCoverDie = 18;
@@ -1676,7 +1678,7 @@ namespace VelastoProductionSystem.Controllers
                         // Log first 20 columns for debugging
                         if (col <= 20)
                         {
-                            headerDebugLog.AppendLine($"  Col {col}: '{headerValue}' → normalized: '{normalizedKey}'");
+                            headerDebugLog.AppendLine($"  Col {col}: '{headerValue}' â†’ normalized: '{normalizedKey}'");
                         }
                     }
                 }
@@ -1704,7 +1706,7 @@ namespace VelastoProductionSystem.Controllers
                                 headers[normalizedKey] = col;
                                 headers[headerValue.ToUpper()] = col;
                                 
-                                headerDebugLog.AppendLine($"  Col {col}: '{headerValue}' → normalized: '{normalizedKey}'");
+                                headerDebugLog.AppendLine($"  Col {col}: '{headerValue}' â†’ normalized: '{normalizedKey}'");
                             }
                         }
                     }
@@ -1723,7 +1725,7 @@ namespace VelastoProductionSystem.Controllers
                         var headerValue = !string.IsNullOrEmpty(val3) && val3.Contains("ITEM") ? val3 : val6;
                         headers["ITEM"] = col;
                         headers["ITEMLIST"] = col;
-                        headerDebugLog.AppendLine($"  ✓ Col {col}: ITEM FOUND! (value: '{headerValue}')");
+                        headerDebugLog.AppendLine($"  âœ“ Col {col}: ITEM FOUND! (value: '{headerValue}')");
                     }
                 }
                 
@@ -1753,14 +1755,14 @@ namespace VelastoProductionSystem.Controllers
                         if (headers.ContainsKey(normalized))
                         {
                             matchedColumns.Add(headers[normalized]);
-                            _logger.LogInformation($"  → Found at col {headers[normalized]} (normalized match: '{normalized}')");
+                            _logger.LogInformation($"  â†’ Found at col {headers[normalized]} (normalized match: '{normalized}')");
                         }
                         
                         // Try exact uppercase match
                         if (headers.ContainsKey(name.ToUpper()))
                         {
                             matchedColumns.Add(headers[name.ToUpper()]);
-                            _logger.LogInformation($"  → Found at col {headers[name.ToUpper()]} (exact match: '{name.ToUpper()}')");
+                            _logger.LogInformation($"  â†’ Found at col {headers[name.ToUpper()]} (exact match: '{name.ToUpper()}')");
                         }
                     }
                     
@@ -1786,7 +1788,7 @@ namespace VelastoProductionSystem.Controllers
                                     (headerKey.Contains(normalized) || normalized.Contains(headerKey)))
                                 {
                                     matchedColumns.Add(kvp.Value);
-                                    _logger.LogInformation($"  → Found at col {kvp.Value} (partial match: '{headerKey}')");
+                                    _logger.LogInformation($"  â†’ Found at col {kvp.Value} (partial match: '{headerKey}')");
                                 }
                             }
                         }
@@ -1798,12 +1800,12 @@ namespace VelastoProductionSystem.Controllers
                         var leftmost = matchedColumns.Min();
                         if (matchedColumns.Count > 1)
                         {
-                            _logger.LogInformation($"  ✓ Multiple columns found ({string.Join(", ", matchedColumns.OrderBy(c => c))}), using LEFTMOST: col {leftmost}");
+                            _logger.LogInformation($"  âœ“ Multiple columns found ({string.Join(", ", matchedColumns.OrderBy(c => c))}), using LEFTMOST: col {leftmost}");
                         }
                         return leftmost;
                     }
                     
-                    _logger.LogWarning($"  → Column NOT FOUND for: {string.Join(", ", possibleNames)}");
+                    _logger.LogWarning($"  â†’ Column NOT FOUND for: {string.Join(", ", possibleNames)}");
                     return 0;
                 }
 
@@ -1811,7 +1813,7 @@ namespace VelastoProductionSystem.Controllers
                 string GetCellValue(int row, int col)
                 {
                     if (col <= 0) return "";
-                    // Use .Value instead of .Text to preserve special characters like ±
+                    // Use .Value instead of .Text to preserve special characters like Â±
                     var cellValue = worksheet.Cells[row, col].Value;
                     if (cellValue == null) return "";
                     
@@ -1830,11 +1832,11 @@ namespace VelastoProductionSystem.Controllers
                 if (itemListCol <= 0)
                 {
                     itemListCol = idxItem;
-                    _logger.LogInformation($"  → Item column not found dynamically, using HARDCODED: col {itemListCol} (based on format detection)");
+                    _logger.LogInformation($"  â†’ Item column not found dynamically, using HARDCODED: col {itemListCol} (based on format detection)");
                 }
                 else
                 {
-                    _logger.LogInformation($"  → Using DYNAMICALLY found Item column: col {itemListCol}");
+                    _logger.LogInformation($"  â†’ Using DYNAMICALLY found Item column: col {itemListCol}");
                 }
                 
                 int noCol = FindColumn("NO", "NUMBER", "NO.");
@@ -1881,18 +1883,18 @@ namespace VelastoProductionSystem.Controllers
 
                 if (docNumberCol == 0)
                 {
-                    _logger.LogWarning("❌ Kolom NO. DOC tidak ditemukan, akan gunakan ID EXCEL atau row number sebagai fallback");
+                    _logger.LogWarning("âŒ Kolom NO. DOC tidak ditemukan, akan gunakan ID EXCEL atau row number sebagai fallback");
                     
                     // Fallback: gunakan ID EXCEL column sebagai document number
                     if (idExcelCol > 0)
                     {
-                        _logger.LogInformation("  → Menggunakan ID EXCEL sebagai document number");
+                        _logger.LogInformation("  â†’ Menggunakan ID EXCEL sebagai document number");
                         docNumberCol = idExcelCol;
                     }
                     else
                     {
                         // Last resort: gunakan row number
-                        _logger.LogWarning("  → ID EXCEL juga tidak ditemukan, akan gunakan row number");
+                        _logger.LogWarning("  â†’ ID EXCEL juga tidak ditemukan, akan gunakan row number");
                     }
                 }
                 
@@ -1901,13 +1903,13 @@ namespace VelastoProductionSystem.Controllers
                 {
                     // Build helpful error message with what we found
                     var errorMsg = new System.Text.StringBuilder();
-                    errorMsg.AppendLine("❌ Kolom 'NO. DOC' dan 'ID EXCEL' tidak ditemukan!");
-                    errorMsg.AppendLine($"\n📊 Info file:");
+                    errorMsg.AppendLine("âŒ Kolom 'NO. DOC' dan 'ID EXCEL' tidak ditemukan!");
+                    errorMsg.AppendLine($"\nðŸ“Š Info file:");
                     errorMsg.AppendLine($"- Sheet: {worksheet.Name}");
                     errorMsg.AppendLine($"- Total kolom: {colCount}");
                     errorMsg.AppendLine($"- Header row: {headerRow}");
                     errorMsg.AppendLine($"- Data start row: {dataStartRow}");
-                    errorMsg.AppendLine($"\n📝 Kolom yang berhasil dibaca (30 pertama):");
+                    errorMsg.AppendLine($"\nðŸ“ Kolom yang berhasil dibaca (30 pertama):");
                     
                     int shown = 0;
                     foreach (var kvp in headers.OrderBy(h => h.Value).Take(30))
@@ -1918,8 +1920,8 @@ namespace VelastoProductionSystem.Controllers
                     
                     if (headers.Count == 0)
                     {
-                        errorMsg.AppendLine("  ⚠ TIDAK ADA HEADER YANG TERBACA!");
-                        errorMsg.AppendLine($"\n💡 Coba cek:");
+                        errorMsg.AppendLine("  âš  TIDAK ADA HEADER YANG TERBACA!");
+                        errorMsg.AppendLine($"\nðŸ’¡ Coba cek:");
                         errorMsg.AppendLine($"  - Apakah sheet '{worksheet.Name}' yang benar?");
                         errorMsg.AppendLine($"  - Apakah row {headerRow} berisi nama kolom?");
                     }
@@ -2004,10 +2006,10 @@ namespace VelastoProductionSystem.Controllers
                     {
                         int firstRow = rowNum; // Alias to keep existing code working
                         
-                        // ====== LOCAL HELPER: Supports both ± format AND manual MIN/STD/MAX columns ======
+                        // ====== LOCAL HELPER: Supports both Â± format AND manual MIN/STD/MAX columns ======
                         // Untuk isTemplateFull: setiap parameter punya 4 kolom: raw(N), MIN(N+1), STD(N+2), MAX(N+3)
-                        // Jika kolom raw berisi format ±  → parse otomatis
-                        // Jika kolom raw kosong/tidak pakai ± → baca MIN/STD/MAX dari kolom terpisah (manual input)
+                        // Jika kolom raw berisi format Â±  â†’ parse otomatis
+                        // Jika kolom raw kosong/tidak pakai Â± â†’ baca MIN/STD/MAX dari kolom terpisah (manual input)
                         void AssignFullOrManual(int rawCol,
                             Action<decimal?> setMin, Action<decimal?> setAsli, Action<decimal?> setMax)
                         {
@@ -2016,7 +2018,7 @@ namespace VelastoProductionSystem.Controllers
                             var parsed = ParsePlusMinusValue(rawVal);
                             if (parsed.min != null || parsed.asli != null || parsed.max != null)
                             {
-                                // Format ± berhasil di-parse → gunakan hasil parse
+                                // Format Â± berhasil di-parse â†’ gunakan hasil parse
                                 setMin(parsed.min); setAsli(parsed.asli); setMax(parsed.max);
                             }
                             else if (isTemplateFull)
@@ -2032,7 +2034,7 @@ namespace VelastoProductionSystem.Controllers
                                 decimal? maxV = decimal.TryParse(maxStr, ns, ci, out var xv) ? xv : (decimal?)null;
                                 if (minV != null || stdV != null || maxV != null)
                                 {
-                                    _logger.LogInformation($"  📋 Manual MIN/STD/MAX col {rawCol}: MIN={minV}, STD={stdV}, MAX={maxV}");
+                                    _logger.LogInformation($"  ðŸ“‹ Manual MIN/STD/MAX col {rawCol}: MIN={minV}, STD={stdV}, MAX={maxV}");
                                 }
                                 setMin(minV); setAsli(stdV); setMax(maxV);
                             }
@@ -2066,13 +2068,13 @@ namespace VelastoProductionSystem.Controllers
                             if (existingDoc != null)
                             {
                                 // UPDATE existing document
-                                _logger.LogInformation($"📝 UPDATING EXISTING DOC: '{docNumber}' (Item: {item})");
+                                _logger.LogInformation($"ðŸ“ UPDATING EXISTING DOC: '{docNumber}' (Item: {item})");
                                 spsNoDoc = existingDoc;
                             }
                             else
                             {
                                 // CREATE new document
-                                _logger.LogInformation($"✨ CREATING NEW DOC: '{docNumber}' (Item: {item})");
+                                _logger.LogInformation($"âœ¨ CREATING NEW DOC: '{docNumber}' (Item: {item})");
                                 spsNoDoc = new SpsNoDoc();
                                 isNewDoc = true;
                             }
@@ -2122,10 +2124,10 @@ namespace VelastoProductionSystem.Controllers
                             spsNoDoc.ToleranceOuter = idxToleranceOuter > 0 ? GetCellValue(firstRow, idxToleranceOuter) : ""; // HARDCODED
                         }
 
-                            // ========== PARSE ± FORMAT FOR TOLERANCE FIELDS ==========
-                            _logger.LogInformation($"  Parsing tolerance fields with ± format...");
+                            // ========== PARSE Â± FORMAT FOR TOLERANCE FIELDS ==========
+                            _logger.LogInformation($"  Parsing tolerance fields with Â± format...");
                             
-                            // DIE/MATERIAL PARAMETERS with ±
+                            // DIE/MATERIAL PARAMETERS with Â±
                             AssignFullOrManual(idxNipple,
                                 v => spsNoDoc.Nipple_Min = v, v => spsNoDoc.Nipple_Asli = v, v => spsNoDoc.Nipple_Max = v);
                             
@@ -2153,7 +2155,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.ADistance_Min = v, v => spsNoDoc.ADistance_Asli = v, v => spsNoDoc.ADistance_Max = v);
                             }
                             
-                            // MESH DIM with ±
+                            // MESH DIM with Â±
                             if (idxMeshDim1 > 0)
                             {
                                 AssignFullOrManual(idxMeshDim1,
@@ -2172,14 +2174,14 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.MeshDim3_Min = v, v => spsNoDoc.MeshDim3_Asli = v, v => spsNoDoc.MeshDim3_Max = v);
                             }
                             
-                            // Parse PitchYarn with ±
+                            // Parse PitchYarn with Â±
                             if (idxPitchYarn > 0)
                             {
                                 AssignFullOrManual(idxPitchYarn,
                                     v => spsNoDoc.PitchYarn_Min = v, v => spsNoDoc.PitchYarn_Asli = v, v => spsNoDoc.PitchYarn_Max = v);
                             }
                             
-                            // TEMPERATURE/CYLINDER/SPEED PARAMETERS with HARDCODED indices (± parsing)
+                            // TEMPERATURE/CYLINDER/SPEED PARAMETERS with HARDCODED indices (Â± parsing)
                             // Using hardcoded column indices based on format detection
                             if (idxHeadTemp1 > 0)
                             {
@@ -2490,60 +2492,60 @@ namespace VelastoProductionSystem.Controllers
                             // TOLERANCE/THICKNESS PARAMETERS - CRITICAL FOR DISPLAY!
                             if (idxToleranceInner > 0)
                             {
-                                _logger.LogWarning($"  🔍 ToleranceInner from col {idxToleranceInner} (with manual fallback)");
+                                _logger.LogWarning($"  ðŸ” ToleranceInner from col {idxToleranceInner} (with manual fallback)");
                                 AssignFullOrManual(idxToleranceInner,
                                     v => spsNoDoc.ToleranceInner_Min = v, v => spsNoDoc.ToleranceInner_Asli = v, v => spsNoDoc.ToleranceInner_Max = v);
-                                _logger.LogWarning($"     ✓ Parsed → Min={spsNoDoc.ToleranceInner_Min}, Asli={spsNoDoc.ToleranceInner_Asli}, Max={spsNoDoc.ToleranceInner_Max}");
+                                _logger.LogWarning($"     âœ“ Parsed â†’ Min={spsNoDoc.ToleranceInner_Min}, Asli={spsNoDoc.ToleranceInner_Asli}, Max={spsNoDoc.ToleranceInner_Max}");
                                 
                                 if (spsNoDoc.ToleranceInner_Min == null && spsNoDoc.ToleranceInner_Asli == null && spsNoDoc.ToleranceInner_Max == null)
                                 {
-                                    _logger.LogError($"     ❌ PARSING FAILED! All values are NULL!");
+                                    _logger.LogError($"     âŒ PARSING FAILED! All values are NULL!");
                                 }
                             }
                             else
                             {
-                                _logger.LogWarning($"  ⚠️ idxToleranceInner is 0 or negative, skipping parsing");
+                                _logger.LogWarning($"  âš ï¸ idxToleranceInner is 0 or negative, skipping parsing");
                             }
                             
                             if (idxToleranceOuter > 0)
                             {
-                                _logger.LogWarning($"  🔍 ToleranceOuter from col {idxToleranceOuter} (with manual fallback)");
+                                _logger.LogWarning($"  ðŸ” ToleranceOuter from col {idxToleranceOuter} (with manual fallback)");
                                 AssignFullOrManual(idxToleranceOuter,
                                     v => spsNoDoc.ToleranceOuter_Min = v, v => spsNoDoc.ToleranceOuter_Asli = v, v => spsNoDoc.ToleranceOuter_Max = v);
-                                _logger.LogWarning($"     ✓ Parsed → Min={spsNoDoc.ToleranceOuter_Min}, Asli={spsNoDoc.ToleranceOuter_Asli}, Max={spsNoDoc.ToleranceOuter_Max}");
+                                _logger.LogWarning($"     âœ“ Parsed â†’ Min={spsNoDoc.ToleranceOuter_Min}, Asli={spsNoDoc.ToleranceOuter_Asli}, Max={spsNoDoc.ToleranceOuter_Max}");
                                 
                                 if (spsNoDoc.ToleranceOuter_Min == null && spsNoDoc.ToleranceOuter_Asli == null && spsNoDoc.ToleranceOuter_Max == null)
                                 {
-                                    _logger.LogError($"     ❌ PARSING FAILED! All values are NULL!");
+                                    _logger.LogError($"     âŒ PARSING FAILED! All values are NULL!");
                                 }
                             }
                             else
                             {
-                                _logger.LogWarning($"  ⚠️ idxToleranceOuter is 0 or negative, skipping parsing");
+                                _logger.LogWarning($"  âš ï¸ idxToleranceOuter is 0 or negative, skipping parsing");
                             }
                             
                             if (idxTebalInner > 0)
                             {
-                                _logger.LogWarning($"  🔍 TebalInner from col {idxTebalInner} (with manual fallback)");
+                                _logger.LogWarning($"  ðŸ” TebalInner from col {idxTebalInner} (with manual fallback)");
                                 AssignFullOrManual(idxTebalInner,
                                     v => spsNoDoc.TebalInner_Min = v, v => spsNoDoc.TebalInner_Asli = v, v => spsNoDoc.TebalInner_Max = v);
-                                _logger.LogWarning($"     ✓ Parsed → Min={spsNoDoc.TebalInner_Min}, Asli={spsNoDoc.TebalInner_Asli}, Max={spsNoDoc.TebalInner_Max}");
+                                _logger.LogWarning($"     âœ“ Parsed â†’ Min={spsNoDoc.TebalInner_Min}, Asli={spsNoDoc.TebalInner_Asli}, Max={spsNoDoc.TebalInner_Max}");
                             }
                             
                             if (idxTebalInnerMiddle > 0)
                             {
-                                _logger.LogWarning($"  🔍 TebalInnerMiddle from col {idxTebalInnerMiddle} (with manual fallback)");
+                                _logger.LogWarning($"  ðŸ” TebalInnerMiddle from col {idxTebalInnerMiddle} (with manual fallback)");
                                 AssignFullOrManual(idxTebalInnerMiddle,
                                     v => spsNoDoc.TebalInnerMiddle_Min = v, v => spsNoDoc.TebalInnerMiddle_Asli = v, v => spsNoDoc.TebalInnerMiddle_Max = v);
-                                _logger.LogWarning($"     ✓ Parsed → Min={spsNoDoc.TebalInnerMiddle_Min}, Asli={spsNoDoc.TebalInnerMiddle_Asli}, Max={spsNoDoc.TebalInnerMiddle_Max}");
+                                _logger.LogWarning($"     âœ“ Parsed â†’ Min={spsNoDoc.TebalInnerMiddle_Min}, Asli={spsNoDoc.TebalInnerMiddle_Asli}, Max={spsNoDoc.TebalInnerMiddle_Max}");
                             }
                             
                             if (idxTebalTotal > 0)
                             {
-                                _logger.LogWarning($"  🔍 TebalTotal from col {idxTebalTotal} (with manual fallback)");
+                                _logger.LogWarning($"  ðŸ” TebalTotal from col {idxTebalTotal} (with manual fallback)");
                                 AssignFullOrManual(idxTebalTotal,
                                     v => spsNoDoc.TebalTotal_Min = v, v => spsNoDoc.TebalTotal_Asli = v, v => spsNoDoc.TebalTotal_Max = v);
-                                _logger.LogWarning($"     ✓ Parsed → Min={spsNoDoc.TebalTotal_Min}, Asli={spsNoDoc.TebalTotal_Asli}, Max={spsNoDoc.TebalTotal_Max}");
+                                _logger.LogWarning($"     âœ“ Parsed â†’ Min={spsNoDoc.TebalTotal_Min}, Asli={spsNoDoc.TebalTotal_Asli}, Max={spsNoDoc.TebalTotal_Max}");
                             }
                             
                             if (idxSelisihTebal > 0)
@@ -2701,7 +2703,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.ChillerWaterTemp_Min = v, v => spsNoDoc.ChillerWaterTemp_Asli = v, v => spsNoDoc.ChillerWaterTemp_Max = v);
                             }
                             
-                            // THICKNESS with ±
+                            // THICKNESS with Â±
                             if (idxTebalInner <= 0) {
                                 int tebalInnerCol = FindColumn("TEBAL INNER", "TEBALINNER");
                                 AssignParsedValue(GetCellValue(firstRow, tebalInnerCol), 
@@ -2721,7 +2723,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.TebalTotal_Min = v, v => spsNoDoc.TebalTotal_Asli = v, v => spsNoDoc.TebalTotal_Max = v);
                             }
                             
-                            // TOLERANCE Inner/Outer with ±
+                            // TOLERANCE Inner/Outer with Â±
                             if (idxToleranceInner <= 0) {
                                 AssignParsedValue(GetCellValue(firstRow, toleranceInnerCol), 
                                     v => spsNoDoc.ToleranceInner_Min = v, v => spsNoDoc.ToleranceInner_Asli = v, v => spsNoDoc.ToleranceInner_Max = v);
@@ -2732,7 +2734,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.ToleranceOuter_Min = v, v => spsNoDoc.ToleranceOuter_Asli = v, v => spsNoDoc.ToleranceOuter_Max = v);
                             }
                             
-                            // OTHER PARAMETERS with ±
+                            // OTHER PARAMETERS with Â±
                             if (idxPitchYarn <= 0) {
                                 int pitchYarnCol = FindColumn("PITCH YARN", "PITCHYARN");
                                 AssignParsedValue(GetCellValue(firstRow, pitchYarnCol), 
@@ -2758,7 +2760,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.OdSensor_Min = v, v => spsNoDoc.OdSensor_Asli = v, v => spsNoDoc.OdSensor_Max = v);
                             }
                             
-                            _logger.LogInformation($"  ✓ Tolerance parsing completed");
+                            _logger.LogInformation($"  âœ“ Tolerance parsing completed");
 
                             // Log important values for debugging
                             _logger.LogInformation($"  Data from row {firstRow}:");
@@ -2776,12 +2778,12 @@ namespace VelastoProductionSystem.Controllers
                             if (isNewDoc)
                             {
                                 _context.SpsNoDocs.Add(spsNoDoc);
-                                _logger.LogInformation($"✨ Adding NEW document to context");
+                                _logger.LogInformation($"âœ¨ Adding NEW document to context");
                             }
                             else
                             {
                                 _context.SpsNoDocs.Update(spsNoDoc);
-                                _logger.LogInformation($"📝 Updating EXISTING document in context");
+                                _logger.LogInformation($"ðŸ“ Updating EXISTING document in context");
                             }
                             
                             await _context.SaveChangesAsync();
@@ -2815,10 +2817,10 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 // Auto-refresh dengan redirect
-                TempData["SuccessMessage"] = $"✅ Import berhasil! {importedDocsCount} dokumen baru, {importedCount} item list ditambahkan!";
+                TempData["SuccessMessage"] = $"âœ… Import berhasil! {importedDocsCount} dokumen baru, {importedCount} item list ditambahkan!";
                 if (errorCount > 0)
                 {
-                    TempData["WarningMessage"] = $"⚠ {errorCount} error: {string.Join(", ", errors.Take(3))}";
+                    TempData["WarningMessage"] = $"âš  {errorCount} error: {string.Join(", ", errors.Take(3))}";
                 }
 
                 await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsImportTemplate, fileApprovalKey);
@@ -2958,7 +2960,7 @@ namespace VelastoProductionSystem.Controllers
                 if (problematicRecords.Count == 0)
                 {
                     report.AppendLine("<div style='color: green;'>");
-                    report.AppendLine("<h3>✓ DATA SUDAH BERSIH!</h3>");
+                    report.AppendLine("<h3>âœ“ DATA SUDAH BERSIH!</h3>");
                     report.AppendLine("<p>Tidak ada record dengan multiple ItemLists.</p>");
                     report.AppendLine("</div>");
                     return Content(report.ToString(), "text/html");
@@ -2980,7 +2982,7 @@ namespace VelastoProductionSystem.Controllers
                     var firstItemList = itemLists.First();
                     var otherItemLists = itemLists.Skip(1).ToList();
 
-                    report.AppendLine($"<p style='color: blue;'>→ Keeping first ItemList '<strong>{firstItemList.ItemList}</strong>' in record {record.DocumentNumber}</p>");
+                    report.AppendLine($"<p style='color: blue;'>â†’ Keeping first ItemList '<strong>{firstItemList.ItemList}</strong>' in record {record.DocumentNumber}</p>");
 
                     // Create new SpsNoDoc records for other ItemLists
                     foreach (var itemList in otherItemLists)
@@ -3010,24 +3012,24 @@ namespace VelastoProductionSystem.Controllers
                         });
 
                         totalCreated++;
-                        report.AppendLine($"<p style='color: green;'>✓ Created new record {newRecord.DocumentNumber} with ItemList '<strong>{itemList.ItemList}</strong>'</p>");
+                        report.AppendLine($"<p style='color: green;'>âœ“ Created new record {newRecord.DocumentNumber} with ItemList '<strong>{itemList.ItemList}</strong>'</p>");
                     }
 
                     // Remove other ItemLists from original record (keep only first)
                     _context.SpsItemLists.RemoveRange(otherItemLists);
                     await _context.SaveChangesAsync();
 
-                    report.AppendLine($"<p style='color: green;'><strong>✓ Success!</strong> Original record kept with 1 ItemList, {otherItemLists.Count} new records created</p>");
+                    report.AppendLine($"<p style='color: green;'><strong>âœ“ Success!</strong> Original record kept with 1 ItemList, {otherItemLists.Count} new records created</p>");
                     report.AppendLine("</div>");
                 }
 
                 report.AppendLine("<hr>");
                 report.AppendLine("<div style='background: #d4edda; padding: 15px; border: 1px solid #c3e6cb; border-radius: 5px;'>");
-                report.AppendLine("<h3 style='color: #155724;'>✅ REPAIR COMPLETED!</h3>");
+                report.AppendLine("<h3 style='color: #155724;'>âœ… REPAIR COMPLETED!</h3>");
                 report.AppendLine($"<p><strong>Total records processed:</strong> {totalProcessed}</p>");
                 report.AppendLine($"<p><strong>Total new records created:</strong> {totalCreated}</p>");
                 report.AppendLine("</div>");
-                report.AppendLine("<p><a href='/SpsMaster'>← Kembali ke Index</a></p>");
+                report.AppendLine("<p><a href='/SpsMaster'>â† Kembali ke Index</a></p>");
 
                 _logger.LogInformation($"FixMultipleItemLists completed: {totalProcessed} processed, {totalCreated} created");
             }
@@ -3035,7 +3037,7 @@ namespace VelastoProductionSystem.Controllers
             {
                 report.AppendLine("<hr>");
                 report.AppendLine("<div style='background: #f8d7da; padding: 15px; border: 1px solid #f5c6cb; border-radius: 5px;'>");
-                report.AppendLine("<h3 style='color: #721c24;'>❌ ERROR!</h3>");
+                report.AppendLine("<h3 style='color: #721c24;'>âŒ ERROR!</h3>");
                 report.AppendLine($"<p><strong>Error:</strong> {ex.Message}</p>");
                 report.AppendLine($"<pre>{ex.StackTrace}</pre>");
                 report.AppendLine("</div>");
@@ -3046,4 +3048,5 @@ namespace VelastoProductionSystem.Controllers
         }
     }
 }
+
 

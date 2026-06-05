@@ -662,6 +662,15 @@ namespace VelastoProductionSystem.Controllers
                 tebalInner = BuildRange(s.TebalInner_Asli, s.TebalInner_Min, s.TebalInner_Max, s.TebalInner),
                 tebalTotal = BuildRange(s.TebalTotal_Asli, s.TebalTotal_Min, s.TebalTotal_Max, s.TebalTotal),
                 dimensi = s.Dimensi,
+
+                // Dedicated exact targets for Javascript Dimension cards parsing
+                // innerTarget = actual inner diameter center value (e.g. 9.60), not tolerance width
+                innerTarget = !string.IsNullOrWhiteSpace(s.InnerTarget) ? s.InnerTarget : s.Dimensi,
+                innerTol = s.ToleranceInner_Asli?.ToString("F2") ?? s.InnerTol,
+                thickTarget = s.TebalInner_Asli?.ToString("F2") ?? s.ThickTarget,
+                thickTol = (s.TebalInner_Max.HasValue && s.TebalInner_Asli.HasValue) ? (s.TebalInner_Max.Value - s.TebalInner_Asli.Value).ToString("F2") : s.ThickTol,
+                totalTarget = s.TebalTotal_Asli?.ToString("F2") ?? s.TotalTarget,
+                totalTol = (s.TebalTotal_Max.HasValue && s.TebalTotal_Asli.HasValue) ? (s.TebalTotal_Max.Value - s.TebalTotal_Asli.Value).ToString("F2") : s.TotalTol,
             };
         }
 

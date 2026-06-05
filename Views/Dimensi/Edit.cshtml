@@ -1646,14 +1646,17 @@
                 });
             }
             
+            // Update ItemCode in header unconditionally to ensure complete code (e.g. NA1850 instead of 1850)
+            const itemCodeEl = document.getElementById('h-itemcode');
+            if (itemCodeEl && sps.ItemList) {
+                itemCodeEl.innerText = sps.ItemList;
+            }
+
+            // Store CustomerName for payload
+            window._dimCustomerName = sps.CustomerName || sps.customerName || "";
+
             // ONLY update header if NOT from planning selection
             if (!fromPlanning) {
-                // Update ItemCode in header
-                const itemCodeEl = document.getElementById('h-itemcode');
-                if (itemCodeEl && sps.ItemList) {
-                    itemCodeEl.innerText = sps.ItemList;
-                }
-                
                 // Update HoseType in header
                 const hoseEl = document.getElementById('h-hose');
                 if (hoseEl && sps.HoseType) {
@@ -2979,7 +2982,7 @@
                     itemCode: document.getElementById('h-itemcode')?.innerText || '',
                     SpsId: spsIdStr ? parseInt(spsIdStr) : null,
                     hoseType: document.getElementById('h-hose')?.innerText || '',
-                    customerName: "@(Model?.CustomerName ?? "")",
+                    customerName: window._dimCustomerName || "@(Model?.CustomerName ?? "")",
                     dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
                     vinCode: lastVin,
                     standardLength: document.getElementById('disp-std-pnjg')?.value || '',
