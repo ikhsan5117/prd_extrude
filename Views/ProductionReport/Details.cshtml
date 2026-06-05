@@ -109,7 +109,7 @@
     @if (currentPortal == "identity")
     {
         <style>
-            @@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
+            @@import url('~/lib/offline-cdn/caveat.css');
             @@media print {
                 @@page { size: landscape; margin: 0; }
                 body { margin: 0; }
@@ -1523,7 +1523,7 @@
 
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="~/lib/offline-cdn/html2pdf.bundle.min.js"></script>
     <script>
         function downloadPDF() {
             const element = document.getElementById('printArea');
@@ -1661,8 +1661,8 @@
                 });
         }
     </script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/lib/offline-cdn/html5-qrcode.min.js"></script>
+    <script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
     <script>
         // ==========================================
         // SCANNER ITEM VERIFICATION LOGIC
@@ -1893,3 +1893,4 @@
         }
     </script>
 }
+

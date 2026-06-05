@@ -1089,7 +1089,7 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="~/lib/offline-cdn/html5-qrcode.min.js"></script>
 
 <style>
     /* Force SweetAlert to be on top of high z-index elements */
@@ -1162,8 +1162,8 @@
 </style>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
+    <script src="~/lib/offline-cdn/html5-qrcode.min.js"></script>
     <script>
         // === SESSION CONTEXT (injected from server) ===
         window.SESSION_MACHINE_NAME = '@Html.Raw(Context.Session.GetString("MachineName") ?? "")';
@@ -2857,3 +2857,4 @@
         .custom-tactical-scroll::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
     </style>
 }
+

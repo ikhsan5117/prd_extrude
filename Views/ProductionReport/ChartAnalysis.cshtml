@@ -319,9 +319,9 @@ body.monitoring-mode .tab-btn { font-size: 1rem; padding: 15px 30px; border-radi
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="~/lib/offline-cdn/chart.umd.min.js"></script>
+<script src="~/lib/offline-cdn/hammer.min.js"></script>
+<script src="~/lib/offline-cdn/chartjs-plugin-zoom.min.js"></script>
 <script>
 let DATA=null, CHARTS={};
 const P=v=>{if(!v)return null;let s=String(v);if(s.includes('~')){let p=s.split('~').map(Number);return(p[0]+p[1])/2}return parseFloat(s)||null};
@@ -1254,3 +1254,4 @@ function switchTab(id,btn){
 
 window.addEventListener('load',loadDocList);
 </script>
+

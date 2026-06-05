@@ -917,87 +917,335 @@ namespace VelastoProductionSystem.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SPS Master Data");
 
-                // Keep first columns stable for operator expectation.
-                var pinnedColumns = new List<(string Header, Func<SpsMaster, object?> Value)>
-                {
-                    ("Machine", x => x.Machine),
-                    ("Item List", x => x.ItemList),
-                    ("Document Number", x => x.DocumentNumber),
-                    ("Revision Number", x => x.RevisionNumber),
-                    ("Revision Date", x => x.RevisionDate),
-                    ("Formulasi", x => x.Formulasi),
-                    ("Machine Code", x => x.MachineCode),
-                    ("Customer", x => x.Customer),
-                    ("Hose Type", x => x.HoseType),
-                    ("Dimensi", x => x.Dimensi),
-                    ("Material", x => x.Material)
+                                // Definisi kolom persis seperti UI (Index.cshtml)
+                var colDefs = new List<(string H, Func<SpsMaster, object?> Value, int G, string Color)> {
+                    ("ID Excel", x => x.No, 0, ""),
+                    ("NO", x => x.No, 0, ""),
+                    ("Machine", x => x.Machine, 0, ""),
+                    ("NO. DOC", x => x.DocumentNumber, 0, ""),
+                    ("STATUS", x => x.IsActive ? "ACTIVE" : "INACTIVE", 0, ""),
+                    ("NO. REV", x => x.RevisionNumber, 0, ""),
+                    ("REV. DATE", x => x.RevisionDate, 0, ""),
+                    ("FORMULASI", x => x.Formulasi, 0, ""),
+                    ("MC", x => x.MachineCode, 0, ""),
+
+                    ("Customer", x => x.Customer, 1, ""),
+                    ("Hose Type", x => x.HoseType, 1, ""),
+                    ("Dimensi", x => x.Dimensi, 1, ""),
+                    ("Material", x => x.Material, 1, ""),
+                    ("Inner Tube", x => x.InnerTube, 1, ""),
+                    ("Middle Tube", x => x.MiddleTube, 1, ""),
+                    ("Outer Cover", x => x.OuterCover, 1, ""),
+                    ("Use Limits In", x => x.UseLimitsInner, 1, ""),
+                    ("Use Limits Mid", x => x.UseLimitsMiddle, 1, ""),
+                    ("Use Limits Out", x => x.UseLimitsOuter, 1, ""),
+                    ("Yarn", x => x.Yarn, 1, ""),
+                    ("MIN Pitch Yarn", x => x.PitchYarn_Min?.ToString("F2"), 1, "success"),
+                    ("STN Pitch Yarn", x => x.PitchYarn_Asli?.ToString("F2"), 1, "primary"),
+                    ("MAX Pitch Yarn", x => x.PitchYarn_Max?.ToString("F2"), 1, "danger"),
+                    ("Tension In", x => x.TensionYarnInner, 1, ""),
+                    ("Tension Out", x => x.TensionYarnOuter, 1, ""),
+                    ("MIN Nipple", x => x.Nipple_Min?.ToString("F2"), 1, "success"),
+                    ("STN Nipple", x => x.Nipple_Asli?.ToString("F2"), 1, "primary"),
+                    ("MAX Nipple", x => x.Nipple_Max?.ToString("F2"), 1, "danger"),
+                    ("MIN Tube Die", x => x.TubeDie_Min?.ToString("F2"), 1, "success"),
+                    ("STN Tube Die", x => x.TubeDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("MAX Tube Die", x => x.TubeDie_Max?.ToString("F2"), 1, "danger"),
+                    ("MIN Middle Die", x => x.MiddleDie_Min?.ToString("F2"), 1, "success"),
+                    ("STN Middle Die", x => x.MiddleDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("MAX Middle Die", x => x.MiddleDie_Max?.ToString("F2"), 1, "danger"),
+                    ("MIN Cover Die", x => x.CoverDie_Min?.ToString("F2"), 1, "success"),
+                    ("STN Cover Die", x => x.CoverDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("MAX Cover Die", x => x.CoverDie_Max?.ToString("F2"), 1, "danger"),
+                    ("MIN Spacer", x => x.SpacerDie_Min?.ToString("F2"), 1, "success"),
+                    ("STN Spacer", x => x.SpacerDie_Asli?.ToString("F2"), 1, "primary"),
+                    ("MAX Spacer", x => x.SpacerDie_Max?.ToString("F2"), 1, "danger"),
+                    ("MIN A Distance", x => x.ADistance_Min?.ToString("F2"), 1, "success"),
+                    ("STN A Distance", x => x.ADistance_Asli?.ToString("F2"), 1, "primary"),
+                    ("MAX A Distance", x => x.ADistance_Max?.ToString("F2"), 1, "danger"),
+
+                    ("Mesh Screen 1", x => x.MeshScreen1, 2, ""),
+                    ("MIN Mesh Dim 1", x => x.MeshDim1_Min?.ToString("F2"), 2, "success"),
+                    ("STN Mesh Dim 1", x => x.MeshDim1_Asli?.ToString("F2"), 2, "primary"),
+                    ("MAX Mesh Dim 1", x => x.MeshDim1_Max?.ToString("F2"), 2, "danger"),
+                    ("Mesh Screen 2", x => x.MeshScreen2, 2, ""),
+                    ("MIN Mesh Dim 2", x => x.MeshDim2_Min?.ToString("F2"), 2, "success"),
+                    ("STN Mesh Dim 2", x => x.MeshDim2_Asli?.ToString("F2"), 2, "primary"),
+                    ("MAX Mesh Dim 2", x => x.MeshDim2_Max?.ToString("F2"), 2, "danger"),
+                    ("Mesh Screen 3", x => x.MeshScreen3, 2, ""),
+                    ("MIN Mesh Dim 3", x => x.MeshDim3_Min?.ToString("F2"), 2, "success"),
+                    ("STN Mesh Dim 3", x => x.MeshDim3_Asli?.ToString("F2"), 2, "primary"),
+                    ("MAX Mesh Dim 3", x => x.MeshDim3_Max?.ToString("F2"), 2, "danger"),
+
+                    ("MIN Head 1", x => x.HeadTemp1_Min?.ToString("F2"), 3, "success"),
+                    ("STN Head 1", x => x.HeadTemp1_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Head 1", x => x.HeadTemp1_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 1-1", x => x.Cylinder1_1_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 1-1", x => x.Cylinder1_1_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 1-1", x => x.Cylinder1_1_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 2-1", x => x.Cylinder2_1_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 2-1", x => x.Cylinder2_1_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 2-1", x => x.Cylinder2_1_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 3-1", x => x.Cylinder3_1_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 3-1", x => x.Cylinder3_1_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 3-1", x => x.Cylinder3_1_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Screw 1", x => x.ScrewTemp1_Min?.ToString("F2"), 3, "success"),
+                    ("STN Screw 1", x => x.ScrewTemp1_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Screw 1", x => x.ScrewTemp1_Max?.ToString("F2"), 3, "danger"),
+
+                    ("MIN Head 2", x => x.HeadTemp2_Min?.ToString("F2"), 3, "success"),
+                    ("STN Head 2", x => x.HeadTemp2_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Head 2", x => x.HeadTemp2_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 1-2", x => x.Cylinder1_2_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 1-2", x => x.Cylinder1_2_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 1-2", x => x.Cylinder1_2_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 2-2", x => x.Cylinder2_2_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 2-2", x => x.Cylinder2_2_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 2-2", x => x.Cylinder2_2_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 3-2", x => x.Cylinder3_2_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 3-2", x => x.Cylinder3_2_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 3-2", x => x.Cylinder3_2_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Screw 2", x => x.ScrewTemp2_Min?.ToString("F2"), 3, "success"),
+                    ("STN Screw 2", x => x.ScrewTemp2_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Screw 2", x => x.ScrewTemp2_Max?.ToString("F2"), 3, "danger"),
+
+                    ("MIN Head 3", x => x.HeadTemp3_Min?.ToString("F2"), 3, "success"),
+                    ("STN Head 3", x => x.HeadTemp3_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Head 3", x => x.HeadTemp3_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 1-3", x => x.Cylinder1_3_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 1-3", x => x.Cylinder1_3_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 1-3", x => x.Cylinder1_3_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 2-3", x => x.Cylinder2_3_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 2-3", x => x.Cylinder2_3_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 2-3", x => x.Cylinder2_3_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Cyl 3-3", x => x.Cylinder3_3_Min?.ToString("F2"), 3, "success"),
+                    ("STN Cyl 3-3", x => x.Cylinder3_3_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Cyl 3-3", x => x.Cylinder3_3_Max?.ToString("F2"), 3, "danger"),
+                    ("MIN Screw 3", x => x.ScrewTemp3_Min?.ToString("F2"), 3, "success"),
+                    ("STN Screw 3", x => x.ScrewTemp3_Asli?.ToString("F2"), 3, "primary"),
+                    ("MAX Screw 3", x => x.ScrewTemp3_Max?.ToString("F2"), 3, "danger"),
+
+                    ("MIN Feed 1", x => x.Feed1_Min?.ToString("F2"), 4, "success"),
+                    ("STN Feed 1", x => x.Feed1_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Feed 1", x => x.Feed1_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Feed 2", x => x.Feed2_Min?.ToString("F2"), 4, "success"),
+                    ("STN Feed 2", x => x.Feed2_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Feed 2", x => x.Feed2_Max?.ToString("F2"), 4, "danger"),
+
+                    ("MIN Screw V1", x => x.ScrewSpeed1_Min?.ToString("F2"), 4, "success"),
+                    ("STN Screw V1", x => x.ScrewSpeed1_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Screw V1", x => x.ScrewSpeed1_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Screw V2", x => x.ScrewSpeed2_Min?.ToString("F2"), 4, "success"),
+                    ("STN Screw V2", x => x.ScrewSpeed2_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Screw V2", x => x.ScrewSpeed2_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Screw V3", x => x.ScrewSpeed3_Min?.ToString("F2"), 4, "success"),
+                    ("STN Screw V3", x => x.ScrewSpeed3_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Screw V3", x => x.ScrewSpeed3_Max?.ToString("F2"), 4, "danger"),
+
+                    ("MIN Feed Roll 1", x => x.FeedRollRatio1_Min?.ToString("F2"), 4, "success"),
+                    ("STN Feed Roll 1", x => x.FeedRollRatio1_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Feed Roll 1", x => x.FeedRollRatio1_Asli == null && !string.IsNullOrEmpty(x.FeedRollRatio1) ? x.FeedRollRatio1 : x.FeedRollRatio1_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Feed Roll 2", x => x.FeedRollRatio2_Min?.ToString("F2"), 4, "success"),
+                    ("STN Feed Roll 2", x => x.FeedRollRatio2_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Feed Roll 2", x => x.FeedRollRatio2_Asli == null && !string.IsNullOrEmpty(x.FeedRollRatio2) ? x.FeedRollRatio2 : x.FeedRollRatio2_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Feed 3", x => x.Feed3_Min?.ToString("F2"), 4, "success"),
+                    ("STN Feed 3", x => x.Feed3_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Feed 3", x => x.Feed3_Asli == null && !string.IsNullOrEmpty(x.FeedRollRatio3) ? x.FeedRollRatio3 : x.Feed3_Max?.ToString("F2"), 4, "danger"),
+
+                    ("MIN Press 1", x => x.Pressure1_Min?.ToString("F2"), 4, "success"),
+                    ("STN Press 1", x => x.Pressure1_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Press 1", x => x.Pressure1_Asli == null && !string.IsNullOrEmpty(x.Pressure1) ? x.Pressure1 : x.Pressure1_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Press 2", x => x.Pressure2_Min?.ToString("F2"), 4, "success"),
+                    ("STN Press 2", x => x.Pressure2_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Press 2", x => x.Pressure2_Asli == null && !string.IsNullOrEmpty(x.Pressure2) ? x.Pressure2 : x.Pressure2_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Press 3", x => x.Pressure3_Min?.ToString("F2"), 4, "success"),
+                    ("STN Press 3", x => x.Pressure3_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Press 3", x => x.Pressure3_Asli == null && !string.IsNullOrEmpty(x.Pressure3) ? x.Pressure3 : x.Pressure3_Max?.ToString("F2"), 4, "danger"),
+
+                    ("Curr Val", x => x.CurrentValue, 4, ""),
+                    ("MIN Am 1", x => x.AmMeter_Min?.ToString("F2"), 4, "success"),
+                    ("STN Am 1", x => x.AmMeter_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Am 1", x => x.AmMeter_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Am 2", x => x.AmMeter2_Min?.ToString("F2"), 4, "success"),
+                    ("STN Am 2", x => x.AmMeter2_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Am 2", x => x.AmMeter2_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Am 3", x => x.AmMeter3_Min?.ToString("F2"), 4, "success"),
+                    ("STN Am 3", x => x.AmMeter3_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Am 3", x => x.AmMeter3_Max?.ToString("F2"), 4, "danger"),
+
+                    ("MIN Preset", x => x.PresetValue_Min?.ToString("F2"), 4, "success"),
+                    ("STN Preset", x => x.PresetValue_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Preset", x => x.PresetValue_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Control", x => x.ControlValue_Min?.ToString("F2"), 4, "success"),
+                    ("STN Control", x => x.ControlValue_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Control", x => x.ControlValue_Max?.ToString("F2"), 4, "danger"),
+
+                    ("MIN Sp-Set", x => x.SpiralPitchSetting_Min?.ToString("F2"), 4, "success"),
+                    ("STN Sp-Set", x => x.SpiralPitchSetting_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Sp-Set", x => x.SpiralPitchSetting_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Sp-Disp", x => x.SpiralPitchDisplay_Min?.ToString("F2"), 4, "success"),
+                    ("STN Sp-Disp", x => x.SpiralPitchDisplay_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Sp-Disp", x => x.SpiralPitchDisplay_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Spiral Speed", x => x.SpiralSpeed_Min?.ToString("F2"), 4, "success"),
+                    ("STN Spiral Speed", x => x.SpiralSpeed_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Spiral Speed", x => x.SpiralSpeed_Max?.ToString("F2"), 4, "danger"),
+                    ("MIN Hose Speed", x => x.HoseSpeed_Min?.ToString("F2"), 4, "success"),
+                    ("STN Hose Speed", x => x.HoseSpeed_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX Hose Speed", x => x.HoseSpeed_Max?.ToString("F2"), 4, "danger"),
+                    ("Unsmooth", x => x.UnsmoothSurface, 4, ""),
+                    ("MIN OD Sensor", x => x.OdSensor_Min?.ToString("F2"), 4, "success"),
+                    ("STN OD Sensor", x => x.OdSensor_Asli?.ToString("F2"), 4, "primary"),
+                    ("MAX OD Sensor", x => x.OdSensor_Max?.ToString("F2"), 4, "danger"),
+
+                    ("MIN Chiller", x => x.ChillerWaterTemp_Min?.ToString("F2"), 5, "success"),
+                    ("STN Chiller", x => x.ChillerWaterTemp_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Chiller", x => x.ChillerWaterTemp_Asli == null && !string.IsNullOrEmpty(x.ChillerWaterTemp) ? x.ChillerWaterTemp : x.ChillerWaterTemp_Max?.ToString("F2"), 5, "danger"),
+                    ("MIN Dancer", x => x.DancerPosition_Min?.ToString("F2"), 5, "success"),
+                    ("STN Dancer", x => x.DancerPosition_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Dancer", x => x.DancerPosition_Max?.ToString("F2"), 5, "danger"),
+                    ("MIN Caterpillar Gap", x => x.CaterpillarGap_Min?.ToString("F2"), 5, "success"),
+                    ("STN Caterpillar Gap", x => x.CaterpillarGap_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Caterpillar Gap", x => x.CaterpillarGap_Max?.ToString("F2"), 5, "danger"),
+                    ("MIN Cutting", x => x.CuttingSpeed_Min?.ToString("F2"), 5, "success"),
+                    ("STN Cutting", x => x.CuttingSpeed_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Cutting", x => x.CuttingSpeed_Max?.ToString("F2"), 5, "danger"),
+                    ("MIN Take-up Speed", x => x.TakeUpConveyorSpeed_Min?.ToString("F2"), 5, "success"),
+                    ("STN Take-up Speed", x => x.TakeUpConveyorSpeed_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Take-up Speed", x => x.TakeUpConveyorSpeed_Max?.ToString("F2"), 5, "danger"),
+                    ("MIN Cool-S 1", x => x.CoolConveyorSpeed_Min?.ToString("F2"), 5, "success"),
+                    ("STN Cool-S 1", x => x.CoolConveyorSpeed_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Cool-S 1", x => x.CoolConveyorSpeed_Max?.ToString("F2"), 5, "danger"),
+                    ("MIN Cool-S 2", x => x.CoolConveyorSpeed2_Min?.ToString("F2"), 5, "success"),
+                    ("STN Cool-S 2", x => x.CoolConveyorSpeed2_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Cool-S 2", x => x.CoolConveyorSpeed2_Max?.ToString("F2"), 5, "danger"),
+                    ("MIN Conv-R", x => x.ConveyorRatio_Min?.ToString("F2"), 5, "success"),
+                    ("STN Conv-R", x => x.ConveyorRatio_Asli?.ToString("F2"), 5, "primary"),
+                    ("MAX Conv-R", x => x.ConveyorRatio_Max?.ToString("F2"), 5, "danger"),
+                    ("Mark Sort", x => x.MarkingSort, 5, ""),
+                    ("Text Material", x => x.TextMarkingMaterial, 5, ""),
+                    ("Mark Colour", x => x.MarkingColour, 5, ""),
+
+                    ("MIN ± Inner", x => x.ToleranceInner_Min?.ToString("F2"), 6, "success"),
+                    ("STN ± Inner", x => x.ToleranceInner_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX ± Inner", x => x.ToleranceInner_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN ± Outer", x => x.ToleranceOuter_Min?.ToString("F2"), 6, "success"),
+                    ("STN ± Outer", x => x.ToleranceOuter_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX ± Outer", x => x.ToleranceOuter_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN Tebal Inner", x => x.TebalInner_Min?.ToString("F2"), 6, "success"),
+                    ("STN Tebal Inner", x => x.TebalInner_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX Tebal Inner", x => x.TebalInner_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN Inner+Middle", x => x.TebalInnerMiddle_Min?.ToString("F2"), 6, "success"),
+                    ("STN Inner+Middle", x => x.TebalInnerMiddle_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX Inner+Middle", x => x.TebalInnerMiddle_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN Tebal Outer", x => x.TebalOuter_Min?.ToString("F2"), 6, "success"),
+                    ("STN Tebal Outer", x => x.TebalOuter_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX Tebal Outer", x => x.TebalOuter_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN Total Thickness", x => x.TebalTotal_Min?.ToString("F2"), 6, "success"),
+                    ("STN Total Thickness", x => x.TebalTotal_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX Total Thickness", x => x.TebalTotal_Max?.ToString("F2"), 6, "danger"),
+                    ("MIN Selisih", x => x.SelisihTebal_Min?.ToString("F2"), 6, "success"),
+                    ("STN Selisih", x => x.SelisihTebal_Asli?.ToString("F2"), 6, "primary"),
+                    ("MAX Selisih", x => x.SelisihTebal_Max?.ToString("F2"), 6, "danger"),
+
+                    ("In Target", x => x.InnerTarget, 6, ""),
+                    ("In Tol", x => x.InnerTol, 6, ""),
+                    ("In LCL", x => x.InnerLCL, 6, ""),
+                    ("In Min", x => x.InnerMin, 6, ""),
+                    ("In UCL", x => x.InnerUCL, 6, ""),
+                    ("In Max", x => x.InnerMax, 6, ""),
+
+                    ("Mid Target", x => x.InnerMidTarget, 6, "info"),
+                    ("Mid Tol", x => x.InnerMidTol, 6, "info"),
+                    ("Mid LCL", x => x.InnerMidLCL, 6, "info"),
+                    ("Mid Min", x => x.InnerMidMin, 6, "info"),
+                    ("Mid UCL", x => x.InnerMidUCL, 6, "info"),
+                    ("Mid Max", x => x.InnerMidMax, 6, "info"),
+
+                    ("Th Target", x => x.ThickTarget, 6, ""),
+                    ("Th Tol", x => x.ThickTol, 6, ""),
+                    ("Th LCL", x => x.ThickLCL, 6, ""),
+                    ("Th Min", x => x.ThickMin, 6, ""),
+                    ("Th UCL", x => x.ThickUCL, 6, ""),
+                    ("Th Max", x => x.ThickMax, 6, ""),
+
+                    ("Tot Target", x => x.TotalTarget, 6, ""),
+                    ("Tot Tol", x => x.TotalTol, 6, ""),
+                    ("Tot LCL", x => x.TotalLCL, 6, ""),
+                    ("Tot Min", x => x.TotalMin, 6, ""),
+                    ("Tot UCL", x => x.TotalUCL, 6, ""),
+                    ("Tot Max", x => x.TotalMax, 6, ""),
+
+                    ("Item List", x => x.ItemList, 6, "")
                 };
 
-                var pinnedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    nameof(SpsMaster.No),
-                    nameof(SpsMaster.Machine),
-                    nameof(SpsMaster.ItemList),
-                    nameof(SpsMaster.DocumentNumber),
-                    nameof(SpsMaster.RevisionNumber),
-                    nameof(SpsMaster.RevisionDate),
-                    nameof(SpsMaster.Formulasi),
-                    nameof(SpsMaster.MachineCode),
-                    nameof(SpsMaster.Customer),
-                    nameof(SpsMaster.HoseType),
-                    nameof(SpsMaster.Dimensi),
-                    nameof(SpsMaster.Material)
+                var groups = new[] {
+                    (Name: "Identifikasi Utama", Color: System.Drawing.Color.FromArgb(13, 110, 253)),
+                    (Name: "Spesifikasi Hose & Dies", Color: System.Drawing.Color.FromArgb(230, 126, 34)),
+                    (Name: "Mesh", Color: System.Drawing.Color.FromArgb(13, 110, 253)),
+                    (Name: "Suhu Pengerjaan (°C)", Color: System.Drawing.Color.FromArgb(230, 126, 34)),
+                    (Name: "Output Mesin", Color: System.Drawing.Color.FromArgb(13, 110, 253)),
+                    (Name: "Proses Akhir", Color: System.Drawing.Color.FromArgb(230, 126, 34)),
+                    (Name: "Final Quality Matrix", Color: System.Drawing.Color.FromArgb(13, 110, 253))
                 };
 
-                static string GetDisplayName(PropertyInfo prop)
+                int currentCol = 1;
+                for (int g = 0; g < groups.Length; g++)
                 {
-                    return prop.GetCustomAttribute<DisplayAttribute>()?.Name ?? prop.Name;
+                    int count = colDefs.Count(c => c.G == g);
+                    if (count > 0)
+                    {
+                        worksheet.Cells[1, currentCol, 1, currentCol + count - 1].Merge = true;
+                        worksheet.Cells[1, currentCol].Value = groups[g].Name;
+                        using (var r = worksheet.Cells[1, currentCol, 1, currentCol + count - 1])
+                        {
+                            r.Style.Font.Bold = true;
+                            r.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                            r.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                            r.Style.Fill.BackgroundColor.SetColor(groups[g].Color);
+                            r.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                            r.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                            r.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+                        }
+                        currentCol += count;
+                    }
                 }
 
-                var dynamicProps = typeof(SpsMaster)
-                    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(p => p.CanRead && !pinnedNames.Contains(p.Name))
-                    .OrderBy(p => p.Name)
-                    .ToList();
-
-                var headers = new List<string> { "ID", "Excel ID", "No" };
-                headers.AddRange(pinnedColumns.Select(c => c.Header));
-                headers.AddRange(dynamicProps.Select(GetDisplayName));
-
-                for (int i = 0; i < headers.Count; i++)
+                for (int i = 0; i < colDefs.Count; i++)
                 {
-                    worksheet.Cells[1, i + 1].Value = headers[i];
+                    var cell = worksheet.Cells[2, i + 1];
+                    cell.Value = colDefs[i].H;
+                    cell.Style.Font.Bold = true;
+                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                    cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+
+                    if (colDefs[i].Color == "success") {
+                        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(210, 244, 234));
+                        cell.Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(15, 81, 50));
+                    } else if (colDefs[i].Color == "primary") {
+                        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(207, 226, 255));
+                        cell.Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(8, 66, 152));
+                    } else if (colDefs[i].Color == "danger") {
+                        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(248, 215, 218));
+                        cell.Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(132, 32, 41));
+                    } else if (colDefs[i].Color == "info") {
+                        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(203, 240, 248));
+                        cell.Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(5, 81, 96));
+                    } else {
+                        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(240, 240, 240));
+                        cell.Style.Font.Color.SetColor(System.Drawing.Color.Black);
+                    }
                 }
-                
-                // Style header
-                using (var range = worksheet.Cells[1, 1, 1, headers.Count])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGreen);
-                }
-                
-                // Data
-                int row = 2;
-                int runningId = 1;
+
+                int row = 3;
                 foreach (var item in expandedData)
                 {
-                    int col = 1;
-                    worksheet.Cells[row, col++].Value = runningId;
-                    worksheet.Cells[row, col++].Value = item.No; // Excel ID from imported sheet
-                    worksheet.Cells[row, col++].Value = item.No;
-
-                    foreach (var pinned in pinnedColumns)
+                    for (int i = 0; i < colDefs.Count; i++)
                     {
-                        worksheet.Cells[row, col++].Value = pinned.Value(item);
+                        var val = colDefs[i].Value(item);
+                        worksheet.Cells[row, i + 1].Value = val;
                     }
-
-                    foreach (var prop in dynamicProps)
-                    {
-                        worksheet.Cells[row, col++].Value = prop.GetValue(item);
-                    }
-
-                    runningId++;
                     row++;
                 }
                 
@@ -2798,3 +3046,4 @@ namespace VelastoProductionSystem.Controllers
         }
     }
 }
+

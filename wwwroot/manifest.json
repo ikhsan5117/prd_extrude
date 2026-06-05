@@ -1,0 +1,29 @@
+{
+  "name": "Velasto Production System",
+  "short_name": "Velasto",
+  "description": "Production Monitoring Platform",
+  "start_url": "/Account/Login",
+  "display": "standalone",
+  "background_color": "#020b13",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

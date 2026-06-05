@@ -884,8 +884,8 @@
 </style>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
+    <script src="~/lib/offline-cdn/html5-qrcode.min.js"></script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
         let html5QrCode;
@@ -1990,3 +1990,4 @@
         });
     </script>
 }
+

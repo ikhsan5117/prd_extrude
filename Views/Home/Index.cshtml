@@ -223,8 +223,8 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/lib/offline-cdn/signalr.min.js"></script>
+    <script src="~/lib/offline-cdn/chart.umd.min.js"></script>
     <script>
         $(document).ready(function() {
             const spcCtx = document.getElementById('spcTrendChart').getContext('2d');
@@ -501,3 +501,4 @@
         }
     </style>
 }
+
