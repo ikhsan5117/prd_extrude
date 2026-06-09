@@ -703,7 +703,7 @@ async function loadAnalysis() {
 
     let url = `/api/sensor-readings/analysis-data?metricType=${encodeURIComponent(metric)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
     if (machine)     url += `&machineCode=${encodeURIComponent(machine)}`;
-    if (selectedSps) url += `&spsId=${encodeURIComponent(selectedSps.id)}`;
+    if (selectedSps) url += `&spsId=${encodeURIComponent(selectedSps.documentNumber)}`;
 
     const btn = document.getElementById('btnAnalysis');
     btn.disabled = true;

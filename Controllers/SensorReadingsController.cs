@@ -606,7 +606,7 @@ namespace VelastoProductionSystem.Controllers
                 .Include(i => i.SpsNoDoc)
                 .Where(s => s.SpsNoDoc != null && s.SpsNoDoc.DocumentNumber != null && s.SpsNoDoc.DocumentNumber != "-")
                 .Select(s => new {
-                    Id = s.DocumentNumber,
+                    Id = s.Id,
                     s.SpsNoDoc!.DocumentNumber,
                     s.SpsNoDoc.No,
                     ItemList = s.ItemList,
