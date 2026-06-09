@@ -1125,10 +1125,12 @@
 
             if (s != null)
             {
-                targetInner = s.InnerTarget;
+                // In DB, ToleranceInner_Asli mistakenly holds the Inner Diameter (e.g. 33.3)
+                targetInner = s.ToleranceInner_Asli?.ToString("F2") ?? s.ThickTarget;
                 if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = s.Dimensi;
 
-                targetThick = s.ThickTarget;
+                // In DB, TebalInner_Asli mistakenly holds the Inner Thickness (e.g. 2.3)
+                targetThick = s.TebalInner_Asli?.ToString("F2") ?? s.InnerTarget;
                 if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = s.TebalInner;
 
                 targetTotal = s.TotalTarget;
@@ -1136,10 +1138,10 @@
             }
             else if (m != null)
             {
-                targetInner = m.InnerTarget;
+                targetInner = m.ThickTarget;
                 if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = m.Dimensi;
 
-                targetThick = m.ThickTarget;
+                targetThick = m.InnerTarget;
                 if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = m.TebalInner;
 
                 targetTotal = m.TotalTarget;
@@ -1147,7 +1149,7 @@
             }
             
             // Robust Tolerance Selection
-            var tolInner = s?.ToleranceInner_Asli?.ToString("F2") ?? s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1";
+            var tolInner = s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1";
             var tolThick = s?.ThickTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.2";
             var tolTotal = s?.TotalTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.3";
 
@@ -2589,13 +2591,14 @@
                     };
 
                     const configs = [
-                        // Inner Diameter: use quality matrix InnerTarget (e.g. 11.30), fallback to dimensi
+                        // Inner Diameter: use exact innerTarget (which maps to DB ToleranceInner_Asli), fallback to dimensi
                         { id: 'innerdiameter', v: m.innerTarget || m.dimensi, t: m.innerTol || m.toleranceInner, el: 'inner-dia', dt: 0.1 },
-                        // Inner Thickness: tebalInner now correctly mapped to ThickTarget from backend
-                        { id: 'innerthicknessx', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                        { id: 'innerthicknessy', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
-                        { id: 'totalthicknessx', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                        { id: 'totalthicknessy', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                        // Inner Thickness: use exact thickTarget (which maps to DB TebalInner_Asli), fallback to tebalInner
+                        { id: 'innerthicknessx', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                        { id: 'innerthicknessy', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                        // Total Thickness: use exact totalTarget, not range string tebalTotal
+                        { id: 'totalthicknessx', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                        { id: 'totalthicknessy', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
                         { id: 'spiralpitch', v: m.spiralPitchSetting || m.spiralPitchDisplay || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                     ];
 

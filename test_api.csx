@@ -1,0 +1,1 @@
+var client = new System.Net.Http.HttpClient(); var res = await client.GetStringAsync("http://localhost:5000/ProductionReport/GetSensorDataForAnalysis?reportId=1428&start=2026-06-08T13:30:00&end=2026-06-08T14:00:00"); System.Console.WriteLine(res);

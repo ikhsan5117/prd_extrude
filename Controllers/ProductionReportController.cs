@@ -921,6 +921,9 @@ namespace VelastoProductionSystem.Controllers
 
             try
             {
+                var lastReport = await _context.ProductionReports.OrderByDescending(r => r.Id).FirstOrDefaultAsync();
+                var startTime = lastReport?.CreatedDate ?? DateTime.Now;
+
                 var report = new ProductionReport
                 {
                     DocumentNumber = dto.DocumentNumber ?? "AUTO",
@@ -958,6 +961,8 @@ namespace VelastoProductionSystem.Controllers
                     DRAC_Akhir = dto.DRAC_Akhir,
                     CreatedBy = dto.CreatedBy ?? "Operator",
                     CreatedDate = DateTime.Now,
+                    ProductionStartTime = startTime,
+                    ProductionEndTime = DateTime.Now,
                     Status = "COMPLETED",
                     SpsId = SanitizeLegacySpsId(dto.SpsId),
                     ItemCode = dto.ItemCode,
@@ -1346,6 +1351,22 @@ namespace VelastoProductionSystem.Controllers
                     report.CustomerName = report.CustomerName ?? "-";
                     report.CreatedDate = DateTime.Now;
                     report.Status = "NOW PRODUCING";
+
+                    // Auto-record Jam Mulai = waktu submit terakhir, Jam Selesai = waktu submit sekarang
+                    var lastReport = await _context.ProductionReports
+                        .Where(r => r.MachineName == report.MachineName && r.CreatedDate.Date == DateTime.Today)
+                        .OrderByDescending(r => r.CreatedDate)
+                        .FirstOrDefaultAsync();
+
+                    if (lastReport != null)
+                    {
+                        if (report.ProductionStartTime == null || report.ProductionStartTime == DateTime.MinValue)
+                            report.ProductionStartTime = lastReport.CreatedDate;
+                    }
+                    
+                    // We no longer forcefully set ProductionStartTime or EndTime to DateTime.Now if they are not provided.
+                    // This allows them to remain blank (null) for older/uncontributed reports.
+
 
                     // Set default values for NOT NULL columns not present in the form
                     report.InnerMaterialActual = report.InnerMaterialActual ?? report.InnerMaterial ?? "-";
@@ -2693,6 +2714,99 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             return Json(new { hoseTypes, pics });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateProductionTime(int id, DateTime? start, DateTime? end)
+        {
+            var report = await _context.ProductionReports.FindAsync(id);
+            if (report == null) return NotFound(new { success = false, message = "Report not found" });
+
+            report.ProductionStartTime = start;
+            report.ProductionEndTime = end;
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync("ReceiveUpdate");
+            return Json(new { success = true, message = "Jam produksi berhasil diperbarui." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSensorDataForAnalysis(int reportId, DateTime? start, DateTime? end)
+        {
+            var report = await _context.ProductionReports.FindAsync(reportId);
+            if (report == null) return NotFound("Report not found");
+
+            // Ambil Standar OD
+            string targetDocNum = report.DocumentNumber;
+
+            if (!string.IsNullOrEmpty(report.ItemCode))
+            {
+                var spsList = await _context.SpsItemLists
+                    .OrderByDescending(l => l.Id)
+                    .FirstOrDefaultAsync(l => l.ItemList != null && l.ItemList.Contains(report.ItemCode));
+                
+                if (spsList != null && !string.IsNullOrEmpty(spsList.DocumentNumber) && spsList.DocumentNumber != "-")
+                {
+                    targetDocNum = spsList.DocumentNumber;
+                }
+
+                // Fetch SPS record with actual OD values (prefer non-null)
+                var spsRecord = await _context.SpsNoDocs
+                    .Where(s => s.DocumentNumber == targetDocNum)
+                    .FirstOrDefaultAsync(s => s.OdSensor_Asli != null && s.OdSensor_Asli != 0);
+                if (spsRecord != null)
+                {
+                    targetDocNum = spsRecord.DocumentNumber;
+                }
+            }
+
+            var sps = await _context.SpsNoDocs
+                .OrderByDescending(s => s.DocumentNumber)
+                .FirstOrDefaultAsync(s => s.DocumentNumber == targetDocNum || s.DocumentNumber == report.DocumentNumber);
+
+            decimal stdOD = sps?.OdSensor_Asli ?? 0;
+            decimal upperLimit = sps?.OdSensor_Max ?? 0;
+            decimal lowerLimit = sps?.OdSensor_Min ?? 0;
+
+            string sensorMachineCode = report.MachineName ?? "";
+            if (sensorMachineCode.Contains("CHS2L")) sensorMachineCode = "CHS 2 Layer";
+            else if (sensorMachineCode.Contains("CHS3L")) sensorMachineCode = "CHS 3 Layer";
+            else if (sensorMachineCode.Contains("DL")) sensorMachineCode = "Non-CHS (DL)";
+
+            var logsQuery = _context.SensorIngestLogs
+                .Where(l => (l.MachineCode == report.MachineName || l.MachineCode == sensorMachineCode)
+                            && l.MetricType == "outer_diameter");
+            
+            if (start.HasValue)
+            {
+                logsQuery = logsQuery.Where(l => l.SensorTimestamp >= start.Value);
+            }
+            else
+            {
+                // If no start date, just show the last 24 hours of that machine for safety
+                logsQuery = logsQuery.Where(l => l.SensorTimestamp >= report.CreatedDate.AddHours(-24));
+            }
+
+            if (end.HasValue)
+            {
+                logsQuery = logsQuery.Where(l => l.SensorTimestamp <= end.Value);
+            }
+
+            var logs = await logsQuery
+                .OrderBy(l => l.SensorTimestamp)
+                .Select(l => new {
+                    time = l.SensorTimestamp.ToString("HH:mm:ss"),
+                    value = l.MetricValue
+                })
+                .ToListAsync();
+
+            return Json(new { 
+                success = true, 
+                stdOD = stdOD, 
+                upperLimit = upperLimit, 
+                lowerLimit = lowerLimit, 
+                logs = logs 
+            });
         }
     }
 }

@@ -236,28 +236,30 @@
 
                             if (sps != null) {
                                 if (point.Contains("Diameter")) { 
-                                    target = sps.ToleranceInner_Asli ?? ParseNum(sps.InnerTarget);
+                                    // In DB, ToleranceInner_Asli mistakenly holds the Inner Diameter (e.g. 33.3)
+                                    target = sps.ToleranceInner_Asli ?? ParseNum(sps.ThickTarget);
                                     if (target <= 0) target = ParseNum(sps.Dimensi);
-                                    tol = ParseTol(sps.InnerTol, 0.1m); 
+                                    tol = ParseTol(sps.InnerTol, 0.1m);
                                 }
                                 else if (point.Contains("Inner Thick")) { 
-                                    target = sps.TebalInner_Asli ?? ParseNum(sps.ThickTarget); 
+                                    // In DB, TebalInner_Asli mistakenly holds the Inner Thickness (e.g. 2.3)
+                                    target = sps.TebalInner_Asli ?? ParseNum(sps.InnerTarget); 
                                     if (target <= 0) target = ParseNum(sps.TebalInner);
                                     tol = ParseTol(sps.ThickTol, 0.2m); 
                                 }
                                 else if (point.Contains("Total Thick")) { 
                                     target = sps.TebalTotal_Asli ?? ParseNum(sps.TotalTarget); 
                                     if (target <= 0) target = ParseNum(sps.TebalTotal);
-                                    tol = ParseTol(sps.TotalTol, 0.3m); 
+                                    tol = (sps.TebalTotal_Max.HasValue && sps.TebalTotal_Asli.HasValue) ? (sps.TebalTotal_Max.Value - sps.TebalTotal_Asli.Value) : ParseTol(sps.TotalTol, 0.3m); 
                                 }
                             }
                             else if (master != null) {
                                 if (point.Contains("Diameter")) {
-                                    target = ParseNum(master.InnerTarget);
+                                    target = ParseNum(master.ThickTarget);
                                     if (target <= 0) target = ParseNum(master.Dimensi);
                                 }
                                 else if (point.Contains("Inner Thick")) {
-                                    target = ParseNum(master.ThickTarget);
+                                    target = ParseNum(master.InnerTarget);
                                     if (target <= 0) target = ParseNum(master.TebalInner);
                                 }
                                 else if (point.Contains("Total Thick")) {

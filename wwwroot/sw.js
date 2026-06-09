@@ -1,10 +1,7 @@
 const CACHE_NAME = 'velasto-pwa-cache-v3';
 const ASSETS_TO_CACHE = [
-  // Halaman utama
-  '/Account/Login',
-  '/Dimensi/Index',
-  '/ProductionReport/Create',
-  '/Dimensi/History',
+  // Halaman Fallback Offline
+  '/offline.html',
 
   // Lokal aset — CSS
   '/lib/offline-cdn/bootstrap.min.css',
@@ -25,8 +22,7 @@ const ASSETS_TO_CACHE = [
   '/lib/offline-cdn/html2pdf.bundle.min.js',
   '/lib/offline-cdn/jquery.validate.min.js',
   '/lib/offline-cdn/jquery.validate.unobtrusive.min.js',
-  '/js/offline-db.js',
-  '/js/sync-engine.js',
+  '/js/site.js',
 
   // Font
   '/lib/offline-cdn/fonts/bootstrap-icons.woff2',
@@ -83,7 +79,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() =>
           caches.match(event.request, { ignoreSearch: true }).then((cached) => {
             if (cached) return cached;
-            return caches.match('/Dimensi/Index');
+            return caches.match('/offline.html');
           })
         )
     );

@@ -847,7 +847,11 @@
                     {
                         var sps = (!string.IsNullOrEmpty(item.ItemCode) && spsMap != null && spsMap.TryGetValue(item.ItemCode, out var s)) ? s : null;
                         var rawPlanning = (item.ItemCode ?? string.Empty).Trim();
-                        var spsItem = sps?.ItemLists?.FirstOrDefault()?.ItemList ?? "";
+                        var spsItem = sps?.ItemLists?.FirstOrDefault(il => 
+                            il.ItemList != null && (
+                                il.ItemList.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase) ||
+                                il.ItemList.TrimStart('N','A','n','a','B','b').Equals(rawPlanning, StringComparison.OrdinalIgnoreCase)
+                            ))?.ItemList ?? sps?.ItemLists?.FirstOrDefault()?.ItemList ?? "";
                         var planningDisplay = (rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem))
                             ? spsItem
                             : rawPlanning;

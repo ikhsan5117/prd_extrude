@@ -33,7 +33,7 @@
                 <!-- HEADER AREA -->
                 <div class="report-header d-flex border-bottom border-dark border-2">
                     <div class="logo-area p-3 border-end border-dark border-2 d-flex align-items-center justify-content-center" style="width: 200px;">
-                        <img src="/img/velasto-logo-dark.png" alt="Velasto" style="max-height: 50px;" onerror="this.src='https://via.placeholder.com/150x50?text=VELASTO'"/>
+                        <img src="/images/velasto-logo-e1700056160273.png" alt="Velasto" style="max-height: 50px;"/>
                     </div>
                     <div class="title-area flex-grow-1 p-2 text-center">
                         <h4 class="fw-bold mb-0">Extruder Production Report</h4>
@@ -356,8 +356,19 @@
                 // Tampilkan item code di input
                 setProductCode(decodedText);
 
-                // Audio feedback
-                try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play(); } catch(e){}
+                // Audio feedback (Web Audio API - fully offline)
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    osc.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    osc.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.1);
+                } catch(e) {}
 
                 // Cari data standar ke backend
                 Swal.fire({

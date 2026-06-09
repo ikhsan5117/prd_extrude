@@ -728,9 +728,7 @@
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 
-    <!-- PWA: Offline DB + Sync Engine + Service Worker -->
-    <script src="~/js/offline-db.js" asp-append-version="true"></script>
-    <script src="~/js/sync-engine.js" asp-append-version="true"></script>
+    <!-- PWA: Offline DB + Sync Engine + Service Worker (Disabled to remove 404) -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

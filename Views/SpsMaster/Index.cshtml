@@ -1290,8 +1290,8 @@
                 let rowText = row.text().toLowerCase();
                 
                 // Extract machine columns
-                let machineText = row.find("td:nth-child(5)").text().toLowerCase().trim(); // Machine column
-                let machineCodeText = row.find("td:nth-child(11)").text().toLowerCase().trim(); // MC column (MachineCode)
+                let machineText = row.find("td:nth-child(4)").text().toLowerCase().trim(); // Machine column (col 4)
+                let machineCodeText = row.find("td:nth-child(10)").text().toLowerCase().trim(); // MC column (MachineCode col 10)
 
                 // Target specific columns based on category
                 let targetText = rowText; // default for 'all'

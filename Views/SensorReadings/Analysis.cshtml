@@ -347,6 +347,7 @@
 
 @section Scripts {
 <script src="~/lib/offline-cdn/chart.umd.min.js"></script>
+<script src="~/lib/offline-cdn/chartjs-plugin-annotation.min.js"></script>
 <script src="~/lib/offline-cdn/chartjs-plugin-zoom.min.js"></script>
 <script>
 // =================================================================
@@ -556,6 +557,7 @@ function buildAllParamPills(s) {
     const params = [
         { l:'Outer Dia',       v:s.toleranceOuter_Asli || s.odSensor_Asli || s.controlValue_Asli, u:'mm',     m:'outer_diameter' },
         { l:'Inner Dia',       v:s.toleranceInner_Asli || s.innerTarget, u:'mm',     m:'inner_diameter' },
+        { l:'Hose Thickness',  v:s.tebalTotal_Asli || s.totalTarget,     u:'mm',     m:'hose_thickness' },
         { l:'Head Temp 1',     v:s.headTemp1_Asli,   u:'C',      m:'head_temp_inner' },
         { l:'Head Temp 2',     v:s.headTemp2_Asli,   u:'C',      m:'head_temp_outer' },
         { l:'Screw Spd 1',     v:s.screwSpeed1_Asli, u:'rpm',    m:'screw_speed_inner' },

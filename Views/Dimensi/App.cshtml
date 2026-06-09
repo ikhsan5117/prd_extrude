@@ -2329,7 +2329,7 @@
                         return match ? parseFloat(match[0]) : 0;
                     };
 
-                    const parseV = (str, def = 0) => {
+                    const parseV = (str, def = null) => {
                         if(!str || str === '---') return def;
                         // Replace comma with dot and extract first number
                         const m = str.toString().replace(/,/g, '.').match(/[-+]?\d+(\.\d+)?/);
@@ -2357,15 +2357,16 @@
 
                     try {
                         const configs = [
-                            // Inner Diameter: prioritize quality matrix target (InnerTarget), fallback to Dimensi
+                            // Inner Diameter: prioritize exact innerTarget, fallback to dimensi
                             { id: 'innerdia', v: m.innerTarget || m.dimensi, t: m.innerTol || m.toleranceInner, el: 'inner-dia', dt: 0.1 },
-                            // Inner Thickness: now correctly uses ThickTarget from backend
-                            { id: 'innertx', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                            { id: 'innerty', v: m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
-                            { id: 'innermidtx', v: m.tebalInnerMiddle, t: m.thickTol || m.toleranceOuter, el: 'innermid-tx', dt: 0.2 },
-                            { id: 'innermidty', v: m.tebalInnerMiddle, t: m.thickTol || m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
-                            { id: 'totaltx', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                            { id: 'totalty', v: m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                            // Inner Thickness: use exact thickTarget, fallback to tebalInner
+                            { id: 'innertx', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
+                            { id: 'innerty', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
+                            { id: 'innermidtx', v: m.innerMidTarget || m.tebalInnerMiddle, t: m.innerMidTol || m.toleranceOuter, el: 'innermid-tx', dt: 0.2 },
+                            { id: 'innermidty', v: m.innerMidTarget || m.tebalInnerMiddle, t: m.innerMidTol || m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
+                            // Total Thickness: use exact totalTarget, not range string tebalTotal
+                            { id: 'totaltx', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
+                            { id: 'totalty', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
                             { id: 'spiral', v: m.spiralPitchSetting || m.spiralPitchDisplay || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                         ];
 
@@ -2390,12 +2391,12 @@
                             const inputEl = document.getElementById(`val-${p.el}`);
                             const cardEl = document.getElementById(`card-${p.el}`);
 
-                            if (targetEl) targetEl.innerText = target === 0 ? "NO DATA" : `${target.toFixed(2)}`;
-                            if (minEl) minEl.innerText = target === 0 ? "---" : (target - tol).toFixed(2);
-                            if (maxEl) maxEl.innerText = target === 0 ? "---" : (target + tol).toFixed(2);
+                            if (targetEl) targetEl.innerText = target === null ? "NO DATA" : `${target.toFixed(2)}`;
+                            if (minEl) minEl.innerText = target === null ? "---" : (target - tol).toFixed(2);
+                            if (maxEl) maxEl.innerText = target === null ? "---" : (target + tol).toFixed(2);
 
                             if (cardEl) {
-                                if (target === 0) {
+                                if (target === null) {
                                     if (p.id.startsWith('innermid')) {
                                         cardEl.style.display = 'none';
                                     } else if (p.id === 'spiral') {

@@ -219,6 +219,11 @@
                             </td>
                             <td class="text-center pe-4">
                                 <div class="d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn btn-action-glass btn-info eval-btn" 
+                                            onclick="openEvalModal(@item.Id, '@(item.ProductionStartTime?.ToString("yyyy-MM-ddTHH:mm"))', '@(item.ProductionEndTime?.ToString("yyyy-MM-ddTHH:mm"))')" 
+                                            title="Evaluasi Waktu & Sensor">
+                                        <i class="bi bi-activity"></i>
+                                    </button>
                                     <a asp-action="Details" asp-route-id="@item.Id" asp-route-portal="parameter" class="btn btn-action-glass btn-blue" title="View Details">
                                         <i class="bi bi-eye"></i>
                                     </a>
@@ -689,9 +694,51 @@
             grid-template-columns: 1fr;
         }
     }
+    }
+
+    /* Removed custom modal CSS in favor of Bootstrap Modal */
 </style>
 
+<!-- MODAL EVALUASI WAKTU & SENSOR -->
+<div class="modal fade" id="evalModal" tabindex="-1" aria-labelledby="evalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="background: #0f172a; border: 1px solid #3b82f6; border-radius: 16px; box-shadow: 0 0 40px rgba(59, 130, 246, 0.2); color: white;">
+            <div class="modal-header" style="background: linear-gradient(90deg, rgba(30, 58, 138, 0.8), rgba(15, 23, 42, 0.8)); border-bottom: 1px solid rgba(59, 130, 246, 0.3);">
+                <h5 class="modal-title text-info fw-bold" id="evalModalLabel"><i class="bi bi-activity me-2"></i>EVALUASI WAKTU & SENSOR OD</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 20px; max-height: 80vh; overflow-y: auto;">
+                <input type="hidden" id="evalReportId" />
+                
+                <div class="row g-3 align-items-end mb-4 bg-primary bg-opacity-10 p-3 rounded-3 border border-primary border-opacity-25">
+                    <div class="col-md-5">
+                        <label class="super-small text-info tracking-widest fw-bold mb-1">JAM MULAI (AKTUAL)</label>
+                        <input type="datetime-local" id="evalStartTime" class="form-control bg-dark text-white border-primary border-opacity-50" />
+                    </div>
+                    <div class="col-md-5">
+                        <label class="super-small text-info tracking-widest fw-bold mb-1">JAM SELESAI (AKTUAL)</label>
+                        <input type="datetime-local" id="evalEndTime" class="form-control bg-dark text-white border-primary border-opacity-50" />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-hud-primary w-100" onclick="saveAndRenderEval()"><i class="bi bi-arrow-clockwise me-1"></i> UPDATE</button>
+                    </div>
+                </div>
+
+                <div id="evalChartContainer" style="height: 400px; width: 100%; position: relative;">
+                    <canvas id="evalSensorChart"></canvas>
+                </div>
+                <div id="evalLoading" class="text-center text-info py-5" style="display:none;">
+                    <div class="spinner-border" role="status"></div>
+                    <div class="mt-2 fw-bold tracking-widest super-small">ANALYZING SENSOR DATA...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
     <script src="~/lib/offline-cdn/signalr.min.js"></script>
     <script>
@@ -925,6 +972,157 @@
         }
 
         startSignalR();
+
+        // Evaluasi Modal Logic
+        let evalChart = null;
+
+        function openEvalModal(id, startTimeStr, endTimeStr) {
+            document.getElementById('evalReportId').value = id;
+            document.getElementById('evalStartTime').value = startTimeStr;
+            document.getElementById('evalEndTime').value = endTimeStr;
+            
+            var modal = new bootstrap.Modal(document.getElementById('evalModal'));
+            modal.show();
+
+            loadChartData(id, startTimeStr, endTimeStr);
+        }
+
+        // Add event listener to destroy chart when modal is hidden
+        document.getElementById('evalModal').addEventListener('hidden.bs.modal', function () {
+            if (evalChart) { evalChart.destroy(); evalChart = null; }
+        });
+
+        async function saveAndRenderEval() {
+            const id = document.getElementById('evalReportId').value;
+            const start = document.getElementById('evalStartTime').value;
+            const end = document.getElementById('evalEndTime').value;
+
+            const formData = new FormData();
+            formData.append("id", id);
+            formData.append("start", start);
+            formData.append("end", end);
+
+            try {
+                const response = await fetch('/ProductionReport/UpdateProductionTime', {
+                    method: 'POST',
+                    body: formData
+                });
+                const res = await response.json();
+                if (res.success) {
+                    loadChartData(id, start, end);
+                } else {
+                    Swal.fire("Error", res.message, "error");
+                }
+            } catch (e) {
+                Swal.fire("Error", "Failed to update time", "error");
+            }
+        }
+
+        async function loadChartData(id, start, end) {
+            document.getElementById('evalChartContainer').style.display = 'none';
+            document.getElementById('evalLoading').style.display = 'block';
+
+            try {
+                const response = await fetch(`/ProductionReport/GetSensorDataForAnalysis?reportId=${id}&start=${start}&end=${end}`);
+                const data = await response.json();
+                
+                document.getElementById('evalLoading').style.display = 'none';
+                document.getElementById('evalChartContainer').style.display = 'block';
+
+                if (!data.success) {
+                    Swal.fire("Error", data.message || "Failed to load data", "error");
+                    return;
+                }
+
+                renderChart(data);
+            } catch (e) {
+                document.getElementById('evalLoading').style.display = 'none';
+                Swal.fire("Error", "Failed to load chart data", "error");
+            }
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('evalSensorChart').getContext('2d');
+            if (evalChart) evalChart.destroy();
+
+            const labels = data.logs.map(l => l.time);
+            const values = data.logs.map(l => l.value);
+
+            const stdOD = parseFloat(data.stdOd || data.stdOD || 0);
+            const upperLimit = parseFloat(data.upperLimit || 0);
+            const lowerLimit = parseFloat(data.lowerLimit || 0);
+
+            document.getElementById('evalModalLabel').innerHTML = `<i class="bi bi-activity me-2"></i>EVALUASI WAKTU & SENSOR OD (Target: ${stdOD}, Max: ${upperLimit}, Min: ${lowerLimit})`;
+
+            if (window['chartjs-plugin-annotation']) {
+                Chart.register(window['chartjs-plugin-annotation']);
+            } else if (window.chartjsPluginAnnotation) {
+                Chart.register(window.chartjsPluginAnnotation);
+            }
+
+
+            evalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'OD Aktual',
+                        data: values,
+                        borderColor: '#0ea5e9',
+                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 1,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'white' } },
+                        annotation: {
+                            annotations: {
+                                stdLine: {
+                                    type: 'line',
+                                    scaleID: 'y',
+                                    yMin: stdOD,
+                                    yMax: stdOD,
+                                    borderColor: '#10b981',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: { display: true, content: `Target OD (${stdOD})`, position: 'start', backgroundColor: '#10b981', color: 'white' }
+                                },
+                                upperLine: {
+                                    type: 'line',
+                                    scaleID: 'y',
+                                    yMin: upperLimit,
+                                    yMax: upperLimit,
+                                    borderColor: '#ef4444',
+                                    borderWidth: 2,
+                                    borderDash: [2, 2],
+                                    label: { display: true, content: `Upper Tol (${upperLimit})`, position: 'start', backgroundColor: '#ef4444', color: 'white' }
+                                },
+                                lowerLine: {
+                                    type: 'line',
+                                    scaleID: 'y',
+                                    yMin: lowerLimit,
+                                    yMax: lowerLimit,
+                                    borderColor: '#ef4444',
+                                    borderWidth: 2,
+                                    borderDash: [2, 2],
+                                    label: { display: true, content: `Lower Tol (${lowerLimit})`, position: 'start', backgroundColor: '#ef4444', color: 'white' }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                    }
+                }
+            });
+        }
     </script>
 }
 

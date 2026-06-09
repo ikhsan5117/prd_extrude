@@ -22,6 +22,13 @@ namespace VelastoProductionSystem.Controllers
             _hubContext = hubContext;
         }
 
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        public async Task<IActionResult> DebugSps()
+        {
+            var sps = await _context.SpsNoDocs.FirstOrDefaultAsync(s => s.DocumentNumber == "VI-SOP-PROD-132");
+            return Json(sps);
+        }
+
         // GET: /Dimensi/Index
         public IActionResult Index()
         {
@@ -306,10 +313,28 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             // Fetch SPS Map for display consistency (fixes incomplete planning/hose names)
-            var itemCodes = reports.Where(r => !string.IsNullOrEmpty(r.ItemCode)).Select(r => r.ItemCode).Distinct().ToList();
-            var spsMap = await _context.SpsNoDocs
-                .Where(s => itemCodes.Contains(s.DocumentNumber))
-                .ToDictionaryAsync(s => s.DocumentNumber, s => s);
+            // Build lookup keyed by BOTH DocumentNumber AND ItemList values for numeric codes (e.g. "2950" -> "NA2950")
+            var itemCodes = reports.Where(r => !string.IsNullOrEmpty(r.ItemCode)).Select(r => r.ItemCode!).Distinct().ToList();
+            var allSps = await _context.SpsNoDocs
+                .Include(s => s.ItemLists)
+                .ToListAsync();
+
+            // Build dictionary: key = itemCode stored in report, value = matching SpsNoDoc
+            var spsMap = new Dictionary<string, SpsNoDoc>(StringComparer.OrdinalIgnoreCase);
+            foreach (var code in itemCodes)
+            {
+                if (spsMap.ContainsKey(code)) continue;
+                // Try exact DocumentNumber match first
+                var match = allSps.FirstOrDefault(s => s.DocumentNumber != null && s.DocumentNumber.Equals(code, StringComparison.OrdinalIgnoreCase));
+                // Then try ItemList match (handles numeric code like "2950" matching ItemList "NA2950")
+                if (match == null)
+                    match = allSps.FirstOrDefault(s => s.ItemLists != null && s.ItemLists.Any(il =>
+                        il.ItemList != null && (
+                            il.ItemList.Equals(code, StringComparison.OrdinalIgnoreCase) ||
+                            il.ItemList.TrimStart('N','A','n','a','B','b').Equals(code, StringComparison.OrdinalIgnoreCase)
+                        )));
+                if (match != null) spsMap[code] = match;
+            }
             
             ViewBag.SpsMap = spsMap;
 
@@ -409,11 +434,22 @@ namespace VelastoProductionSystem.Controllers
                 cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
             }
 
-            // Fetch SPS Map for Excel
-            var itemCodes = rows.Where(r => !string.IsNullOrEmpty(r.ItemCode)).Select(r => r.ItemCode).Distinct().ToList();
-            var spsMap = await _context.SpsNoDocs
-                .Where(s => itemCodes.Contains(s.DocumentNumber))
-                .ToDictionaryAsync(s => s.DocumentNumber, s => s);
+            // Fetch SPS Map for Excel - same dual-key lookup as History view
+            var itemCodes = rows.Where(r => !string.IsNullOrEmpty(r.ItemCode)).Select(r => r.ItemCode!).Distinct().ToList();
+            var allSps = await _context.SpsNoDocs.Include(s => s.ItemLists).ToListAsync();
+            var spsMap = new Dictionary<string, SpsNoDoc>(StringComparer.OrdinalIgnoreCase);
+            foreach (var code in itemCodes)
+            {
+                if (spsMap.ContainsKey(code)) continue;
+                var match = allSps.FirstOrDefault(s => s.DocumentNumber != null && s.DocumentNumber.Equals(code, StringComparison.OrdinalIgnoreCase));
+                if (match == null)
+                    match = allSps.FirstOrDefault(s => s.ItemLists != null && s.ItemLists.Any(il =>
+                        il.ItemList != null && (
+                            il.ItemList.Equals(code, StringComparison.OrdinalIgnoreCase) ||
+                            il.ItemList.TrimStart('N','A','n','a','B','b').Equals(code, StringComparison.OrdinalIgnoreCase)
+                        )));
+                if (match != null) spsMap[code] = match;
+            }
 
             int row = 5;
             foreach (var item in rows)
@@ -423,7 +459,12 @@ namespace VelastoProductionSystem.Controllers
                 var rawHose = (item.HoseType ?? string.Empty).Trim();
 
                 // Robust Display Selection
-                var planningDisplay = (rawPlanning.All(char.IsDigit) && sps != null) ? sps.DocumentNumber : rawPlanning;
+                var spsItem = sps?.ItemLists?.FirstOrDefault(il => 
+                    il.ItemList != null && (
+                        il.ItemList.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase) ||
+                        il.ItemList.TrimStart('N','A','n','a','B','b').Equals(rawPlanning, StringComparison.OrdinalIgnoreCase)
+                    ))?.ItemList ?? sps?.ItemLists?.FirstOrDefault()?.ItemList ?? "";
+                var planningDisplay = (rawPlanning.All(char.IsDigit) && !string.IsNullOrWhiteSpace(spsItem)) ? spsItem : rawPlanning;
                 var productInfoDisplay = (rawHose.Equals(rawPlanning, StringComparison.OrdinalIgnoreCase) && sps != null) ? sps.HoseType : rawHose;
 
                 ws.Cells[row, 1].Value = (item.DocumentNumber ?? "").Replace("#", "");
@@ -664,11 +705,16 @@ namespace VelastoProductionSystem.Controllers
                 dimensi = s.Dimensi,
 
                 // Dedicated exact targets for Javascript Dimension cards parsing
-                // innerTarget = actual inner diameter center value (e.g. 9.60), not tolerance width
-                innerTarget = !string.IsNullOrWhiteSpace(s.InnerTarget) ? s.InnerTarget : s.Dimensi,
-                innerTol = s.ToleranceInner_Asli?.ToString("F2") ?? s.InnerTol,
-                thickTarget = s.TebalInner_Asli?.ToString("F2") ?? s.ThickTarget,
+                // innerTarget = actual inner diameter center value. In DB, ToleranceInner_Asli mistakenly holds the Inner Diameter (e.g. 33.3)
+                innerTarget = s.ToleranceInner_Asli?.ToString("F2") ?? (!string.IsNullOrWhiteSpace(s.ThickTarget) ? s.ThickTarget : s.Dimensi),
+                innerTol = (s.ToleranceInner_Max.HasValue && s.ToleranceInner_Asli.HasValue) ? (s.ToleranceInner_Max.Value - s.ToleranceInner_Asli.Value).ToString("F2") : s.InnerTol,
+                
+                // thickTarget = actual inner thickness value. In DB, TebalInner_Asli mistakenly holds the Inner Thickness (e.g. 2.3)
+                thickTarget = s.TebalInner_Asli?.ToString("F2") ?? s.InnerTarget,
                 thickTol = (s.TebalInner_Max.HasValue && s.TebalInner_Asli.HasValue) ? (s.TebalInner_Max.Value - s.TebalInner_Asli.Value).ToString("F2") : s.ThickTol,
+                innerMidTarget = s.TebalInnerMiddle_Asli?.ToString("F2") ?? s.InnerMidTarget,
+                innerMidTol = (s.TebalInnerMiddle_Max.HasValue && s.TebalInnerMiddle_Asli.HasValue) ? (s.TebalInnerMiddle_Max.Value - s.TebalInnerMiddle_Asli.Value).ToString("F2") : null,
+                tebalInnerMiddle = BuildRange(s.TebalInnerMiddle_Asli, s.TebalInnerMiddle_Min, s.TebalInnerMiddle_Max, null),
                 totalTarget = s.TebalTotal_Asli?.ToString("F2") ?? s.TotalTarget,
                 totalTol = (s.TebalTotal_Max.HasValue && s.TebalTotal_Asli.HasValue) ? (s.TebalTotal_Max.Value - s.TebalTotal_Asli.Value).ToString("F2") : s.TotalTol,
             };

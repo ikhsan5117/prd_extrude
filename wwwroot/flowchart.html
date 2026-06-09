@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowchart Fitur Timer & Sensor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; overflow: hidden; }
+        .card-header { background: #0f172a; color: white; border-bottom: 4px solid #0ea5e9; padding: 15px 20px; }
+        .mermaid { display: flex; justify-content: center; background: white; padding: 30px 10px; border-radius: 10px; overflow-x: auto; }
+        .mermaid svg { max-width: 100%; height: auto; }
+        @media print {
+            @page { size: A4 landscape; margin: 5mm; }
+            .no-print { display: none !important; }
+            html, body { background: white; padding: 0; margin: 0; height: 100vh; overflow: hidden; }
+            .container-fluid { padding: 0 !important; margin: 0 !important; }
+            .card { box-shadow: none; border-radius: 0; border: none; }
+            .card-header { padding: 5px; border-bottom: 2px solid #0ea5e9; }
+            .card-body { padding: 0 !important; margin: 0 !important; }
+            .mermaid { padding: 0; margin: 0; display: flex; justify-content: center; align-items: center; height: 65vh; overflow: hidden; }
+            .mermaid svg { max-width: 100% !important; max-height: 100% !important; width: auto !important; height: auto !important; }
+            .card-footer { padding: 10px !important; margin: 0; border-top: none; }
+            .row { margin: 0 !important; }
+            .p-3 { padding: 10px !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid my-4 px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h2>Rancangan Alur Sistem</h2>
+            <div class="d-flex gap-2">
+                <button onclick="downloadPNG()" class="btn btn-success px-4">&#128229; Download PNG</button>
+                <button onclick="window.print()" class="btn btn-primary px-4">&#128438; Cetak / Simpan ke PDF</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">FLOWCHART: Timer Produksi &amp; Analisis Grafik Sensor OD</h4>
+            </div>
+            <div class="card-body p-2">
+                <div class="mermaid">
+%%{init: {'flowchart': {'nodeSpacing': 40, 'rankSpacing': 50}}}%%
+flowchart TD
+    classDef startend fill:#1e293b,stroke:#0ea5e9,stroke-width:2px,color:#fff
+    classDef operator fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:#fff
+    classDef system fill:#475569,stroke:#334155,stroke-width:2px,color:#fff
+    classDef db fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#1e293b
+    classDef supervisor fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
+    classDef modal fill:#8b5cf6,stroke:#7c3aed,stroke-width:3px,color:#fff
+
+    subgraph ALUR1 ["1. Alur OPERATOR - Lantai Produksi"]
+        direction LR
+        A(["Mulai: Buka Form\nParameter Settings"]):::startend
+        B["Pilih Planning\n& Lengkapi Form"]:::operator
+        F["Klik SUBMIT"]:::operator
+        AUTO["Sistem Mencatat Otomatis:\nJam Mulai = Waktu Submit\nJam Selesai = Mulai + 4 Jam"]:::system
+        REP{"Submit\nLagi?"}:::system
+        Done(["Laporan\nTersimpan"]):::startend
+
+        A --> B --> F --> AUTO --> REP
+        REP -- "Ya" --> B
+        REP -- "Selesai" --> Done
+    end
+
+    DB[("Database:\nLaporan + Jam Mulai\n& Jam Selesai")]:::db
+    F -->|Tersimpan ke DB| DB
+    DB --> AUTO
+
+    subgraph ALUR2 ["2. Alur SUPERVISOR - Parameter History"]
+        direction LR
+        H["Buka Menu\nParameter History"]:::supervisor
+        D{"Jam Perlu\nDikoreksi?"}:::system
+        E["Klik Edit &\nUbah Jam Manual"]:::supervisor
+        I{"Jam\nValid?"}:::system
+        J["Klik: Analisa\nOD Sensor"]:::supervisor
+        K["Tampil Normal\n(Tanpa Analisa)"]:::system
+
+        H --> D
+        D -- Ya --> E --> I
+        D -- Tidak --> I
+        I -- Ya --> J
+        I -- Tidak --> K
+    end
+
+    DB -.->|Tampilkan Data| H
+    E -->|Update Jam| DB
+
+    subgraph ALUR3 ["3. Popup Analisis & Output Akhir"]
+        direction LR
+        L["Popup Modal\nMuncul"]:::modal
+        M["Ambil Data Sensor\ndi Rentang Jam Tsb"]:::system
+        N["Grafik: Aktual OD\nvs Standar SPS"]:::modal
+        End(["Selesai:\nEvaluasi Kualitas"]):::startend
+
+        J --> L --> M --> N --> End
+    end
+                </div>
+            </div>
+            <div class="card-footer bg-white p-4">
+                <h5>&#128218; Keterangan Alur</h5>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3" style="background:#e0f2fe; border-left: 4px solid #0ea5e9;">
+                            <b>&#128100; Peran Operator</b><br/>
+                            Cukup isi form dan klik <b>SUBMIT</b>. Tidak perlu menekan tombol start/stop apapun. Sistem akan <b>otomatis mencatat waktu submit sebagai Jam Mulai</b>, dan mengisi Jam Selesai dengan <b>Jam Mulai + 4 jam</b> sebagai nilai default. Operator bisa submit berkali-kali untuk planning yang berbeda.
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3" style="background:#d1fae5; border-left: 4px solid #10b981;">
+                            <b>&#128101; Peran Supervisor</b><br/>
+                            Memantau riwayat produksi di <b>Parameter History</b>. Jika ada kesalahan jam oleh operator, Supervisor bisa mengedit langsung dari tabel tersebut. Setelah jam valid, klik tombol <b>Analisa OD Sensor</b>.
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3" style="background:#ede9fe; border-left: 4px solid #8b5cf6;">
+                            <b>&#128202; Popup Analisis</b><br/>
+                            Sebuah modal popup akan tampil berisi <b>grafik garis</b> yang membandingkan data aktual <i>Outer Diameter</i> dari sensor mesin VS nilai standar/toleransi yang ada di dokumen SPS, khusus pada rentang waktu produksi tersebut.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis',
+                nodeSpacing: 50,
+                rankSpacing: 60
+            }
+        });
+
+        function downloadPNG() {
+            const el = document.querySelector('.mermaid');
+            if (!el) return;
+            
+            // Add html2canvas library dynamically if not present
+            if (typeof html2canvas === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                script.onload = () => executeDownload(el);
+                document.head.appendChild(script);
+            } else {
+                executeDownload(el);
+            }
+        }
+
+        function executeDownload(element) {
+            html2canvas(element, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'flowchart-timer-sensor.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                alert('Gagal mendownload gambar: ' + err.message);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -606,9 +606,15 @@
                         return def;
                     }
 
-                    decimal idNom = stdVal != null ? D(stdVal.InnerTarget, stdVal.ToleranceInner_Asli ?? 0m) : (master != null ? D(master.Dimensi, 0m) : 0m);
-                    decimal idTol = stdVal != null ? D(stdVal.InnerTol, 0.1m) : (master != null ? D(master.ToleranceInner, 0.1m) : 0.1m);
-                    decimal tubeNom = stdVal != null ? D(stdVal.ThickTarget, stdVal.TebalInner_Asli ?? 0m) : (master != null ? D(master.TebalInner, 0m) : 0m);
+                    decimal DTol(string? s, decimal def) {
+                        if (string.IsNullOrWhiteSpace(s)) return def;
+                        var parts = s.Replace("±", "").Trim().Split(' ');
+                        return decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal v) ? v : def;
+                    }
+
+                    decimal idNom = stdVal != null ? D(stdVal.ToleranceInner_Asli?.ToString("F2") ?? stdVal.ThickTarget, 0m) : (master != null ? D(master.Dimensi, 0m) : 0m);
+                    decimal idTol = stdVal != null ? D(stdVal.InnerTol, 0m) : (master != null ? DTol(master.ToleranceInner, 0m) : 0m);
+                    decimal tubeNom = stdVal != null ? D(stdVal.TebalInner_Asli?.ToString("F2") ?? stdVal.InnerTarget, 0m) : (master != null ? D(master.TebalInner, 0m) : 0m);
                     decimal tubeTol = stdVal != null ? D(stdVal.ThickTol, 0.2m) : 0.2m;
                     decimal coverNom = stdVal != null ? D(stdVal.TotalTarget, stdVal.TebalTotal_Asli ?? 0m) : (master != null ? D(master.TebalTotal, 0m) : 0m);
                     decimal coverTol = stdVal != null ? D(stdVal.TotalTol, 0.3m) : (master != null ? D(master.ToleranceOuter, 0.3m) : 0.3m);
