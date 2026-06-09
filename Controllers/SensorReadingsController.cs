@@ -601,8 +601,10 @@ namespace VelastoProductionSystem.Controllers
                 .ToListAsync();
 
             // Ambil semua SPS dari SpsNoDocs (join ke ItemList untuk ambil ItemList)
+            // Hanya ambil yang punya DocumentNumber valid (bukan strip '-')
             var spsList = await _context.SpsItemLists
                 .Include(i => i.SpsNoDoc)
+                .Where(s => s.SpsNoDoc != null && s.SpsNoDoc.DocumentNumber != null && s.SpsNoDoc.DocumentNumber != "-")
                 .Select(s => new {
                     Id = s.DocumentNumber,
                     s.SpsNoDoc!.DocumentNumber,

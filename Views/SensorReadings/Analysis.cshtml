@@ -424,8 +424,8 @@ function renderSpsGrid(list) {
                 <div class="fw-bold small text-white mb-1">${s.itemList || '-'}</div>
                 <div class="text-muted" style="font-size:.72rem;">${s.customer || ''}</div>
                 <div class="d-flex flex-wrap gap-1 mt-2">
-                    ${s.odSensor_Asli ? `<span class="param-pill"><span class="pp-label">OD Sensor</span><span class="pp-val text-warning">${s.odSensor_Asli}</span></span>` : ''}
-                    ${s.innerTarget ? `<span class="param-pill"><span class="pp-label">Inner Target</span><span class="pp-val">${s.innerTarget}</span></span>` : ''}
+                    ${(s.odSensor_Asli && s.odSensor_Asli !== '-') ? `<span class="param-pill"><span class="pp-label">OD Sensor</span><span class="pp-val text-warning">${s.odSensor_Asli}</span></span>` : ''}
+                    ${(s.innerTarget && s.innerTarget !== '-') ? `<span class="param-pill"><span class="pp-label">Inner Target</span><span class="pp-val">${s.innerTarget}</span></span>` : ''}
                 </div>
             </div>
         </div>
@@ -456,7 +456,7 @@ function updateSelectedPanel() {
     const s = selectedSps;
     document.getElementById('stdSelectedPanel').classList.remove('d-none');
     document.getElementById('selDocNum').textContent      = s.documentNumber || '-';
-    document.getElementById('selProductCode').textContent = s.no ? 'No. ' + s.no : '-';
+    document.getElementById('selProductCode').textContent = s.no || '-';
     document.getElementById('selItemList').textContent    = s.itemList || '-';
     document.getElementById('selCustomer').textContent    = s.customer || '-';
     document.getElementById('selMachineCode').textContent = s.machineCode || '-';
