@@ -797,16 +797,15 @@ namespace VelastoProductionSystem.Controllers
             switch (metricKey)
             {
                 case "outer_diameter":
-                    target = sps.ToleranceOuter_Asli ?? sps.OdSensor_Asli ?? sps.ControlValue_Asli;
-                    ucl    = sps.ToleranceOuter_Max  ?? sps.OdSensor_Max  ?? sps.ControlValue_Max;
-                    lcl    = sps.ToleranceOuter_Min  ?? sps.OdSensor_Min  ?? sps.ControlValue_Min;
+                    target = sps.OdSensor_Asli ?? sps.ToleranceOuter_Asli ?? sps.ControlValue_Asli;
+                    ucl    = sps.OdSensor_Max  ?? sps.ToleranceOuter_Max  ?? sps.ControlValue_Max;
+                    lcl    = sps.OdSensor_Min  ?? sps.ToleranceOuter_Min  ?? sps.ControlValue_Min;
                     
                     // Fallback to parsed text tolerance if explicit min/max are empty.
                     if (ucl == null && target != null)
                     {
-                        var tol = sps.ToleranceOuter_Asli
+                        var tol = TryParseTolerance(sps.OdSensor)
                                ?? TryParseTolerance(sps.ToleranceOuter)
-                               ?? TryParseTolerance(sps.OdSensor)
                                ?? TryParseTolerance(sps.ControlValue);
                         if (tol != null) { ucl = target + tol; lcl = target - tol; }
                     }
@@ -890,9 +889,9 @@ namespace VelastoProductionSystem.Controllers
             switch (metricKey)
             {
                 case "outer_diameter":
-                    target    = TryParseFirst(sps.ToleranceOuter) ?? TryParseFirst(sps.OdSensor) ?? TryParseFirst(sps.ControlValue);
-                    tolerance = TryParseTolerance(sps.ToleranceOuter)
-                             ?? TryParseTolerance(sps.OdSensor)
+                    target    = TryParseFirst(sps.OdSensor) ?? TryParseFirst(sps.ToleranceOuter) ?? TryParseFirst(sps.ControlValue);
+                    tolerance = TryParseTolerance(sps.OdSensor)
+                             ?? TryParseTolerance(sps.ToleranceOuter)
                              ?? TryParseTolerance(sps.ControlValue);
                     label = "Outer Diameter"; unit = "mm";
                     break;

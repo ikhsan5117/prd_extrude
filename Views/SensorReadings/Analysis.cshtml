@@ -374,7 +374,7 @@ if (window.Chart) {
 
 // Mapping metricType -> field SpsMasters (camelCase for JSON)
 const METRIC_MAP = {
-    outer_diameter:    { field:'toleranceOuter_Asli',    altField:'odSensor_Asli',        minField:'toleranceOuter_Min', maxField:'toleranceOuter_Max', tolFields:['toleranceOuter', 'odSensor', 'controlValue'], label:'Outer Diameter',    unit:'mm'    },
+    outer_diameter:    { field:'odSensor_Asli',    altField:'toleranceOuter_Asli',        minField:'odSensor_Min', maxField:'odSensor_Max', tolFields:['odSensor', 'toleranceOuter', 'controlValue'], label:'Outer Diameter',    unit:'mm'    },
     inner_diameter:    { field:'toleranceInner_Asli',    altField:'innerTarget',          minField:'toleranceInner_Min', maxField:'toleranceInner_Max', tolFields:['toleranceInner', 'innerTol'], label:'Inner Diameter',    unit:'mm'    },
     hose_speed:        { field:'hoseSpeed_Asli',         minField:'hoseSpeed_Min', maxField:'hoseSpeed_Max', label:'Hose Speed',        unit:'m/min' },
     head_temp_inner:   { field:'headTemp1_Asli',         minField:'headTemp1_Min', maxField:'headTemp1_Max', label:'Head Temp Inner',   unit:'°C'    },
@@ -783,36 +783,61 @@ function renderChart(data) {
 
     const labels  = sd.map(d => formatSensorTimeAxis(d.x));
     const fullLabels = sd.map(d => formatSensorTimeFull(d.x));
-    const actuals = sd.map(d => +d.y);
     const unit    = std?.unit || '';
 
-    const pointColors = sd.map(d => {
-        if (!std) return '#0d6efd';
-        const v = +d.y;
-        if (std.ucl != null && v > +std.ucl) return '#dc3545';
-        if (std.lcl != null && v < +std.lcl) return '#dc3545';
-        return '#0d6efd';
+    const datasets = [];
+    const deviceGroups = {};
+    
+    sd.forEach((d, i) => {
+        const dev = d.device || 'Sensor';
+        if (!deviceGroups[dev]) {
+            deviceGroups[dev] = { 
+                data: new Array(sd.length).fill(null), 
+                pointColors: new Array(sd.length).fill('transparent') 
+            };
+        }
+        deviceGroups[dev].data[i] = +d.y;
+        
+        let color = '#0d6efd';
+        if (std) {
+            const v = +d.y;
+            if (std.ucl != null && v > +std.ucl) color = '#dc3545';
+            else if (std.lcl != null && v < +std.lcl) color = '#dc3545';
+        }
+        deviceGroups[dev].pointColors[i] = color;
     });
 
-    const datasets = [{
-        label: 'Aktual Sensor',
-        data: actuals,
-        borderColor: '#0d6efd',
-        backgroundColor: 'rgba(13,110,253,.07)',
-        pointBackgroundColor: pointColors,
-        pointBorderColor: pointColors,
-        pointRadius: actuals.length <= 200 ? 3 : 0,
-        pointHoverRadius: 4,
-        tension: 0.3,
-        fill: true,
-        clip: false,
-        order: 1
-    }];
+    const palette = ['#0d6efd', '#fd7e14', '#20c997', '#6f42c1', '#d63384', '#0dcaf0'];
+    let cIdx = 0;
+
+    for (const [dev, group] of Object.entries(deviceGroups)) {
+        const devColor = palette[cIdx % palette.length];
+        
+        // Ganti warna fallback dengan warna khusus device ini
+        const pColors = group.pointColors.map(c => c === '#0d6efd' ? devColor : c);
+
+        datasets.push({
+            label: `Aktual (${dev})`,
+            data: group.data,
+            borderColor: devColor,
+            backgroundColor: 'transparent',
+            pointBackgroundColor: pColors,
+            pointBorderColor: pColors,
+            pointRadius: sd.length <= 200 ? 3 : 0,
+            pointHoverRadius: 5,
+            spanGaps: true,
+            tension: 0.3,
+            fill: false,
+            clip: false,
+            order: 1
+        });
+        cIdx++;
+    }
 
     document.getElementById('legActual').classList.remove('d-none');
 
     if (std) {
-        const n = actuals.length;
+        const n = sd.length;
         if (showTgt && std.target != null) {
             datasets.push({
                 label: 'Target (' + (+std.target).toFixed(3) + ' ' + unit + ')',
