@@ -721,8 +721,9 @@
                         <label class="super-small text-info tracking-widest fw-bold mb-1">JAM SELESAI (AKTUAL)</label>
                         <input type="datetime-local" id="evalEndTime" class="form-control bg-dark text-white border-primary border-opacity-50" />
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 d-flex flex-column gap-2">
                         <button class="btn btn-hud-primary w-100" onclick="saveAndRenderEval()"><i class="bi bi-arrow-clockwise me-1"></i> UPDATE</button>
+                        <button class="btn btn-outline-info btn-sm w-100" onclick="openYAxisModal()"><i class="bi bi-arrows-expand me-1"></i> SET RANGE</button>
                     </div>
                 </div>
 
@@ -746,6 +747,32 @@
                 <div id="evalLoading" class="text-center text-info py-5" style="display:none;">
                     <div class="spinner-border" role="status"></div>
                     <div class="mt-2 fw-bold tracking-widest super-small">ANALYZING SENSOR DATA...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Y-AXIS RANGE MODAL -->
+<div class="modal fade" id="yAxisModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content" style="background: #0f172a; border: 1px solid #3b82f6; border-radius: 12px; color: white;">
+            <div class="modal-header" style="background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(59, 130, 246, 0.3);">
+                <h6 class="modal-title text-info fw-bold"><i class="bi bi-arrows-expand me-2"></i>Range Grafik (Y-Axis)</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="mb-3">
+                    <label class="super-small text-info tracking-widest fw-bold mb-1">BATAS ATAS (MAX Y)</label>
+                    <input type="number" step="0.1" id="yAxisMax" class="form-control bg-dark text-white border-primary border-opacity-50" placeholder="Auto" />
+                </div>
+                <div class="mb-4">
+                    <label class="super-small text-info tracking-widest fw-bold mb-1">BATAS BAWAH (MIN Y)</label>
+                    <input type="number" step="0.1" id="yAxisMin" class="form-control bg-dark text-white border-primary border-opacity-50" placeholder="Auto" />
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-hud-primary w-100" onclick="applyYAxisRange()">Terapkan</button>
+                    <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetYAxisRange()">Reset (Auto)</button>
                 </div>
             </div>
         </div>
@@ -1142,8 +1169,11 @@
                 ...(hasUsl ? [upperLimit] : []),
                 ...(hasLsl ? [lowerLimit] : [])
             ];
-            const yMin = refValues.length ? Math.min(...refValues) - 0.05 : undefined;
-            const yMax = refValues.length ? Math.max(...refValues) + 0.05 : undefined;
+            const autoYMin = refValues.length ? Math.min(...refValues) - 0.05 : undefined;
+            const autoYMax = refValues.length ? Math.max(...refValues) + 0.05 : undefined;
+
+            const finalYMin = evalCustomYMin !== null ? evalCustomYMin : autoYMin;
+            const finalYMax = evalCustomYMax !== null ? evalCustomYMax : autoYMax;
 
             evalChart = new Chart(ctx, {
                 type: 'line',
@@ -1174,8 +1204,8 @@
                             limits: {
                                 x: { min: 0, max: Math.max(labels.length - 1, 0) },
                                 y: {
-                                    min: yMin != null ? yMin - 0.5 : undefined,
-                                    max: yMax != null ? yMax + 0.5 : undefined
+                                    min: finalYMin != null ? finalYMin - 0.5 : undefined,
+                                    max: finalYMax != null ? finalYMax + 0.5 : undefined
                                 }
                             }
                         }
@@ -1185,12 +1215,53 @@
                         y: {
                             ticks: { color: '#94a3b8' },
                             grid: { color: 'rgba(255,255,255,0.1)' },
-                            suggestedMin: yMin,
-                            suggestedMax: yMax
+                            min: finalYMin,
+                            max: finalYMax,
+                            suggestedMin: autoYMin,
+                            suggestedMax: autoYMax
                         }
                     }
                 }
             });
+        }
+        
+        let evalCustomYMin = null;
+        let evalCustomYMax = null;
+
+        function openYAxisModal() {
+            var modal = new bootstrap.Modal(document.getElementById('yAxisModal'));
+            modal.show();
+        }
+
+        function applyYAxisRange() {
+            const minVal = document.getElementById('yAxisMin').value;
+            const maxVal = document.getElementById('yAxisMax').value;
+            evalCustomYMin = minVal !== '' ? parseFloat(minVal) : null;
+            evalCustomYMax = maxVal !== '' ? parseFloat(maxVal) : null;
+            
+            if (evalChart) {
+                evalChart.options.scales.y.min = evalCustomYMin !== null ? evalCustomYMin : undefined;
+                evalChart.options.scales.y.max = evalCustomYMax !== null ? evalCustomYMax : undefined;
+                evalChart.update();
+            }
+            
+            const modalEl = document.getElementById('yAxisModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if(modal) modal.hide();
+        }
+
+        function resetYAxisRange() {
+            document.getElementById('yAxisMin').value = '';
+            document.getElementById('yAxisMax').value = '';
+            evalCustomYMin = null;
+            evalCustomYMax = null;
+            
+            // Re-render chart to use auto calculated bounds
+            saveAndRenderEval();
+            
+            const modalEl = document.getElementById('yAxisModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if(modal) modal.hide();
         }
         
         // Setup Pagination for Parameter History
