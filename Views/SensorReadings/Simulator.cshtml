@@ -209,35 +209,8 @@
 
     <!-- ── Bottom Panels: SPS & Log (Side-by-Side) ──────────────── -->
     <div class="row g-3 mb-4">
-        <!-- KIRI: Pilih SPS -->
-        <div class="col-lg-6">
-            <div class="sim-card h-100">
-                <div class="d-flex align-items-center px-3 py-2 border-bottom border-white border-opacity-10">
-                    <i class="bi bi-file-earmark-text text-info me-2"></i>
-                    <span class="fw-semibold small">1. Pilih Dokumen SPS Standar</span>
-                    <div class="ms-auto">
-                        <input type="text" class="form-control form-control-sm" id="spsSearch" placeholder="Cari SPS..." style="width: 150px;">
-                    </div>
-                </div>
-                <div class="p-0" style="height: 350px; overflow-y: auto;">
-                    <table class="table table-dark table-hover table-sm table-bordered table-compact-sim mb-0">
-                        <thead class="sticky-top">
-                            <tr>
-                                <th style="width: 25%;">Item List</th>
-                                <th style="width: 15%;">Mesin</th>
-                                <th style="width: 60%;">No. Dokumen</th>
-                            </tr>
-                        </thead>
-                        <tbody id="spsTableBody">
-                            <!-- Diisi JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
         <!-- KANAN: Activity Log -->
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="sim-card h-100">
                 <div class="d-flex align-items-center px-3 py-2 border-bottom border-white border-opacity-10">
                     <i class="bi bi-terminal text-secondary me-2"></i>
@@ -921,64 +894,12 @@ function toggleKey() {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  SPS LIST & SEARCH
-// ═══════════════════════════════════════════════════════════════════════
-let allSps = @Html.Raw(ViewBag.SpsList ?? "[]");
-let selectedSps = null;
 
-function renderSpsTable(filter = "") {
-    const tbody = document.getElementById('spsTableBody');
-    tbody.innerHTML = "";
-    
-    const f = filter.toLowerCase();
-    const filtered = allSps.filter(s => 
-        s.itemList.toLowerCase().includes(f) || 
-        (s.machineCode || "").toLowerCase().includes(f) ||
-        s.documentNumber.toLowerCase().includes(f)
-    ).slice(0, 50);
-
-    filtered.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        if (selectedSps && selectedSps.id === s.id) tr.classList.add('table-info', 'text-dark');
-        
-        tr.innerHTML = `
-            <td>${s.itemList}</td>
-            <td>${s.machineCode || '-'}</td>
-            <td>${s.documentNumber}</td>
-        `;
-        tr.onclick = () => {
-            selectedSps = s;
-            // Update sensor machine code to match SPS machine code
-            sensors.forEach(sensor => {
-                if (!sensor.running && s.machineCode) {
-                    sensor.machineCode = s.machineCode;
-                    const wrap = document.getElementById(`wrap-${sensor.id}`);
-                    if (wrap) {
-                        const pos = sensors.indexOf(sensor);
-                        const cfg = { ...sensor };
-                        removeSensor(sensor.id);
-                        addSensorCard(cfg);
-                    }
-                }
-            });
-            renderSpsTable(filter);
-            logLine('info', `✅ SPS Terpilih: ${s.documentNumber} (${s.itemList}) - Mesin: ${s.machineCode || 'N/A'}`);
-        };
-        tbody.appendChild(tr);
-    });
-}
-
-document.getElementById('spsSearch').addEventListener('input', (e) => {
-    renderSpsTable(e.target.value);
-});
 
 // ═══════════════════════════════════════════════════════════════════════
 //  INIT — load 2 sensor default supaya langsung ada isi
 // ═══════════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-    renderSpsTable();
     // Coba load dari localStorage dulu
     const saved = localStorage.getItem('sensorSimConfig');
     if (saved) {
