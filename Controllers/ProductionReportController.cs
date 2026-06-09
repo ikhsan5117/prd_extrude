@@ -921,8 +921,8 @@ namespace VelastoProductionSystem.Controllers
 
             try
             {
-                var lastReport = await _context.ProductionReports.OrderByDescending(r => r.Id).FirstOrDefaultAsync();
-                var startTime = lastReport?.CreatedDate ?? DateTime.Now;
+                var machineName = HttpContext.Session.GetString("MachineName");
+                var (productionStart, productionEnd) = await GetProductionWindowAsync(machineName);
 
                 var report = new ProductionReport
                 {
@@ -932,7 +932,7 @@ namespace VelastoProductionSystem.Controllers
                     Shift = dto.Shift,
                     CustomerName = dto.CustomerName,
                     HoseType = dto.HoseType,
-                    MachineName = HttpContext.Session.GetString("MachineName"),
+                    MachineName = machineName,
                     InnerMaterial = dto.InnerMaterial,
                     InnerMaterialActual = dto.InnerMaterialActual,
                     OuterMaterial = dto.OuterMaterial,
@@ -961,8 +961,8 @@ namespace VelastoProductionSystem.Controllers
                     DRAC_Akhir = dto.DRAC_Akhir,
                     CreatedBy = dto.CreatedBy ?? "Operator",
                     CreatedDate = DateTime.Now,
-                    ProductionStartTime = startTime,
-                    ProductionEndTime = DateTime.Now,
+                    ProductionStartTime = productionStart,
+                    ProductionEndTime = productionEnd,
                     Status = "COMPLETED",
                     SpsId = SanitizeLegacySpsId(dto.SpsId),
                     ItemCode = dto.ItemCode,
@@ -1352,21 +1352,14 @@ namespace VelastoProductionSystem.Controllers
                     report.CreatedDate = DateTime.Now;
                     report.Status = "NOW PRODUCING";
 
-                    // Auto-record Jam Mulai = waktu submit terakhir, Jam Selesai = waktu submit sekarang
-                    var lastReport = await _context.ProductionReports
-                        .Where(r => r.MachineName == report.MachineName && r.CreatedDate.Date == DateTime.Today)
-                        .OrderByDescending(r => r.CreatedDate)
-                        .FirstOrDefaultAsync();
-
-                    if (lastReport != null)
+                    // Jendela 4 jam per mesin: save pertama buka jendela, save berikutnya ikut jendela aktif
+                    if (report.ProductionStartTime == null || report.ProductionStartTime == DateTime.MinValue
+                        || report.ProductionEndTime == null || report.ProductionEndTime == DateTime.MinValue)
                     {
-                        if (report.ProductionStartTime == null || report.ProductionStartTime == DateTime.MinValue)
-                            report.ProductionStartTime = lastReport.CreatedDate;
+                        var (productionStart, productionEnd) = await GetProductionWindowAsync(report.MachineName);
+                        report.ProductionStartTime = productionStart;
+                        report.ProductionEndTime = productionEnd;
                     }
-                    
-                    // We no longer forcefully set ProductionStartTime or EndTime to DateTime.Now if they are not provided.
-                    // This allows them to remain blank (null) for older/uncontributed reports.
-
 
                     // Set default values for NOT NULL columns not present in the form
                     report.InnerMaterialActual = report.InnerMaterialActual ?? report.InnerMaterial ?? "-";
@@ -2777,20 +2770,12 @@ namespace VelastoProductionSystem.Controllers
                 .Where(l => (l.MachineCode == report.MachineName || l.MachineCode == sensorMachineCode)
                             && l.MetricType == "outer_diameter");
             
-            if (start.HasValue)
-            {
-                logsQuery = logsQuery.Where(l => l.SensorTimestamp >= start.Value);
-            }
-            else
-            {
-                // If no start date, just show the last 24 hours of that machine for safety
-                logsQuery = logsQuery.Where(l => l.SensorTimestamp >= report.CreatedDate.AddHours(-24));
-            }
+            var (defaultStart, defaultEnd) = ResolveProductionWindow(report);
+            var rangeStart = start ?? defaultStart;
+            var rangeEnd = end ?? defaultEnd;
 
-            if (end.HasValue)
-            {
-                logsQuery = logsQuery.Where(l => l.SensorTimestamp <= end.Value);
-            }
+            logsQuery = logsQuery.Where(l => l.SensorTimestamp >= rangeStart);
+            logsQuery = logsQuery.Where(l => l.SensorTimestamp <= rangeEnd);
 
             var logs = await logsQuery
                 .OrderBy(l => l.SensorTimestamp)
@@ -2807,6 +2792,41 @@ namespace VelastoProductionSystem.Controllers
                 lowerLimit = lowerLimit, 
                 logs = logs 
             });
+        }
+
+        /// <summary>
+        /// Jendela produksi 4 jam per mesin.
+        /// Save pertama: Mulai = sekarang, Selesai = sekarang + 4 jam.
+        /// Save berikutnya dalam jendela aktif: pakai Mulai/Selesai yang sama.
+        /// Setelah jendela habis: save baru buka jendela baru.
+        /// </summary>
+        private async Task<(DateTime start, DateTime end)> GetProductionWindowAsync(string? machineName)
+        {
+            var now = DateTime.Now;
+
+            if (!string.IsNullOrWhiteSpace(machineName))
+            {
+                var activeWindow = await _context.ProductionReports
+                    .Where(r => r.MachineName == machineName
+                        && r.ProductionStartTime != null
+                        && r.ProductionEndTime != null
+                        && r.ProductionEndTime > now)
+                    .OrderByDescending(r => r.ProductionStartTime)
+                    .Select(r => new { r.ProductionStartTime, r.ProductionEndTime })
+                    .FirstOrDefaultAsync();
+
+                if (activeWindow?.ProductionStartTime != null && activeWindow.ProductionEndTime != null)
+                    return (activeWindow.ProductionStartTime.Value, activeWindow.ProductionEndTime.Value);
+            }
+
+            return (now, now.AddHours(4));
+        }
+
+        private static (DateTime start, DateTime end) ResolveProductionWindow(ProductionReport report)
+        {
+            var start = report.ProductionStartTime ?? report.CreatedDate;
+            var end = report.ProductionEndTime ?? start.AddHours(4);
+            return (start, end);
         }
     }
 }

@@ -164,6 +164,8 @@
                         var statusStr = item.Status?.ToUpper().Trim() ?? "";
                         var isCompleted = statusStr == "COMPLETED" || statusStr == "OK" || statusStr.Contains("OK");
                         var isNg = statusStr == "NG" || statusStr.Contains("NG");
+                        var evalStart = item.ProductionStartTime ?? item.CreatedDate;
+                        var evalEnd = item.ProductionEndTime ?? evalStart.AddHours(4);
                         var itemCode = item.ItemCode ?? "N/A";
                         var searchText = ((item.DocumentNumber ?? "") + " " + itemCode + " " + (item.HoseType ?? "") + " " + (item.Shift ?? "") + " " + (item.MachineName ?? "") + " " + (item.CreatedBy ?? "")).ToLower();
                         
@@ -220,7 +222,7 @@
                             <td class="text-center pe-4">
                                 <div class="d-flex justify-content-center gap-2">
                                     <button type="button" class="btn btn-action-glass btn-info eval-btn" 
-                                            onclick="openEvalModal(@item.Id, '@(item.ProductionStartTime?.ToString("yyyy-MM-ddTHH:mm"))', '@(item.ProductionEndTime?.ToString("yyyy-MM-ddTHH:mm"))')" 
+                                            onclick="openEvalModal(@item.Id, '@evalStart.ToString("yyyy-MM-ddTHH:mm")', '@evalEnd.ToString("yyyy-MM-ddTHH:mm")')" 
                                             title="Evaluasi Waktu & Sensor">
                                         <i class="bi bi-activity"></i>
                                     </button>
@@ -725,7 +727,21 @@
                 </div>
 
                 <div id="evalChartContainer" style="height: 400px; width: 100%; position: relative;">
+                    <div class="position-absolute top-0 end-0 d-flex gap-1 flex-wrap justify-content-end" style="z-index: 5; padding: 6px;">
+                        <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" onclick="zoomInEvalChart()" title="Zoom In (perbesar)">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" onclick="zoomOutEvalChart()" title="Zoom Out (perkecil)">
+                            <i class="bi bi-zoom-out"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="resetEvalChartZoom()" title="Reset zoom">
+                            <i class="bi bi-arrows-fullscreen"></i>
+                        </button>
+                    </div>
                     <canvas id="evalSensorChart"></canvas>
+                </div>
+                <div class="super-small text-white-50 mt-1 opacity-75">
+                    <i class="bi bi-info-circle me-1"></i>Scroll mouse / pinch untuk zoom sumbu waktu · drag untuk geser · tombol +/− untuk zoom manual
                 </div>
                 <div id="evalLoading" class="text-center text-info py-5" style="display:none;">
                     <div class="spinner-border" role="status"></div>
@@ -738,7 +754,7 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js"></script>
     <script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
     <script src="~/lib/offline-cdn/signalr.min.js"></script>
     <script>
@@ -973,13 +989,37 @@
 
         startSignalR();
 
+        // Register zoom plugin (sama seperti Sensor Monitor Analysis)
+        (function registerEvalZoomPlugin() {
+            const zoomPlugin = window.ChartZoom || window['chartjs-plugin-zoom'];
+            if (window.Chart && zoomPlugin && !Chart.registry.plugins.get('zoom')) {
+                Chart.register(zoomPlugin);
+            }
+        })();
+
         // Evaluasi Modal Logic
         let evalChart = null;
 
+        function zoomInEvalChart() {
+            if (!evalChart || typeof evalChart.zoom !== 'function') return;
+            evalChart.zoom(1.25);
+        }
+
+        function zoomOutEvalChart() {
+            if (!evalChart || typeof evalChart.zoom !== 'function') return;
+            evalChart.zoom(0.8);
+        }
+
+        function resetEvalChartZoom() {
+            if (evalChart && typeof evalChart.resetZoom === 'function') {
+                evalChart.resetZoom();
+            }
+        }
+
         function openEvalModal(id, startTimeStr, endTimeStr) {
             document.getElementById('evalReportId').value = id;
-            document.getElementById('evalStartTime').value = startTimeStr;
-            document.getElementById('evalEndTime').value = endTimeStr;
+            document.getElementById('evalStartTime').value = startTimeStr || '';
+            document.getElementById('evalEndTime').value = endTimeStr || '';
             
             var modal = new bootstrap.Modal(document.getElementById('evalModal'));
             modal.show();
@@ -1041,84 +1081,113 @@
             }
         }
 
+        function evalStdLine(label, val, len, color, dash) {
+            const v = parseFloat(val);
+            if (isNaN(v)) return null;
+            return {
+                label,
+                data: Array(len).fill(v),
+                borderColor: color,
+                borderWidth: 2,
+                borderDash: dash,
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                order: 2
+            };
+        }
+
         function renderChart(data) {
             const ctx = document.getElementById('evalSensorChart').getContext('2d');
             if (evalChart) evalChart.destroy();
 
             const labels = data.logs.map(l => l.time);
-            const values = data.logs.map(l => l.value);
+            const values = data.logs.map(l => parseFloat(l.value));
+            const pointCount = Math.max(labels.length, 1);
 
-            const stdOD = parseFloat(data.stdOd || data.stdOD || 0);
-            const upperLimit = parseFloat(data.upperLimit || 0);
-            const lowerLimit = parseFloat(data.lowerLimit || 0);
+            const stdOD = parseFloat(data.stdOd ?? data.stdOD);
+            const upperLimit = parseFloat(data.upperLimit);
+            const lowerLimit = parseFloat(data.lowerLimit);
+            const hasStd = !isNaN(stdOD);
+            const hasUsl = !isNaN(upperLimit);
+            const hasLsl = !isNaN(lowerLimit);
 
-            document.getElementById('evalModalLabel').innerHTML = `<i class="bi bi-activity me-2"></i>EVALUASI WAKTU & SENSOR OD (Target: ${stdOD}, Max: ${upperLimit}, Min: ${lowerLimit})`;
+            document.getElementById('evalModalLabel').innerHTML =
+                `<i class="bi bi-activity me-2"></i>EVALUASI WAKTU & SENSOR OD` +
+                (hasStd ? ` (Target: ${stdOD}` : '') +
+                (hasUsl ? `, USL: ${upperLimit}` : '') +
+                (hasLsl ? `, LSL: ${lowerLimit}` : '') +
+                (hasStd || hasUsl || hasLsl ? ')' : '');
 
-            if (window['chartjs-plugin-annotation']) {
-                Chart.register(window['chartjs-plugin-annotation']);
-            } else if (window.chartjsPluginAnnotation) {
-                Chart.register(window.chartjsPluginAnnotation);
-            }
+            const datasets = [{
+                label: 'OD Aktual',
+                data: values,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                borderWidth: 2,
+                pointRadius: values.length <= 200 ? 2 : 0,
+                pointHoverRadius: 4,
+                fill: true,
+                tension: 0.1,
+                order: 1
+            }];
 
+            if (hasStd) datasets.push(evalStdLine(`Target SPS (${stdOD})`, stdOD, pointCount, '#22d3ee', [2, 4]));
+            if (hasUsl) datasets.push(evalStdLine(`USL (Spec Max)`, upperLimit, pointCount, '#ff4d4d', [5, 5]));
+            if (hasLsl) datasets.push(evalStdLine(`LSL (Spec Min)`, lowerLimit, pointCount, '#fbbf24', []));
+
+            const refValues = [
+                ...values.filter(v => !isNaN(v)),
+                ...(hasStd ? [stdOD] : []),
+                ...(hasUsl ? [upperLimit] : []),
+                ...(hasLsl ? [lowerLimit] : [])
+            ];
+            const yMin = refValues.length ? Math.min(...refValues) - 0.05 : undefined;
+            const yMax = refValues.length ? Math.max(...refValues) + 0.05 : undefined;
 
             evalChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'OD Aktual',
-                        data: values,
-                        borderColor: '#0ea5e9',
-                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 1,
-                        fill: true,
-                        tension: 0.1
-                    }]
-                },
+                data: { labels, datasets: datasets.filter(Boolean) },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { labels: { color: 'white' } },
-                        annotation: {
-                            annotations: {
-                                stdLine: {
-                                    type: 'line',
-                                    scaleID: 'y',
-                                    yMin: stdOD,
-                                    yMax: stdOD,
-                                    borderColor: '#10b981',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: { display: true, content: `Target OD (${stdOD})`, position: 'start', backgroundColor: '#10b981', color: 'white' }
-                                },
-                                upperLine: {
-                                    type: 'line',
-                                    scaleID: 'y',
-                                    yMin: upperLimit,
-                                    yMax: upperLimit,
-                                    borderColor: '#ef4444',
-                                    borderWidth: 2,
-                                    borderDash: [2, 2],
-                                    label: { display: true, content: `Upper Tol (${upperLimit})`, position: 'start', backgroundColor: '#ef4444', color: 'white' }
-                                },
-                                lowerLine: {
-                                    type: 'line',
-                                    scaleID: 'y',
-                                    yMin: lowerLimit,
-                                    yMax: lowerLimit,
-                                    borderColor: '#ef4444',
-                                    borderWidth: 2,
-                                    borderDash: [2, 2],
-                                    label: { display: true, content: `Lower Tol (${lowerLimit})`, position: 'start', backgroundColor: '#ef4444', color: 'white' }
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: 'white', usePointStyle: true, font: { size: 11 } }
+                        },
+                        tooltip: { mode: 'index', intersect: false },
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                                modifierKey: null
+                            },
+                            zoom: {
+                                wheel: { enabled: true, speed: 0.1 },
+                                pinch: { enabled: true },
+                                drag: { enabled: false },
+                                mode: 'x'
+                            },
+                            limits: {
+                                x: { min: 0, max: Math.max(labels.length - 1, 0) },
+                                y: {
+                                    min: yMin != null ? yMin - 0.5 : undefined,
+                                    max: yMax != null ? yMax + 0.5 : undefined
                                 }
                             }
                         }
                     },
                     scales: {
-                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                        x: { ticks: { color: '#94a3b8', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            suggestedMin: yMin,
+                            suggestedMax: yMax
+                        }
                     }
                 }
             });
