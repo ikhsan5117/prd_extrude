@@ -235,7 +235,7 @@
 
 <!-- ── Modal Edit Sensor ──────────────────────────────────────────── -->
 <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h6 class="modal-title"><i class="bi bi-sliders me-2"></i>Konfigurasi Sensor</h6>
@@ -251,7 +251,16 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Machine Code</label>
-                        <input type="text" class="form-control form-control-sm" id="editMachineCode" placeholder="cth: EXT-01">
+                        <select class="form-select form-select-sm" id="editMachineCode">
+                            <option value="">-- Pilih Mesin --</option>
+                            @if (ViewBag.Machines != null)
+                            {
+                                foreach (var m in ViewBag.Machines)
+                                {
+                                    <option value="@m.KodeMesin">@m.KodeMesin - @m.NamaMesin</option>
+                                }
+                            }
+                        </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Metric Type</label>
@@ -558,7 +567,7 @@ function addSensorCard(cfg) {
     const sensor = {
         id:          id,
         deviceId:    cfg?.deviceId    ?? `SENSOR-${id.toUpperCase()}`,
-        machineCode: cfg?.machineCode ?? 'EXT-01',
+        machineCode: cfg?.machineCode ?? '',
         metricType:  cfg?.metricType  ?? 'outer_diameter',
         targetVal:   cfg?.targetVal   ?? (meta.defaultTarget ?? 25.4),
         noise:       cfg?.noise       ?? (meta.defaultNoise  ?? 0.05),
@@ -695,7 +704,11 @@ function openEdit(sensorId) {
 
     document.getElementById('editSensorId').value    = sensorId;
     document.getElementById('editDeviceId').value    = sensor.deviceId;
-    document.getElementById('editMachineCode').value = sensor.machineCode;
+    
+    const mcElem = document.getElementById('editMachineCode');
+    mcElem.value = sensor.machineCode;
+    if (mcElem.selectedIndex === -1) mcElem.value = ''; // fallback if EXT-01 doesn't exist
+    
     document.getElementById('editMetricType').value  = sensor.metricType;
     document.getElementById('editTargetVal').value   = sensor.targetVal;
     document.getElementById('editNoise').value       = sensor.noise;

@@ -131,6 +131,14 @@ namespace VelastoProductionSystem.Controllers
                 })
                 .ToListAsync();
 
+            var elwpContext = HttpContext.RequestServices.GetRequiredService<ElwpDbContext>();
+            var machines = await elwpContext.ElwpMachines
+                .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
+                .OrderBy(m => m.KodeMesin)
+                .ToListAsync();
+
+            ViewBag.Machines = machines;
+
             var jsonOpts = new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };
             ViewBag.SpsList = System.Text.Json.JsonSerializer.Serialize(spsList, jsonOpts);
 
