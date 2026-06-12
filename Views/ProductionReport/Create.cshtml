@@ -509,7 +509,7 @@
                             </div>
 
                             <!-- YARN SUPPORT -->
-                            <div class="hud-pill-integrated border border-success border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
+                            <div id="yarnMaterialCard" class="hud-pill-integrated border border-success border-opacity-20 p-3 shadow-sm" style="background: rgba(15, 23, 42, 0.8);">
                                 <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-white border-opacity-10">
                                     <div class="label-stack"><span class="label-sub text-success">YARN (SUPPORT)</span><span class="label-main">POLYESTER</span></div>
                                     <button type="button" onclick="addMaterialRow('yarn')" class="btn btn-sm btn-outline-success border-0 rounded-circle p-1" style="width: 28px; height: 28px; background: rgba(16, 185, 129, 0.1);">
@@ -1431,7 +1431,7 @@
                 'ConveyorRatio':       sps.ConveyorRatio || sps.conveyorRatio || formatVal(sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max),
                 'ChillerWaterTemp':    formatVal(sps.ChillerWaterTemp || sps.chillerWaterTemp),
                 'CaterpillarGap':      formatVal(sps.CaterpillarGap || sps.caterpillarGap),
-                'UnsmoothSurface':     formatVal(sps.UnsmoothSurface || sps.unsmoothSurface || 'OK'),
+                'UnsmoothSurface':     formatVal(sps.UnsmoothSurface || sps.unsmoothSurface),
 
                 'NippleDie':    sps.NippleDie || sps.nippleDie || formatVal(sps.Nipple_Asli || sps.nipple_Asli || sps.Nipple || sps.nipple, sps.Nipple_Min || sps.nipple_Min, sps.Nipple_Max || sps.nipple_Max),
                 'TubeDie':      sps.TubeDie   || sps.tubeDie   || formatVal(sps.TubeDie_Asli || sps.tubeDie_Asli || sps.TubeDie || sps.tubeDie, sps.TubeDie_Min || sps.tubeDie_Min, sps.TubeDie_Max || sps.tubeDie_Max),
@@ -1444,7 +1444,7 @@
             for (const [key, val] of Object.entries(specMappings)) {
                 const el = document.getElementById('spec_' + key);
                 const mainInput = document.getElementById('input_' + key);
-                const isNoData = (val === '---' || val === '' || val === null);
+                const isNoData = (!val || val === '---' || val === '' || /^[-|\s]+$/.test(String(val)));
 
                 if (el) {
                     el.innerText = val;
@@ -1532,9 +1532,16 @@
             const nippleCard = document.getElementById('die_card_NippleDie');
             const midCard = document.getElementById('die_card_MiddleDie');
             const spacerCard = document.getElementById('die_card_SpacerDie');
+            const toleranceCard = document.getElementById('die_card_ToleranceDie');
+            const tubeCard = document.getElementById('die_card_TubeDie');
+            const coverCard = document.getElementById('die_card_CoverDie');
+            
             const nippleVal = String(sps.NippleDie || sps.nippleDie || sps.Nipple || sps.nipple || sps.Nipple_Asli || sps.nipple_Asli || '').trim();
             const midVal = String(sps.MiddleDie || sps.middleDie || '').trim();
             const spacerVal = String(sps.SpacerDie || sps.spacerDie || '').trim();
+            const toleranceVal = String(sps.ToleranceDie || sps.toleranceDie || sps.ADistance || sps.aDistance || '').trim();
+            const tubeVal = String(sps.TubeDie || sps.tubeDie || '').trim();
+            const coverVal = String(sps.CoverDie || sps.coverDie || '').trim();
 
             if (nippleCard) {
                 if (isDoubleLayer || !nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
@@ -1563,6 +1570,36 @@
                 } else {
                     spacerCard.classList.remove('d-none');
                     spacerCard.style.display = 'block';
+                }
+            }
+
+            if (toleranceCard) {
+                if (isDoubleLayer || !toleranceVal || toleranceVal === '--' || toleranceVal === '0' || toleranceVal === '') {
+                    toleranceCard.classList.add('d-none');
+                    toleranceCard.style.setProperty('display', 'none', 'important');
+                } else {
+                    toleranceCard.classList.remove('d-none');
+                    toleranceCard.style.display = 'block';
+                }
+            }
+
+            if (tubeCard) {
+                if (!tubeVal || tubeVal === '--' || tubeVal === '0' || tubeVal === '') {
+                    tubeCard.classList.add('d-none');
+                    tubeCard.style.setProperty('display', 'none', 'important');
+                } else {
+                    tubeCard.classList.remove('d-none');
+                    tubeCard.style.display = 'block';
+                }
+            }
+
+            if (coverCard) {
+                if (!coverVal || coverVal === '--' || coverVal === '0' || coverVal === '') {
+                    coverCard.classList.add('d-none');
+                    coverCard.style.setProperty('display', 'none', 'important');
+                } else {
+                    coverCard.classList.remove('d-none');
+                    coverCard.style.display = 'block';
                 }
             }
 
@@ -2742,6 +2779,11 @@
                 if (midCard) {
                     midCard.classList.add('d-none');
                     midCard.style.setProperty('display', 'none', 'important');
+                }
+                const yarnCard = document.getElementById('yarnMaterialCard');
+                if (yarnCard) {
+                    yarnCard.classList.add('d-none');
+                    yarnCard.style.setProperty('display', 'none', 'important');
                 }
             }
         });

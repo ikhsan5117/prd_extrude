@@ -2367,7 +2367,7 @@
                             // Total Thickness: use exact totalTarget, not range string tebalTotal
                             { id: 'totaltx', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
                             { id: 'totalty', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
-                            { id: 'spiral', v: m.spiralPitchSetting || m.spiralPitchDisplay || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
+                            { id: 'spiral', v: m.spiralPitchSetting || m.spiralPitchDisplay, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                         ];
 
                         configs.forEach(p => {
