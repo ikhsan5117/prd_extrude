@@ -2781,7 +2781,8 @@ namespace VelastoProductionSystem.Controllers
                 .OrderBy(l => l.SensorTimestamp)
                 .Select(l => new {
                     time = l.SensorTimestamp.ToString("HH:mm:ss"),
-                    value = l.MetricValue
+                    value = l.MetricValue,
+                    device = l.DeviceId
                 })
                 .ToListAsync();
 

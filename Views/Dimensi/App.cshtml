@@ -2740,6 +2740,9 @@
                     
                     // Reset HUD
                     resetHUD();
+
+                    // Reset UI to 'before selecting planning' state
+                    resetPlanningSelection();
                     
                     setTimeout(() => { status.style.opacity = '0'; }, 3000);
 
@@ -2801,6 +2804,52 @@
                 position: 'top-end',
                 toast: true
             });
+        }
+
+        function resetPlanningSelection() {
+            // Restore default placeholder
+            const placeholder = document.getElementById('selection-placeholder');
+            const workspace = document.getElementById('input-workspace');
+            if (placeholder) {
+                placeholder.style.display = 'block';
+                placeholder.style.borderColor = 'rgba(255,255,255,0.1)';
+                placeholder.innerHTML = `
+                    <div class="mb-4">
+                        <i class="bi bi-cursor-fill text-info" style="font-size: 60px; opacity: 0.5; display: block;"></i>
+                    </div>
+                    <h3 style="color: #fff; font-weight: 800; letter-spacing: 1px;">PLEASE SELECT PLANNING</h3>
+                    <p style="color: #94a3b8; font-size: 14px;">Select an item from the <b>Planning Master</b> above to start dimension inspection.</p>
+                `;
+            }
+            if (workspace) {
+                workspace.style.display = 'none';
+                workspace.style.opacity = '0';
+            }
+
+            // Clear search input
+            const pi = document.getElementById('planningSearch');
+            if (pi) {
+                pi.value = '';
+                pi.readOnly = false;
+                pi.placeholder = 'PILIH PLANNING MASTER...';
+            }
+            window._dimSelectedLabel = null;
+            window._dimSelectedItemCode = null;
+            
+            const itemCodeInput = document.getElementById('itemCode');
+            if (itemCodeInput) itemCodeInput.value = '';
+            
+            const mainSearchInput = document.getElementById('main-item-search');
+            if (mainSearchInput) mainSearchInput.value = '';
+            
+            // Clear headers
+            const docEl = document.getElementById('h-doc'); if (docEl) docEl.innerText = '---';
+            const hoseEl = document.getElementById('h-hose'); if (hoseEl) hoseEl.innerText = '---';
+            const custEl = document.getElementById('h-customer'); if (custEl) custEl.innerText = '---';
+            const specEl = document.getElementById('h-spec'); if (specEl) specEl.innerText = '---';
+            
+            // Re-fetch planning items (in case of updates)
+            refreshPlanningItems();
         }
 
         function finalize() {

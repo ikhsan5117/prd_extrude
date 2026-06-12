@@ -222,7 +222,7 @@
                             <td class="text-center pe-4">
                                 <div class="d-flex justify-content-center gap-2">
                                     <button type="button" class="btn btn-action-glass btn-info eval-btn" 
-                                            onclick="openEvalModal(@item.Id, '@evalStart.ToString("yyyy-MM-ddTHH:mm")', '@evalEnd.ToString("yyyy-MM-ddTHH:mm")')" 
+                                            onclick="openEvalModal(@item.Id, '@evalStart.ToString("yyyy-MM-ddTHH:mm")', '@evalEnd.ToString("yyyy-MM-ddTHH:mm")', '@(item.MachineName)', '@(item.MachineName)')" 
                                             title="Evaluasi Waktu & Sensor">
                                         <i class="bi bi-activity"></i>
                                     </button>
@@ -993,11 +993,10 @@
                 const doc = parser.parseFromString(html, 'text/html');
                 
                 // Update table body
-                const newTbody = doc.querySelector('.sapphire-table tbody');
-                const oldTbody = document.querySelector('.sapphire-table tbody');
-                if (newTbody && oldTbody) {
-                    oldTbody.innerHTML = newTbody.innerHTML;
-                    bindEvents(); // Re-bind listeners for new rows
+                const newBody = doc.querySelector('tbody');
+                if (newBody) {
+                    document.querySelector('tbody').innerHTML = newBody.innerHTML;
+                    bindEvents(); // Rebind delete events
                 }
                 
                 // Update stats cards (Total, Operators, Machines)
@@ -1013,6 +1012,100 @@
                 window.location.reload();
             }
         }
+
+        connection.on("SensorDataReceived", function (data) {
+            // Show global debug toast
+            const dbg = document.getElementById('dbg-toast');
+            if (!dbg) {
+                const d = document.createElement('div');
+                d.id = 'dbg-toast';
+                d.style = 'position:fixed; bottom:20px; left:20px; background:rgba(0,0,0,0.8); color:yellow; padding:8px; border-radius:10px; font-size:11px; z-index:9999; pointer-events:none;';
+                d.innerHTML = `RX: ${data.machineCode} | ${data.metricValue}`;
+                document.body.appendChild(d);
+            } else {
+                dbg.innerHTML = `RX: ${data.machineCode} | ${data.metricValue}`;
+            }
+
+            // Live sync for eval chart
+            if (evalChart) {
+                let smc = currentEvalMachineName || currentEvalMachineCode || "";
+                if (smc.includes("CHS2L")) smc = "CHS 2 Layer";
+                else if (smc.includes("CHS3L")) smc = "CHS 3 Layer";
+                else if (smc.includes("DL")) smc = "Non-CHS (DL)";
+
+                const dataMC = (data.machineCode || "").toLowerCase();
+                const curMC = (currentEvalMachineCode || "").toLowerCase();
+                const curMN = (currentEvalMachineName || "").toLowerCase();
+                const smcLow = smc.toLowerCase();
+
+                const isMatch = dataMC === curMC || dataMC === curMN || smcLow === dataMC ||
+                    (curMC && dataMC.includes(curMC)) || (dataMC && curMC.includes(dataMC)) ||
+                    (curMN && dataMC.includes(curMN)) || (dataMC && curMN.includes(dataMC));
+                    
+                if (isMatch) {
+                    if (data.metricType && data.metricType.toLowerCase() !== 'outer_diameter') return;
+
+                    const ts = data.timestamp;
+                    const val = parseFloat(data.metricValue);
+                    const dev = data.deviceId || 'Sensor';
+                    
+                    // Show a quick unobtrusive toast to let the user know data is streaming
+                    const toast = document.getElementById('live-indicator-toast');
+                    if (!toast) {
+                        const t = document.createElement('div');
+                        t.id = 'live-indicator-toast';
+                        t.style = 'position:fixed; bottom:20px; right:20px; background:rgba(16,185,129,0.9); color:white; padding:8px 16px; border-radius:20px; font-size:12px; z-index:9999; box-shadow:0 4px 6px rgba(0,0,0,0.3); pointer-events:none; transition: opacity 0.5s;';
+                        t.innerHTML = `<i class="bi bi-broadcast pulse-white me-2"></i>Live Data: ${ts} (${val})`;
+                        document.body.appendChild(t);
+                    } else {
+                        toast.innerHTML = `<i class="bi bi-broadcast pulse-white me-2"></i>Live Data: ${ts} (${val})`;
+                        toast.style.opacity = '1';
+                        clearTimeout(toast.hideTimeout);
+                        toast.hideTimeout = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+                    }
+
+                    if (!evalChart.data.labels.includes(ts)) {
+                        evalChart.data.labels.push(ts);
+                        
+                        // Push correct values instead of null for standard lines
+                        evalChart.data.datasets.forEach(ds => {
+                            if (ds.label.includes('Target SPS')) {
+                                ds.data.push(ds.data[0]); // replicate target
+                            } else if (ds.label.includes('USL')) {
+                                ds.data.push(ds.data[0]);
+                            } else if (ds.label.includes('LSL')) {
+                                ds.data.push(ds.data[0]);
+                            } else {
+                                ds.data.push(null);
+                            }
+                        });
+                    }
+                    
+                    const labelIdx = evalChart.data.labels.indexOf(ts);
+                    let ds = evalChart.data.datasets.find(d => d.label === `OD Aktual (${dev})`);
+                    
+                    if (!ds) {
+                        const palette = ['#0ea5e9', '#fd7e14', '#20c997', '#6f42c1', '#d63384', '#0dcaf0'];
+                        const devColor = palette[evalChart.data.datasets.length % palette.length];
+                        ds = {
+                            label: `OD Aktual (${dev})`,
+                            data: new Array(evalChart.data.labels.length).fill(null),
+                            borderColor: devColor,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            tension: 0.1,
+                            spanGaps: true
+                        };
+                        evalChart.data.datasets.push(ds);
+                    }
+                    
+                    ds.data[labelIdx] = val;
+                    evalChart.update();
+                }
+            }
+        });
 
         startSignalR();
 
@@ -1043,10 +1136,15 @@
             }
         }
 
-        function openEvalModal(id, startTimeStr, endTimeStr) {
+        let currentEvalMachineCode = '';
+        let currentEvalMachineName = '';
+
+        function openEvalModal(id, startTimeStr, endTimeStr, machineName, machineCode) {
             document.getElementById('evalReportId').value = id;
             document.getElementById('evalStartTime').value = startTimeStr || '';
             document.getElementById('evalEndTime').value = endTimeStr || '';
+            currentEvalMachineName = machineName || '';
+            currentEvalMachineCode = machineCode || '';
             
             var modal = new bootstrap.Modal(document.getElementById('evalModal'));
             modal.show();
@@ -1125,43 +1223,101 @@
         }
 
         function renderChart(data) {
-            const ctx = document.getElementById('evalSensorChart').getContext('2d');
-            if (evalChart) evalChart.destroy();
-
-            const labels = data.logs.map(l => l.time);
+            let labels = data.logs.map(l => l.time);
             const values = data.logs.map(l => parseFloat(l.value));
+
+            // Generate placeholder labels if data is completely empty so the grid can render
+            if (labels.length === 0) {
+                const startStr = document.getElementById('evalStartTime').value;
+                const endStr = document.getElementById('evalEndTime').value;
+                if (startStr && endStr) {
+                    const s = new Date(startStr);
+                    const e = new Date(endStr);
+                    const step = (e - s) / 4;
+                    for (let i = 0; i <= 4; i++) {
+                        const d = new Date(s.getTime() + step * i);
+                        labels.push(d.toTimeString().split(' ')[0].substring(0, 5));
+                    }
+                } else {
+                    labels = ["00:00", "01:00", "02:00", "03:00", "04:00"];
+                }
+            }
+
             const pointCount = Math.max(labels.length, 1);
 
             const stdOD = parseFloat(data.stdOd ?? data.stdOD);
             const upperLimit = parseFloat(data.upperLimit);
             const lowerLimit = parseFloat(data.lowerLimit);
-            const hasStd = !isNaN(stdOD);
-            const hasUsl = !isNaN(upperLimit);
-            const hasLsl = !isNaN(lowerLimit);
+            const hasStd = !isNaN(stdOD) && stdOD > 0;
+            const hasUsl = !isNaN(upperLimit) && upperLimit > 0;
+            const hasLsl = !isNaN(lowerLimit) && lowerLimit > 0;
 
             document.getElementById('evalModalLabel').innerHTML =
                 `<i class="bi bi-activity me-2"></i>EVALUASI WAKTU & SENSOR OD` +
+                (currentEvalMachineName ? ` - [${currentEvalMachineName}]` : '') +
                 (hasStd ? ` (Target: ${stdOD}` : '') +
                 (hasUsl ? `, USL: ${upperLimit}` : '') +
                 (hasLsl ? `, LSL: ${lowerLimit}` : '') +
                 (hasStd || hasUsl || hasLsl ? ')' : '');
 
-            const datasets = [{
-                label: 'OD Aktual',
-                data: values,
-                borderColor: '#0ea5e9',
-                backgroundColor: 'rgba(14, 165, 233, 0.1)',
-                borderWidth: 2,
-                pointRadius: values.length <= 200 ? 2 : 0,
-                pointHoverRadius: 4,
-                fill: true,
-                tension: 0.1,
-                order: 1
-            }];
+            // Ensure chart container is visible
+            const container = document.getElementById('evalChartContainer');
+            container.style.display = 'block';
+            container.innerHTML = `<canvas id="evalSensorChart"></canvas>`;
+
+            const ctx = document.getElementById('evalSensorChart').getContext('2d');
+            if (evalChart) evalChart.destroy();
+
+            const datasets = [];
+            const deviceGroups = {};
+            
+            data.logs.forEach((d, i) => {
+                const dev = d.device || 'Sensor';
+                if (!deviceGroups[dev]) {
+                    deviceGroups[dev] = { 
+                        data: new Array(data.logs.length).fill(null)
+                    };
+                }
+                deviceGroups[dev].data[i] = parseFloat(d.value);
+            });
+
+            const palette = ['#0ea5e9', '#fd7e14', '#20c997', '#6f42c1', '#d63384', '#0dcaf0'];
+            let cIdx = 0;
+
+            for (const [dev, group] of Object.entries(deviceGroups)) {
+                const devColor = palette[cIdx % palette.length];
+                
+                datasets.push({
+                    label: `OD Aktual (${dev})`,
+                    data: group.data,
+                    borderColor: devColor,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointBackgroundColor: devColor,
+                    pointBorderColor: devColor,
+                    pointRadius: data.logs.length <= 200 ? 2 : 0,
+                    pointHoverRadius: 4,
+                    spanGaps: true,
+                    tension: 0.1,
+                    fill: false,
+                    order: 1
+                });
+                cIdx++;
+            }
 
             if (hasStd) datasets.push(evalStdLine(`Target SPS (${stdOD})`, stdOD, pointCount, '#22d3ee', [2, 4]));
             if (hasUsl) datasets.push(evalStdLine(`USL (Spec Max)`, upperLimit, pointCount, '#ff4d4d', [5, 5]));
-            if (hasLsl) datasets.push(evalStdLine(`LSL (Spec Min)`, lowerLimit, pointCount, '#fbbf24', []));
+            if (hasLsl) datasets.push(evalStdLine(`LSL (Spec Min)`, lowerLimit, pointCount, '#ffb703', [5, 5]));
+
+            // Ensure there is at least one dataset so the grid renders
+            if (datasets.length === 0) {
+                datasets.push({
+                    label: 'No Data',
+                    data: new Array(labels.length).fill(null),
+                    borderColor: 'transparent',
+                    pointRadius: 0
+                });
+            }
 
             const refValues = [
                 ...values.filter(v => !isNaN(v)),
