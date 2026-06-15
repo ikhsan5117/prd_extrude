@@ -979,7 +979,7 @@
                             <td class="text-primary fw-bold">@(item.CuttingSpeed_Asli?.ToString("F2") ?? "")</td>
                             <td class="text-danger">@(item.CuttingSpeed_Max?.ToString("F2") ?? "")</td>
                             <td class="text-success">@(item.TakeUpConveyorSpeed_Min?.ToString("F2") ?? "")</td>
-                            <td class="text-primary fw-bold">@(item.TakeUpConveyorSpeed_Asli?.ToString("F2") ?? "")</td>
+                            <td class="text-primary fw-bold">@(item.TakeUpConveyorSpeed_Asli == null && !string.IsNullOrEmpty(item.TakeUpConveyorSpeed) ? item.TakeUpConveyorSpeed : (item.TakeUpConveyorSpeed_Asli?.ToString("F2") ?? ""))</td>
                             <td class="text-danger">@(item.TakeUpConveyorSpeed_Max?.ToString("F2") ?? "")</td>
                             <td class="text-success">@(item.CoolConveyorSpeed_Min?.ToString("F2") ?? "")</td>
                             <td class="text-primary fw-bold">@(item.CoolConveyorSpeed_Asli?.ToString("F2") ?? "")</td>
