@@ -1468,6 +1468,8 @@
                             mainInput.value = "";
                             mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '0.4', 'important');
                             mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'none', 'important');
+                            const colParent = mainInput.closest('.col-6');
+                            if (colParent) colParent.style.display = 'none';
                         }
                     } else {
                         if (mainInput) {
@@ -1475,6 +1477,8 @@
                             mainInput.placeholder = "0.00";
                             mainInput.closest('.param-tile-modern')?.style.setProperty('opacity', '1', 'important');
                             mainInput.closest('.param-tile-modern')?.style.setProperty('pointer-events', 'auto', 'important');
+                            const colParent = mainInput.closest('.col-6');
+                            if (colParent) colParent.style.display = '';
                         }
                     }
 
@@ -1496,6 +1500,8 @@
                                 if (container) {
                                     container.style.opacity = "0.4";
                                     container.style.pointerEvents = "none";
+                                    const colParent = container.closest('.die-container-item');
+                                    if (colParent) colParent.style.display = 'none';
                                 }
                             } else {
                                 document.getElementsByName(d.init)[0].disabled = false;
@@ -1503,6 +1509,8 @@
                                 if (container) {
                                     container.style.opacity = "1";
                                     container.style.pointerEvents = "auto";
+                                    const colParent = container.closest('.die-container-item');
+                                    if (colParent) colParent.style.display = '';
                                 }
                             }
                             checkDieStatus('spec_' + key, d.field, d.init, d.final);
@@ -1521,6 +1529,18 @@
                     }
                 }
             }
+
+            // Hide parameter sections if all their tiles are hidden
+            document.querySelectorAll('#parameterCardsContainer .col-12.col-xxl-6').forEach(colWrapper => {
+                const paramRow = colWrapper.querySelector('.row.g-4');
+                if (paramRow) {
+                    const visibleCols = Array.from(paramRow.children).filter(col => col.style.display !== 'none');
+                    colWrapper.style.display = visibleCols.length === 0 ? 'none' : '';
+                }
+            });
+            
+            // Re-validate global logic
+            setTimeout(validateMaterialList, 100);
 
             // EXPLICIT HIDDEN LOGIC FOR DOUBLE LAYER MACHINES
             const machineHidden = document.getElementById('MachineName')?.value || '';

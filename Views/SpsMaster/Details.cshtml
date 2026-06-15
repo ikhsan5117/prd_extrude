@@ -858,3 +858,131 @@
 </div>
 
 </div><!-- End .sps-container -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const table = document.querySelector(".param-table");
+    if (!table) return;
+
+    function isValueEmpty(text) {
+        text = text.trim();
+        // Basic empty checks
+        if (!text || text === "-" || text === "0" || text === "0.0" || text === "0.00") return true;
+        
+        // Single label with no data (e.g. "ø Tube (mm): ")
+        if (text.match(/:\s*$/)) return true;
+        
+        // Multiple labels separated by | (e.g. "Inner:  | Middle:  | Outer: ")
+        if (text.includes("|")) {
+            const parts = text.split("|");
+            let hasDataInParts = false;
+            for (let part of parts) {
+                part = part.trim();
+                // If a part has data, it won't end with a colon
+                if (!part.match(/:\s*$/) && part !== "") {
+                    hasDataInParts = true;
+                }
+            }
+            if (!hasDataInParts) return true;
+        }
+        
+        return false;
+    }
+
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    let currentGroup = [];
+    let groups = [];
+    
+    // Group rows by the item number in the first column
+    rows.forEach(row => {
+        const firstCell = row.querySelector("td:first-child");
+        const isNewGroup = firstCell && !isNaN(parseInt(firstCell.textContent.trim())) && !firstCell.hasAttribute("colspan");
+        
+        if (isNewGroup) {
+            if (currentGroup.length > 0) groups.push(currentGroup);
+            currentGroup = [row];
+        } else {
+            currentGroup.push(row);
+        }
+    });
+    if (currentGroup.length > 0) groups.push(currentGroup);
+
+    groups.forEach(group => {
+        let visibleRows = [];
+        let hiddenRows = [];
+        
+        group.forEach((row, rowIndex) => {
+            const isFirstInGroup = (rowIndex === 0);
+            let hasData = false;
+            
+            const cells = Array.from(row.children);
+            
+            // Determine where the data columns start
+            let startIdx = isFirstInGroup ? 3 : 2;
+            if (!isFirstInGroup && cells.length > 0 && cells[0].textContent.trim() === "") {
+                startIdx = 2; 
+            }
+            
+            // Loop through data cells to check if there is any non-empty data
+            for (let i = startIdx; i < cells.length; i++) {
+                const cell = cells[i];
+                const txt = cell.textContent.trim();
+                const ignoreList = [
+                    "✓", "O", "Tiap Batch", "Awal Proses", "Preparation", 
+                    "Equipment", "Preparation Equipment", "1x/Bulan", 
+                    "Dies maintenance schedule", "1x / 3 Bulan", "Display", 
+                    "Awal/Akhir", "EPC Parameter setting", "Awal Prn Produce", 
+                    "Tension check sheet", "EPC"
+                ];
+                
+                // If it's not a fixed checkmark or schedule text, evaluate it
+                if (txt && !ignoreList.includes(txt) && !ignoreList.includes(txt.replace(/\n/g, ' '))) {
+                    if (!isValueEmpty(txt)) {
+                        hasData = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (hasData) {
+                visibleRows.push(row);
+            } else {
+                hiddenRows.push(row);
+            }
+        });
+        
+        if (visibleRows.length === 0) {
+            // Hide the entire group if no rows have data
+            group.forEach(r => r.style.display = "none");
+        } else {
+            // Hide only the empty rows
+            hiddenRows.forEach(r => r.style.display = "none");
+            
+            const firstRow = group[0];
+            const firstVisibleRow = visibleRows[0];
+            
+            // Adjust rowspans so the table structure doesn't break
+            const rowspanCells = Array.from(firstRow.children).filter(c => parseInt(c.getAttribute('rowspan')) > 1 || c.rowSpan > 1);
+            
+            if (firstRow !== firstVisibleRow) {
+                // If the very first row was hidden, move its rowspan cells to the new first visible row
+                rowspanCells.forEach(c => {
+                    c.setAttribute('rowspan', visibleRows.length);
+                    // Place the 'No' cell at the beginning, and 'Schedule/Check' cells at the end
+                    if (c === firstRow.firstElementChild) {
+                        firstVisibleRow.insertBefore(c, firstVisibleRow.firstElementChild);
+                    } else {
+                        firstVisibleRow.appendChild(c);
+                    }
+                });
+            } else {
+                // Otherwise just update the rowspan value
+                rowspanCells.forEach(c => c.setAttribute('rowspan', visibleRows.length));
+            }
+        }
+    });
+});
+</script>
