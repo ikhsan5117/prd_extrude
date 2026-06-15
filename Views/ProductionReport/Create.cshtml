@@ -40,9 +40,9 @@
                     <div class="row g-3 align-items-center">
                         <div class="col-md-7">
                             <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height: 60px; position: relative; background: #0f172a; border-radius: 8px;">
-                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
+                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center" style="cursor: pointer;" onclick="document.getElementById('planningSearch').focus(); openPlanningDropdown();">
                                     <div class="d-flex align-items-center gap-2 mb-0">
-                                        <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-list-check me-2"></i>PLANNING MASTER</label>
+                                        <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px; cursor: pointer;"><i class="bi bi-list-check me-2"></i>PLANNING MASTER</label>
                                         @{
                                             var sessionMachine = Context.Session.GetString("MachineName");
                                             var sessionIsAdmin = Context.Session.GetString("IsAdmin") == "true";
@@ -60,7 +60,7 @@
                                             </span>
                                         }
                                     </div>
-                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none; cursor: pointer;" placeholder="PILIH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="openPlanningDropdown()" autocomplete="off" readonly />
+                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none; cursor: pointer;" placeholder="PILIH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="openPlanningDropdown()" onclick="openPlanningDropdown()" autocomplete="off" readonly />
                                 </div>
                             </div>
                         </div>
@@ -1540,7 +1540,7 @@
             });
             
             // Re-validate global logic
-            setTimeout(validateMaterialList, 100);
+            setTimeout(revalidateAllInputs, 100);
 
             // EXPLICIT HIDDEN LOGIC FOR DOUBLE LAYER MACHINES
             const machineHidden = document.getElementById('MachineName')?.value || '';
@@ -2715,6 +2715,7 @@
                 searchInput.value = '';
                 searchInput.readOnly = true;
                 searchInput.placeholder = 'PILIH PLANNING MASTER...';
+                searchInput.blur();
             }
             window._selectedPlanningLabel = null;
         }
@@ -2755,17 +2756,29 @@
                 setupAutoSave(normalCode);  // begin tracking changes
 
             } catch (e) {
-                console.warn(e.message);
-                lockForm();
-                Swal.fire({
-                    title: 'PROTOCOL UNKNOWN',
-                    text: `SPS Masterlist untuk item [${code}] belum terdaftar. Form dikunci — silakan pilih item lain.`,
-                    icon: 'warning',
-                    background: '#020617',
-                    color: '#f87171',
-                    confirmButtonColor: '#ef4444',
-                    confirmButtonText: 'PILIH ULANG'
-                });
+                console.warn(e);
+                if (e.message === 'PROTOCOL NOT FOUND') {
+                    lockForm();
+                    Swal.fire({
+                        title: 'PROTOCOL UNKNOWN',
+                        text: `SPS Masterlist untuk item [${code}] belum terdaftar. Form dikunci — silakan pilih item lain.`,
+                        icon: 'warning',
+                        background: '#020617',
+                        color: '#f87171',
+                        confirmButtonColor: '#ef4444',
+                        confirmButtonText: 'PILIH ULANG'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'SYSTEM ERROR',
+                        text: `Terjadi kesalahan saat memproses data SPS: ${e.message}`,
+                        icon: 'error',
+                        background: '#020617',
+                        color: '#f87171',
+                        confirmButtonColor: '#ef4444',
+                        confirmButtonText: 'OK'
+                    });
+                }
             }
         }
 
