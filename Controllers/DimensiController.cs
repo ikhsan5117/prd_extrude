@@ -5,6 +5,7 @@ using VelastoProductionSystem.Models;
 using System.Text.Json;
 
 using VelastoProductionSystem.Hubs;
+using VelastoProductionSystem.Helpers;
 using Microsoft.AspNetCore.SignalR;
 
 namespace VelastoProductionSystem.Controllers
@@ -79,38 +80,8 @@ namespace VelastoProductionSystem.Controllers
             return View("App", report);
         }
 
-        private string GetCurrentShift()
-        {
-            try
-            {
-                var shifts = _context.ShiftMasters.ToList();
-                if (shifts == null || !shifts.Any()) 
-                {
-                    return DateTime.Now.Hour >= 7 && DateTime.Now.Hour < 19 ? "Shift 1" : "Shift 2";
-                }
-
-                var now = DateTime.Now.TimeOfDay;
-
-                var shiftInfos = shifts.Select(s => {
-                    TimeSpan.TryParse(s.StartTime ?? "07:30", out var start);
-                    return new { Name = s.ShiftName ?? "Shift", Start = start };
-                }).OrderBy(s => s.Start).ToList();
-
-                for (int i = 0; i < shiftInfos.Count; i++)
-                {
-                    var current = shiftInfos[i];
-                    var next = (i + 1 < shiftInfos.Count) ? shiftInfos[i + 1] : shiftInfos[0];
-
-                    if (current.Start < next.Start) {
-                        if (now >= current.Start && now < next.Start) return current.Name;
-                    } else {
-                        if (now >= current.Start || now < next.Start) return current.Name;
-                    }
-                }
-                return shiftInfos.FirstOrDefault()?.Name ?? "Shift 1";
-            }
-            catch { return "Shift 1"; }
-        }
+        private string GetCurrentShift() =>
+            ShiftHelper.GetCurrentShift(_context.ShiftMasters.ToList());
 
         [HttpGet]
         public async Task<JsonResult> GetSpsStandard(string hoseType, string? machineCode)
@@ -801,7 +772,7 @@ namespace VelastoProductionSystem.Controllers
                         CreatedDate = DateTime.Now,
                         CreatedBy = HttpContext.Session.GetString("UserName") ?? "QC Operator",
                         MachineName = HttpContext.Session.GetString("MachineName"),
-                        Shift = !string.IsNullOrEmpty(data.Shift) ? data.Shift : GetCurrentShift()
+                        Shift = ShiftHelper.NormalizeShiftLabel(!string.IsNullOrEmpty(data.Shift) ? data.Shift : GetCurrentShift())
                     };
                     _context.DimensionReports.Add(report);
                     await _context.SaveChangesAsync();
@@ -826,7 +797,8 @@ namespace VelastoProductionSystem.Controllers
                 report.ByPass = data.ByPass ?? "";
                 report.CustomerName = data.CustomerName ?? "-";
                 report.Yarn = data.Yarn ?? "";
-                report.Shift = !string.IsNullOrEmpty(data.Shift) ? data.Shift : (report.Shift ?? GetCurrentShift());
+                report.Shift = ShiftHelper.NormalizeShiftLabel(
+                    !string.IsNullOrEmpty(data.Shift) ? data.Shift : (report.Shift ?? GetCurrentShift()));
                 
                 // Explicitly mark entity as modified to ensure EF tracks changes
                 _context.Entry(report).State = Microsoft.EntityFrameworkCore.EntityState.Modified;

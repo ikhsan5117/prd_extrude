@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
+using VelastoProductionSystem.Helpers;
 using VelastoProductionSystem.Models;
 using VelastoProductionSystem.Hubs;
 using Microsoft.AspNetCore.SignalR;
@@ -297,7 +298,7 @@ namespace VelastoProductionSystem.Controllers
                 HoseType = master.HoseType ?? "-",
                 Dimension = master.Dimensi ?? "-",
                 Yarn = master.InnerTube ?? "-",
-                Shift = "Shift 1",
+                Shift = ShiftHelper.GetCurrentShift(await _context.ShiftMasters.ToListAsync()),
                 SpsId = null, // legacy id, use DocumentNumber instead
                 CreatedBy = HttpContext.Session.GetString("UserName") ?? "Operator"
             };
@@ -946,10 +947,7 @@ namespace VelastoProductionSystem.Controllers
 
             var formattedDate = $"{year}-{monthNumber}-{day}";
 
-            string normalizedShift = shiftString;
-            if (normalizedShift == "1") normalizedShift = "I";
-            else if (normalizedShift == "2") normalizedShift = "II";
-            else if (normalizedShift == "3") normalizedShift = "III";
+            string normalizedShift = ShiftHelper.NormalizeShiftLabel(shiftString);
 
             return (formattedDate, normalizedShift);
         }
@@ -970,7 +968,7 @@ namespace VelastoProductionSystem.Controllers
                     DocumentNumber = dto.DocumentNumber ?? "AUTO",
                     RevisionNumber = dto.RevisionNumber,
                     ProductionDate = DateTime.TryParse(dto.ProductionDate, out var dt) ? dt : DateTime.Now,
-                    Shift = dto.Shift,
+                    Shift = ShiftHelper.NormalizeShiftLabel(dto.Shift),
                     CustomerName = dto.CustomerName,
                     HoseType = dto.HoseType,
                     MachineName = machineName,
@@ -1152,7 +1150,7 @@ namespace VelastoProductionSystem.Controllers
                 report.DocumentNumber = dto.DocumentNumber ?? report.DocumentNumber;
                 report.RevisionNumber = dto.RevisionNumber;
                 if (DateTime.TryParse(dto.ProductionDate, out var dt)) report.ProductionDate = dt;
-                report.Shift = dto.Shift;
+                report.Shift = ShiftHelper.NormalizeShiftLabel(dto.Shift);
                 report.CustomerName = dto.CustomerName;
                 report.HoseType = dto.HoseType;
                 report.SpsId = SanitizeLegacySpsId(dto.SpsId);
@@ -1354,6 +1352,7 @@ namespace VelastoProductionSystem.Controllers
                 ProductionDate = DateTime.Today,
                 Status = "NOW PRODUCING",
                 Yarn = "---",
+                Shift = ShiftHelper.GetCurrentShift(await _context.ShiftMasters.ToListAsync()),
                 CreatedBy = HttpContext.Session.GetString("UserName") ?? "Operator"
             });
         }
@@ -1376,19 +1375,9 @@ namespace VelastoProductionSystem.Controllers
                     report.CreatedBy = report.CreatedBy ?? "Operator 1";
                     
                     if (string.IsNullOrEmpty(report.Shift))
-                    {
-                        var shifts = await _context.ShiftMasters.OrderBy(s => s.StartTime).ToListAsync();
-                        if (shifts.Any())
-                        {
-                            var now = DateTime.Now.TimeOfDay;
-                            var currentShift = shifts.LastOrDefault(s => TimeSpan.Parse(s.StartTime) <= now) ?? shifts.Last();
-                            report.Shift = currentShift.ShiftName;
-                        }
-                        else
-                        {
-                            report.Shift = "SHIFT 1";
-                        }
-                    }
+                        report.Shift = ShiftHelper.GetCurrentShift(await _context.ShiftMasters.ToListAsync());
+                    else
+                        report.Shift = ShiftHelper.NormalizeShiftLabel(report.Shift);
                     report.CustomerName = report.CustomerName ?? "-";
                     report.CreatedDate = DateTime.Now;
                     report.Status = "NOW PRODUCING";
@@ -1440,6 +1429,8 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (report == null) return NotFound();
 
+            report.Shift = ShiftHelper.NormalizeShiftLabel(report.Shift);
+
             ViewBag.StandardParameterSettings = new SelectList(
                 await _context.SpsNoDocs
                     .Select(s => new { Id = s.DocumentNumber, Display = "[" + s.DocumentNumber + "] - " + s.HoseType })
@@ -1479,7 +1470,7 @@ namespace VelastoProductionSystem.Controllers
                     existing.DocumentNumber = report.DocumentNumber;
                     existing.ProductionDate = report.ProductionDate;
                     existing.RevisionNumber = report.RevisionNumber;
-                    existing.Shift = report.Shift;
+                    existing.Shift = ShiftHelper.NormalizeShiftLabel(report.Shift);
                     existing.CustomerName = report.CustomerName;
                     existing.HoseType = report.HoseType;
                     existing.Dimension = report.Dimension;
@@ -1771,7 +1762,7 @@ namespace VelastoProductionSystem.Controllers
                         OuterMaterialActual = "-",
                         YarnActual = "-",
                         CreatedBy = data.CreatedBy ?? "Operator",
-                        Shift = data.Shift ?? "I",
+                        Shift = ShiftHelper.NormalizeShiftLabel(data.Shift ?? ShiftHelper.GetCurrentShift(await _context.ShiftMasters.ToListAsync())),
                         ItemCode = data.ItemCode,
                         SpsId = data.SpsId
                     };

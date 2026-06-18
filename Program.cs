@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
+using VelastoProductionSystem.Helpers;
 using VelastoProductionSystem.WebSockets;
 using VelastoProductionSystem.Hubs;
 using VelastoProductionSystem.Services;
@@ -74,6 +75,7 @@ using (var scope = app.Services.CreateScope())
         EnsureSpsDocumentActivationColumn(context);
 
         DataSeeder.SeedData(context, elwpContext);
+        await ShiftHelper.EnsureCompanyShiftsAsync(context);
     }
     catch (Exception ex)
     {

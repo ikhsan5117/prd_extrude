@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VelastoProductionSystem.Data;
+using VelastoProductionSystem.Helpers;
 using VelastoProductionSystem.Models;
 
 namespace VelastoProductionSystem.Controllers
@@ -17,7 +18,7 @@ namespace VelastoProductionSystem.Controllers
         public async Task<IActionResult> Index()
         {
             await EnsureTableExists();
-            await EnsureDefaultShifts();
+            await ShiftHelper.EnsureCompanyShiftsAsync(_context);
             
             ViewBag.Shifts = await _context.ShiftMasters.OrderBy(x => x.ShiftName).ToListAsync();
             var machines = await _context.Machines.OrderBy(x => x.Line).ThenBy(x => x.MachineCode).ToListAsync();
@@ -123,19 +124,6 @@ namespace VelastoProductionSystem.Controllers
                 TempData["SuccessMessage"] = "Shift berhasil dihapus.";
             }
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task EnsureDefaultShifts()
-        {
-            if (!await _context.ShiftMasters.AnyAsync())
-            {
-                _context.ShiftMasters.AddRange(new List<ShiftMaster> {
-                    new ShiftMaster { ShiftName = "SHIFT 1", StartTime = "07:00" },
-                    new ShiftMaster { ShiftName = "SHIFT 2", StartTime = "15:30" },
-                    new ShiftMaster { ShiftName = "SHIFT 3", StartTime = "22:30" }
-                });
-                await _context.SaveChangesAsync();
-            }
         }
 
         private async Task EnsureTableExists()

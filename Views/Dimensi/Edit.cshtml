@@ -1361,7 +1361,7 @@
                 hoseEl.innerText = item.itemCode; // Initially same as itemCode, will be updated by loadMaster
             }
             
-            if (item.date) setPlanningDateAndShift(item.date, item.shift);
+            if (item.date || item.shift) setPlanningDateAndShift(item.date, item.shift);
             const manualInput = document.getElementById('manualItemSearch');
             if (manualInput) manualInput.value = item.itemCode;
             
@@ -1404,28 +1404,32 @@
             return `${day} ${month} ${year}`;
         }
 
+        function normalizePlanningShift(shiftValue) {
+            if (!shiftValue) return '';
+            const raw = shiftValue.toString().trim().toUpperCase();
+            const num = raw.replace(/SHIFT/gi, '').trim();
+            if (num === '1' || num === 'I' || raw.includes('SIANG') || raw.includes('ONE')) return 'Shift 1';
+            if (num === '2' || num === 'II' || raw.includes('SORE') || raw.includes('TWO')) return 'Shift 2';
+            if (num === '3' || num === 'III' || raw.includes('MALAM') || raw.includes('THREE')) return 'Shift 3';
+            return shiftValue.toString().trim();
+        }
+
         function setPlanningDateAndShift(dateValue, shiftValue) {
             const dateEl = document.getElementById('h-date');
             const shiftEl = document.getElementById('h-shift');
-            if (dateEl) {
+            if (dateEl && dateValue) {
                 const formatted = formatDisplayDate(dateValue);
                 if (formatted) dateEl.innerText = formatted;
             }
             if (shiftEl && shiftValue) {
-                const normalized = shiftValue.toUpperCase();
-                if (normalized === 'I') shiftEl.innerText = 'Shift 1';
-                else if (normalized === 'II') shiftEl.innerText = 'Shift 2';
-                else if (normalized === 'III') shiftEl.innerText = 'Shift 3';
-                else shiftEl.innerText = shiftValue;
+                shiftEl.innerText = normalizePlanningShift(shiftValue);
             }
         }
 
         function toggleShift() {
             const el = document.getElementById('h-shift');
-            const current = el.innerText;
-            let next = "Shift 1";
-            if (current === "Shift 1") next = "Shift 2";
-            else if (current === "Shift 2") next = "Shift 3";
+            const current = normalizePlanningShift(el.innerText) || 'Shift 1';
+            const next = current === 'Shift 1' ? 'Shift 2' : 'Shift 1';
             el.innerText = next;
             
             el.classList.remove('animate__animated', 'animate__pulse');
@@ -1939,10 +1943,8 @@
 
         function toggleShift() {
             const el = document.getElementById('h-shift');
-            const current = el.innerText;
-            let next = "Shift 1";
-            if (current === "Shift 1") next = "Shift 2";
-            else if (current === "Shift 2") next = "Shift 3";
+            const current = normalizePlanningShift(el.innerText) || 'Shift 1';
+            const next = current === 'Shift 1' ? 'Shift 2' : 'Shift 1';
             el.innerText = next;
             
             // Pulse effect
@@ -2996,7 +2998,7 @@
                     ngVisual: totalNgVis,
                     remark: lastRemark,
                     byPass: '',
-                    shift: document.getElementById('h-shift')?.innerText || '',
+                    shift: normalizePlanningShift(document.getElementById('h-shift')?.innerText || ''),
                     productionDataSummaries: allSummaries,
                     dimensionReadings: aggregateReadings.map(r => ({
                         pointName: String(r.PointName || ''),

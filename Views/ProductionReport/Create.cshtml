@@ -96,9 +96,8 @@
                             <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
                                 <label><i class="bi bi-clock-history me-2 text-info"></i>SHIFT MONITORING</label>
                                 <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0 text-white" style="-webkit-appearance: none;" onchange="refreshPlanningItems()">
-                                    <option value="I" class="bg-dark">SHIFT I (SIANG)</option>
-                                    <option value="II" class="bg-dark" selected>SHIFT II (SORE)</option>
-                                    <option value="III" class="bg-dark">SHIFT III (MALAM)</option>
+                                    <option value="Shift 1" class="bg-dark">SHIFT 1 (19:30 - 07:30)</option>
+                                    <option value="Shift 2" class="bg-dark">SHIFT 2 (07:30 - 19:30)</option>
                                 </select>
                             </div>
                         </div>
@@ -2489,6 +2488,21 @@
         let planningResultItems = [];
         let planningResultIndex = -1;
 
+        function normalizePlanningShift(shiftValue) {
+            if (!shiftValue) return '';
+            const raw = shiftValue.toString().trim().toUpperCase();
+            const num = raw.replace(/SHIFT/gi, '').trim();
+            if (num === '1' || num === 'I' || raw.includes('ONE')) return 'Shift 1';
+            if (num === '2' || num === 'II' || raw.includes('TWO')) return 'Shift 2';
+            if (num === '3' || num === 'III' || raw.includes('THREE')) return 'Shift 3';
+            return shiftValue.toString().trim();
+        }
+
+        function applyPlanningShift(shiftValue) {
+            const normalized = normalizePlanningShift(shiftValue);
+            if (normalized) document.getElementById('Shift').value = normalized;
+        }
+
         async function refreshPlanningItems() {
             const date = document.getElementById('ProductionDate').value;
             const shift = document.getElementById('Shift').value;
@@ -2662,18 +2676,9 @@
                 document.getElementById('ProductionDate').value = item.date;
             }
 
-            // Auto-sync Shift (Robust Mapping)
+            // Auto-sync Shift from planning
             if (item.Shift || item.shift) {
-                let rawShift = (item.Shift || item.shift).toString().toUpperCase();
-                console.log("RAW SHIFT FROM DB:", rawShift);
-
-                if (rawShift.includes('1') || rawShift === 'I' || rawShift.includes('SIANG') || rawShift.includes('ONE')) {
-                    document.getElementById('Shift').value = 'I';
-                } else if (rawShift.includes('2') || rawShift === 'II' || rawShift.includes('SORE') || rawShift.includes('TWO')) {
-                    document.getElementById('Shift').value = 'II';
-                } else if (rawShift.includes('3') || rawShift === 'III' || rawShift.includes('MALAM') || rawShift.includes('THREE')) {
-                    document.getElementById('Shift').value = 'III';
-                }
+                applyPlanningShift(item.Shift || item.shift);
             }
 
             // Pre-fill ItemCode immediately as safety net (async fetchSpsByItem may override via applySpsToForm)

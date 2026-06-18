@@ -206,9 +206,8 @@
                             <div class="hud-pill-integrated border border-info border-opacity-20" style="background:rgba(15,23,42,0.8);">
                                 <label><i class="bi bi-clock-history me-2 text-info"></i>SHIFT MONITORING</label>
                                 <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0 text-white" style="-webkit-appearance:none;">
-                                    <option value="I" class="bg-dark">SHIFT I (SIANG)</option>
-                                    <option value="II" class="bg-dark">SHIFT II (SORE)</option>
-                                    <option value="III" class="bg-dark">SHIFT III (MALAM)</option>
+                                    <option value="Shift 1" class="bg-dark">SHIFT 1 (19:30 - 07:30)</option>
+                                    <option value="Shift 2" class="bg-dark">SHIFT 2 (07:30 - 19:30)</option>
                                 </select>
                             </div>
                         </div>
@@ -1599,6 +1598,21 @@
         let userHasSelectedData = false;
 
         // === PLANNING SEARCH FUNCTIONS ===
+        function normalizePlanningShift(shiftValue) {
+            if (!shiftValue) return '';
+            const raw = shiftValue.toString().trim().toUpperCase();
+            const num = raw.replace(/SHIFT/gi, '').trim();
+            if (num === '1' || num === 'I' || raw.includes('ONE')) return 'Shift 1';
+            if (num === '2' || num === 'II' || raw.includes('TWO')) return 'Shift 2';
+            if (num === '3' || num === 'III' || raw.includes('THREE')) return 'Shift 3';
+            return shiftValue.toString().trim();
+        }
+
+        function applyPlanningShift(shiftValue) {
+            const normalized = normalizePlanningShift(shiftValue);
+            if (normalized) document.getElementById('Shift').value = normalized;
+        }
+
         async function refreshPlanningItems() {
             const dateInput = document.getElementById('ProductionDate');
             const shiftInput = document.getElementById('Shift');
@@ -1715,6 +1729,12 @@
             const hoseInput = document.getElementById('HoseType');
             if (hoseInput) hoseInput.value = item.itemName || item.itemCode; 
             
+            if (item.date) {
+                const dateInput = document.getElementById('ProductionDate');
+                if (dateInput) dateInput.value = item.date;
+            }
+            if (item.shift) applyPlanningShift(item.shift);
+
             // Fetch full SPS details
             fetchSpsByItem(item.itemCode);
         }
