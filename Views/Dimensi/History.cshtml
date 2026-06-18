@@ -3,6 +3,8 @@
     Layout = "_Layout";
     ViewData["Title"] = "Dimension Inspection History";
     var spsMap = ViewBag.SpsMap as Dictionary<string, VelastoProductionSystem.Models.SpsNoDoc>;
+    var machineFilter = (ViewBag.MachineFilter as string) ?? "";
+    var machineList = (ViewBag.MachineList as IEnumerable<string>) ?? new List<string>();
 }
 
 <style>
@@ -752,10 +754,33 @@
         </div>
 
         <!-- ── CONTROL HUB ── -->
-        <div class="control-hub fade-in" style="animation-delay: 0.1s;">
-            <div class="search-block">
+        <div class="control-hub fade-in" style="animation-delay: 0.1s; flex-direction: column; gap: 12px;">
+            <!-- Baris 1: Machine Filter + Date Filter -->
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <i class="bi bi-cpu" style="color: #fbbf24; font-size: 0.9rem;"></i>
+                <select id="machineFilterSelect" class="search-mode-select" onchange="applyMachineFilter()" style="min-width: 200px; background: rgba(13,17,23,0.9); color: #e6edf3; border: 1px solid rgba(0,102,255,0.4); border-radius: 10px; padding: 10px 16px; font-size: 0.8rem; font-weight: 800; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;">
+                    <option value="" style="background:#0d1117; color:#e6edf3;">SEMUA MESIN</option>
+                    @foreach (var m in machineList)
+                    {
+                        if (machineFilter == m)
+                        {
+                            <option value="@m" selected style="background:#0d1117; color:#00ccff; font-weight:800;">@m</option>
+                        }
+                        else
+                        {
+                            <option value="@m" style="background:#0d1117; color:#e6edf3;">@m</option>
+                        }
+                    }
+                </select>
+                <div class="control-item" onclick="openDatePopup()" style="cursor:pointer; flex: 0 0 auto;">
+                    <i class="bi bi-calendar3"></i>
+                    <span id="dateFilterLabel" style="font-weight:700;color:#cbd5e1;">PILIH TANGGAL</span>
+                </div>
+            </div>
+            <!-- Baris 2: Text Search -->
+            <div class="search-block" style="width: 100%;">
                 <div class="quick-search-label"><i class="bi bi-search"></i> PENCARIAN CEPAT</div>
-                <div class="control-item search-wrap compact-search">
+                <div class="control-item search-wrap compact-search" style="width: 100%;">
                     <select id="searchType" class="search-mode-select" onchange="updateSearchMode()">
                         <option value="" selected>Semua</option>
                         <option value="planning">Planning</option>
@@ -765,10 +790,6 @@
                     <input type="text" id="globalSearch" placeholder="Ketik kata kunci..." oninput="filterHistory()" onfocus="renderSearchAutocomplete()" />
                     <div id="searchAutocomplete" class="search-autocomplete"></div>
                 </div>
-            </div>
-            <div class="control-item" onclick="openDatePopup()" style="cursor:pointer;">
-                <i class="bi bi-calendar3"></i>
-                <span id="dateFilterLabel" style="font-weight:700;color:#cbd5e1;">PILIH TANGGAL</span>
             </div>
         </div>
 
@@ -1132,6 +1153,16 @@
         if (dateEnd) params.set('endDate', dateEnd);
 
         window.location.href = `/Dimensi/ExportHistoryExcel?${params.toString()}`;
+    }
+
+    function applyMachineFilter() {
+        const machine = document.getElementById('machineFilterSelect').value;
+        const params = new URLSearchParams(window.location.search);
+
+        if (machine) params.set('machineFilter', machine);
+        else params.delete('machineFilter');
+
+        window.location.href = `/Dimensi/History?${params.toString()}`;
     }
 
     // Table sorting function

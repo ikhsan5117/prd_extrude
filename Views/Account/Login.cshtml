@@ -432,14 +432,14 @@
 
         <div id="credentialsGuide" style="margin-top: 25px; display: none;">
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div onclick="fillAdminCredentials('adm_prod', 'produksi123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,210,254,0.08)'; this.style.borderColor='rgba(0,210,254,0.3)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)';">
                     <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Admin Prod</span>
                     <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
                         <span style="color: var(--accent-cyan);">adm_prod</span>
                         <span style="color: #fff; opacity: 0.5;">produksi123!</span>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div onclick="fillAdminCredentials('adm_eng', 'engineering123!')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,210,254,0.08)'; this.style.borderColor='rgba(0,210,254,0.3)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)';">
                     <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">Admin Eng</span>
                     <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.8rem;">
                         <span style="color: var(--accent-cyan);">adm_eng</span>
@@ -535,6 +535,17 @@
                 $('#loginForm').submit();
             }
         });
+        // Fitur 4: Click-to-Fill credential cards
+        window.fillAdminCredentials = function(username, password) {
+            $('#adminUsernameInput').val(username).trigger('input');
+            $('#password').val(password);
+
+            // Visual feedback - flash cyan border
+            $('#adminUsernameInput, #password').css('border-color', 'var(--accent-cyan)');
+            setTimeout(() => {
+                $('#adminUsernameInput, #password').css('border-color', '');
+            }, 600);
+        };
     });
 
 </script>

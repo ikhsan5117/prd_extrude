@@ -1,4 +1,8 @@
 @model IEnumerable<VelastoProductionSystem.Models.ProductionReport>
+@{
+    var machineFilter = (ViewBag.MachineFilter as string) ?? "";
+    var machineList = (ViewBag.MachineList as IEnumerable<string>) ?? new List<string>();
+}
 
 <style>
     :root {
@@ -120,9 +124,25 @@
         </div>
 
         <!-- ── SEARCH HUD ── -->
-        <div class="search-hub fade-in" style="animation-delay: 0.1s;">
-            <i class="bi bi-search" style="position: absolute; left: 25px; top: 22px; color: var(--accent); font-size: 1.2rem;"></i>
-            <input type="text" class="search-input" placeholder="SEARCH_BY_VIN_OR_DOC_NUMBER..." />
+        <div class="search-hub fade-in d-flex gap-3" style="animation-delay: 0.1s;">
+            <select id="machineFilterSelect" class="btn-action sec" style="width: 250px; text-align: left; background: rgba(21, 27, 38, 0.5); border-radius: 16px; padding-left: 20px; font-weight: 600;" onchange="applyFilters()">
+                <option value="">ALL MACHINES</option>
+                @foreach (var m in machineList)
+                {
+                    if (machineFilter == m)
+                    {
+                        <option value="@m" selected>@m</option>
+                    }
+                    else
+                    {
+                        <option value="@m">@m</option>
+                    }
+                }
+            </select>
+            <div style="flex: 1; position: relative;">
+                <i class="bi bi-search" style="position: absolute; left: 25px; top: 22px; color: var(--accent); font-size: 1.2rem;"></i>
+                <input type="text" class="search-input" placeholder="SEARCH_BY_VIN_OR_DOC_NUMBER..." oninput="filterLocal(this.value)" />
+            </div>
         </div>
 
         <!-- ── MASONRY TILES ── -->
@@ -184,3 +204,27 @@
         </div>
     </div>
 </div>
+
+<script>
+    function applyFilters() {
+        const machine = document.getElementById('machineFilterSelect').value;
+        const params = new URLSearchParams(window.location.search);
+
+        if (machine) params.set('machineFilter', machine);
+        else params.delete('machineFilter');
+
+        window.location.href = `/ProductionReport/DimensionHistory?${params.toString()}`;
+    }
+
+    function filterLocal(query) {
+        query = query.toLowerCase();
+        document.querySelectorAll('.hist-tile').forEach(tile => {
+            const text = tile.innerText.toLowerCase();
+            if (text.includes(query)) {
+                tile.style.display = 'flex';
+            } else {
+                tile.style.display = 'none';
+            }
+        });
+    }
+</script>

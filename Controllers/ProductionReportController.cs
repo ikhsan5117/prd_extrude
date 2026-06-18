@@ -35,7 +35,7 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: ProductionReport/ParameterHistory
-        public async Task<IActionResult> ParameterHistory(string? startDate = null, string? endDate = null)
+        public async Task<IActionResult> ParameterHistory(string? startDate = null, string? endDate = null, string? machineFilter = null)
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
             {
@@ -43,6 +43,7 @@ namespace VelastoProductionSystem.Controllers
             }
 
             var query = _context.ProductionReports
+
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(startDate) && DateTime.TryParse(startDate, out var sDate))
@@ -64,6 +65,24 @@ namespace VelastoProductionSystem.Controllers
             {
                 ViewBag.EndDate = "";
             }
+
+            if (!string.IsNullOrWhiteSpace(machineFilter))
+            {
+                query = query.Where(p => p.MachineName == machineFilter);
+                ViewBag.MachineFilter = machineFilter;
+            }
+            else
+            {
+                ViewBag.MachineFilter = "";
+            }
+
+            // Get Machine List for Dropdown — only valid machine codes (start with EXT)
+            ViewBag.MachineList = await _context.ProductionReports
+                .Where(p => !string.IsNullOrEmpty(p.MachineName) && p.MachineName.StartsWith("EXT"))
+                .Select(p => p.MachineName!)
+                .Distinct()
+                .OrderBy(m => m)
+                .ToListAsync();
 
             var reports = await query
                 .OrderByDescending(p => p.CreatedDate)
@@ -176,14 +195,36 @@ namespace VelastoProductionSystem.Controllers
         }
 
         // GET: ProductionReport/DimensionHistory
-        public async Task<IActionResult> DimensionHistory()
+        public async Task<IActionResult> DimensionHistory(string? machineFilter = null)
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
             {
                 return RedirectToAction("Login", "Account");
             }
-            var reports = await _context.ProductionReports
+
+            var query = _context.ProductionReports
                 .Where(p => !string.IsNullOrEmpty(p.ActualLength) || !string.IsNullOrEmpty(p.VinCode) || p.QtyOk > 0 || p.NgDimension > 0 || p.NgVisual > 0)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(machineFilter))
+            {
+                query = query.Where(p => p.MachineName == machineFilter);
+                ViewBag.MachineFilter = machineFilter;
+            }
+            else
+            {
+                ViewBag.MachineFilter = "";
+            }
+
+            // Get Machine List for Dropdown — only valid machine codes (start with EXT)
+            ViewBag.MachineList = await _context.ProductionReports
+                .Where(p => !string.IsNullOrEmpty(p.MachineName) && p.MachineName.StartsWith("EXT"))
+                .Select(p => p.MachineName!)
+                .Distinct()
+                .OrderBy(m => m)
+                .ToListAsync();
+
+            var reports = await query
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
             return View(reports);

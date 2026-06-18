@@ -302,13 +302,32 @@ namespace VelastoProductionSystem.Controllers
             return View(new DimensionReport { Measurements = new List<DimensionMeasurement>() });
         }
 
-        public async Task<IActionResult> History()
+        public async Task<IActionResult> History(string? machineFilter = null)
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
             {
                 return RedirectToAction("Login", "Account");
             }
-            var reports = await _context.DimensionReports
+
+            var query = _context.DimensionReports.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(machineFilter))
+            {
+                query = query.Where(r => r.MachineName == machineFilter);
+                ViewBag.MachineFilter = machineFilter;
+            }
+            else
+            {
+                ViewBag.MachineFilter = "";
+            }
+
+            ViewBag.MachineList = await _context.DimensionReports
+                .Where(r => !string.IsNullOrEmpty(r.MachineName))
+                .Select(r => r.MachineName!)
+                .Distinct()
+                .ToListAsync();
+
+            var reports = await query
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
 
