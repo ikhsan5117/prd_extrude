@@ -510,15 +510,15 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
 
-            // Fetch specific SPS record. Match by ItemCode
+            // Fetch specific SPS record. Match by DocumentNumber (since it refers to the SPS Document)
             ViewBag.Sps = await _context.SpsNoDocs
                 .OrderByDescending(s => s.DocumentNumber)
-                .FirstOrDefaultAsync(s => s.DocumentNumber == report.ItemCode);
+                .FirstOrDefaultAsync(s => s.DocumentNumber == report.DocumentNumber);
 
-            // Fetch Masterlist data as fallback - Match by ItemCode/DocNumber for better accuracy than just HoseType
+            // Fetch Masterlist data as fallback - Match by ItemCode
             ViewBag.Master = await _context.SpsNoDocs
                 .OrderByDescending(m => m.DocumentNumber)
-                .FirstOrDefaultAsync(m => (m.DocumentNumber != null && m.DocumentNumber.Contains(report.ItemCode ?? "")) || m.DocumentNumber == report.DocumentNumber);
+                .FirstOrDefaultAsync(m => m.DocumentNumber != null && m.DocumentNumber.Contains(report.ItemCode ?? ""));
 
             return View(report);
         }
@@ -535,10 +535,10 @@ namespace VelastoProductionSystem.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
 
-            // Fetch specific SPS record by ItemCode
+            // Fetch specific SPS record. Match by DocumentNumber
             ViewBag.Sps = await _context.SpsNoDocs
                 .OrderByDescending(s => s.DocumentNumber)
-                .FirstOrDefaultAsync(s => s.DocumentNumber == report.ItemCode);
+                .FirstOrDefaultAsync(s => s.DocumentNumber == report.DocumentNumber);
 
             // Fetch Masterlist data as fallback
             ViewBag.Master = await _context.SpsNoDocs

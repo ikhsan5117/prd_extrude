@@ -8,7 +8,7 @@ using VelastoProductionSystem.Hubs;
 using VelastoProductionSystem.Services;
 
 // Set EPPlus License globally for version 8+
-OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization("Velasto");
+OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 
 var builder = WebApplication.CreateBuilder(args);
 

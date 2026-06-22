@@ -234,37 +234,30 @@
                             decimal target = 0, tol = 0;
                             decimal defaultTol = point.Contains("Thick") ? 0.2m : 0.1m;
 
-                            if (sps != null) {
+                            var source = sps ?? master;
+                            if (source != null) {
                                 if (point.Contains("Diameter")) { 
                                     // In DB, ToleranceInner_Asli mistakenly holds the Inner Diameter (e.g. 33.3)
-                                    target = sps.ToleranceInner_Asli ?? ParseNum(sps.ThickTarget);
-                                    if (target <= 0) target = ParseNum(sps.Dimensi);
-                                    tol = ParseTol(sps.InnerTol, 0.1m);
+                                    target = source.ToleranceInner_Asli ?? ParseNum(source.ThickTarget);
+                                    if (target <= 0) target = ParseNum(source.Dimensi);
+                                    tol = (source.ToleranceInner_Max.HasValue && source.ToleranceInner_Asli.HasValue) 
+                                          ? (source.ToleranceInner_Max.Value - source.ToleranceInner_Asli.Value) 
+                                          : ParseTol(source.InnerTol ?? source.ToleranceInner, 0.1m);
                                 }
                                 else if (point.Contains("Inner Thick")) { 
                                     // In DB, TebalInner_Asli mistakenly holds the Inner Thickness (e.g. 2.3)
-                                    target = sps.TebalInner_Asli ?? ParseNum(sps.InnerTarget); 
-                                    if (target <= 0) target = ParseNum(sps.TebalInner);
-                                    tol = ParseTol(sps.ThickTol, 0.2m); 
+                                    target = source.TebalInner_Asli ?? ParseNum(source.InnerTarget); 
+                                    if (target <= 0) target = ParseNum(source.TebalInner);
+                                    tol = (source.TebalInner_Max.HasValue && source.TebalInner_Asli.HasValue) 
+                                          ? (source.TebalInner_Max.Value - source.TebalInner_Asli.Value) 
+                                          : ParseTol(source.ThickTol ?? source.ToleranceOuter, 0.2m); 
                                 }
                                 else if (point.Contains("Total Thick")) { 
-                                    target = sps.TebalTotal_Asli ?? ParseNum(sps.TotalTarget); 
-                                    if (target <= 0) target = ParseNum(sps.TebalTotal);
-                                    tol = (sps.TebalTotal_Max.HasValue && sps.TebalTotal_Asli.HasValue) ? (sps.TebalTotal_Max.Value - sps.TebalTotal_Asli.Value) : ParseTol(sps.TotalTol, 0.3m); 
-                                }
-                            }
-                            else if (master != null) {
-                                if (point.Contains("Diameter")) {
-                                    target = ParseNum(master.ThickTarget);
-                                    if (target <= 0) target = ParseNum(master.Dimensi);
-                                }
-                                else if (point.Contains("Inner Thick")) {
-                                    target = ParseNum(master.InnerTarget);
-                                    if (target <= 0) target = ParseNum(master.TebalInner);
-                                }
-                                else if (point.Contains("Total Thick")) {
-                                    target = ParseNum(master.TotalTarget);
-                                    if (target <= 0) target = ParseNum(master.TebalTotal);
+                                    target = source.TebalTotal_Asli ?? ParseNum(source.TotalTarget); 
+                                    if (target <= 0) target = ParseNum(source.TebalTotal);
+                                    tol = (source.TebalTotal_Max.HasValue && source.TebalTotal_Asli.HasValue) 
+                                          ? (source.TebalTotal_Max.Value - source.TebalTotal_Asli.Value) 
+                                          : ParseTol(source.TotalTol ?? source.ToleranceOuter, 0.3m); 
                                 }
                             }
 

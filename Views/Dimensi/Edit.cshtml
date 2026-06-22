@@ -1123,35 +1123,26 @@
             string? targetThick = null;
             string? targetTotal = null;
 
-            if (s != null)
+            var source = s ?? m;
+            if (source != null)
             {
                 // In DB, ToleranceInner_Asli mistakenly holds the Inner Diameter (e.g. 33.3)
-                targetInner = s.ToleranceInner_Asli?.ToString("F2") ?? s.ThickTarget;
-                if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = s.Dimensi;
+                targetInner = source.ToleranceInner_Asli?.ToString("F2") ?? source.ThickTarget;
+                if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = source.Dimensi;
 
                 // In DB, TebalInner_Asli mistakenly holds the Inner Thickness (e.g. 2.3)
-                targetThick = s.TebalInner_Asli?.ToString("F2") ?? s.InnerTarget;
-                if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = s.TebalInner;
+                targetThick = source.TebalInner_Asli?.ToString("F2") ?? source.InnerTarget;
+                if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = source.TebalInner;
 
-                targetTotal = s.TotalTarget;
-                if (string.IsNullOrEmpty(targetTotal) || targetTotal == "0") targetTotal = s.TebalTotal;
-            }
-            else if (m != null)
-            {
-                targetInner = m.ThickTarget;
-                if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = m.Dimensi;
-
-                targetThick = m.InnerTarget;
-                if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = m.TebalInner;
-
-                targetTotal = m.TotalTarget;
-                if (string.IsNullOrEmpty(targetTotal) || targetTotal == "0") targetTotal = m.TebalTotal;
+                targetTotal = source.TebalTotal_Asli?.ToString("F2") ?? source.TotalTarget;
+                if (string.IsNullOrEmpty(targetTotal) || targetTotal == "0") targetTotal = source.TebalTotal;
             }
             
             // Robust Tolerance Selection
-            var tolInner = s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1";
-            var tolThick = s?.ThickTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.2";
-            var tolTotal = s?.TotalTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.3";
+            var sourceTol = s ?? m;
+            var tolInner = (sourceTol?.ToleranceInner_Max.HasValue == true && sourceTol?.ToleranceInner_Asli.HasValue == true) ? (sourceTol.ToleranceInner_Max.Value - sourceTol.ToleranceInner_Asli.Value).ToString("G29") : (s?.InnerTol ?? s?.ToleranceInner ?? m?.ToleranceInner ?? "0.1");
+            var tolThick = (sourceTol?.TebalInner_Max.HasValue == true && sourceTol?.TebalInner_Asli.HasValue == true) ? (sourceTol.TebalInner_Max.Value - sourceTol.TebalInner_Asli.Value).ToString("G29") : (s?.ThickTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.2");
+            var tolTotal = (sourceTol?.TebalTotal_Max.HasValue == true && sourceTol?.TebalTotal_Asli.HasValue == true) ? (sourceTol.TebalTotal_Max.Value - sourceTol.TebalTotal_Asli.Value).ToString("G29") : (s?.TotalTol ?? s?.ToleranceOuter ?? m?.ToleranceOuter ?? "0.3");
 
             var stdObj = new {
                 innerdiameter = new { id = "innerdiameter", val = targetInner, tol = tolInner },
