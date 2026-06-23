@@ -781,6 +781,19 @@
                                     <div id="evalInfoItemList" style="font-size:13px; font-weight:800; color:#6ee7b7; letter-spacing:0.5px; line-height:1.3;">—</div>
                                 </div>
                             </div>
+
+                            <div style="width:1px; height:32px; background:linear-gradient(to bottom, transparent, rgba(59,130,246,0.4), transparent);"></div>
+
+                            <!-- Outer Diameter Specs -->
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.38); display:flex; align-items:center; justify-content:center;">
+                                    <i class="bi bi-bullseye" style="color:#fbbf24; font-size:13px;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size:9px; font-weight:800; letter-spacing:1.5px; color:rgba(148,163,184,0.7); text-transform:uppercase; line-height:1;">DIMENSION</div>
+                                    <div id="evalInfoOD" style="font-size:13px; font-weight:800; color:#fbbf24; letter-spacing:0.5px; line-height:1.3;">—</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1154,7 +1167,7 @@
                         
                         // Push correct values instead of null for standard lines
                         evalChart.data.datasets.forEach(ds => {
-                            if (ds.label.includes('Target SPS')) {
+                            if (ds.label === 'Outer Diameter') {
                                 ds.data.push(ds.data[0]); // replicate target
                             } else if (ds.label.includes('USL')) {
                                 ds.data.push(ds.data[0]);
@@ -1352,12 +1365,18 @@
             const hasLsl = !isNaN(lowerLimit) && lowerLimit > 0;
 
             document.getElementById('evalModalLabel').innerHTML =
-                `<i class="bi bi-activity me-2"></i>EVALUASI WAKTU & SENSOR OD` +
-                (currentEvalMachineName ? ` - [${currentEvalMachineName}]` : '') +
-                (hasStd ? ` (Target: ${stdOD}` : '') +
-                (hasUsl ? `, USL: ${upperLimit}` : '') +
-                (hasLsl ? `, LSL: ${lowerLimit}` : '') +
-                (hasStd || hasUsl || hasLsl ? ')' : '');
+                `<i class="bi bi-activity me-2"></i>EVALUASI WAKTU & SENSOR "${currentEvalMachineName || currentEvalMachineCode || 'Unknown'}"`;
+
+            // Update the new Outer Diameter Info Label
+            const elODInfo = document.getElementById('evalInfoOD');
+            if (elODInfo) {
+                let specs = [];
+                if (hasStd) specs.push(`Outer Diameter: ${stdOD}`);
+                if (hasUsl) specs.push(`USL: ${upperLimit}`);
+                if (hasLsl) specs.push(`LSL: ${lowerLimit}`);
+                
+                elODInfo.textContent = specs.join(', ') || '—';
+            }
 
             // Ensure chart container is visible
             const container = document.getElementById('evalChartContainer');
@@ -1404,7 +1423,7 @@
                 cIdx++;
             }
 
-            if (hasStd) datasets.push(evalStdLine(`Target SPS (${stdOD})`, stdOD, pointCount, '#22d3ee', [2, 4]));
+            if (hasStd) datasets.push(evalStdLine(`Outer Diameter`, stdOD, pointCount, '#22d3ee', [2, 4]));
             if (hasUsl) datasets.push(evalStdLine(`USL (Spec Max)`, upperLimit, pointCount, '#ff4d4d', [5, 5]));
             if (hasLsl) datasets.push(evalStdLine(`LSL (Spec Min)`, lowerLimit, pointCount, '#ffb703', [5, 5]));
 
@@ -1468,7 +1487,13 @@
                     scales: {
                         x: { ticks: { color: '#94a3b8', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.05)' } },
                         y: {
-                            ticks: { color: '#94a3b8' },
+                            ticks: { 
+                                color: '#94a3b8',
+                                callback: function(value) {
+                                    let roundedValue = Math.round(value * 1000) / 1000;
+                                    return roundedValue + ' mm';
+                                }
+                            },
                             grid: { color: 'rgba(255,255,255,0.1)' },
                             min: finalYMin,
                             max: finalYMax,
