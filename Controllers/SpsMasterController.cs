@@ -102,14 +102,15 @@ namespace VelastoProductionSystem.Controllers
                     }
                 }
                 
-                // Check for Â± symbol (or alternative: +/-, +-,  etc.)
-                var plusMinusSymbols = new[] { "Â±", "+/-", "+-", "~" };
+                // Check for ± symbol (or alternative: +/-, +-, ~, etc.)
+                // IMPORTANT: Include both the real Unicode ± (U+00B1) and common encoding variants
+                var plusMinusSymbols = new[] { "\u00B1", "±", "Â±", "+/-", "+-", "~" };
                 
                 foreach (var symbol in plusMinusSymbols)
                 {
                     if (cleaned.Contains(symbol))
                     {
-                        _logger.LogInformation($"ParsePlusMinusValue: Found symbol '{symbol}' in cleaned value");
+                        _logger.LogInformation($"ParsePlusMinusValue: Found symbol '{symbol}' (U+{(int)symbol[0]:X4}) in cleaned value");
                         var parts = cleaned.Split(new[] { symbol }, StringSplitOptions.None);
                         _logger.LogInformation($"ParsePlusMinusValue: Split into {parts.Length} parts: [{string.Join("] [", parts)}]");
                         
@@ -1369,12 +1370,14 @@ namespace VelastoProductionSystem.Controllers
                 {
                     _logger.LogInformation("Detected NON-CHS Double Layer format");
                     headerRow = 3;  // Headers: ID, No, Machine, No. Document, ...
-                    dataStartRow = 4;
+                    headerRow2 = 5; // Secondary headers (ITEM, dll) ada di row 5
+                    dataStartRow = 6;
                     
                     // Log first few rows for debugging
                     _logger.LogInformation($"Row 2 Col 4: '{worksheet.Cells[2, 4].Text}'");
                     _logger.LogInformation($"Row 3 Col 4: '{worksheet.Cells[3, 4].Text}'");
-                    _logger.LogInformation($"Row 4 Col 4: '{worksheet.Cells[4, 4].Text}'");
+                    _logger.LogInformation($"Row 5 Col 51 (ITEM): '{worksheet.Cells[5, 51].Text}'");
+                    _logger.LogInformation($"Row 6 Col 4: '{worksheet.Cells[6, 4].Text}'");
                 }
                 // Format 2: CHS 2 Layer / 3 Layer Digitalisasi (header di row 3 + row 6 untuk Item)
                 else if (row1Text.Contains("CHS 2 LAYER") || row1Text.Contains("CHS 3 LAYER") || row1Text.Contains("DIGITALISASI"))
@@ -1818,13 +1821,19 @@ namespace VelastoProductionSystem.Controllers
                     if (cellValue == null) return "";
                     
                     var value = cellValue.ToString()?.Trim() ?? "";
+                    // Debug: log unicode codepoints if value contains potential ± character
+                    if (value.Length > 0 && value.Any(c => c == '\u00B1' || c == '\u00C2' || c > 127))
+                    {
+                        var codepoints = string.Join("-", value.Select(c => $"U+{(int)c:X4}"));
+                        _logger.LogDebug($"GetCellValue[{row},{col}] special chars: [{value}] codepoints={codepoints}");
+                    }
                     return (string.IsNullOrWhiteSpace(value) || value == "-") ? "" : value;
                 }
 
                 // Find critical columns (basic metadata)
                 int idExcelCol = FindColumn("ID", "ID EXCEL", "EXCEL ID", "EXCELID", "NO");
                 int docNumberCol = FindColumn("NO. DOC", "NO.DOC", "NODOC", "DOCUMENT NUMBER", "NO. DOCUMENT", "DOCUMENTNUMBER", "NO DOCUMENT", "DOC NUMBER", "DOC NO", "DOCNO", "SOP NUMBER", "PROD NUMBER", "VI-SOP-PROD", "VISOPPROD", "DOC", "DOCUMENT");
-                int machineCol = FindColumn("MACHINE", "MESIN", "MC");
+                int machineCol = FindColumn("MACHINE", "MESIN");
                 int machineCodeCol = FindColumn("MC", "MACHINE CODE", "MACHINECODE", "KODE MESIN", "M/C");
                 
                 // ITEM LIST - Try to find dynamically first, fallback to HARDCODED
@@ -2057,10 +2066,10 @@ namespace VelastoProductionSystem.Controllers
                         {
                             _logger.LogInformation($"Processing row {firstRow}: Doc {docNumber} - Item: {item}");
 
-                            // Check if document + item exists (1 SpsNoDoc = 1 ItemList)
+                            // Check if document exists
                             var existingDoc = await _context.SpsNoDocs
                                 .Include(s => s.ItemLists)
-                                .FirstOrDefaultAsync(s => s.DocumentNumber == docNumber && s.ItemLists.Any(i => i.ItemList == item));
+                                .FirstOrDefaultAsync(s => s.DocumentNumber == docNumber);
 
                             SpsNoDoc spsNoDoc;
                             bool isNewDoc = false;
@@ -2068,13 +2077,13 @@ namespace VelastoProductionSystem.Controllers
                             if (existingDoc != null)
                             {
                                 // UPDATE existing document
-                                _logger.LogInformation($"ðŸ“ UPDATING EXISTING DOC: '{docNumber}' (Item: {item})");
+                                _logger.LogInformation($"📝 UPDATING EXISTING DOC: '{docNumber}' (Item: {item})");
                                 spsNoDoc = existingDoc;
                             }
                             else
                             {
                                 // CREATE new document
-                                _logger.LogInformation($"âœ¨ CREATING NEW DOC: '{docNumber}' (Item: {item})");
+                                _logger.LogInformation($"✨ CREATING NEW DOC: '{docNumber}' (Item: {item})");
                                 spsNoDoc = new SpsNoDoc();
                                 isNewDoc = true;
                             }
@@ -2084,7 +2093,9 @@ namespace VelastoProductionSystem.Controllers
                             spsNoDoc.DocumentNumber = docNumber;
                             spsNoDoc.No = GetCellValue(firstRow, noCol);
                             spsNoDoc.Machine = GetCellValue(firstRow, machineCol);
-                            spsNoDoc.MachineCode = GetCellValue(firstRow, machineCodeCol);
+                            // Fallback: jika kolom MC/Machine Code tidak ditemukan, gunakan nilai Machine
+                            var machineCodeVal = machineCodeCol > 0 ? GetCellValue(firstRow, machineCodeCol) : "";
+                            spsNoDoc.MachineCode = !string.IsNullOrEmpty(machineCodeVal) ? machineCodeVal : GetCellValue(firstRow, machineCol);
                             spsNoDoc.RevisionNumber = GetCellValue(firstRow, idxRev); // HARDCODED
                             spsNoDoc.RevisionDate = GetCellValue(firstRow, idxRevDate); // HARDCODED
                             spsNoDoc.Customer = GetCellValue(firstRow, idxCustomer); // HARDCODED
@@ -2703,7 +2714,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.ChillerWaterTemp_Min = v, v => spsNoDoc.ChillerWaterTemp_Asli = v, v => spsNoDoc.ChillerWaterTemp_Max = v);
                             }
                             
-                            // THICKNESS with Â±
+                            // THICKNESS with ±
                             if (idxTebalInner <= 0) {
                                 int tebalInnerCol = FindColumn("TEBAL INNER", "TEBALINNER");
                                 AssignParsedValue(GetCellValue(firstRow, tebalInnerCol), 
@@ -2723,7 +2734,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.TebalTotal_Min = v, v => spsNoDoc.TebalTotal_Asli = v, v => spsNoDoc.TebalTotal_Max = v);
                             }
                             
-                            // TOLERANCE Inner/Outer with Â±
+                            // TOLERANCE Inner/Outer with ±
                             if (idxToleranceInner <= 0) {
                                 AssignParsedValue(GetCellValue(firstRow, toleranceInnerCol), 
                                     v => spsNoDoc.ToleranceInner_Min = v, v => spsNoDoc.ToleranceInner_Asli = v, v => spsNoDoc.ToleranceInner_Max = v);
@@ -2734,7 +2745,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.ToleranceOuter_Min = v, v => spsNoDoc.ToleranceOuter_Asli = v, v => spsNoDoc.ToleranceOuter_Max = v);
                             }
                             
-                            // OTHER PARAMETERS with Â±
+                            // OTHER PARAMETERS with ±
                             if (idxPitchYarn <= 0) {
                                 int pitchYarnCol = FindColumn("PITCH YARN", "PITCHYARN");
                                 AssignParsedValue(GetCellValue(firstRow, pitchYarnCol), 
@@ -2760,7 +2771,7 @@ namespace VelastoProductionSystem.Controllers
                                     v => spsNoDoc.OdSensor_Min = v, v => spsNoDoc.OdSensor_Asli = v, v => spsNoDoc.OdSensor_Max = v);
                             }
                             
-                            _logger.LogInformation($"  âœ“ Tolerance parsing completed");
+                            _logger.LogInformation($"  ✓ Tolerance parsing completed");
 
                             // Log important values for debugging
                             _logger.LogInformation($"  Data from row {firstRow}:");
@@ -2774,16 +2785,17 @@ namespace VelastoProductionSystem.Controllers
                             _logger.LogInformation($"    ToleranceInner parsed: Min={spsNoDoc.ToleranceInner_Min}, Asli={spsNoDoc.ToleranceInner_Asli}, Max={spsNoDoc.ToleranceInner_Max}");
                             _logger.LogInformation($"    ToleranceOuter parsed: Min={spsNoDoc.ToleranceOuter_Min}, Asli={spsNoDoc.ToleranceOuter_Asli}, Max={spsNoDoc.ToleranceOuter_Max}");
 
+
                             // Save document (add if new, update if existing)
                             if (isNewDoc)
                             {
                                 _context.SpsNoDocs.Add(spsNoDoc);
-                                _logger.LogInformation($"âœ¨ Adding NEW document to context");
+                                _logger.LogInformation($"✨ Adding NEW document to context");
                             }
                             else
                             {
                                 _context.SpsNoDocs.Update(spsNoDoc);
-                                _logger.LogInformation($"ðŸ“ Updating EXISTING document in context");
+                                _logger.LogInformation($"📝 Updating EXISTING document in context");
                             }
                             
                             await _context.SaveChangesAsync();
@@ -2792,8 +2804,16 @@ namespace VelastoProductionSystem.Controllers
                             {
                                 importedDocsCount++;
                                 _logger.LogInformation($"Created SpsNoDoc: {spsNoDoc.DocumentNumber}");
-                                
-                                // Insert the 1-to-1 ItemList since it's a new record
+                            }
+                            else
+                            {
+                                _logger.LogInformation($"Updated SpsNoDoc: {spsNoDoc.DocumentNumber}");
+                            }
+                            
+                            // Check if ItemList needs to be added
+                            bool itemExists = !isNewDoc && existingDoc?.ItemLists != null && existingDoc.ItemLists.Any(i => i.ItemList == item);
+                            if (!itemExists)
+                            {
                                 _context.SpsItemLists.Add(new SpsItemList
                                 {
                                     DocumentNumber = spsNoDoc.DocumentNumber,
@@ -2801,10 +2821,6 @@ namespace VelastoProductionSystem.Controllers
                                 });
                                 await _context.SaveChangesAsync();
                                 importedCount++;
-                            }
-                            else
-                            {
-                                _logger.LogInformation($"Updated SpsNoDoc: {spsNoDoc.DocumentNumber}");
                             }
                         } // end foreach (var item in items)
                     }
