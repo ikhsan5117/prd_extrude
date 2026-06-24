@@ -1333,6 +1333,7 @@
                 planningInput.style.cursor = 'pointer';
             }
             document.getElementById('planningResults')?.classList.add('d-none');
+            window._dimSelectedItemName = item.itemName; // Tambahkan ini untuk menyimpan itemName
 
             // Update all header elements from planning data
             const lineEl = document.getElementById('h-line');
@@ -2558,7 +2559,7 @@
                         if(docEl) docEl.innerText = m.docNo || "---";
 
                         const partEl = document.getElementById('disp-part-no');
-                        if(partEl) partEl.innerText = m.itemList || "---";
+                        if(partEl) partEl.innerText = window._dimSelectedItemCode || m.itemList || "---";
                         
                         const stdPnjgEl = document.getElementById('disp-std-pnjg');
                         if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
