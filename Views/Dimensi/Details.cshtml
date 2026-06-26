@@ -245,27 +245,29 @@
                                           : ParseTol(source.InnerTol ?? source.ToleranceInner, 0.1m);
                                 }
                                 else if (point.Contains("Inner Thick")) { 
-                                    // In DB, TebalInner_Asli mistakenly holds the Inner Thickness (e.g. 2.3)
-                                    target = source.TebalInner_Asli ?? ParseNum(source.InnerTarget); 
+                                    // TebalInner_Asli = parsed inner thickness (e.g. 1.9)
+                                    // Fallback to ThickTarget (numeric), then TebalInner (string)
+                                    target = source.TebalInner_Asli ?? ParseNum(source.ThickTarget); 
                                     if (target <= 0) target = ParseNum(source.TebalInner);
                                     tol = (source.TebalInner_Max.HasValue && source.TebalInner_Asli.HasValue) 
                                           ? (source.TebalInner_Max.Value - source.TebalInner_Asli.Value) 
-                                          : ParseTol(source.ThickTol ?? source.ToleranceOuter, 0.2m); 
+                                          : ParseTol(source.ThickTol, 0.1m); 
                                 }
                                 else if (point.Contains("Total Thick")) { 
                                     target = source.TebalTotal_Asli ?? ParseNum(source.TotalTarget); 
                                     if (target <= 0) target = ParseNum(source.TebalTotal);
                                     tol = (source.TebalTotal_Max.HasValue && source.TebalTotal_Asli.HasValue) 
                                           ? (source.TebalTotal_Max.Value - source.TebalTotal_Asli.Value) 
-                                          : ParseTol(source.TotalTol ?? source.ToleranceOuter, 0.3m); 
+                                          : ParseTol(source.TotalTol, 0.1m); 
                                 }
                             }
 
-                            // 3. TOLERANCE REFINEMENT (Masterlist fallback)
+                            // 3. TOLERANCE REFINEMENT (Masterlist fallback — never use ToleranceOuter for Thick)
                             if (tol <= 0) {
                                 if (master != null) {
                                     if (point.Contains("Diameter")) tol = ParseTol(master.ToleranceInner, 0.1m);
-                                    else if (point.Contains("Thick")) tol = ParseTol(master.ToleranceOuter, 0.2m);
+                                    else if (point.Contains("Inner Thick")) tol = ParseTol(master.ThickTol, 0.1m);
+                                    else if (point.Contains("Total Thick")) tol = ParseTol(master.TotalTol, 0.1m);
                                     else if (point.Contains("Spiral")) tol = ParseTol(master.ToleranceSpiralPitch, 5.0m);
                                 }
                             }

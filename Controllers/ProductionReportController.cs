@@ -521,34 +521,47 @@ namespace VelastoProductionSystem.Controllers
                     (s.MachineCode != null && s.MachineCode.ToUpper() == sanitizedMachine) ||
                     (s.Machine != null && s.Machine.ToUpper() == sanitizedMachine))
                     .OrderByDescending(s => s.DocumentNumber).FirstOrDefaultAsync();
-                if (spsExact != null) return Json(MapMasterToSps(spsExact));
+                if (spsExact != null) return Json(MapMasterToSps(spsExact, itemCode.Trim()));
 
                 // 2. Try CATEGORY match (DL to DL, CHS to CHS)
                 var spsCategory = await spsQuery.Where(s =>
                     (isDL && s.Machine != null && (s.Machine.ToUpper().Contains("DL") || s.Machine.ToUpper().Contains("NON-CHS") || s.Machine.ToUpper().Contains("DOUBLE"))) ||
                     (isCHS && s.Machine != null && s.Machine.ToUpper().Contains("CHS") && !s.Machine.ToUpper().Contains("DL")))
                     .OrderByDescending(s => s.DocumentNumber).FirstOrDefaultAsync();
-                if (spsCategory != null) return Json(MapMasterToSps(spsCategory));
+                if (spsCategory != null) return Json(MapMasterToSps(spsCategory, itemCode.Trim()));
             }
 
             // ULTIMATE FALLBACK
             var ultimateFallback = await spsQuery.OrderByDescending(s => s.DocumentNumber).FirstOrDefaultAsync();
-            if (ultimateFallback != null) return Json(MapMasterToSps(ultimateFallback));
+            if (ultimateFallback != null) return Json(MapMasterToSps(ultimateFallback, itemCode.Trim()));
 
             return Json(new { success = false, message = "Protocol Not Found" });
         }
 
-        private object MapMasterToSps(SpsNoDoc master)
+        private object MapMasterToSps(SpsNoDoc master, string? requestedItemCode = null)
         {
             // Helper: build "Min | Asli | Max" range from decimal fields, fall back to string
             static string R(decimal? asli, decimal? min, decimal? max, string? fallback = "")
             {
                 if (asli.HasValue)
-                    return (min.HasValue && max.HasValue)
-                        ? $"{min:F2} | {asli:F2} | {max:F2}"
-                        : asli.Value.ToString("F2");
-                return fallback ?? "";
+                {
+                    string sMin = min.HasValue ? min.Value.ToString("F2") : "--";
+                    string sMax = max.HasValue ? max.Value.ToString("F2") : "--";
+                    return $"{sMin} | {asli.Value:F2} | {sMax}";
+                }
+                
+                string fb = fallback?.Trim() ?? "";
+                if (string.IsNullOrEmpty(fb) || fb == "-" || fb == "---") return "";
+                if (fb.Contains("|")) return fb;
+                
+                return $"-- | {fb} | --";
             }
+
+            // Resolve item code: prefer the explicitly requested code (from planning/search),
+            // then fall back to the first ItemList linked to this SPS document.
+            var resolvedItemCode = !string.IsNullOrWhiteSpace(requestedItemCode)
+                ? requestedItemCode
+                : master.ItemLists?.FirstOrDefault(il => !string.IsNullOrWhiteSpace(il.ItemList))?.ItemList;
 
             return new {
                 // Masterlist SPS rows do not have a numeric StandardParameterSettings FK.
@@ -556,7 +569,8 @@ namespace VelastoProductionSystem.Controllers
                 Id = (string?)null,
                 Source = "Masterlist",
                 MasterlistId = master.DocumentNumber,
-                ItemList = (string?)null,
+                ItemList = resolvedItemCode,
+                ItemCode = resolvedItemCode,
                 HoseType = master.HoseType,
                 CustomerName = master.Customer,
                 DocumentNumber = master.DocumentNumber,
@@ -2861,6 +2875,8 @@ namespace VelastoProductionSystem.Controllers
             var end = report.ProductionEndTime ?? start.AddHours(4);
             return (start, end);
         }
+
+
     }
 }
 

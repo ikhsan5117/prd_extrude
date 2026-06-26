@@ -2587,12 +2587,12 @@
                     const configs = [
                         // Inner Diameter: use exact innerTarget (which maps to DB ToleranceInner_Asli), fallback to dimensi
                         { id: 'innerdiameter', v: m.innerTarget || m.dimensi, t: m.innerTol || m.toleranceInner, el: 'inner-dia', dt: 0.1 },
-                        // Inner Thickness: use exact thickTarget (which maps to DB TebalInner_Asli), fallback to tebalInner
-                        { id: 'innerthicknessx', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                        { id: 'innerthicknessy', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
-                        // Total Thickness: use exact totalTarget, not range string tebalTotal
-                        { id: 'totalthicknessx', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                        { id: 'totalthicknessy', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                        // Inner Thickness: use thickTol ONLY — never fall back to toleranceOuter (which is an outer-dia string)
+                        { id: 'innerthicknessx', v: m.thickTarget || m.tebalInner, t: m.thickTol, el: 'inner-tx', dt: 0.1 },
+                        { id: 'innerthicknessy', v: m.thickTarget || m.tebalInner, t: m.thickTol, el: 'inner-ty', dt: 0.1 },
+                        // Total Thickness: use totalTol ONLY — never fall back to toleranceOuter
+                        { id: 'totalthicknessx', v: m.totalTarget || m.tebalTotal, t: m.totalTol, el: 'total-tx', dt: 0.1 },
+                        { id: 'totalthicknessy', v: m.totalTarget || m.tebalTotal, t: m.totalTol, el: 'total-ty', dt: 0.1 },
                         { id: 'spiralpitch', v: m.spiralPitchSetting || m.spiralPitchDisplay || m.toleranceSpiralPitch, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                     ];
 

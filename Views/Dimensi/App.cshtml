@@ -467,7 +467,7 @@
         .section-title {
             font-size: 12px; font-weight: 800; color: var(--text-dim);
             letter-spacing: 3px; display: flex; align-items: center; gap: 12px;
-            margin: 50px 0 25px 0; padding-left: 15px; border-left: 4px solid var(--text-dim);
+            margin: 5px 0 25px 0; padding-left: 15px; border-left: 4px solid var(--text-dim);
             text-transform: uppercase;
         }
         .prod-data-container {
@@ -552,109 +552,173 @@
 
 
 <!-- NEW REPORT HEADER (AS PER IMAGE) -->
-<div class="app-container pt-3">
-    <!-- Main Header -->
-    <div class="text-center mb-3 animate__animated animate__fadeInDown">
-        <h2 class="display-6 fw-bold tracking-widest text-uppercase" style="letter-spacing: 6px;">EXTRUDER PRODUCTION REPORT</h2>
-        <div class="text-primary fw-bold" style="font-size: 13px; letter-spacing: 4px;">( DIMENSION )</div>
+<div class="container-fluid pt-3 mb-4 no-print" style="position: relative; z-index: 1050; overflow: visible; padding-left: 24px; padding-right: 24px;">
+    <style>
+        .pcc-search-grid { padding: 0 0 12px; display: grid; grid-template-columns: 3fr 2fr; gap: 10px; }
+        .pcc-search-box {
+            background: linear-gradient(to right, rgba(4,11,26,0.97) 0%, rgba(8,28,68,0.88) 70%, rgba(14,42,90,0.82) 100%);
+            border: 1px solid rgba(56,189,248,0.6);
+            border-left: 5px solid #38bdf8;
+            border-radius: 6px; display: flex; flex-direction: column; justify-content: center; padding: 12px 16px; gap: 4px;
+            transition: all 0.2s; cursor: pointer; position: relative;
+            margin-top: 10px; min-height: 56px;
+            box-shadow: inset 0 0 30px rgba(56,189,248,0.04);
+        }
+        .pcc-search-box:focus-within { 
+            border-color: rgba(56,189,248,0.85); border-left-color: #7dd3fc; 
+            background: linear-gradient(to right, rgba(4,12,30,0.98) 0%, rgba(10,35,80,0.92) 70%, rgba(18,50,105,0.86) 100%);
+            box-shadow: -2px 0 14px rgba(56,189,248,0.35), inset 0 0 30px rgba(56,189,248,0.06);
+        }
+        .pcc-search-input { background: transparent; border: none; outline: none; color: #f0f9ff; font-family: monospace; font-size: 0.9rem; font-weight: 700; width: 100%; }
+        /* Permanently floating label for search boxes */
+        .pcc-search-label { 
+            position: absolute; top: 0; left: 12px; transform: translateY(-50%);
+            font-size: 0.65rem; font-weight: 900; letter-spacing: 1.5px; color: #38bdf8; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; display: flex; align-items: center; gap: 6px; text-transform: uppercase;
+            background: #050d24; padding: 0 6px; pointer-events: none;
+        }
+        .pcc-search-action { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.25); border-radius: 8px; color: #38bdf8; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .pcc-search-action:hover { background: rgba(14,165,233,0.25); box-shadow: 0 0 12px rgba(14,165,233,0.3); }
+        /* Floating Badges */
+        .pcc-floating-badge { position: absolute; top: 0; right: 14px; transform: translateY(-50%); background: #050d24; padding: 0 6px; z-index: 2; display: flex; align-items: center; }
+        .pcc-meta-grid { padding: 12px 0 0; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+        /* Static Fields (Always Floated) */
+        .pcc-field { 
+            background: linear-gradient(to right, rgba(4,11,26,0.97) 0%, rgba(8,28,68,0.88) 70%, rgba(14,42,90,0.82) 100%);
+            border: 1px solid rgba(56,189,248,0.6);
+            border-left: 5px solid #38bdf8;
+            border-radius: 6px; padding: 12px 16px 10px; display: flex; flex-direction: column; justify-content: center; 
+            transition: all 0.2s; position: relative; margin-top: 10px; min-height: 54px;
+            box-shadow: inset 0 0 30px rgba(56,189,248,0.04);
+        }
+        .pcc-field:hover { 
+            border-color: rgba(56,189,248,0.85); border-left-color: #7dd3fc;
+            background: linear-gradient(to right, rgba(4,12,30,0.98) 0%, rgba(10,35,80,0.92) 70%, rgba(18,50,105,0.86) 100%);
+            box-shadow: -2px 0 12px rgba(56,189,248,0.3), inset 0 0 30px rgba(56,189,248,0.06);
+        }
+        .pcc-field-label { 
+            position: absolute; top: 0; left: 12px; transform: translateY(-50%);
+            font-size: 0.65rem; font-weight: 900; letter-spacing: 1.5px; color: #38bdf8; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; display: flex; align-items: center; gap: 5px; text-transform: uppercase; 
+            background: #050d24; padding: 0 6px;
+        }
+        .pcc-field-input { background: transparent; border: none; outline: none; color: #e2e8f0; font-family: monospace; font-size: 0.82rem; font-weight: 700; width: 100%; }
+        /* Tablet: tetap sejajar */
+        @@media (max-width: 1024px) {
+            .pcc-meta-grid { grid-template-columns: 1fr 1fr; }
+        }
+        /* Mobile only: stack */
+        @@media (max-width: 640px) {
+            .pcc-search-grid { grid-template-columns: 1fr; }
+            .pcc-meta-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+
+    <div class="text-center mb-4 animate__animated animate__fadeInDown">
+        <h1 class="m-0 fw-black text-white letter-spacing-2" style="font-size: 1.6rem; letter-spacing: 5px;">EXTRUDER PRODUCTION REPORT</h1>
+        <div class="text-info fw-bold tracking-widest mt-1" style="font-size: 0.95rem; letter-spacing: 4px;">( DIMENSION )</div>
     </div>
 
-    <!-- Item List Scanner Action Bar -->
-    <div class="search-container no-print">
-        <div class="row g-3 animate__animated animate__fadeInUp">
-            <!-- Left Console: Planning Master -->
-            <div class="col-md-7">
-                <div class="hud-console-pill">
-                    <div class="hud-label-mini">
-                        @{
-                            var dimMachine = Context.Session.GetString("MachineName");
-                            var dimIsAdmin = Context.Session.GetString("IsAdmin") == "true";
-                        }
-                        <i class="bi bi-list-check"></i>
-                        <span>PLANNING MASTER</span>
-                        @if (!dimIsAdmin && !string.IsNullOrEmpty(dimMachine))
-                        {
-                            <span class="ms-auto" style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.2);">
-                                <i class="bi bi-cpu-fill me-1"></i>@dimMachine
-                            </span>
-                        }
-                        else if (dimIsAdmin)
-                        {
-                            <span class="ms-auto" style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.2);">
-                                <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
-                            </span>
-                        }
+    <div class="animate__animated animate__fadeInUp">
+        <div class="pcc-search-grid">
+            <!-- Planning Master -->
+            <div class="pcc-search-box" onclick="document.getElementById('planningSearch').focus(); openPlanningDropdown();">
+                @{
+                    var dimMachine = Context.Session.GetString("MachineName");
+                    var dimIsAdmin = Context.Session.GetString("IsAdmin") == "true";
+                }
+                @if (!dimIsAdmin && !string.IsNullOrEmpty(dimMachine))
+                {
+                    <div class="pcc-floating-badge">
+                        <span style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:1px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.3);">
+                            <i class="bi bi-cpu-fill me-1"></i>@dimMachine
+                        </span>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <input id="planningSearch" type="text" class="hud-input-flat" 
-                               placeholder="PILIH PLANNING MASTER..." 
-                               oninput="filterPlanningResults(this.value)" 
-                               onfocus="openPlanningDropdown()" autocomplete="off" readonly
-                               style="cursor:pointer;" />
+                }
+                else if (dimIsAdmin)
+                {
+                    <div class="pcc-floating-badge">
+                        <span style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3);">
+                            <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
+                        </span>
                     </div>
-                    <div id="planningResults" class="planning-results d-none custom-tactical-scroll"></div>
+                }
+                <input id="planningSearch" type="text" class="pcc-search-input"
+                       placeholder=" "
+                       oninput="filterPlanningResults(this.value)"
+                       onfocus="openPlanningDropdown()"
+                       autocomplete="off" readonly style="cursor:pointer;" />
+                <label class="pcc-search-label">
+                    <i class="bi bi-search"></i>
+                    PLANNING MASTER
+                </label>
+                <div id="planningResults" class="planning-results d-none custom-tactical-scroll"
+                     style="position: absolute; top: calc(100% + 5px); left: 0; right: 0; background: #020617; border: 1px solid rgba(14,165,233,0.4); z-index: 9999; max-height: 450px; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14,165,233,0.1); border-radius: 12px;">
                 </div>
             </div>
 
-            <!-- Right Console: Masterlist SPS -->
-            <div class="col-md-5">
-                <div class="hud-console-pill">
-                    <div class="hud-label-mini">
-                        <i class="bi bi-search"></i>
-                        <span>SPS MASTERLIST</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <input type="text" id="main-item-search" class="hud-input-flat" 
-                               placeholder="SEARCH SPS MASTERLIST..." 
-                               autocomplete="off" 
-                               onkeypress="if(event.key === 'Enter') loadMaster()" />
-                        <button class="hud-btn-side" id="btn-master-search" onclick="loadMaster()" title="Trigger Master Search">
-                            <i class="bi bi-lightning-fill"></i>
-                        </button>
-                    </div>
-                </div>
+            <!-- Manual Protocol / SPS Masterlist -->
+            <div class="pcc-search-box">
+                <input id="main-item-search" type="text" class="pcc-search-input"
+                       placeholder=" "
+                       autocomplete="off"
+                       onkeypress="if(event.key === 'Enter') loadMaster()" />
+                <label class="pcc-search-label">
+                    <i class="bi bi-list-check"></i>
+                    SPS MASTERLIST
+                </label>
+                <button type="button"
+                        onclick="loadMaster()"
+                        class="pcc-search-action">
+                    <i class="bi bi-lightning-fill"></i>
+                </button>
             </div>
-            <input type="hidden" id="itemCode" value="@Model.ItemCode" />
         </div>
-    </div>
+        
+        <input type="hidden" id="itemCode" value="@Model.ItemCode" />
 
-    <!-- Unified Technical HUD Dashboard -->
-    <div class="tech-header-ribbon animate__animated animate__fadeIn">
-        <!-- CLUSTER 1: MACHINE -->
-        <div class="header-cluster" style="border-left-color: #fca311;">
-            <span class="m-lbl"><i class="bi bi-gear-wide-connected m-icon" style="color: #fca311;"></i> PRODUCTION MACHINE</span>
-            <div class="m-row">
-                <span class="m-val" id="h-line" style="color: #fca311;">@(Model.MachineName ?? "---")</span>
+        <!-- META FIELDS ROW -->
+        <div class="pcc-meta-grid">
+            <!-- Machine -->
+            <div class="pcc-field" style="border-color: rgba(245,158,11,0.5);">
+                <div class="pcc-field-label" style="color: #fca311;">
+                    <i class="bi bi-gear-wide-connected"></i> PRODUCTION MACHINE
+                </div>
+                <div class="pcc-field-input" id="h-line" style="color: #fca311;">@(Model.MachineName ?? "---")</div>
             </div>
-        </div>
-        <!-- CLUSTER 2: DOC -->
-        <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-tag-fill m-icon"></i> DOC NO.</span>
-            <div class="m-row">
-                <span class="m-val" id="h-doc">@(string.IsNullOrEmpty(Model.DocumentNumber) ? "---" : Model.DocumentNumber)</span>
-                <span class="m-sub" id="h-rev">REV.0</span>
-            </div>
-        </div>
-        <!-- CLUSTER 3: TIMING -->
-        <div class="header-cluster">
-            <span class="m-lbl"><i class="bi bi-clock-fill m-icon"></i> TIME / SHIFT</span>
-            <div class="m-row">
-                <span class="m-val" id="h-date" onclick="selectHUDDate()" style="font-size: 11px; cursor: pointer;" title="CLICK TO CHANGE DATE">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
-                <span class="m-divider"></span>
-                <span class="m-val m-accent" id="h-shift" onclick="toggleShift()" style="cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
-            </div>
-        </div>
-        <!-- CLUSTER 4: OPERATOR & SPEC -->
-        <div class="header-cluster" style="border-left-color: #0d6efd;">
-            <span class="m-lbl"><i class="bi bi-person-badge-fill m-icon" style="color: #0d6efd;"></i> OPERATOR / SPEC</span>
-            <div class="m-row">
-                <div id="h-row-hose" style="display: flex; align-items: center; gap: 8px;">
-                    <span class="m-val" id="h-operator" style="color: #0d6efd;">@(Model.CreatedBy ?? "---")</span>
-                    <span class="m-divider"></span>
-                    <span class="m-val m-accent" id="h-hose" style="font-size: 11px;">---</span>
+
+            <!-- Doc No -->
+            <div class="pcc-field">
+                <div class="pcc-field-label">
+                    <i class="bi bi-tag-fill"></i> DOC NO.
+                </div>
+                <div class="pcc-field-input" style="display:flex; justify-content:space-between;">
+                    <span id="h-doc">@(string.IsNullOrEmpty(Model.DocumentNumber) ? "---" : Model.DocumentNumber)</span>
+                    <span id="h-rev" style="color: rgba(14,165,233,0.6); font-size: 0.7rem;">REV.0</span>
                 </div>
             </div>
-        </div>
+
+            <!-- Time / Shift -->
+            <div class="pcc-field">
+                <div class="pcc-field-label">
+                    <i class="bi bi-clock-fill"></i> TIME / SHIFT
+                </div>
+                <div class="pcc-field-input" style="display:flex; justify-content:space-between;">
+                    <span id="h-date" onclick="selectHUDDate()" style="cursor: pointer;" title="CLICK TO CHANGE DATE">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
+                    <span id="h-shift" onclick="toggleShift()" style="color: #38bdf8; cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
+                </div>
+            </div>
+
+            <!-- Operator / Spec -->
+            <div class="pcc-field" style="border-color: rgba(13,110,253,0.5);">
+                <div class="pcc-field-label" style="color: #0d6efd;">
+                    <i class="bi bi-person-badge-fill"></i> OPERATOR / SPEC
+                </div>
+                <div class="pcc-field-input" style="display:flex; justify-content:space-between;">
+                    <span id="h-operator" style="color: #0d6efd;">@(Model.CreatedBy ?? "---")</span>
+                    <span id="h-hose" style="color: #38bdf8; font-size: 0.7rem; margin-top:2px;">---</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -2296,9 +2360,9 @@
                     if(docEl) docEl.innerText = m.docNo || "---";
                     if(revEl) revEl.innerText = "REV." + (m.revNo || "0");
 
-                    // Update SPS Masterlist input with SPS document number
+                    // Update SPS Masterlist input with Item List (instead of Document Number)
                     const searchInput = document.getElementById('main-item-search');
-                    if(searchInput) searchInput.value = m.docNo || m.itemList || m.hoseType || code;
+                    if(searchInput) searchInput.value = m.itemList || code || m.docNo || m.hoseType;
 
                     // Capture specific SpsId to bind the report exactly to this specification row
                     window._dimSpsId = data.id || m.id || m.spsId || null;
@@ -2364,14 +2428,14 @@
                         const configs = [
                             // Inner Diameter: prioritize exact innerTarget, fallback to dimensi
                             { id: 'innerdia', v: m.innerTarget || m.dimensi, t: m.innerTol || m.toleranceInner, el: 'inner-dia', dt: 0.1 },
-                            // Inner Thickness: use exact thickTarget, fallback to tebalInner
-                            { id: 'innertx', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-tx', dt: 0.2 },
-                            { id: 'innerty', v: m.thickTarget || m.tebalInner, t: m.thickTol || m.toleranceOuter, el: 'inner-ty', dt: 0.2 },
-                            { id: 'innermidtx', v: m.innerMidTarget || m.tebalInnerMiddle, t: m.innerMidTol || m.toleranceOuter, el: 'innermid-tx', dt: 0.2 },
-                            { id: 'innermidty', v: m.innerMidTarget || m.tebalInnerMiddle, t: m.innerMidTol || m.toleranceOuter, el: 'innermid-ty', dt: 0.2 },
-                            // Total Thickness: use exact totalTarget, not range string tebalTotal
-                            { id: 'totaltx', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-tx', dt: 0.2 },
-                            { id: 'totalty', v: m.totalTarget || m.tebalTotal, t: m.totalTol || m.toleranceOuter, el: 'total-ty', dt: 0.2 },
+                            // Inner Thickness: use thickTol ONLY — never fall back to toleranceOuter (which is an outer-dia string)
+                            { id: 'innertx', v: m.thickTarget || m.tebalInner, t: m.thickTol, el: 'inner-tx', dt: 0.1 },
+                            { id: 'innerty', v: m.thickTarget || m.tebalInner, t: m.thickTol, el: 'inner-ty', dt: 0.1 },
+                            { id: 'innermidtx', v: m.innerMidTarget || m.tebalInnerMiddle, t: m.innerMidTol || m.thickTol, el: 'innermid-tx', dt: 0.1 },
+                            { id: 'innermidty', v: m.innerMidTarget || m.tebalInnerMiddle, t: m.innerMidTol || m.thickTol, el: 'innermid-ty', dt: 0.1 },
+                            // Total Thickness: use totalTol ONLY — never fall back to toleranceOuter
+                            { id: 'totaltx', v: m.totalTarget || m.tebalTotal, t: m.totalTol, el: 'total-tx', dt: 0.1 },
+                            { id: 'totalty', v: m.totalTarget || m.tebalTotal, t: m.totalTol, el: 'total-ty', dt: 0.1 },
                             { id: 'spiral', v: m.spiralPitchSetting || m.spiralPitchDisplay, t: m.toleranceSpiralPitch, el: 'spiral', dt: 5 }
                         ];
 

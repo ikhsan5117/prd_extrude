@@ -23,95 +23,324 @@
             <input type="hidden" id="ProductionStartTime" name="ProductionStartTime" />
             <input type="hidden" id="ProductionEndTime" name="ProductionEndTime" />
             <!-- SECTION: PRODUCTION COMMAND CONSOLE (TOP HEADER) -->
-            <div class="hud-card mb-4 shadow-hud-blue border-white border-opacity-10" style="position: relative; z-index: 1050; overflow: visible;">
-                <div class="hud-card-header d-flex justify-content-between align-items-center py-2 px-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-terminal-fill hud-card-icon fs-6"></i>
-                        <span class="hud-card-title small tracking-widest font-monospace">PRODUCTION COMMAND CONSOLE</span>
-                    </div>
-                    <div class="d-flex gap-3 super-small font-black opacity-40 text-uppercase letter-spacing-2">
-                        <span><i class="bi bi-file-text me-1"></i>DOC: <input asp-for="DocumentNumber" id="DocNo" class="bg-transparent border-0 text-white-50 w-auto" placeholder="AUTO" /></span>
-                        <span><i class="bi bi-activity me-1"></i>REV: <input asp-for="RevisionNumber" id="RevNo" class="bg-transparent border-0 text-white-50 w-auto" placeholder="0" /></span>
-                    </div>
-                </div>
+            <div class="mb-4 no-print" style="position: relative; z-index: 1050; overflow: visible;">
+                <style>
+                    .pcc-wrapper {
+                        background: linear-gradient(135deg, rgba(2,8,23,0.98) 0%, rgba(8,20,48,0.98) 100%);
+                        border: 1px solid #38bdf8;
+                        border-radius: 16px;
+                        box-shadow: 0 0 20px rgba(56,189,248,0.25), 0 25px 50px rgba(0,0,0,0.6), inset 0 0 15px rgba(56,189,248,0.1);
+                        overflow: visible;
+                        position: relative;
+                    }
+                    .pcc-wrapper::before {
+                        content: '';
+                        position: absolute;
+                        top: 0; left: 0; right: 0;
+                        height: 2px;
+                        background: linear-gradient(90deg, transparent 0%, rgba(14,165,233,0.8) 30%, rgba(56,189,248,1) 50%, rgba(14,165,233,0.8) 70%, transparent 100%);
+                        border-radius: 16px 16px 0 0;
+                    }
+                    .pcc-topbar {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 14px 20px 12px;
+                        border-bottom: 1px solid rgba(14,165,233,0.12);
+                        background: linear-gradient(90deg, rgba(14,165,233,0.08) 0%, transparent 60%);
+                    }
+                    .pcc-brand {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+                    .pcc-brand-icon {
+                        width: 36px; height: 36px;
+                        background: linear-gradient(135deg, rgba(14,165,233,0.2), rgba(56,189,248,0.1));
+                        border: 1px solid rgba(14,165,233,0.4);
+                        border-radius: 10px;
+                        display: flex; align-items: center; justify-content: center;
+                        color: #38bdf8;
+                        font-size: 1rem;
+                        box-shadow: 0 0 15px rgba(14,165,233,0.2);
+                    }
+                    .pcc-title {
+                        font-size: 0.75rem;
+                        font-weight: 900;
+                        letter-spacing: 3px;
+                        color: #e0f2fe;
+                        font-family: monospace;
+                        line-height: 1;
+                    }
+                    .pcc-subtitle {
+                        font-size: 0.58rem;
+                        color: rgba(14,165,233,0.6);
+                        letter-spacing: 2px;
+                        font-family: monospace;
+                        margin-top: 2px;
+                    }
+                    .pcc-meta-badge {
+                        display: flex;
+                        gap: 10px;
+                        align-items: center;
+                    }
+                    .pcc-badge-item {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        background: rgba(14,165,233,0.12);
+                        border: 1px solid rgba(14,165,233,0.35);
+                        border-radius: 8px;
+                        padding: 5px 12px;
+                        font-size: 0.65rem;
+                        color: rgba(255,255,255,0.85);
+                        font-family: monospace;
+                        letter-spacing: 1px;
+                    }
+                    .pcc-badge-item i { color: #38bdf8; }
+                    .pcc-badge-item input {
+                        background: transparent;
+                        border: none;
+                        color: #ffffff;
+                        font-family: monospace;
+                        font-size: 0.65rem;
+                        width: 60px;
+                        outline: none;
+                        letter-spacing: 1px;
+                        font-weight: 700;
+                    }
+                    .pcc-search-grid {
+                        padding: 16px 20px;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                        border-bottom: 1px solid rgba(14,165,233,0.08);
+                    }
+                    .pcc-search-box {
+                        background: rgba(255,255,255,0.03);
+                        border: 1px solid rgba(56,189,248,0.8);
+                        border-radius: 12px;
+                        display: flex;
+                        flex-direction: column;
+                        padding: 10px 14px;
+                        gap: 4px;
+                        transition: border-color 0.2s, box-shadow 0.2s;
+                        cursor: pointer;
+                        position: relative;
+                    }
+                    .pcc-search-box:focus-within {
+                        border-color: rgba(14,165,233,0.6);
+                        box-shadow: 0 0 0 3px rgba(14,165,233,0.08), 0 0 20px rgba(14,165,233,0.1);
+                    }
+                    .pcc-search-label {
+                        font-size: 0.58rem;
+                        font-weight: 900;
+                        letter-spacing: 2px;
+                        color: #38bdf8;
+                        font-family: monospace;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    .pcc-search-input {
+                        background: transparent;
+                        border: none;
+                        outline: none;
+                        color: #f0f9ff;
+                        font-family: monospace;
+                        font-size: 0.9rem;
+                        font-weight: 700;
+                        width: 100%;
+                    }
+                    .pcc-search-input::placeholder { color: rgba(148,163,184,0.4); font-weight: 400; }
+                    .pcc-search-action {
+                        position: absolute;
+                        right: 12px; top: 50%;
+                        transform: translateY(-50%);
+                        background: rgba(14,165,233,0.12);
+                        border: 1px solid rgba(14,165,233,0.25);
+                        border-radius: 8px;
+                        color: #38bdf8;
+                        width: 34px; height: 34px;
+                        display: flex; align-items: center; justify-content: center;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    }
+                    .pcc-search-action:hover {
+                        background: rgba(14,165,233,0.25);
+                        box-shadow: 0 0 12px rgba(14,165,233,0.3);
+                    }
+                    .pcc-meta-grid {
+                        padding: 14px 20px;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr 1fr 1fr;
+                        gap: 10px;
+                    }
+                    .pcc-field {
+                        background: rgba(255,255,255,0.02);
+                        border: 1px solid rgba(56,189,248,0.6);
+                        border-radius: 10px;
+                        padding: 8px 12px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 3px;
+                        transition: border-color 0.2s;
+                    }
+                    .pcc-field:focus-within {
+                        border-color: rgba(14,165,233,0.3);
+                    }
+                    .pcc-field-label {
+                        font-size: 0.55rem;
+                        font-weight: 900;
+                        letter-spacing: 2px;
+                        color: #38bdf8;
+                        font-family: monospace;
+                        display: flex; align-items: center; gap: 5px;
+                    }
+                    .pcc-field-input {
+                        background: transparent;
+                        border: none;
+                        outline: none;
+                        color: #e2e8f0;
+                        font-family: monospace;
+                        font-size: 0.82rem;
+                        font-weight: 700;
+                        width: 100%;
+                    }
+                    .pcc-field-input::placeholder { color: rgba(148,163,184,0.35); font-weight: 400; }
+                    .pcc-field-input option { background: #0f172a; }
+                    @@media (max-width: 1024px) {
+                        .pcc-search-grid { grid-template-columns: 1fr; }
+                        .pcc-meta-grid { grid-template-columns: 1fr 1fr; }
+                        .pcc-meta-badge { flex-wrap: wrap; gap: 6px; }
+                        .pcc-badge-item input { width: 110px; }
+                    }
+                    @@media (max-width: 480px) {
+                        .pcc-meta-badge { display: none; }
+                    }
+                </style>
 
-                <!-- NEW: SPS PROTOCOL SYNC -->
-                <div class="p-3 bg-black bg-opacity-20 border-bottom border-white border-opacity-5 no-print">
-                    <div class="row g-3 align-items-center">
-                        <div class="col-md-7">
-                            <div class="hud-pill p-0 d-flex flex-row border border-info border-opacity-50" style="min-height: 60px; position: relative; background: #0f172a; border-radius: 8px;">
-                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center" style="cursor: pointer;" onclick="document.getElementById('planningSearch').focus(); openPlanningDropdown();">
-                                    <div class="d-flex align-items-center gap-2 mb-0">
-                                        <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px; cursor: pointer;"><i class="bi bi-list-check me-2"></i>PLANNING MASTER</label>
-                                        @{
-                                            var sessionMachine = Context.Session.GetString("MachineName");
-                                            var sessionIsAdmin = Context.Session.GetString("IsAdmin") == "true";
-                                        }
-                                        @if (!sessionIsAdmin && !string.IsNullOrEmpty(sessionMachine))
-                                        {
-                                            <span class="ms-1" style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.3); white-space:nowrap;">
-                                                <i class="bi bi-cpu-fill me-1"></i>@sessionMachine
-                                            </span>
-                                        }
-                                        else if (sessionIsAdmin)
-                                        {
-                                            <span class="ms-1" style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3); white-space:nowrap;">
-                                                <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
-                                            </span>
-                                        }
-                                    </div>
-                                    <input id="planningSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none; cursor: pointer;" placeholder="PILIH PLANNING MASTER..." oninput="filterPlanningResults(this.value)" onfocus="openPlanningDropdown()" onclick="openPlanningDropdown()" autocomplete="off" readonly />
-                                </div>
+                <div class="pcc-wrapper">
+                    <!-- TOP BAR -->
+                    <div class="pcc-topbar">
+                        <div class="pcc-brand">
+                            <div class="pcc-brand-icon">
+                                <i class="bi bi-terminal-fill"></i>
+                            </div>
+                            <div>
+                                <div class="pcc-title">PRODUCTION</div>
+                                <div class="pcc-subtitle">VELASTO INDUSTRIAL</div>
                             </div>
                         </div>
-                        <div class="col-md-5">
-                            <div class="hud-pill p-0 d-flex flex-row overflow-hidden border border-info border-opacity-50" style="min-height: 60px; background: #0f172a; border-radius: 8px;">
-                                <div class="flex-grow-1 p-2 px-3 d-flex flex-column justify-content-center">
-                                    <label class="mb-0 text-info font-black" style="font-size: 0.65rem; letter-spacing: 1px;"><i class="bi bi-keyboard me-2"></i>MANUAL PROTOCOL</label>
-                                    <input id="manualItemSearch" type="text" class="hud-input bg-transparent border-0 py-1 font-monospace text-white fw-bold" style="font-size: 1rem; outline: none;" placeholder="SEARCH SPS MASTERLIST..." onchange="if(this.value) fetchSpsByItem(this.value)" onkeyup="if(event.key === 'Enter' && this.value) { fetchSpsByItem(this.value); this.blur(); }" autocomplete="off" />
-                                </div>
-                                <button type="button" onclick="let v = document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);" class="btn border-0 rounded-0 px-3 d-flex align-items-center justify-content-center border-start border-info border-opacity-20" style="min-width: 60px; background: rgba(14, 165, 233, 0.1); color: #0ea5e9;" title="Search">
-                                    <i class="bi bi-search fs-4"></i>
-                                </button>
+                        <div class="pcc-meta-badge">
+                            <div class="pcc-badge-item">
+                                <i class="bi bi-file-text-fill"></i>
+                                DOC:&nbsp;<input asp-for="DocumentNumber" id="DocNo" placeholder="AUTO" style="width:140px;" />
+                            </div>
+                            <div class="pcc-badge-item">
+                                <i class="bi bi-activity"></i>
+                                REV:&nbsp;<input asp-for="RevisionNumber" id="RevNo" placeholder="0" style="width:30px;" />
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tactical Results Container (Wider & Repositioned) -->
-                    <div id="planningResults" class="d-none custom-tactical-scroll" style="position: absolute; top: 135px; left: 15px; right: 15px; background: #0f172a; border: 2px solid #0ea5e9; z-index: 9999; max-height: 450px; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.9); border-radius: 12px;">
-                        <!-- Items will be injected here -->
+                    <!-- SEARCH ROW -->
+                    <div class="pcc-search-grid">
+                        <!-- Planning Master -->
+                        <div class="pcc-search-box" onclick="document.getElementById('planningSearch').focus(); openPlanningDropdown();">
+                            <div class="pcc-search-label">
+                                <i class="bi bi-list-check"></i>
+                                PLANNING MASTER
+                                @{
+                                    var sessionMachine = Context.Session.GetString("MachineName");
+                                    var sessionIsAdmin = Context.Session.GetString("IsAdmin") == "true";
+                                }
+                                @if (!sessionIsAdmin && !string.IsNullOrEmpty(sessionMachine))
+                                {
+                                    <span style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:1px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.3);">
+                                        <i class="bi bi-cpu-fill me-1"></i>@sessionMachine
+                                    </span>
+                                }
+                                else if (sessionIsAdmin)
+                                {
+                                    <span style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3);">
+                                        <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
+                                    </span>
+                                }
+                            </div>
+                            <input id="planningSearch" type="text" class="pcc-search-input"
+                                   placeholder="PILIH PLANNING MASTER..."
+                                   oninput="filterPlanningResults(this.value)"
+                                   onfocus="openPlanningDropdown()"
+                                   onclick="openPlanningDropdown()"
+                                   autocomplete="off" readonly />
+                            
+                            <!-- Tactical Results Container -->
+                            <div id="planningResults" class="d-none custom-tactical-scroll"
+                                 style="position: absolute; top: calc(100% + 5px); left: 0; right: 0; background: #020617; border: 1px solid rgba(14,165,233,0.4); z-index: 9999; max-height: 450px; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14,165,233,0.1); border-radius: 12px;">
+                                <!-- Items will be injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Manual Protocol -->
+                        <div class="pcc-search-box">
+                            <div class="pcc-search-label">
+                                <i class="bi bi-keyboard"></i>
+                                MANUAL PROTOCOL
+                            </div>
+                            <input id="manualItemSearch" type="text" class="pcc-search-input"
+                                   placeholder="SEARCH SPS MASTERLIST..."
+                                   onchange="if(this.value) fetchSpsByItem(this.value)"
+                                   onkeyup="if(event.key==='Enter' && this.value){ fetchSpsByItem(this.value); this.blur(); }"
+                                   autocomplete="off" />
+                            <button type="button"
+                                    onclick="let v=document.getElementById('manualItemSearch').value; if(v) fetchSpsByItem(v);"
+                                    class="pcc-search-action">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
 
+                    <!-- META FIELDS ROW -->
+                    <div class="pcc-meta-grid">
+                        <!-- System Date -->
+                        <div class="pcc-field">
+                            <div class="pcc-field-label">
+                                <i class="bi bi-calendar-check-fill"></i> SYSTEM DATE
+                            </div>
+                            <input type="date" asp-for="ProductionDate" id="ProductionDate"
+                                   class="pcc-field-input"
+                                   value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   required onchange="refreshPlanningItems()" />
+                        </div>
 
-                <div class="p-2 bg-black bg-opacity-10">
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
-                                <label><i class="bi bi-calendar-check me-2 text-info"></i>SYSTEM DATE</label>
-                                <input type="date" asp-for="ProductionDate" id="ProductionDate" class="hud-input font-monospace text-primary-glow" value="@DateTime.Now.ToString("yyyy-MM-dd")" required onchange="refreshPlanningItems()" />
+                        <!-- Shift Monitoring -->
+                        <div class="pcc-field">
+                            <div class="pcc-field-label">
+                                <i class="bi bi-clock-history"></i> SHIFT MONITORING
                             </div>
+                            <select asp-for="Shift" id="Shift" class="pcc-field-input" onchange="refreshPlanningItems()">
+                                <option value="Shift 1" class="bg-dark">SHIFT 1 (19:30 - 07:30)</option>
+                                <option value="Shift 2" class="bg-dark">SHIFT 2 (07:30 - 19:30)</option>
+                            </select>
                         </div>
-                        <div class="col-6">
-                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
-                                <label><i class="bi bi-clock-history me-2 text-info"></i>SHIFT MONITORING</label>
-                                <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0 text-white" style="-webkit-appearance: none;" onchange="refreshPlanningItems()">
-                                    <option value="Shift 1" class="bg-dark">SHIFT 1 (19:30 - 07:30)</option>
-                                    <option value="Shift 2" class="bg-dark">SHIFT 2 (07:30 - 19:30)</option>
-                                </select>
+
+                        <!-- Customer Entity -->
+                        <div class="pcc-field">
+                            <div class="pcc-field-label">
+                                <i class="bi bi-building-fill"></i> CUSTOMER ENTITY
                             </div>
+                            <input asp-for="CustomerName" id="CustomerName"
+                                   class="pcc-field-input" placeholder="PT. ADM" />
                         </div>
-                        <div class="col-6">
-                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
-                                <label><i class="bi bi-building me-2 text-info"></i>CUSTOMER ENTITY</label>
-                                <input asp-for="CustomerName" id="CustomerName" class="hud-input small text-white font-black" placeholder="PT. ADM" />
+
+                        <!-- Hose Specification Type -->
+                        <div class="pcc-field">
+                            <div class="pcc-field-label">
+                                <i class="bi bi-cpu-fill"></i> HOSE SPEC TYPE
                             </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="hud-pill-integrated border border-info border-opacity-20" style="background: rgba(15, 23, 42, 0.8);">
-                                <label><i class="bi bi-cpu me-2 text-info"></i>HOSE SPECIFICATION TYPE</label>
-                                <input asp-for="HoseType" id="HoseType" class="hud-input small font-monospace text-white" placeholder="Extrusion Spec Name..." />
-                            </div>
+                            <input asp-for="HoseType" id="HoseType"
+                                   class="pcc-field-input" placeholder="Spec Name..." />
                         </div>
                     </div>
                 </div>
@@ -776,8 +1005,8 @@
                     </div>
                     
                     <!-- ADD CHECK Button - Always Visible -->
-                    <div class="add-check-trigger d-flex align-items-center gap-2 cursor-pointer no-select" onclick="addReadingPoint()">
-                        <i class="bi bi-plus fs-2 text-white"></i>
+                    <div class="add-check-trigger add-check-pulse d-flex align-items-center gap-2 cursor-pointer no-select" onclick="addReadingPoint()">
+                        <i class="bi bi-plus-circle fs-3 text-info"></i>
                         <span class="text-white fw-900 tracking-widest" style="font-size: 1.1rem;">ADD CHECK</span>
                     </div>
                 </div>
@@ -790,15 +1019,26 @@
             <style>
                 .no-select { user-select: none; }
                 .add-check-trigger { 
-                    opacity: 0.6; 
+                    opacity: 1; 
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    padding: 8px 15px;
+                    padding: 10px 20px;
                     border-radius: 8px;
+                    border: 1px solid rgba(13, 202, 240, 0.5);
+                    background: rgba(13, 202, 240, 0.05);
                 }
                 .add-check-trigger:hover { 
-                    opacity: 1; 
-                    background: rgba(255,255,255,0.05);
-                    transform: translateX(5px);
+                    opacity: 1;
+                    background: rgba(13, 202, 240, 0.15);
+                    box-shadow: 0 0 15px rgba(13, 202, 240, 0.4);
+                    transform: translateY(-2px);
+                }
+                @@keyframes pulse-border {
+                    0%   { box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.5); }
+                    70%  { box-shadow: 0 0 0 10px rgba(13, 202, 240, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(13, 202, 240, 0); }
+                }
+                .add-check-pulse {
+                    animation: pulse-border 2s infinite;
                 }
                 .active-tab { 
                     background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; 
@@ -1453,9 +1693,15 @@
                     const maxEl = document.getElementById('spec_max_' + key);
                     if (minEl || stdEl || maxEl) {
                         const parts = val.split('|').map(s => s.trim());
-                        if (minEl) minEl.textContent = parts[0] || '--';
-                        if (stdEl) stdEl.textContent = parts[1] || (parts[0] || '--');
-                        if (maxEl) maxEl.textContent = parts[2] || '--';
+                        if (parts.length === 1) {
+                            if (minEl) minEl.textContent = '--';
+                            if (stdEl) stdEl.textContent = parts[0] || '--';
+                            if (maxEl) maxEl.textContent = '--';
+                        } else {
+                            if (minEl) minEl.textContent = parts[0] || '--';
+                            if (stdEl) stdEl.textContent = parts[1] || (parts[0] || '--');
+                            if (maxEl) maxEl.textContent = parts[2] || '--';
+                        }
                     }
                     el.classList.add('blink-once');
                     
@@ -1683,11 +1929,23 @@
             try {
                 // Pipe-separated "min | std | max" format (e.g. "25,70 | 25,80 | 25,90")
                 if (specText.includes('|')) {
-                    const parts = specText.split('|').map(s => parseFloat(s.replace(',', '.').trim()));
-                    const pMin = parts[0];
-                    const pMax = parts[parts.length - 1];
-                    if (!isNaN(pMin) && !isNaN(pMax)) return (val >= pMin && val <= pMax);
-                    return true;
+                    const rawParts = specText.split('|').map(s => s.trim());
+                    const sMin = rawParts[0];
+                    const sStd = rawParts[1] || '';
+                    const sMax = rawParts[rawParts.length - 1];
+
+                    const pMin = parseFloat(sMin.replace(',', '.'));
+                    const pMax = parseFloat(sMax.replace(',', '.'));
+
+                    const hasMinLimit = !isNaN(pMin);
+                    const hasMaxLimit = !isNaN(pMax);
+
+                    if (hasMinLimit && hasMaxLimit) return (val >= pMin && val <= pMax);
+                    if (hasMinLimit) return (val >= pMin);
+                    if (hasMaxLimit) return (val <= pMax);
+
+                    // If neither MIN nor MAX is a number, fallback to STD string logic (e.g. "Max 120")
+                    specText = sStd;
                 }
 
                 // Normalize specText as well (replace comma with dot)
