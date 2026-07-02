@@ -462,9 +462,10 @@
 <script src="~/lib/offline-cdn/dexie.min.js"></script>
 
 <script>
-    // Inisialisasi Dexie untuk akses offline login data
-    const db = new Dexie('ExtrudeDB');
-    db.version(1).stores({
+    // Inisialisasi Dexie — HARUS sama dengan VelastoOfflineDB di offline-sync.js
+    const db = new Dexie('VelastoOfflineDB');
+    db.version(2).stores({
+        syncQueue: '++id, url, timestamp, retryCount',
         apiCache: 'key, timestamp'
     });
 
@@ -472,22 +473,29 @@
         const defaultPassword = "extrude123!";
         let isAdminMode = false;
 
-        // Cek jika OFFLINE saat halaman dimuat
-        if (!navigator.onLine) {
+        // Cek jika OFFLINE atau DB server tidak terjangkau
+        const isDbOffline = @(ViewBag.DbOffline == true ? "true" : "false");
+        const needLoadFromCache = !navigator.onLine || isDbOffline;
+
+        if (needLoadFromCache) {
+            const msg = isDbOffline
+                ? 'Server database tidak terjangkau. Memuat data dari cache lokal...'
+                : 'Mencoba memuat data pengguna dari Cache Lokal...';
+
             Swal.fire({
-                title: 'Mode Offline',
-                text: 'Mencoba memuat data pengguna dari Cache Lokal...',
+                title: '⚡ Mode Offline',
+                text: msg,
                 icon: 'info',
-                timer: 1500,
+                timer: 2000,
                 showConfirmButton: false
             });
-            
-            // Load dropdown data from Dexie
+
+            // Load dropdown data dari VelastoOfflineDB
             db.apiCache.get('LOGIN_DATA').then(data => {
                 if (data && data.data) {
                     const users = data.data.users;
                     const machines = data.data.machines;
-                    
+
                     let userHtml = '<option value="">-- Pilih Operator --</option>';
                     users.forEach(u => {
                         userHtml += `<option value="${u.id}">${u.fullName}</option>`;
@@ -500,9 +508,13 @@
                     });
                     $('#machineId').html(machineHtml);
                 } else {
-                    Swal.fire('Data Tidak Ditemukan', 'Anda belum pernah melakukan Sync Master Data di perangkat ini.', 'warning');
+                    Swal.fire(
+                        'Cache Tidak Ditemukan',
+                        'Belum ada data yang tersinkron di perangkat ini. Hubungkan ke jaringan lalu lakukan Sync Master Data terlebih dahulu.',
+                        'warning'
+                    );
                 }
-            }).catch(e => console.error(e));
+            }).catch(e => console.error('[Offline Login] Error membaca IndexedDB:', e));
         }
 
         // Toggle Admin Mode
@@ -619,11 +631,11 @@
                 timer: 1500,
                 showConfirmButton: false
             }).then(() => {
-                // Redirect to App
-                if (sessionData.isAdmin === "true") {
-                    window.location.href = '/ProductionReport/ChartAnalysis';
+                // Redirect ke halaman yang bisa diakses offline
+                if (userRole === 'SUPERADMIN' || userRole === 'ADMIN_PROD' || userRole === 'ADMIN_ENG') {
+                    window.location.href = '/Dimensi/App';
                 } else {
-                    window.location.href = '/ProductionReport/Create';
+                    window.location.href = '/Dimensi/App';
                 }
             });
         });

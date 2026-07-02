@@ -24,11 +24,11 @@
 
         if (sidebarIsAdmin && sidebarRole == "SUPERADMIN")
         {
-            inboxPendingCount = await ApprovalService.CountInboxPendingAsync();
+            try { inboxPendingCount = await ApprovalService.CountInboxPendingAsync(); } catch { inboxPendingCount = 0; }
         }
         else if (!sidebarIsAdmin || sidebarRole == "ADMIN_ENG")
         {
-            myOpenRequestCount = await ApprovalService.CountMyOpenRequestsAsync();
+            try { myOpenRequestCount = await ApprovalService.CountMyOpenRequestsAsync(); } catch { myOpenRequestCount = 0; }
         }
     }
 
@@ -72,7 +72,7 @@
                         <div class="text-white-50 super-small text-uppercase fw-bold d-none d-md-block" style="font-size: 0.6rem; letter-spacing: 1px;">Machine</div>
                         <div class="text-warning fw-bold" style="font-size: 0.85rem;" id="nav-machine-display">-</div>
                     </div>
-                    <a href="/Account/Login" onclick="localStorage.removeItem('offline_session');" class="btn btn-outline-danger btn-sm border-0 rounded-circle" title="Change User/Machine">
+                    <a href="/Account/Logout" onclick="localStorage.removeItem('offline_session');" class="btn btn-outline-danger btn-sm border-0 rounded-circle" title="Logout">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
                 </div>

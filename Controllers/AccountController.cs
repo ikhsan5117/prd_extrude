@@ -25,15 +25,25 @@ namespace VelastoProductionSystem.Controllers
                 return RedirectToAction("Create", "ProductionReport");
             }
 
-            ViewBag.Users = await _context.ElwpUsers
-                .Where(u => u.IsActive && u.AreaId == 1) // Hanya area Extrude
-                .OrderBy(u => u.FullName)
-                .ToListAsync();
+            try
+            {
+                ViewBag.Users = await _context.ElwpUsers
+                    .Where(u => u.IsActive && u.AreaId == 1)
+                    .OrderBy(u => u.FullName)
+                    .ToListAsync();
 
-            ViewBag.Machines = await _context.ElwpMachines
-                .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
-                .OrderBy(m => m.KodeMesin)
-                .ToListAsync();
+                ViewBag.Machines = await _context.ElwpMachines
+                    .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
+                    .OrderBy(m => m.KodeMesin)
+                    .ToListAsync();
+            }
+            catch
+            {
+                // DB tidak terjangkau — tampilkan login kosong, data akan diisi dari IndexedDB oleh JS
+                ViewBag.Users = new List<VelastoProductionSystem.Models.ElwpUser>();
+                ViewBag.Machines = new List<VelastoProductionSystem.Models.ElwpMachine>();
+                ViewBag.DbOffline = true;
+            }
 
             return View();
         }
@@ -202,15 +212,24 @@ namespace VelastoProductionSystem.Controllers
 
         private async Task PrepareLoginViewData()
         {
-            ViewBag.Users = await _context.ElwpUsers
-                .Where(u => u.IsActive && u.AreaId == 1)
-                .OrderBy(u => u.FullName)
-                .ToListAsync();
+            try
+            {
+                ViewBag.Users = await _context.ElwpUsers
+                    .Where(u => u.IsActive && u.AreaId == 1)
+                    .OrderBy(u => u.FullName)
+                    .ToListAsync();
 
-            ViewBag.Machines = await _context.ElwpMachines
-                .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
-                .OrderBy(m => m.KodeMesin)
-                .ToListAsync();
+                ViewBag.Machines = await _context.ElwpMachines
+                    .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
+                    .OrderBy(m => m.KodeMesin)
+                    .ToListAsync();
+            }
+            catch
+            {
+                ViewBag.Users = new List<VelastoProductionSystem.Models.ElwpUser>();
+                ViewBag.Machines = new List<VelastoProductionSystem.Models.ElwpMachine>();
+                ViewBag.DbOffline = true;
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ using VelastoProductionSystem.Helpers;
 using VelastoProductionSystem.WebSockets;
 using VelastoProductionSystem.Hubs;
 using VelastoProductionSystem.Services;
+using VelastoProductionSystem.Middleware;
 
 // Set EPPlus License globally for version 8+
 OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
@@ -247,6 +248,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseStaticFiles();
+
+// Tangkap error koneksi DB (saat server tidak bisa dijangkau / wifi mati)
+app.UseDatabaseOfflineFallback();
 
 app.UseRouting();
 app.UseWebSockets();
