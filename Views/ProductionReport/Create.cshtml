@@ -1,7 +1,10 @@
 @model VelastoProductionSystem.Models.ProductionReport
+@inject VelastoProductionSystem.Data.ApplicationDbContext DbContext
 
 @{
     ViewData["Title"] = "EXTRUDER PRODUCTION REPORT";
+    var shift1Start = DbContext.ShiftMasters.FirstOrDefault(s => s.ShiftName.Contains("1"))?.StartTime ?? "19:30";
+    var shift2Start = DbContext.ShiftMasters.FirstOrDefault(s => s.ShiftName.Contains("2"))?.StartTime ?? "07:30";
 }
 
 <div class="production-blueprint no-print-bg pb-5">
@@ -17,7 +20,7 @@
 
         <form asp-action="Create" id="mainReportForm">
             <input type="hidden" id="SpsId" name="SpsId" value="" />
-            <input type="hidden" id="MachineName" name="MachineName" value="@(Context.Session.GetString("MachineName"))" />
+            <input type="hidden" id="MachineName" name="MachineName" value="" />
             
             <!-- HIDDEN FIELDS FOR PRODUCTION TIMER -->
             <input type="hidden" id="ProductionStartTime" name="ProductionStartTime" />
@@ -251,18 +254,6 @@
                             <div class="pcc-search-label">
                                 <i class="bi bi-list-check"></i>
                                 PLANNING MASTER
-                                @{
-                                    var sessionMachine = Context.Session.GetString("MachineName");
-                                    var sessionIsAdmin = Context.Session.GetString("IsAdmin") == "true";
-                                }
-                                @if (!sessionIsAdmin && !string.IsNullOrEmpty(sessionMachine))
-                                {
-                                    <span style="font-size:9px; font-weight:900; color:#f59e0b; background:rgba(245,158,11,0.15); padding:1px 8px; border-radius:20px; border:1px solid rgba(245,158,11,0.3);">
-                                        <i class="bi bi-cpu-fill me-1"></i>@sessionMachine
-                                    </span>
-                                }
-                                else if (sessionIsAdmin)
-                                {
                                     <span style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3);">
                                         <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
                                     </span>
@@ -319,9 +310,9 @@
                             <div class="pcc-field-label">
                                 <i class="bi bi-clock-history"></i> SHIFT MONITORING
                             </div>
-                            <select asp-for="Shift" id="Shift" class="pcc-field-input" onchange="refreshPlanningItems()">
-                                <option value="Shift 1" class="bg-dark">SHIFT 1 (19:30 - 07:30)</option>
-                                <option value="Shift 2" class="bg-dark">SHIFT 2 (07:30 - 19:30)</option>
+                            <select asp-for="Shift" id="Shift" class="pcc-field-input" onchange="refreshPlanningItems()" style="pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none;" tabindex="-1">
+                                <option value="Shift 1" class="bg-dark">SHIFT 1 (@shift1Start - @shift2Start)</option>
+                                <option value="Shift 2" class="bg-dark">SHIFT 2 (@shift2Start - @shift1Start)</option>
                             </select>
                         </div>
 
@@ -1410,8 +1401,8 @@
     <script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
     <script src="~/lib/offline-cdn/html5-qrcode.min.js"></script>
     <script>
-        // === SESSION CONTEXT (injected from server) ===
-        window.SESSION_MACHINE_NAME = '@Html.Raw(Context.Session.GetString("MachineName") ?? "")';
+        // === SESSION CONTEXT (injected from client-side _Layout.cshtml) ===
+        // window.SESSION_MACHINE_NAME is set in _Layout.cshtml
 
         let html5QrCode;
 
@@ -2371,16 +2362,29 @@
             modal.show();
 
             setTimeout(() => {
-                html5QrCode = new Html5Qrcode("reader");
-                const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+                try {
+                    html5QrCode = new Html5Qrcode("reader");
+                    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
-                html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-                    callback(decodedText);
+                    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+                        callback(decodedText);
+                        closeScannerModal();
+                        // Optional beep sound could be added here
+                    }).catch(err => {
+                        console.error("Scanner failed (environment)", err);
+                        // Try fallback to any camera
+                        html5QrCode.start({ facingMode: "user" }, config, (decodedText) => {
+                            callback(decodedText);
+                            closeScannerModal();
+                        }).catch(err2 => {
+                            closeScannerModal();
+                            Swal.fire('CAMERA ERROR', 'Kamera tidak ditemukan atau izin tidak diberikan.', 'error');
+                        });
+                    });
+                } catch(e) {
                     closeScannerModal();
-                    // Optional beep sound could be added here
-                }).catch(err => {
-                    console.error("Scanner failed", err);
-                });
+                    Swal.fire('SYSTEM ERROR', 'Modul Scanner belum dimuat sempurna. Harap refresh halaman.', 'error');
+                }
             }, 300);
         }
 
@@ -2537,6 +2541,17 @@
                 }))
             };
 
+            // Cek status online sebelum mengirim
+            if (!navigator.onLine) {
+                if (typeof window.enqueueOfflineRequest === 'function') {
+                    await window.enqueueOfflineRequest('/ProductionReport/SaveWithReadings', payload);
+                    clearDraft(_currentDraftItem);
+                    Swal.fire('OFFLINE MODE', 'Report disimpan di perangkat dan akan terkirim saat internet kembali.', 'info')
+                        .then(() => resetHUD());
+                    return;
+                }
+            }
+
             try {
                 const res = await fetch('/ProductionReport/SaveWithReadings', {
                     method: 'POST',
@@ -2554,6 +2569,15 @@
                     Swal.fire('TRANSMISSION ERROR', result.message || 'The server rejected the dataset.', 'error');
                 }
             } catch (e) {
+                if (e instanceof TypeError || (e.message && (e.message.includes('NetworkError') || e.message.includes('Failed to fetch')))) {
+                    if (typeof window.enqueueOfflineRequest === 'function') {
+                        await window.enqueueOfflineRequest('/ProductionReport/SaveWithReadings', payload);
+                        clearDraft(_currentDraftItem);
+                        Swal.fire('OFFLINE MODE', 'Report disimpan di perangkat dan akan terkirim saat internet kembali.', 'info')
+                            .then(() => resetHUD());
+                        return;
+                    }
+                }
                 Swal.fire('SYSTEM CRITICAL', e.message, 'error');
             }
         }
@@ -2765,6 +2789,7 @@
             const date = document.getElementById('ProductionDate').value;
             const shift = document.getElementById('Shift').value;
             const searchInput = document.getElementById('planningSearch');
+            const machine = document.getElementById('MachineName')?.value || window.SESSION_MACHINE_NAME || '';
             
             if (!date || !shift) return;
 
@@ -2773,8 +2798,32 @@
             document.getElementById('planningResults').classList.add('d-none');
 
             try {
-                const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shift)}`);
-                planningItemsCache = await res.json();
+                let fromServer = true;
+                if (window.db && window.db.apiCache) {
+                    const cacheKey = `PLANNING_${date}_${shift}_${machine}`;
+                    const cached = await window.db.apiCache.get(cacheKey);
+                    if (cached) {
+                        planningItemsCache = cached.data;
+                        fromServer = false;
+                        console.log("Loaded planning items from Dexie Cache");
+                    }
+                }
+
+                if (fromServer) {
+                    let fetchUrl = `/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shift)}`;
+                    if (machine) fetchUrl += `&machine=${encodeURIComponent(machine)}`;
+                    const res = await fetch(fetchUrl);
+                    planningItemsCache = await res.json();
+                    try { localStorage.setItem('offline_planning_cache', JSON.stringify(planningItemsCache)); } catch(e){}
+                    
+                    if (window.db && window.db.apiCache) {
+                        const cacheKey = `PLANNING_${date}_${shift}_${machine}`;
+                        await window.db.apiCache.put({ id: cacheKey, data: planningItemsCache, timestamp: new Date().getTime() });
+                    }
+                    
+                    // Silently cache SPS data for these items in the background
+                    silentCacheSpsData(planningItemsCache);
+                }
                 
                 // Cek apakah data di-filter berdasarkan mesin
                 const isFiltered = planningItemsCache.length > 0 && planningItemsCache[0].isFiltered;
@@ -2792,8 +2841,21 @@
                 planningResultItems = planningItemsCache;
                 planningResultIndex = -1;
             } catch (e) {
-                console.error("Failed to fetch planning items:", e);
-                searchInput.placeholder = "ERROR LOADING DATA";
+                console.warn("Failed to fetch planning items, trying offline cache:", e);
+                const cached = localStorage.getItem('offline_planning_cache');
+                if (cached) {
+                    try {
+                        planningItemsCache = JSON.parse(cached);
+                        searchInput.disabled = false;
+                        searchInput.placeholder = `[OFFLINE] KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA)`;
+                        searchInput.value = "";
+                        planningResultItems = planningItemsCache;
+                        planningResultIndex = -1;
+                        console.log("Loaded planning items from offline cache.");
+                        return;
+                    } catch(err){}
+                }
+                searchInput.placeholder = "ERROR LOADING DATA (OFFLINE)";
             }
         }
 
@@ -2812,11 +2874,6 @@
             const container = document.getElementById('planningResults');
             filterPlanningResults('');
             container.classList.remove('d-none');
-
-            // Re-fetch if cache is empty
-            if (planningItemsCache.length === 0) {
-                refreshPlanningItems();
-            }
         }
 
         // Close dropdown when clicking outside
@@ -2833,6 +2890,34 @@
                 }
             }
         });
+
+        async function silentCacheSpsData(items) {
+            if (!navigator.onLine || !window.db || !window.db.apiCache) return;
+            
+            const machine = document.getElementById('MachineName')?.value || '';
+            const uniqueItems = [...new Set(items.map(i => i.itemCode))].filter(Boolean);
+            
+            for (const code of uniqueItems) {
+                const upperCode = code.toUpperCase().trim();
+                try {
+                    const cachedSps = await window.db.apiCache.get(`SPS_PARAM_${upperCode}`);
+                    if (!cachedSps) {
+                        const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}&machineCode=${encodeURIComponent(machine)}`);
+                        if (!res.ok) continue;
+                        const data = await res.json();
+                        // Cache it regardless of success (if success is false, it means Protocol Not Found)
+                        await window.db.apiCache.put({ 
+                            id: `SPS_PARAM_${upperCode}`, 
+                            data: data, 
+                            timestamp: new Date().getTime() 
+                        });
+                        try { localStorage.setItem('offline_param_sps_cache_' + upperCode, JSON.stringify(data)); } catch(e){}
+                    }
+                } catch (e) {
+                    console.warn("Silent cache failed for", code, e);
+                }
+            }
+        }
 
         function filterPlanningResults(query) {
             const sanitizedQuery = query.trim().toUpperCase();
@@ -2992,10 +3077,27 @@
             }
 
             try {
+                let data = null;
+                let fromServer = true;
                 const machine = forcedMachine || document.getElementById('MachineName')?.value || '';
-                const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}&machineCode=${encodeURIComponent(machine)}`);
-                const data = await res.json();
-                if (data.success === false) throw new Error('PROTOCOL NOT FOUND');
+
+                if (window.db && window.db.apiCache) {
+                    const cachedSps = await window.db.apiCache.get(`SPS_PARAM_${code.toUpperCase().trim()}`);
+                    if (cachedSps) {
+                        data = cachedSps.data;
+                        fromServer = false;
+                        console.log("Loaded SPS PARAM master from Dexie Cache");
+                    }
+                }
+
+                if (fromServer) {
+                    const res = await fetch(`/ProductionReport/GetSpsByItem?itemCode=${encodeURIComponent(code.trim())}&machineCode=${encodeURIComponent(machine)}`);
+                    data = await res.json();
+                    if (data.success === false) throw new Error('PROTOCOL NOT FOUND');
+                    try { localStorage.setItem('offline_param_sps_cache_' + code, JSON.stringify(data)); } catch(e){}
+                } else {
+                    if (data.success === false) throw new Error('PROTOCOL NOT FOUND');
+                }
 
                 const hasDraft = localStorage.getItem(_draftKey(normalCode));
 
@@ -3019,7 +3121,34 @@
                 setupAutoSave(normalCode);  // begin tracking changes
 
             } catch (e) {
-                console.warn(e);
+                console.warn("fetchSpsByItem error:", e);
+                
+                if (e.message !== 'PROTOCOL NOT FOUND') {
+                    const cached = localStorage.getItem('offline_param_sps_cache_' + code);
+                    if (cached) {
+                        try {
+                            const data = JSON.parse(cached);
+                            applySpsToForm(data);
+                            const hasDraft = localStorage.getItem(_draftKey(normalCode));
+                            if (hasDraft) {
+                                setTimeout(() => {
+                                    let d; try { d = JSON.parse(hasDraft); } catch {}
+                                    const restored = restoreDraft(normalCode);
+                                    if (restored && d) {
+                                        showDraftBanner(normalCode, d.ts);
+                                        revalidateAllInputs();
+                                    }
+                                }, 200);
+                            } else {
+                                renderTabs();
+                            }
+                            setupAutoSave(normalCode);
+                            Swal.fire({ title: 'OFFLINE MODE', text: 'Standar parameter dimuat dari memori lokal.', icon: 'info', timer: 2000, toast: true, position: 'top-end', showConfirmButton: false });
+                            return;
+                        } catch(err){}
+                    }
+                }
+
                 if (e.message === 'PROTOCOL NOT FOUND') {
                     lockForm();
                     Swal.fire({
@@ -3032,9 +3161,10 @@
                         confirmButtonText: 'PILIH ULANG'
                     });
                 } else {
+                    lockForm();
                     Swal.fire({
                         title: 'SYSTEM ERROR',
-                        text: `Terjadi kesalahan saat memproses data SPS: ${e.message}`,
+                        text: `Terjadi kesalahan saat memproses data SPS: ${e.message} (Anda sedang offline dan item ini belum pernah diakses sebelumnya).`,
                         icon: 'error',
                         background: '#020617',
                         color: '#f87171',

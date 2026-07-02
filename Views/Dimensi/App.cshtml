@@ -1353,11 +1353,6 @@
             setTimeout(() => el.classList.add('animate__animated', 'animate__pulse'), 10);
             
             Swal.fire({ 
-                icon: 'info', 
-                title: 'SHIFT UPDATED', 
-                text: `Toggled to ${next}`, 
-                timer: 1000, 
-                showConfirmButton: false, 
                 toast: true, 
                 position: 'top-end' 
             });
@@ -1374,6 +1369,8 @@
             const shiftText = document.getElementById('h-shift')?.innerText || '';
             const date = parseDisplayDate(dateText);
             const planningInput = document.getElementById('planningSearch');
+            const machine = document.getElementById('h-line')?.innerText || window.SESSION_MACHINE_NAME || '';
+            
             if (!date || !shiftText || !planningInput) return;
 
             planningInput.placeholder = 'LOADING PLANNING...';
@@ -1381,8 +1378,32 @@
             document.getElementById('planningResults')?.classList.add('d-none');
 
             try {
-                const res = await fetch(`/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shiftText)}`);
-                planningItemsCache = await res.json();
+                let fromServer = true;
+                if (window.db && window.db.apiCache) {
+                    const cacheKey = `PLANNING_${date}_${shiftText}_${machine}`;
+                    const cached = await window.db.apiCache.get(cacheKey);
+                    if (cached) {
+                        planningItemsCache = cached.data;
+                        fromServer = false;
+                        console.log("Loaded planning items from Dexie Cache");
+                    }
+                }
+
+                if (fromServer) {
+                    let fetchUrl = `/ProductionReport/GetPlanningItems?date=${date}&shift=${encodeURIComponent(shiftText)}`;
+                    if (machine && machine !== '---') fetchUrl += `&machine=${encodeURIComponent(machine)}`;
+                    const res = await fetch(fetchUrl);
+                    planningItemsCache = await res.json();
+                    try { localStorage.setItem('offline_planning_cache', JSON.stringify(planningItemsCache)); } catch(e){}
+                    
+                    if (window.db && window.db.apiCache) {
+                        const cacheKey = `PLANNING_${date}_${shiftText}_${machine}`;
+                        await window.db.apiCache.put({ id: cacheKey, data: planningItemsCache, timestamp: new Date().getTime() });
+                    }
+                    
+                    silentCacheDimensiData(planningItemsCache);
+                }
+                
                 planningResultItems = planningItemsCache;
                 planningResultIndex = -1;
 
@@ -1400,9 +1421,22 @@
                 }
                 planningInput.value = '';
             } catch (error) {
-                console.error('Failed to refresh planning items:', error);
+                console.warn('Failed to refresh planning items, trying offline cache:', error);
+                const cached = localStorage.getItem('offline_planning_cache');
+                if (cached) {
+                    try {
+                        planningItemsCache = JSON.parse(cached);
+                        planningResultItems = planningItemsCache;
+                        planningInput.disabled = false;
+                        planningInput.placeholder = `[OFFLINE] KETIK ITEM CODE (${planningItemsCache.length} TERSEDIA)`;
+                        planningInput.value = "";
+                        planningResultIndex = -1;
+                        console.log("Loaded planning items from offline cache.");
+                        return;
+                    } catch(err){}
+                }
                 planningInput.disabled = false;
-                planningInput.placeholder = 'ERROR LOADING PLANNING';
+                planningInput.placeholder = 'ERROR LOADING PLANNING (OFFLINE)';
             }
         }
 
@@ -1526,6 +1560,8 @@
             loadMaster();
         }
 
+        async function silentCacheDimensiData(items) { if (!navigator.onLine || !window.db || !window.db.apiCache) return; const machine = document.getElementById('h-line')?.innerText || window.SESSION_MACHINE_NAME || ''; const uniqueItems = [...new Set(items.map(i => i.itemCode))].filter(Boolean); for (const code of uniqueItems) { const upperCode = code.toUpperCase().trim(); try { const cachedSps = await window.db.apiCache.get('SPS_DIM_' + upperCode); if (!cachedSps) { let url = '/Dimensi/GetSpsStandard?hoseType=' + encodeURIComponent(code.trim()); if (machine && machine !== '---') url += '&machineCode=' + encodeURIComponent(machine); const res = await fetch(url); if (!res.ok) continue; const data = await res.json(); await window.db.apiCache.put({ id: 'SPS_DIM_' + upperCode, data: data, timestamp: new Date().getTime() }); try { localStorage.setItem('offline_sps_cache_' + code, JSON.stringify(data)); } catch(e){} } } catch (e) { console.warn('Silent cache failed for', code, e); } } }
+
         function openPlanningDropdown() {
             const planningInput = document.getElementById('planningSearch');
             if (!planningInput) return;
@@ -1540,7 +1576,6 @@
                 : 'LOADING...';
             filterPlanningResults('');
             document.getElementById('planningResults')?.classList.remove('d-none');
-            if (planningItemsCache.length === 0) refreshPlanningItems();
         }
 
         function showPlanningResults() { openPlanningDropdown(); } // alias untuk backward-compat
@@ -2336,8 +2371,23 @@
             if(!code) return;
             Swal.fire({ title: 'FETCHING MASTER...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}&machineCode=${encodeURIComponent(machine)}`);
-                const data = await res.json();
+                let data = null;
+                let fromServer = true;
+
+                if (window.db && window.db.apiCache) {
+                    const cachedSps = await window.db.apiCache.get(`SPS_DIM_${code.toUpperCase().trim()}`);
+                    if (cachedSps) {
+                        data = cachedSps.data;
+                        fromServer = false;
+                        console.log("Loaded SPS master from Dexie Cache");
+                    }
+                }
+
+                if (fromServer) {
+                    const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}&machineCode=${encodeURIComponent(machine)}`);
+                    data = await res.json();
+                    try { localStorage.setItem('offline_sps_cache_' + code, JSON.stringify(data)); } catch(e){}
+                }
                 Swal.close();
                 
                 if(!data.success) {
@@ -2526,7 +2576,74 @@
                     dimSetupAutoSave(normalCode);  // begin tracking changes
                 }
             } catch (e) { 
-                console.error("LoadMaster Error:", e);
+                console.warn("LoadMaster Error, trying offline cache:", e);
+                const cached = localStorage.getItem('offline_sps_cache_' + code);
+                if (cached) {
+                    try {
+                        const data = JSON.parse(cached);
+                        Swal.close();
+                        if(!data.success) { lockDimensiForm(code); return; }
+                        
+                        const m = data.data;
+                        const shouldShowSpiral = isChs2LayerContext(m);
+                        
+                        const custEl = document.getElementById('h-customer');
+                        const hoseEl = document.getElementById('h-hose');
+                        const docEl = document.getElementById('h-doc');
+                        const revEl = document.getElementById('h-rev');
+                        if(custEl) custEl.innerText = m.customer || "GENERAL";
+                        if(hoseEl) hoseEl.innerText = m.hoseType || "---";
+                        if(docEl) docEl.innerText = m.docNo || "---";
+                        if(revEl) revEl.innerText = "REV." + (m.revNo || "0");
+                        
+                        const searchInput = document.getElementById('main-item-search');
+                        if(searchInput) searchInput.value = m.itemList || code || m.docNo || m.hoseType;
+                        window._dimSpsId = data.id || m.id || m.spsId || null;
+                        if (!window._dimSelectedItemCode || window._dimSelectedItemCode === "") {
+                            window._dimSelectedItemCode = code;
+                            const itemCodeInput = document.getElementById('itemCode');
+                            if(itemCodeInput) itemCodeInput.value = code;
+                        }
+                        
+                        const normalCode = (code || '').toUpperCase().trim();
+                        activeStandards = {
+                            innerdia:   { val: m.innerDiameter,   tol: m.innerDiameterTolerance   },
+                            innertx:    { val: m.innerTx,         tol: m.innerTxTolerance         },
+                            innerty:    { val: m.innerTy,         tol: m.innerTyTolerance         },
+                            innermidtx: { val: m.innerMidTx,      tol: m.innerMidTxTolerance      },
+                            innermidty: { val: m.innerMidTy,      tol: m.innerMidTyTolerance      },
+                            totaltx:    { val: m.totalTx,         tol: m.totalTxTolerance         },
+                            totalty:    { val: m.totalTy,         tol: m.totalTyTolerance         },
+                            spiral:     { val: m.spiralPitch,     tol: m.spiralPitchTolerance     }
+                        };
+                        
+                        if (shouldShowSpiral) { document.getElementById('card-spiral').classList.remove('d-none'); document.getElementById('val-spiral').disabled = false; } 
+                        else { document.getElementById('card-spiral').classList.add('d-none'); document.getElementById('val-spiral').disabled = true; }
+                        const midXCard = document.getElementById('card-innermid-tx');
+                        const midYCard = document.getElementById('card-innermid-ty');
+                        if (m.innerMidTx > 0 || m.innerMidTy > 0) { if(midXCard) midXCard.classList.remove('d-none'); if(midYCard) midYCard.classList.remove('d-none'); } 
+                        else { if(midXCard) midXCard.classList.add('d-none'); if(midYCard) midYCard.classList.add('d-none'); }
+                        
+                        let hasDraft = dimRestoreDraft(normalCode);
+                        if(hasDraft) {
+                            renderTimeline();
+                            renderSummaryList();
+                            renderVisualStatus();
+                            loadDataToUI();
+                            const tsEl = document.getElementById('dimDraftBanner')?.getAttribute('data-ts');
+                            if(tsEl) dimShowDraftBanner(normalCode, parseInt(tsEl));
+                        } else {
+                            resetHUD();
+                            unlockDimensiForm();
+                            const firstInput = document.getElementById('val-inner-dia');
+                            if (firstInput) { firstInput.focus(); firstInput.select(); }
+                            loadDataToUI();
+                        }
+                        dimSetupAutoSave(normalCode);
+                        Swal.fire({ title: 'OFFLINE MODE', text: 'Dimuat dari memori lokal.', icon: 'info', timer: 2000, toast: true, position: 'top-end', showConfirmButton: false });
+                        return;
+                    } catch(err){}
+                }
                 Swal.fire('Error', 'Failed to load master data structure.', 'error');
             }
         }
@@ -2793,6 +2910,23 @@
                 };
 
 
+                // Cek status online sebelum mengirim
+                if (!navigator.onLine) {
+                    if (typeof window.enqueueOfflineRequest === 'function') {
+                        await window.enqueueOfflineRequest('/Dimensi/SaveData', payload);
+                        dimClearDraft(_dimCurrentItem);
+                        const status = document.getElementById('save-status');
+                        if(status) {
+                            status.innerText = "Tersimpan ke Mode Offline";
+                            status.style.opacity = '1';
+                        }
+                        resetHUD();
+                        resetPlanningSelection();
+                        setTimeout(() => { if(status) status.style.opacity = '0'; }, 3000);
+                        return;
+                    }
+                }
+
                 const response = await fetch('/Dimensi/SaveData', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2805,7 +2939,10 @@
 
                     // Flash success message
                     const status = document.getElementById('save-status');
-                    status.style.opacity = '1';
+                    if(status) {
+                        status.innerText = "Data Disimpan";
+                        status.style.opacity = '1';
+                    }
                     
                     // Reset HUD
                     resetHUD();
@@ -2813,13 +2950,28 @@
                     // Reset UI to 'before selecting planning' state
                     resetPlanningSelection();
                     
-                    setTimeout(() => { status.style.opacity = '0'; }, 3000);
+                    setTimeout(() => { if(status) status.style.opacity = '0'; }, 3000);
 
                 } else {
                     Swal.fire('Error', result.message || 'Failed to save', 'error');
                 }
             } catch (err) {
                 console.error(err);
+                if (err instanceof TypeError || (err.message && (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')))) {
+                    if (typeof window.enqueueOfflineRequest === 'function') {
+                        await window.enqueueOfflineRequest('/Dimensi/SaveData', payload);
+                        dimClearDraft(_dimCurrentItem);
+                        const status = document.getElementById('save-status');
+                        if(status) {
+                            status.innerText = "Tersimpan ke Mode Offline";
+                            status.style.opacity = '1';
+                        }
+                        resetHUD();
+                        resetPlanningSelection();
+                        setTimeout(() => { if(status) status.style.opacity = '0'; }, 3000);
+                        return;
+                    }
+                }
                 Swal.fire('Error', 'Sistem Gagal Menyimpan', 'error');
             } finally {
                 refreshSubmitButtonState();

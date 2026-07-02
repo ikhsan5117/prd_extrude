@@ -23,14 +23,12 @@ namespace VelastoProductionSystem.Controllers
             {
                 return RedirectToAction("Login", "Account");
             }
-            // Dashboard dengan statistik produksi
-            ViewBag.TotalProductions = _context.ProductionReports.Count();
-            ViewBag.ActiveProductions = _context.ProductionReports
-                .Where(p => p.Status == "InProgress").Count();
-            ViewBag.TodayProductions = _context.ProductionReports
-                .Where(p => p.ProductionDate.Date == DateTime.Today).Count();
-
-            return View();
+            var role = HttpContext.Session.GetString("UserRole");
+            if (role == "ADMIN_ENG" || role == "SUPERADMIN" || HttpContext.Session.GetString("IsAdmin") == "true")
+            {
+                return RedirectToAction("ChartAnalysis", "ProductionReport");
+            }
+            return RedirectToAction("Create", "ProductionReport");
         }
 
         public IActionResult ClearDummyData()

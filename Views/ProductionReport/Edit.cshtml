@@ -1,7 +1,10 @@
 @model VelastoProductionSystem.Models.ProductionReport
+@inject VelastoProductionSystem.Data.ApplicationDbContext DbContext
 
 @{
-    ViewData["Title"] = "Edit Production Report";
+    ViewData["Title"] = "EDIT EXTRUDER REPORT";
+    var shift1Start = DbContext.ShiftMasters.FirstOrDefault(s => s.ShiftName.Contains("1"))?.StartTime ?? "19:30";
+    var shift2Start = DbContext.ShiftMasters.FirstOrDefault(s => s.ShiftName.Contains("2"))?.StartTime ?? "07:30";
 }
 
 @section Styles {
@@ -205,9 +208,9 @@
                         <div class="col-6">
                             <div class="hud-pill-integrated border border-info border-opacity-20" style="background:rgba(15,23,42,0.8);">
                                 <label><i class="bi bi-clock-history me-2 text-info"></i>SHIFT MONITORING</label>
-                                <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0 text-white" style="-webkit-appearance:none;">
-                                    <option value="Shift 1" class="bg-dark">SHIFT 1 (19:30 - 07:30)</option>
-                                    <option value="Shift 2" class="bg-dark">SHIFT 2 (07:30 - 19:30)</option>
+                                <select asp-for="Shift" id="Shift" class="hud-input font-black bg-transparent border-0 text-white" style="pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none;" tabindex="-1">
+                                    <option value="Shift 1" class="bg-dark">SHIFT 1 (@shift1Start - @shift2Start)</option>
+                                    <option value="Shift 2" class="bg-dark">SHIFT 2 (@shift2Start - @shift1Start)</option>
                                 </select>
                             </div>
                         </div>

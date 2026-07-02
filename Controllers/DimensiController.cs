@@ -264,6 +264,29 @@ namespace VelastoProductionSystem.Controllers
             return Json(new { success = false, message = "Standard not found: " + hoseType });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllOfflineMasterData()
+        {
+            try
+            {
+                var spsRaw = await _context.SpsNoDocs
+                    .AsNoTracking()
+                    .ToListAsync();
+                
+                var spsList = new List<object>();
+                foreach (var s in spsRaw)
+                {
+                    spsList.Add(BuildDimensiSpsResponse(s));
+                }
+                
+                return Json(new { success = true, spsList });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         public IActionResult App()
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))

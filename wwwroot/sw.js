@@ -1,7 +1,12 @@
-const CACHE_NAME = 'velasto-pwa-cache-v3';
+const CACHE_NAME = 'velasto-pwa-cache-v11';
 const ASSETS_TO_CACHE = [
-  // Halaman Fallback Offline
+  // Halaman Fallback Offline & Halaman PWA
   '/offline.html',
+  '/Account/Login',
+  '/ProductionReport/Create',
+  '/ProductionReport/ChartAnalysis',
+  '/Dimensi',
+  '/Dimensi/App',
 
   // Lokal aset — CSS
   '/lib/offline-cdn/bootstrap.min.css',
@@ -22,7 +27,9 @@ const ASSETS_TO_CACHE = [
   '/lib/offline-cdn/html2pdf.bundle.min.js',
   '/lib/offline-cdn/jquery.validate.min.js',
   '/lib/offline-cdn/jquery.validate.unobtrusive.min.js',
+  '/lib/offline-cdn/dexie.min.js',
   '/js/site.js',
+  '/js/offline-sync.js',
 
   // Font
   '/lib/offline-cdn/fonts/bootstrap-icons.woff2',
@@ -36,7 +43,15 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then((cache) => {
+      return Promise.all(
+        ASSETS_TO_CACHE.map((url) => {
+          return cache.add(url).catch((err) => {
+            console.warn('[SW] Failed to cache asset:', url, err);
+          });
+        })
+      );
+    })
   );
 });
 

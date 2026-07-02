@@ -9,7 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Velasto Production System</title>
     <link rel="stylesheet" href="~/lib/offline-cdn/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/offline-cdn/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/lib/offline-cdn/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/lib/offline-cdn/sweetalert2.min.css" />
     <link href="~/lib/offline-cdn/plus-jakarta-sans.css" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#020b13">
@@ -457,10 +458,52 @@
 </div>
 
 <script src="~/lib/offline-cdn/jquery-3.6.0.min.js"></script>
+<script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
+<script src="~/lib/offline-cdn/dexie.min.js"></script>
+
 <script>
+    // Inisialisasi Dexie untuk akses offline login data
+    const db = new Dexie('ExtrudeDB');
+    db.version(1).stores({
+        apiCache: 'key, timestamp'
+    });
+
     $(document).ready(function() {
         const defaultPassword = "extrude123!";
         let isAdminMode = false;
+
+        // Cek jika OFFLINE saat halaman dimuat
+        if (!navigator.onLine) {
+            Swal.fire({
+                title: 'Mode Offline',
+                text: 'Mencoba memuat data pengguna dari Cache Lokal...',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            // Load dropdown data from Dexie
+            db.apiCache.get('LOGIN_DATA').then(data => {
+                if (data && data.data) {
+                    const users = data.data.users;
+                    const machines = data.data.machines;
+                    
+                    let userHtml = '<option value="">-- Pilih Operator --</option>';
+                    users.forEach(u => {
+                        userHtml += `<option value="${u.id}">${u.fullName}</option>`;
+                    });
+                    $('#userId').html(userHtml);
+
+                    let machineHtml = '<option value="">-- Pilih Mesin --</option>';
+                    machines.forEach(m => {
+                        machineHtml += `<option value="${m.id}">${m.kodeMesin} - ${m.namaMesin}</option>`;
+                    });
+                    $('#machineId').html(machineHtml);
+                } else {
+                    Swal.fire('Data Tidak Ditemukan', 'Anda belum pernah melakukan Sync Master Data di perangkat ini.', 'warning');
+                }
+            }).catch(e => console.error(e));
+        }
 
         // Toggle Admin Mode
         $('#adminToggle').on('click', function(e) {
@@ -475,6 +518,7 @@
                 $('label[for="machineId"], label:contains("MESIN PRODUKSI")').hide();
                 
                 $('#userId').removeAttr('required');
+                $('#machineId').removeAttr('required');
                 $('#password').val('');
                 $('#adminUsernameInput').val('');
                 $('#credentialsGuide').fadeIn();
@@ -489,6 +533,7 @@
                 $('label:contains("MESIN PRODUKSI")').show();
                 
                 $('#userId').attr('required', 'required');
+                $('#machineId').attr('required', 'required');
                 $('#password').val('');
                 $('#adminUsernameInput').val('');
                 $('#adminUsername').val('');
@@ -497,11 +542,90 @@
             }
         });
 
-        // On form submit, copy admin username to hidden field
-        $('#loginForm').on('submit', function() {
+        // On form submit, handle online/offline intelligently
+        $('#loginForm').on('submit', async function(e) {
+            e.preventDefault(); // ALWAYS stop normal POST to handle it via AJAX/Offline
+
             if (isAdminMode) {
                 $('#adminUsername').val($('#adminUsernameInput').val());
             }
+
+            const pw = $('#password').val();
+            let isServerReachable = false;
+            
+            // Coba ping server untuk cek apakah benar-benar online
+            try {
+                const ping = await fetch('/Account/Login', { method: 'HEAD', cache: 'no-store', headers: { 'Cache-Control': 'no-cache' }});
+                if (ping.ok || ping.redirected || ping.status === 405) {
+                    isServerReachable = true;
+                }
+            } catch (err) {
+                isServerReachable = false;
+            }
+
+            // Jika server reachable, submit form secara normal (DOM submit)
+            if (isServerReachable) {
+                this.submit();
+                return;
+            }
+
+            // Jika server tidak reachable (OFFLINE)
+            let userRole = "OPERATOR";
+            let displayName = "";
+            let machineName = "";
+
+            if (isAdminMode) {
+                const lowerAdmin = $('#adminUsernameInput').val().toLowerCase();
+                if (lowerAdmin === "admin" && pw === "admin123!") { userRole = "SUPERADMIN"; displayName = "Super Admin"; machineName = "ADMIN"; }
+                else if (lowerAdmin === "adm_prod" && pw === "produksi123!") { userRole = "ADMIN_PROD"; displayName = "Admin Produksi"; machineName = "ADMIN"; }
+                else if (lowerAdmin === "adm_eng" && pw === "engineering123!") { userRole = "ADMIN_ENG"; displayName = "Admin Engineering"; machineName = "ADMIN"; }
+                else if (lowerAdmin === "eng_temp" && pw === "engtemp123!") { userRole = "ENGINEERING"; displayName = "Engineering Temporary"; machineName = "ENG"; }
+                else {
+                    Swal.fire('Login Gagal', 'Password Admin salah atau user tidak valid!', 'error');
+                    return;
+                }
+            } else {
+                if (pw !== "extrude123!") {
+                    Swal.fire('Login Gagal', 'Password Operator salah!', 'error');
+                    return;
+                }
+                const userId = $('#userId').val();
+                const machId = $('#machineId').val();
+                if (!userId || !machId) {
+                    Swal.fire('Perhatian', 'Pilih User dan Mesin terlebih dahulu.', 'warning');
+                    return;
+                }
+                displayName = $('#userId option:selected').text();
+                machineName = $('#machineId option:selected').text().split(' - ')[0]; // Ambil kode mesin
+                if (displayName.toUpperCase().includes('TRIAL')) {
+                    userRole = "ENGINEERING";
+                }
+            }
+
+            // SIMPAN SESSION KE LOCAL STORAGE
+            const sessionData = {
+                userName: displayName,
+                userRole: userRole,
+                isAdmin: userRole.includes('ADMIN') ? "true" : "false",
+                machineName: machineName,
+                loginTime: new Date().getTime()
+            };
+            localStorage.setItem('offline_session', JSON.stringify(sessionData));
+
+            Swal.fire({
+                title: 'Login Offline Berhasil',
+                text: `Selamat datang, ${displayName}!`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                // Redirect to App
+                if (sessionData.isAdmin === "true") {
+                    window.location.href = '/ProductionReport/ChartAnalysis';
+                } else {
+                    window.location.href = '/ProductionReport/Create';
+                }
+            });
         });
 
         // Fitur 1: Auto-Fill Password saat User Dipilih (Operator mode)

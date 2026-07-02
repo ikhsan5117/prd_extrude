@@ -25,10 +25,7 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport (Monitoring List)
         public async Task<IActionResult> Index()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            
             var reports = await _context.ProductionReports
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
@@ -38,10 +35,7 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/ParameterHistory
         public async Task<IActionResult> ParameterHistory(string? startDate = null, string? endDate = null, string? machineFilter = null)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            
 
             var query = _context.ProductionReports
 
@@ -94,10 +88,7 @@ namespace VelastoProductionSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportParameterHistoryExcel(string? startDate = null, string? endDate = null)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            
 
             var query = _context.ProductionReports
                 .AsQueryable();
@@ -198,10 +189,7 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/DimensionHistory
         public async Task<IActionResult> DimensionHistory(string? machineFilter = null)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            
 
             var query = _context.ProductionReports
                 .Where(p => !string.IsNullOrEmpty(p.ActualLength) || !string.IsNullOrEmpty(p.VinCode) || p.QtyOk > 0 || p.NgDimension > 0 || p.NgVisual > 0)
@@ -234,10 +222,7 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/App (New Tablet App Interface)
         public async Task<IActionResult> App(int? id)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            
 
             if (id == null)
             {
@@ -802,8 +787,11 @@ namespace VelastoProductionSystem.Controllers
 
             if (elwpRows.Any())
             {
-                // Permintaan user: "buka semuanya jangan 1 shift aja harus 20"
-                // Jadi filter shift dihilangkan agar semua planning dalam 1 hari muncul.
+                // Re-enable shift filtering based on user request
+                if (!string.IsNullOrEmpty(shift))
+                {
+                    elwpRows = elwpRows.Where(x => x.p.Shift != null && x.p.Shift.Equals(shift, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
 
                 // Filter berdasarkan mesin - SELALU diapply untuk non-admin
                 // jika operator memiliki session mesin, hanya tampilkan planning untuk mesin tersebut
@@ -874,7 +862,8 @@ namespace VelastoProductionSystem.Controllers
                 bool hasDayMatch = ds.Contains(dayStr1) || ds.Contains(dayStr2);
                 bool hasMonthMatch = months.Any(m => ds.Contains(m));
                 bool hasYearMatch = ds.Contains(yearFull) || ds.Contains(yearShort);
-                return hasDayMatch && hasMonthMatch && hasYearMatch;
+                bool hasShiftMatch = string.IsNullOrEmpty(shift) || ds.Contains(shift.ToUpper());
+                return hasDayMatch && hasMonthMatch && hasYearMatch && hasShiftMatch;
             }).OrderByDescending(x => x.Id).ToList();
 
             if (!filtered.Any())
@@ -1342,10 +1331,7 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/Create (The "NOW I'M PRODUCE" Form - Gambar 1)
         public async Task<IActionResult> Create()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            
 
             var hoseTypes = await _context.SpsNoDocs
                 .Where(m => !string.IsNullOrEmpty(m.HoseType))
@@ -1898,8 +1884,7 @@ namespace VelastoProductionSystem.Controllers
         // GET: ProductionReport/ChartAnalysis
         public IActionResult ChartAnalysis()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserName")))
-                return RedirectToAction("Login", "Account");
+            
 
             return View();
         }
@@ -2876,7 +2861,92 @@ namespace VelastoProductionSystem.Controllers
             return (start, end);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllOfflineMasterData(DateTime? targetDate = null)
+        {
+            try
+            {
+                var date = (targetDate ?? DateTime.Today).Date;
+
+                var cultureID = new System.Globalization.CultureInfo("id-ID");
+                
+                // 1. Planning Master (Live from ELWP_PRD)
+                var planningsQuery = from p in _elwpContext.ElwpPlannings
+                                     join m in _elwpContext.ElwpMachines on p.MesinId equals m.Id into machineJoin
+                                     from m in machineJoin.DefaultIfEmpty()
+                                     where p.TanggalPlanning >= date && p.TanggalPlanning < date.AddDays(1)
+                                     select new { p, MachineName = m != null ? m.NamaMesin : "UNKNOWN", MachineCode = m != null ? m.KodeMesin : "" };
+                
+                var elwpRows = await planningsQuery.ToListAsync();
+                
+                var plannings = elwpRows.Select(x => new {
+                    itemCode = x.p.KodeItem,
+                    itemName = (x.p.PartName ?? "#N/A") + (string.IsNullOrEmpty(x.p.PnSap) ? "" : " | " + x.p.PnSap),
+                    machineName = x.MachineName,
+                    machineCode = x.MachineCode,
+                    dateShift = $"{(x.p.TanggalPlanning?.ToString("dddd, d MMMM yyyy", cultureID) ?? "").ToUpper()} SHIFT {x.p.Shift}",
+                    date = x.p.TanggalPlanning?.ToString("yyyy-MM-dd"),
+                    shift = x.p.Shift?.ToString(),
+                    isFiltered = false,
+                    hasSps = true
+                }).OrderBy(p => p.itemName).ToList();
+
+                // 2. SPS Master
+                var spsRaw = await _context.SpsNoDocs
+                    .Include(s => s.ItemLists)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var spsList = new List<object>();
+                foreach(var s in spsRaw)
+                {
+                    spsList.Add(MapMasterToSps(s));
+                }
+
+                // 3. Todays Summary (All machines)
+                var endDate = date.AddDays(1);
+                var paramReports = await _context.ProductionReports
+                    .Where(r => r.CreatedDate >= date && r.CreatedDate < endDate)
+                    .Select(r => new {
+                        r.Id, r.HoseType, r.VinCode, r.Shift, r.CreatedBy, r.Status, r.CreatedDate,
+                        r.DocumentNumber, r.RevisionNumber,
+                        r.MachineName
+                    }).ToListAsync();
+
+                var dimReports = await _context.DimensionReports
+                    .Where(r => r.CreatedDate >= date && r.CreatedDate < endDate)
+                    .Select(r => new {
+                        r.Id, r.HoseType, r.Shift, r.CreatedBy, r.Status, r.CreatedDate,
+                        r.DocumentNumber, r.RevisionNumber, r.MachineName
+                    }).ToListAsync();
+                    
+                var summary = new {
+                    parameterReports = paramReports,
+                    dimensionReports = dimReports
+                };
+
+                // 4. Users and Machines for Offline Login
+                var users = await _elwpContext.ElwpUsers
+                    .Where(u => u.IsActive && u.AreaId == 1)
+                    .OrderBy(u => u.FullName)
+                    .Select(u => new { u.Id, u.FullName, u.Username })
+                    .ToListAsync();
+
+                var machines = await _elwpContext.ElwpMachines
+                    .Where(m => m.IsActive && m.AreaId == 1 && m.KodeMesin != "DL01" && m.KodeMesin != "DL02")
+                    .OrderBy(m => m.KodeMesin)
+                    .Select(m => new { m.Id, m.KodeMesin, m.NamaMesin })
+                    .ToListAsync();
+
+                return Json(new { success = true, plannings, spsList, summary, users, machines });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
     }
 }
+
 

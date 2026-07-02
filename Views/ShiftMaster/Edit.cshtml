@@ -1,0 +1,55 @@
+@model VelastoProductionSystem.Models.ShiftMaster
+
+@{
+    ViewData["Title"] = "Edit Shift";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+        <h4 class="mb-1 text-white"><i class="bi bi-pencil-square me-2"></i>Edit Waktu Shift</h4>
+        <p class="text-white-50 small mb-0">Ubah jam mulai untuk @Model.ShiftName</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 col-lg-5">
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="mb-4">
+                            <label asp-for="ShiftName" class="form-label text-white-50 small fw-bold">NAMA SHIFT</label>
+                            <input asp-for="ShiftName" class="form-control bg-dark border-secondary text-white" readonly />
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label asp-for="StartTime" class="form-label text-white-50 small fw-bold">JAM MULAI (Format 24 Jam, cth: 19:30)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-secondary border-secondary text-white"><i class="bi bi-clock"></i></span>
+                                <input asp-for="StartTime" class="form-control bg-dark border-secondary text-info fw-bold font-monospace" placeholder="HH:mm" required pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" />
+                            </div>
+                            <span asp-validation-for="StartTime" class="text-danger small mt-1 d-block"></span>
+                            <div class="form-text text-white-50 mt-2">
+                                <i class="bi bi-info-circle me-1"></i>Pastikan formatnya sesuai (misal: 07:30 atau 19:30) agar sistem otomatis dapat membaca dengan benar.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary fw-bold">
+                                <i class="bi bi-save me-1"></i>Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
